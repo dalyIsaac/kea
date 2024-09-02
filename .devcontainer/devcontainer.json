@@ -17,7 +17,14 @@
             "target": "/mnt/usr",
             "type": "bind"
         }
-    ]
+	],
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"eamodio.gitlens"
+		    ]
+		}
+	}
 
     // Features to add to the dev container. More info: https://containers.dev/features.
     // "features": {},
