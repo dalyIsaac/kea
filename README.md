@@ -2,6 +2,10 @@
 
 ## Plan
 
+### POC
+
+- [x] Get the commit diff between two branches
+
 ### Core
 
 - [ ] Get the commit diff between two branches
