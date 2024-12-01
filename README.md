@@ -1,42 +1,28 @@
-# kea
+## Usage
 
-## Plan
+```bash
+$ npm install # or pnpm install or yarn install
+```
 
-### POC
+### Learn more on the [Solid Website](https://solidjs.com) and come chat with us on our [Discord](https://discord.com/invite/solidjs)
 
-- [x] Get the commit diff between two branches
+## Available Scripts
 
-### Core
+In the project directory, you can run:
 
-- [ ] Get the commit diff between two branches
-- [ ] Get the file deltas between branches
-- [ ] Set up persistent storage
-- [ ] For each patch, store the commit ID and the patch number in a local file
+### `npm run dev`
 
-### Headless server
+Runs the app in the development mode.<br>
+Open [http://localhost:5173](http://localhost:5173) to view it in the browser.
 
-- [ ] Set up a server
-- [ ] Add a REST API to integrate with the core
+### `npm run build`
 
-### VSCode plugin
+Builds the app for production to the `dist` folder.<br>
+It correctly bundles Solid in production mode and optimizes the build for the best performance.
 
-- [ ] Add GitLab/GitHub agnostic layer
-- [ ] Get the current PR number
-- [ ] Show diff for the current patch
-- [ ] Checkout a specific patch
-- [ ] Comment on file
+The build is minified and the filenames include the hashes.<br>
+Your app is ready to be deployed!
 
-### IntelliJ plugin
+## Deployment
 
-- [ ] Add GitLab/GitHub agnostic layer
-- [ ] Get the current PR number
-- [ ] Show diff for the current patch
-- [ ] Checkout a specific patch
-- [ ] Comment on file
-
-### Web UI
-
-- [ ] Authentication
-- [ ] Store user credentials
-- [ ] Render diffs
-- [ ] Comment on file
+Learn more about deploying your application with the [documentations](https://vite.dev/guide/static-deploy.html)
