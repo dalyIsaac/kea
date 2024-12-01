@@ -3,6 +3,8 @@ import "./App.css";
 import { makePersisted } from "@solid-primitives/storage";
 import { createQuery } from "@tanstack/solid-query";
 import { MonacoDiffEditor } from "./editor/MonacoDiffEditor";
+import { useParams } from "@solidjs/router";
+import { PullRequestPathParams } from "./routes";
 
 const [api, setApi] = makePersisted(createSignal("https://api.github.com"), {
   storage: localStorage,
@@ -12,18 +14,15 @@ const [personalAccessToken, setPersonalAccessToken] = makePersisted(
   { storage: localStorage }
 );
 
-const [repository, setRepository] = makePersisted(
-  createSignal("microsoft/playwright")
-);
-const [pullRequest, setPullRequest] = makePersisted(createSignal(33645));
-
 function App() {
+  const params = useParams<PullRequestPathParams>();
+
   const pullRequestDetailsQuery = createQuery(() => ({
     enabled: !!personalAccessToken(),
-    queryKey: ["pullRequestDetails", repository(), pullRequest()],
+    queryKey: ["pullRequestDetails", params.repo, params.owner, params.pull],
     queryFn: async () => {
       const response = await fetch(
-        `${api()}/repos/${repository()}/pulls/${pullRequest()}`,
+        `${api()}/repos/${params.owner}/${params.repo}/pulls/${params.pull}`,
         {
           headers: {
             Authorization: `token ${personalAccessToken()}`,
@@ -38,10 +37,12 @@ function App() {
 
   const pullRequestFilesQuery = createQuery(() => ({
     enabled: !!personalAccessToken(),
-    queryKey: ["pullRequestFiles", repository(), pullRequest()],
+    queryKey: ["pullRequestFiles", params.repo, params.pull],
     queryFn: async () => {
       const response = await fetch(
-        `${api()}/repos/${repository()}/pulls/${pullRequest()}/files`,
+        `${api()}/repos/${params.owner}/${params.repo}/pulls/${
+          params.pull
+        }/files`,
         {
           headers: {
             Authorization: `token ${personalAccessToken()}`,
@@ -60,7 +61,7 @@ function App() {
       !!personalAccessToken() &&
       !!pullRequestFilesQuery.data &&
       !!pullRequestDetailsQuery.data,
-    queryKey: ["firstFileBlob", repository(), pullRequest()],
+    queryKey: ["firstFileBlob", params.repo, params.pull],
     queryFn: async () => {
       const files = pullRequestFilesQuery.data;
       const firstFile = files[0];
@@ -69,9 +70,9 @@ function App() {
       // Get both modified and original content
       const [modifiedResponse, originalResponse] = await Promise.all([
         fetch(
-          `${api()}/repos/${repository()}/contents/${firstFile.filename}?ref=${
-            prDetails.head.sha
-          }`,
+          `${api()}/repos/${params.owner}/${params.repo}/contents/${
+            firstFile.filename
+          }?ref=${prDetails.head.sha}`,
           {
             headers: {
               Authorization: `token ${personalAccessToken()}`,
@@ -80,9 +81,9 @@ function App() {
           }
         ),
         fetch(
-          `${api()}/repos/${repository()}/contents/${firstFile.filename}?ref=${
-            prDetails.base.sha
-          }`,
+          `${api()}/repos/${params.owner}/${params.repo}/contents/${
+            firstFile.filename
+          }?ref=${prDetails.base.sha}`,
           {
             headers: {
               Authorization: `token ${personalAccessToken()}`,
@@ -121,40 +122,6 @@ function App() {
         onInput={(e) => setPersonalAccessToken(e.currentTarget.value)}
       />
 
-      <label for="repository">Repository</label>
-      <input
-        id="repository"
-        type="text"
-        value={repository()}
-        onInput={(e) => setRepository(e.currentTarget.value)}
-      />
-
-      <label for="pullRequest">Pull Request</label>
-      <input
-        id="pullRequest"
-        type="number"
-        value={pullRequest()}
-        onInput={(e) => setPullRequest(e.currentTarget.valueAsNumber)}
-      />
-
-      {/* <ErrorBoundary
-        fallback={(error) => (
-          <div>
-            <h1>Something went wrong</h1>
-            <pre>{error.message}</pre>
-          </div>
-        )}
-      >
-        <Suspense fallback={<div>Loading...</div>}>
-          <ul>
-            {repositoryQuery.data?.map((repo: any) => (
-              <li>{repo.full_name}</li>
-            ))}
-          </ul>
-        </Suspense>
-      </ErrorBoundary> */}
-
-      {/* The files */}
       <ErrorBoundary
         fallback={(error) => (
           <div>
