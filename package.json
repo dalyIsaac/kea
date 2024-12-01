@@ -10,8 +10,10 @@
     "format": "prettier --write ."
   },
   "dependencies": {
+    "@monaco-editor/loader": "^1.4.0",
     "@solid-primitives/storage": "^4.2.1",
     "@tanstack/solid-query": "^5.62.0",
+    "monaco-editor": "^0.52.0",
     "solid-js": "^1.9.3"
   },
   "devDependencies": {
