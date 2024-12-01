@@ -1,28 +1,16 @@
-## Usage
+# kea
 
-```bash
-$ npm install # or pnpm install or yarn install
-```
+![Kea logo](./public/kea.png)
 
-### Learn more on the [Solid Website](https://solidjs.com) and come chat with us on our [Discord](https://discord.com/invite/solidjs)
+## MVP
 
-## Available Scripts
+- [ ] Route to PR based on URL
+- [ ] Display files in PR
+- [ ] Comment on lines in PR
+- [ ] Suggestions on PR
+- [ ] Show comments on PR
 
-In the project directory, you can run:
+## Follow-on features
 
-### `npm run dev`
-
-Runs the app in the development mode.<br>
-Open [http://localhost:5173](http://localhost:5173) to view it in the browser.
-
-### `npm run build`
-
-Builds the app for production to the `dist` folder.<br>
-It correctly bundles Solid in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.<br>
-Your app is ready to be deployed!
-
-## Deployment
-
-Learn more about deploying your application with the [documentations](https://vite.dev/guide/static-deploy.html)
+- [ ] Add GitLab interface
+- [ ] Add suggestions by inline editing
