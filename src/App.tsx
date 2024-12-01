@@ -2,32 +2,35 @@ import { createSignal } from "solid-js";
 import solidLogo from "./assets/solid.svg";
 import viteLogo from "/vite.svg";
 import "./App.css";
+import { makePersisted } from "@solid-primitives/storage";
+
+const [api, setApi] = makePersisted(createSignal("https://api.github.com"), {
+  storage: localStorage,
+});
 
 function App() {
-  const [count, setCount] = createSignal(0);
-
   return (
     <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} class="logo" alt="Vite logo" />
-        </a>
-        <a href="https://solidjs.com" target="_blank">
-          <img src={solidLogo} class="logo solid" alt="Solid logo" />
-        </a>
-      </div>
-      <h1>Vite + Solid</h1>
-      <div class="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count()}
-        </button>
+      <header class="App-header">
+        <img src={solidLogo} class="App-logo" alt="logo" />
+        <img src={viteLogo} class="App-logo" alt="logo" />
         <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
+          Edit <code>src/App.tsx</code> and save to reload.
         </p>
-      </div>
-      <p class="read-the-docs">
-        Click on the Vite and Solid logos to learn more
-      </p>
+        <input
+          type="text"
+          value={api()}
+          onInput={(e) => setApi(e.currentTarget.value)}
+        />
+        <a
+          class="App-link"
+          href={api()}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Learn Solid
+        </a>
+      </header>
     </>
   );
 }
