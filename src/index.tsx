@@ -1,4 +1,8 @@
 /* @refresh reload */
+// @ts-expect-error It's a font.
+import "@fontsource/inter";
+import "./index.css";
+
 import { render } from "solid-js/web";
 import { QueryClient, QueryClientProvider } from "@tanstack/solid-query";
 import { Router } from "@solidjs/router";

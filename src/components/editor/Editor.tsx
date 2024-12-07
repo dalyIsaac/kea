@@ -1,6 +1,9 @@
 import { Component } from "solid-js";
-import { PullRequestPathParams } from "../routes";
-import { createFileBlobQuery, createPullRequestDetailsQuery } from "../queries";
+import { PullRequestPathParams } from "../../routes";
+import {
+  createFileBlobQuery,
+  createPullRequestDetailsQuery,
+} from "../../queries";
 import { MonacoDiffEditor } from "./MonacoDiffEditor";
 
 export const Editor: Component<{ params: PullRequestPathParams }> = (props) => {

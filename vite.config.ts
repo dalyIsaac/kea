@@ -1,12 +1,7 @@
-import path from "node:path";
 import { defineConfig } from "vite";
 import solid from "vite-plugin-solid";
+import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
-  plugins: [solid()],
-  resolve: {
-    alias: {
-      "~": path.resolve(__dirname, "./src"),
-    },
-  },
+  plugins: [solid(), tsconfigPaths()],
 });
