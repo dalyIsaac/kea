@@ -17,5 +17,5 @@ render(
       <Router>{routes}</Router>
     </QueryClientProvider>
   ),
-  root!
+  root!,
 );

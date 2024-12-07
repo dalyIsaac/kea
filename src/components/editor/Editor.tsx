@@ -11,13 +11,13 @@ export const Editor: Component<{ params: PullRequestPathParams }> = (props) => {
   const originalFileBlobQuery = createFileBlobQuery(
     props.params,
     pullRequestDetailsQuery.data?.data.head.sha,
-    pullRequestDetailsQuery.data?.data.head.repo?.full_name
+    pullRequestDetailsQuery.data?.data.head.repo?.full_name,
   );
 
   const modifiedFileBlobQuery = createFileBlobQuery(
     props.params,
     pullRequestDetailsQuery.data?.data.base.sha,
-    pullRequestDetailsQuery.data?.data.base.repo?.full_name
+    pullRequestDetailsQuery.data?.data.base.repo?.full_name,
   );
 
   return (

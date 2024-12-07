@@ -1,6 +1,7 @@
 import { Component, ErrorBoundary, Suspense } from "solid-js";
-import { PullRequestPathParams } from "./routes";
-import { createPullRequestFilesQuery } from "./queries";
+import { createPullRequestFilesQuery } from "~/queries";
+import { PullRequestPathParams } from "~/routes";
+import { FileTree } from "~/components/common/file-tree";
 
 export const Files: Component<{ params: PullRequestPathParams }> = (props) => {
   const pullRequestFilesQuery = createPullRequestFilesQuery(props.params);
@@ -14,11 +15,7 @@ export const Files: Component<{ params: PullRequestPathParams }> = (props) => {
       )}
     >
       <Suspense fallback={<div>Loading...</div>}>
-        <ul>
-          {pullRequestFilesQuery.data?.data.map((file) => (
-            <li>{file.filename}</li>
-          ))}
-        </ul>
+        <FileTree files={pullRequestFilesQuery.data?.data || []} />
       </Suspense>
     </ErrorBoundary>
   );

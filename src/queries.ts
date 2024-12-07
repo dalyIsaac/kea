@@ -1,12 +1,12 @@
 import { createQuery, skipToken } from "@tanstack/solid-query";
 import { PullRequestPathParams } from "./routes";
-import { Octokit } from "octokit";
+import { Octokit } from "@octokit/rest";
 import { createSignal } from "solid-js";
 import { makePersisted } from "@solid-primitives/storage";
 
 export const [personalAccessToken, setPersonalAccessToken] = makePersisted(
   createSignal(""),
-  { storage: localStorage }
+  { storage: localStorage },
 );
 
 const [octokit, setOctokit] = createSignal<Octokit>(new Octokit());
@@ -43,7 +43,7 @@ export const createPullRequestFilesQuery = (params: PullRequestPathParams) =>
 export const createFileBlobQuery = (
   params: PullRequestPathParams,
   sha: string | undefined,
-  path: string | undefined
+  path: string | undefined,
 ) =>
   createQuery(() => ({
     enabled: !!octokit() && !!sha && !!path,
