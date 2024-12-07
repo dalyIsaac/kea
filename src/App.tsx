@@ -1,4 +1,3 @@
-import "./App.css";
 import { useParams } from "@solidjs/router";
 import { PullRequestPathParams } from "./routes";
 import { Files } from "./Files";
