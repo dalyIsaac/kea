@@ -14,7 +14,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "~/components/shadcn/tabs";
-import { Files } from "~/components/widgets/files";
+import { Files } from "~/components/common/files";
 
 export const PullRequest: Component = () => {
   const params = useParams<PullRequestPathParams>();

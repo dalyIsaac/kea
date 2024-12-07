@@ -7,7 +7,7 @@
     "prefix": ""
   },
   "aliases": {
-    "components": "~/components/ui",
-    "utils": "~/lib/utils"
+    "components": "src/components/shadcn",
+    "utils": "src/utils"
   }
 }

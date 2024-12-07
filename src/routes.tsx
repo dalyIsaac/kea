@@ -1,10 +1,18 @@
 import { Params, RouteDefinition } from "@solidjs/router";
-import App from "./App";
+import { Commit } from "./routes/commit";
+import { PullRequest } from "./routes/pull-request";
+import { Page } from "./components/common/page";
 
 export interface PullRequestPathParams extends Params {
   owner: string;
   repo: string;
   pull: string;
+}
+
+export interface CommitPathParams extends Params {
+  owner: string;
+  repo: string;
+  commit: string;
 }
 
 export const routes: RouteDefinition[] = [
@@ -14,11 +22,30 @@ export const routes: RouteDefinition[] = [
   },
   {
     path: "/:owner/:repo/pull/:pull",
-    component: () => <App />,
+    component: () => (
+      <Page>
+        <PullRequest />
+      </Page>
+    ),
     matchFilters: {
-      owner: /^[a-z0-9-]+$/,
-      repo: /^[a-z0-9-]+$/,
       pull: /^\d+$/,
     },
+  },
+  {
+    path: "/:owner/:repo/commit/:commit",
+    component: () => (
+      <Page>
+        <Commit />
+      </Page>
+    ),
+    matchFilters: {
+      commit: /^[a-f0-9]+$/,
+    },
+  },
+
+  // 404
+  {
+    path: "*",
+    component: () => <div>404</div>,
   },
 ];

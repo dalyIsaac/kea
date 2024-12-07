@@ -6,7 +6,7 @@
 
 ### Stage 1: Commits
 
-- [ ] Route to commit based on URL
+- [x] Route to commit based on URL
 - [ ] Display diffs between arbitrary commits
 - [ ] Comment on line in a commit
 - [ ] Suggestions on lines in a commit
