@@ -4,7 +4,7 @@
 
 ## MVP
 
-- [ ] Route to PR based on URL
+- [x] Route to PR based on URL
 - [ ] Display files in PR
 - [ ] Comment on lines in PR
 - [ ] Suggestions on PR
