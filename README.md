@@ -1,16 +1,33 @@
-# kea
+<img src="./public/kea.png" width="200" height="200" alt="Kea logo">
 
-![Kea logo](./public/kea.png)
+# Kea
 
-## MVP
+## Plan
+
+### Stage 1: Commits
+
+- [ ] Route to commit based on URL
+- [ ] Display diffs between arbitrary commits
+- [ ] Comment on line in a commit
+- [ ] Suggestions on lines in a commit
+- [ ] Show comments on a commit
+
+### Stage 2: Pull Requests
 
 - [x] Route to PR based on URL
-- [ ] Display files in PR
-- [ ] Comment on lines in PR
-- [ ] Suggestions on PR
-- [ ] Show comments on PR
+- [ ] Display diffs for a PR
+- [ ] Display diffs for a commit in a PR
+- [ ] Comment on line in a PR
+- [ ] Add suggestions on lines in a PR
+- [ ] Show comments on a PR
+- [ ] Show comments on a commit in a PR
 
-## Follow-on features
+### Stage 3: Better diffs
 
-- [ ] Add GitLab interface
+- [ ] Show diffs between commits while ignoring merge commits to the main branch
+
+### Stage 5: Extensibility
+
+- [ ] GitLab interface
 - [ ] Add suggestions by inline editing
+- [ ] Flexible widget system
