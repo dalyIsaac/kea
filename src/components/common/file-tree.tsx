@@ -35,29 +35,25 @@ interface TreeNode {
 const createTree = (files: File[]): TreeNode[] => {
   const tree: TreeNode[] = [];
 
+  let currentNodes = tree;
+
   for (const file of files) {
-    const parts = file.filename.split("/");
-    let node = tree.find((node) => node.name === parts[0]);
+    const path = file.filename.split("/");
+    const fileName = path.pop() as string;
 
-    if (node === undefined) {
-      node = { name: parts[0], children: [] };
-      tree.push(node);
-    }
+    for (const dir of path) {
+      let node = currentNodes.find((node) => node.name === dir);
 
-    for (let i = 1; i < parts.length; i++) {
-      let child: TreeNode | undefined = node.children.find(
-        (child) => child.name === parts[i],
-      );
-
-      if (child === undefined) {
-        child = { name: parts[i], children: [] };
-        node.children.push(child);
+      if (node === undefined) {
+        node = { name: dir, children: [], file: undefined };
+        currentNodes.push(node);
       }
 
-      node = child;
+      currentNodes = node.children;
     }
 
-    node.file = file;
+    currentNodes.push({ name: fileName, file, children: [] });
+    currentNodes = tree;
   }
 
   return tree;
