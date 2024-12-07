@@ -3,13 +3,13 @@ import { Commit } from "./routes/commit";
 import { PullRequest } from "./routes/pull-request";
 import { Page } from "./components/common/page";
 
-export interface PullRequestPathParams extends Params {
+export interface PullRequestRouteParams extends Params {
   owner: string;
   repo: string;
   pull: string;
 }
 
-export interface CommitPathParams extends Params {
+export interface CommitRouteParams extends Params {
   owner: string;
   repo: string;
   commit: string;

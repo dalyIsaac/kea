@@ -1,5 +1,5 @@
 import { createQuery, skipToken } from "@tanstack/solid-query";
-import { PullRequestPathParams } from "./routes";
+import { CommitRouteParams, PullRequestRouteParams } from "./routes";
 import { Octokit } from "@octokit/rest";
 import { createSignal } from "solid-js";
 import { makePersisted } from "@solid-primitives/storage";
@@ -16,7 +16,7 @@ export const setApi = (personalAccessToken: string) => {
   setOctokit(new Octokit({ auth: personalAccessToken }));
 };
 
-export const createPullRequestDetailsQuery = (params: PullRequestPathParams) =>
+export const createPullRequestDetailsQuery = (params: PullRequestRouteParams) =>
   createQuery(() => ({
     enabled: !!octokit(),
     queryKey: ["pullRequestDetails", params.repo, params.pull],
@@ -28,7 +28,7 @@ export const createPullRequestDetailsQuery = (params: PullRequestPathParams) =>
       }),
   }));
 
-export const createPullRequestFilesQuery = (params: PullRequestPathParams) =>
+export const createPullRequestFilesQuery = (params: PullRequestRouteParams) =>
   createQuery(() => ({
     enabled: !!octokit(),
     queryKey: ["pullRequestFiles", params.repo, params.pull],
@@ -40,8 +40,20 @@ export const createPullRequestFilesQuery = (params: PullRequestPathParams) =>
       }),
   }));
 
+export const createCommitQuery = (params: CommitRouteParams, ref: string) =>
+  createQuery(() => ({
+    enabled: !!octokit(),
+    queryKey: ["commitFiles", params.repo, ref],
+    queryFn: () =>
+      octokit().rest.repos.getCommit({
+        owner: params.owner,
+        repo: params.repo,
+        ref: ref,
+      }),
+  }));
+
 export const createFileBlobQuery = (
-  params: PullRequestPathParams,
+  params: PullRequestRouteParams,
   sha: string | undefined,
   path: string | undefined,
 ) =>

@@ -5,7 +5,11 @@ import { File } from "~/types";
 export const FileTree: Component<{ files: File[] }> = (props) => {
   const tree = createMemo(() => createTree(props.files));
 
-  return <For each={tree()}>{(node) => <FileNode node={node} />}</For>;
+  return (
+    <ul>
+      <For each={tree()}>{(node) => <FileNode node={node} />}</For>
+    </ul>
+  );
 };
 
 const FileNode: Component<{ node: TreeNode }> = (props) => {
