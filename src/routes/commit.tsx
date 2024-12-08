@@ -3,7 +3,7 @@ import { SolidQueryDevtools } from "@tanstack/solid-query-devtools";
 import { Component, createEffect, createSignal, Show } from "solid-js";
 import { FileTree } from "~/components/common/file-tree";
 import { Page } from "~/components/common/page";
-import { MonacoDiffEditor } from "~/components/editor/MonacoDiffEditor";
+import { MonacoDiffEditor } from "~/components/editor/monaco-diff-editor";
 import {
   ComboboxContent,
   ComboboxControl,
@@ -82,6 +82,9 @@ const Commit: Component = () => {
           <MonacoDiffEditor
             original={parentFileContentQuery.data ?? ""}
             modified={modifiedFileContentQuery.data ?? ""}
+            options={{
+              readOnly: true,
+            }}
           />
         </Show>
       </div>

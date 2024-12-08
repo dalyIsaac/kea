@@ -16,7 +16,7 @@
 ### Stage 2: Pull Requests
 
 - [x] Route to PR based on URL
-- [x] Display files in a PR
+- [ ] Display files in a PR
 - [ ] Display diffs for a PR
 - [ ] Display diffs for a commit in a PR
 - [ ] Comment on line in a PR

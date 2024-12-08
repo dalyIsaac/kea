@@ -103,9 +103,6 @@ export const createFileContentQuery = (
             path: p,
           })
           .then((res) => getStringContent(res.data))
-          .catch((e) => {
-            console.error(e);
-            return "";
-          }),
+          .catch(() => ""),
     };
   });
