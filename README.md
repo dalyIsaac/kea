@@ -8,7 +8,7 @@
 
 - [x] Route to commit based on URL
 - [x] Display files in a commit
-- [ ] Display diffs between arbitrary commits
+- [x] Display diffs between arbitrary commits
 - [ ] Comment on line in a commit
 - [ ] Suggestions on lines in a commit
 - [ ] Show comments on a commit

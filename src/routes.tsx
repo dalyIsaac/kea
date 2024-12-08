@@ -1,18 +1,21 @@
 import { Params, RouteDefinition } from "@solidjs/router";
-import { Commit } from "./routes/commit";
-import { PullRequest } from "./routes/pull-request";
-import { Page } from "./components/common/page";
+import { lazy } from "solid-js";
 
-export interface PullRequestRouteParams extends Params {
+export interface RepoRoute {
   owner: string;
   repo: string;
+}
+
+export interface PullRequestRouteParams extends Params, RepoRoute {
   pull: string;
 }
 
-export interface CommitRouteParams extends Params {
-  owner: string;
-  repo: string;
+export interface CommitRouteParams extends Params, RepoRoute {
   commit: string;
+}
+
+export interface CommiteRouteFileParams extends CommitRouteParams {
+  file: string;
 }
 
 export const routes: RouteDefinition[] = [
@@ -21,23 +24,19 @@ export const routes: RouteDefinition[] = [
     component: () => <div>Home</div>,
   },
   {
+    path: "/settings",
+    component: lazy(() => import("./routes/settings")),
+  },
+  {
     path: "/:owner/:repo/pull/:pull",
-    component: () => (
-      <Page>
-        <PullRequest />
-      </Page>
-    ),
+    component: lazy(() => import("./routes/pull-request")),
     matchFilters: {
       pull: /^\d+$/,
     },
   },
   {
-    path: "/:owner/:repo/commit/:commit",
-    component: () => (
-      <Page>
-        <Commit />
-      </Page>
-    ),
+    path: "/:owner/:repo/commit/:commit/*file",
+    component: lazy(() => import("./routes/commit")),
     matchFilters: {
       commit: /^[a-f0-9]+$/,
     },

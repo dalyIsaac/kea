@@ -17,7 +17,7 @@ const FileNode: Component<{ node: TreeNode }> = (props) => {
     <li class="ml-4 list-none">
       <Switch fallback={<p class="font-bold">{props.node.name}</p>}>
         <Match when={props.node.file}>
-          <A href={`TODO`}>{props.node.name}</A>
+          <A href={props.node.path}>{props.node.name}</A>
         </Match>
       </Switch>
 
@@ -32,6 +32,7 @@ const FileNode: Component<{ node: TreeNode }> = (props) => {
 
 interface TreeNode {
   name: string;
+  path: string;
   file?: File;
   children: TreeNode[];
 }
@@ -49,14 +50,24 @@ const createTree = (files: File[]): TreeNode[] => {
       let node = currentNodes.find((node) => node.name === dir);
 
       if (node === undefined) {
-        node = { name: dir, children: [], file: undefined };
+        node = {
+          name: dir,
+          children: [],
+          path: path.join("/") + "/" + dir,
+          file: undefined,
+        };
         currentNodes.push(node);
       }
 
       currentNodes = node.children;
     }
 
-    currentNodes.push({ name: fileName, file, children: [] });
+    currentNodes.push({
+      name: fileName,
+      file,
+      path: file.filename,
+      children: [],
+    });
     currentNodes = tree;
   }
 

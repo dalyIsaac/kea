@@ -9,22 +9,35 @@ import {
 } from "~/components/shadcn/tabs";
 import { FileTree } from "~/components/common/file-tree";
 import { createPullRequestFilesQuery } from "~/queries";
+import { Page } from "~/components/common/page";
 
-export const PullRequest: Component = () => {
+const PullRequest: Component = () => {
   const params = useParams<PullRequestRouteParams>();
-  const filesQuery = createPullRequestFilesQuery(params);
+  const paramsFn = () => params;
+  const filesQuery = createPullRequestFilesQuery(paramsFn);
 
   return (
-    <Tabs defaultValue="files" class="w-60">
-      <TabsList class="grid w-full grid-cols-2">
-        <TabsTrigger value="files">Files</TabsTrigger>
-        <TabsTrigger value="timeline">Timeline </TabsTrigger>
-      </TabsList>
+    <div class="flex gap-2">
+      <Tabs defaultValue="files" class="w-60">
+        <TabsList class="grid w-full grid-cols-2">
+          <TabsTrigger value="files">Files</TabsTrigger>
+          <TabsTrigger value="timeline">Timeline </TabsTrigger>
+        </TabsList>
 
-      <TabsContent value="files">
-        <FileTree files={filesQuery.data?.data ?? []} />
-      </TabsContent>
-      <TabsContent value="timeline">Timeline Tab</TabsContent>
-    </Tabs>
+        <TabsContent value="files">
+          <FileTree files={filesQuery.data?.data ?? []} />
+        </TabsContent>
+        <TabsContent value="timeline">Timeline Tab</TabsContent>
+      </Tabs>
+      Pull request information goes here
+    </div>
   );
 };
+
+const PullRequestRoute = () => (
+  <Page>
+    <PullRequest />
+  </Page>
+);
+
+export default PullRequestRoute;
