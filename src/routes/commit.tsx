@@ -80,8 +80,8 @@ const Commit: Component = () => {
 
         <Show when={file()} fallback={<div>Select a file</div>}>
           <MonacoDiffEditor
-            original={parentFileContentQuery.data ?? ""}
-            modified={modifiedFileContentQuery.data ?? ""}
+            original={parentFileContentQuery.data}
+            modified={modifiedFileContentQuery.data}
             options={{
               readOnly: true,
             }}

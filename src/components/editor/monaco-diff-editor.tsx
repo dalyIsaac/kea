@@ -11,12 +11,13 @@ import * as monacoEditor from "monaco-editor";
 import loader, { Monaco } from "@monaco-editor/loader";
 import { getOrCreateModel } from "./utils";
 import { LoaderParams } from "./types";
+import { createEditor } from "./create-editor";
 
 const viewStates = new Map();
 
 export interface MonacoDiffEditorProps {
-  original?: string;
-  modified?: string;
+  original?: string | undefined;
+  modified?: string | undefined;
 
   originalLanguage?: string;
   modifiedLanguage?: string;
@@ -28,8 +29,6 @@ export interface MonacoDiffEditorProps {
   class?: string;
   theme?: monacoEditor.editor.BuiltinTheme | string;
   overrideServices?: monacoEditor.editor.IEditorOverrideServices;
-  width?: string;
-  height?: string;
   options?: monacoEditor.editor.IStandaloneEditorConstructionOptions;
   saveViewState?: boolean;
   loaderParams?: LoaderParams;
@@ -48,8 +47,6 @@ export const MonacoDiffEditor = (inputProps: MonacoDiffEditorProps) => {
   const props = mergeProps(
     {
       theme: "vs",
-      width: "100%",
-      height: "100%",
       loadingState: "Loading…",
       saveViewState: true,
     },
@@ -74,7 +71,8 @@ export const MonacoDiffEditor = (inputProps: MonacoDiffEditorProps) => {
 
     try {
       const monaco = await loadMonaco;
-      const editor = createEditor(monaco);
+      const editor = createEditor(props, monaco, containerRef);
+
       setMonaco(monaco);
       setEditor(editor);
       props.onMount?.(monaco, editor);
@@ -271,37 +269,6 @@ export const MonacoDiffEditor = (inputProps: MonacoDiffEditorProps) => {
       { defer: true },
     ),
   );
-
-  const createEditor = (monaco: Monaco) => {
-    const originalModel = getOrCreateModel(
-      monaco,
-      props.original ?? "",
-      props.originalLanguage,
-      props.originalPath,
-    );
-    const modifiedModel = getOrCreateModel(
-      monaco,
-      props.modified ?? "",
-      props.modifiedLanguage,
-      props.modifiedPath,
-    );
-
-    const editor = monaco.editor.createDiffEditor(
-      containerRef,
-      {
-        automaticLayout: true,
-        ...props.options,
-      },
-      props.overrideServices,
-    );
-
-    editor.setModel({
-      original: originalModel,
-      modified: modifiedModel,
-    });
-
-    return editor;
-  };
 
   return (
     <div class="flex h-full w-full">
