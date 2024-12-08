@@ -9,8 +9,6 @@ import {
 } from "solid-js";
 import * as monacoEditor from "monaco-editor";
 import loader, { Monaco } from "@monaco-editor/loader";
-import { Loader } from "./Loader";
-import { MonacoContainer } from "./MonacoContainer";
 import { getOrCreateModel } from "./utils";
 import { LoaderParams } from "./types";
 
@@ -306,13 +304,14 @@ export const MonacoDiffEditor = (inputProps: MonacoDiffEditorProps) => {
   };
 
   return (
-    <MonacoContainer
-      class={props.class}
-      width={props.width}
-      height={props.height}
-    >
-      {!editor() && <Loader>{props.loadingState}</Loader>}
-      <div style={{ width: "100%" }} ref={containerRef!} />
-    </MonacoContainer>
+    <div class="flex h-full w-full">
+      {!editor() && (
+        <div class="flex h-full w-full items-center justify-center">
+          {props.loadingState}
+        </div>
+      )}
+
+      <div class="h-full w-full" ref={containerRef!} />
+    </div>
   );
 };
