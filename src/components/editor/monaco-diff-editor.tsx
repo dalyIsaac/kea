@@ -1,5 +1,4 @@
 import {
-  createSignal,
   createEffect,
   onCleanup,
   JSX,
@@ -9,9 +8,14 @@ import {
 } from "solid-js";
 import * as monacoEditor from "monaco-editor";
 import loader, { Monaco } from "@monaco-editor/loader";
-import { getOrCreateModel } from "./utils";
 import { LoaderParams } from "./types";
-import { createEditor } from "./create-editor";
+import {
+  createEditor,
+  getOrCreateModel,
+  editor,
+  monaco,
+  setMonaco,
+} from "./utils";
 
 const viewStates = new Map();
 
@@ -27,6 +31,7 @@ export interface MonacoDiffEditorProps {
 
   loadingState?: JSX.Element;
   class?: string;
+  theme2?: Monaco;
   theme?: monacoEditor.editor.BuiltinTheme | string;
   overrideServices?: monacoEditor.editor.IEditorOverrideServices;
   options?: monacoEditor.editor.IStandaloneEditorConstructionOptions;
@@ -55,10 +60,6 @@ export const MonacoDiffEditor = (inputProps: MonacoDiffEditorProps) => {
 
   let containerRef: HTMLDivElement;
 
-  const [monaco, setMonaco] = createSignal<Monaco>();
-  const [editor, setEditor] =
-    createSignal<monacoEditor.editor.IStandaloneDiffEditor>();
-
   let abortInitialization: (() => void) | undefined;
   let monacoOnChangeSubscription: any;
   let isOnChangeSuppressed = false;
@@ -74,7 +75,6 @@ export const MonacoDiffEditor = (inputProps: MonacoDiffEditorProps) => {
       const editor = createEditor(props, monaco, containerRef);
 
       setMonaco(monaco);
-      setEditor(editor);
       props.onMount?.(monaco, editor);
 
       monacoOnChangeSubscription = editor.onDidUpdateDiff(() => {
@@ -82,6 +82,17 @@ export const MonacoDiffEditor = (inputProps: MonacoDiffEditorProps) => {
           props.onChange?.(editor.getModifiedEditor().getValue());
         }
       });
+
+      editor.createDecorationsCollection([
+        {
+          range: new monaco.Range(3, 1, 3, 1),
+          options: {
+            isWholeLine: true,
+            className: "bg-pink-400",
+            glyphMarginClassName: "bg-blue-400",
+          },
+        },
+      ]);
     } catch (error: any) {
       if (error?.type === "cancelation") {
         return;
@@ -93,7 +104,7 @@ export const MonacoDiffEditor = (inputProps: MonacoDiffEditorProps) => {
 
   onCleanup(() => {
     const _editor = editor();
-    if (!_editor) {
+    if (_editor === undefined) {
       abortInitialization?.();
       return;
     }

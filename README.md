@@ -11,6 +11,7 @@
 - [x] Display diffs between arbitrary commits
 - [ ] Comment on line in a commit
 - [ ] Suggestions on lines in a commit
+- [ ] Handle moved files
 - [ ] Show comments on a commit
 
 ### Stage 2: Pull Requests
