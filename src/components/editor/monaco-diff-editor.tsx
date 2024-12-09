@@ -82,17 +82,6 @@ export const MonacoDiffEditor = (inputProps: MonacoDiffEditorProps) => {
           props.onChange?.(editor.getModifiedEditor().getValue());
         }
       });
-
-      editor.createDecorationsCollection([
-        {
-          range: new monaco.Range(3, 1, 3, 1),
-          options: {
-            isWholeLine: true,
-            className: "bg-pink-400",
-            glyphMarginClassName: "bg-blue-400",
-          },
-        },
-      ]);
     } catch (error: any) {
       if (error?.type === "cancelation") {
         return;

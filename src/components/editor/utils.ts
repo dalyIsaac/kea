@@ -67,7 +67,18 @@ export const createEditor = (
   });
 
   setEditor(editor);
-  setDecorationsCollection(editor.createDecorationsCollection());
+  setDecorationsCollection(
+    editor.createDecorationsCollection([
+      {
+        range: new monaco.Range(3, 1, 3, 1),
+        options: {
+          isWholeLine: true,
+          className: "bg-pink-400",
+          glyphMarginClassName: "bg-blue-400",
+        },
+      },
+    ]),
+  );
 
   return editor;
 };
