@@ -7,21 +7,23 @@
 ### Stage 1: Commits
 
 - [x] Route to commit based on URL
-- [x] Display files in a commit
+- [x] Display files
 - [x] Display diffs between arbitrary commits
-- [ ] Comment on line in a commit
-- [ ] Suggestions on lines in a commit
+- [ ] Show comments on a line
+- [ ] Show comments on a range of lines
+- [ ] Comment on lines
+- [ ] Add suggestions on lines
 - [ ] Handle moved files
-- [ ] Show comments on a commit
+- [ ] Copy link to a line
 
 ### Stage 2: Pull Requests
 
 - [x] Route to PR based on URL
-- [ ] Display files in a PR
+- [ ] Display files
 - [ ] Display diffs for a PR
 - [ ] Display diffs for a commit in a PR
-- [ ] Comment on line in a PR
-- [ ] Add suggestions on lines in a PR
+- [ ] Comment on lines
+- [ ] Add suggestions on lines
 - [ ] Show comments on a PR
 - [ ] Show comments on a commit in a PR
 
