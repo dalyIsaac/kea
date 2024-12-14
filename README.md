@@ -36,3 +36,7 @@
 - [ ] GitLab interface
 - [ ] Add suggestions by inline editing
 - [ ] Flexible widget system
+
+## Notes
+
+- A backend is necessary - commit comments requires a hunk position, and hunks can only be provided for the entire commit.

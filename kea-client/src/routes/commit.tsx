@@ -14,7 +14,11 @@ import {
   Combobox,
   ComboboxTrigger,
 } from "~/components/shadcn/combobox";
-import { createCommitQuery, createFileContentQuery } from "~/queries";
+import {
+  createCommitCommentsQuery,
+  createCommitQuery,
+  createFileContentQuery,
+} from "~/queries";
 import { CommiteRouteFileParams, CommitRouteParams } from "~/routes";
 
 const Commit: Component = () => {
@@ -24,18 +28,15 @@ const Commit: Component = () => {
   const file = (): string | undefined => params.file;
 
   const commitQuery = createCommitQuery(paramsFn, commit);
-
-  const allParents = () =>
+  const commitParents = () =>
     commitQuery.data?.data.parents.map((parent) => parent.sha) ?? [];
-
   const [parentSha, setParent] = createSignal("");
 
   createEffect(() => {
     if (parentSha() !== "") {
       return;
     }
-
-    const parents = allParents();
+    const parents = commitParents();
     if (parents.length === 1) {
       setParent(parents[0]);
     }
@@ -52,6 +53,12 @@ const Commit: Component = () => {
     file,
   );
 
+  const commitCommentsQuery = createCommitCommentsQuery(paramsFn);
+
+  createEffect(() => {
+    console.log(commitCommentsQuery.data);
+  });
+
   return (
     <div class="flex gap-2">
       <SolidQueryDevtools initialIsOpen />
@@ -60,7 +67,7 @@ const Commit: Component = () => {
 
       <div class="flex w-full flex-col">
         <Combobox
-          options={allParents()}
+          options={commitParents()}
           placeholder="Select parent..."
           value={parentSha()}
           itemComponent={(props) => (

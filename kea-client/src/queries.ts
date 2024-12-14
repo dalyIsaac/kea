@@ -1,4 +1,4 @@
-import { createQuery, skipToken } from "@tanstack/solid-query";
+import { createQuery } from "@tanstack/solid-query";
 import { CommitRouteParams, PullRequestRouteParams, RepoRoute } from "./routes";
 import { Octokit } from "@octokit/rest";
 import { createSignal } from "solid-js";
@@ -106,3 +106,19 @@ export const createFileContentQuery = (
           .catch(() => ""),
     };
   });
+
+export const createCommitCommentsQuery = (params: Fn<CommitRouteParams>) =>
+  createQuery(() => ({
+    queryKey: [
+      "commitComments",
+      params().owner,
+      params().repo,
+      params().commit,
+    ],
+    queryFn: () =>
+      octokit().rest.repos.listCommentsForCommit({
+        owner: params().owner,
+        repo: params().repo,
+        commit_sha: params().commit,
+      }),
+  }));
