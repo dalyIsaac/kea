@@ -5,4 +5,5 @@ edition = "2021"
 
 [dependencies]
 axum = "0.7.9"
+octocrab = "0.42.1"
 tokio = { version = "1.42.0", features = ["macros", "rt-multi-thread"] }

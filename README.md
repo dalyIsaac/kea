@@ -18,8 +18,7 @@
 
 #### Backend
 
-- [ ] Set up Axum
-- [ ] Set up Clippy
+- [x] Set up Axum
 - [ ] Set up authentication
 
 ### Stage 2: Pull Requests
