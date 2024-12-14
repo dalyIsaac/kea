@@ -16,6 +16,12 @@
 - [ ] Handle moved files
 - [ ] Copy link to a line
 
+#### Backend
+
+- [ ] Set up Axum
+- [ ] Set up Clippy
+- [ ] Set up authentication
+
 ### Stage 2: Pull Requests
 
 - [x] Route to PR based on URL
