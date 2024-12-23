@@ -8,9 +8,6 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
    && apt-get -y install clang lld \
    && apt-get autoremove -y && apt-get clean -y
 
-# Install sqlx-cli
-RUN cargo install sqlx-cli --no-default-features --features postgres
-
 # Persist shell history.
 RUN SNIPPET="export PROMPT_COMMAND='history -a' && export HISTFILE=/commandhistory/.zsh_history" \
    && mkdir /commandhistory \
