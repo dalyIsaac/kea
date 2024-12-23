@@ -4,6 +4,15 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+anyhow = "1.0.95"
 axum = "0.7.9"
+axum-extra = { version = "0.9.6", features = ["cookie-private"] }
+chrono = { version = "0.4.39", features = ["clock"] }
+oauth2 = "4.4.2"
 octocrab = "0.42.1"
+request = "0.0.8"
+sqlx = { version = "0.8.2", features = ["runtime-tokio-rustls", "macros", "chrono"] }
+thiserror = "2.0.9"
 tokio = { version = "1.42.0", features = ["macros", "rt-multi-thread"] }
+tower-http = { version = "0.6.2", features = ["cors", "fs"] }
+tracing = "0.1.41"
