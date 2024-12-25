@@ -11,8 +11,11 @@ use crate::{
 
 #[axum::debug_handler]
 pub async fn login(
-    State(AppState { github_client }): State<AppState>,
+    State(AppState {
+        github_client,
+        base_url,
+    }): State<AppState>,
     query: Option<Query<AuthResponse>>,
 ) -> Result<Redirect, KeaError> {
-    github_client.login(query).await
+    github_client.login(query, &base_url).await
 }

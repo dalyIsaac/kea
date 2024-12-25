@@ -1,4 +1,4 @@
-use std::{path::PathBuf, str::FromStr};
+use std::path::PathBuf;
 
 use axum::{extract::Query, http::Uri, response::Redirect};
 use oauth2::ClientSecret;
@@ -9,13 +9,15 @@ use crate::error::KeaError;
 
 use super::scm_client::{AuthResponse, ScmClient};
 
+const GITHUB_REDIRECT_URI: &str = "/login/github";
+pub const GITHUB_LOGIN_URI: &str = GITHUB_REDIRECT_URI;
+
 #[derive(Clone)]
 struct GitHubConfig {
     app_id: models::AppId,
     app_key: jsonwebtoken::EncodingKey,
     client_id: String,
     client_secret: ClientSecret,
-    redirect_uri: Uri,
 }
 
 #[derive(Clone)]
@@ -39,6 +41,15 @@ impl GitHubClient {
             .user_access_token(user_access_token)
             .build()
             .map_err(|e| KeaError::GitHubClientCreationError(Box::new(e)))
+    }
+
+    pub fn get_oauth_redirect_url(&self, base_url: &Uri) -> String {
+        format!(
+            "https://github.com/login/oauth/authorize?client_id={}&redirect_uri={}{}",
+            self.config.client_id,
+            base_url.to_string().trim_end_matches('/'),
+            GITHUB_REDIRECT_URI
+        )
     }
 }
 
@@ -65,33 +76,24 @@ impl ScmClient for GitHubClient {
             std::env::var("GITHUB_CLIENT_SECRET").expect("GITHUB_CLIENT_SECRET must be set"),
         );
 
-        let redirect_uri = Uri::from_str(
-            std::env::var("GITHUB_REDIRECT_URI")
-                .expect("GITHUB_REDIRECT_URI must be set")
-                .as_str(),
-        )
-        .expect("Invalid redirect URI");
-
         GitHubClient {
             config: GitHubConfig {
                 app_id,
                 app_key,
                 client_id,
                 client_secret,
-                redirect_uri,
             },
         }
     }
 
-    async fn login(&self, query: Option<Query<AuthResponse>>) -> Result<Redirect, KeaError> {
+    async fn login(
+        &self,
+        query: Option<Query<AuthResponse>>,
+        base_url: &Uri,
+    ) -> Result<Redirect, KeaError> {
         let auth_response = match query {
             Some(Query(auth)) => auth,
-            None => {
-                return Ok(Redirect::to(&format!(
-                    "https://github.com/login/oauth/authorize?client_id={}&redirect_uri={}",
-                    self.config.client_id, self.config.redirect_uri
-                )))
-            }
+            None => return Ok(Redirect::to(&self.get_oauth_redirect_url(base_url))),
         };
 
         let token = match auth_response {
@@ -144,8 +146,8 @@ impl ScmClient for GitHubClient {
             });
         }
 
-        todo!("Store token in database");
-        todo!("Redirect to path that requires authentication");
+        // TODO: Store the token in the database
+        // TODO: Redirect to the web app's url which triggered the auth
         Ok(Redirect::to("/"))
     }
 }
