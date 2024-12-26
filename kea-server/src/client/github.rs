@@ -1,16 +1,20 @@
 use std::path::PathBuf;
 
 use axum::{extract::Query, http::Uri, response::Redirect};
+use axum_extra::extract::{cookie::Cookie, PrivateCookieJar};
 use oauth2::ClientSecret;
 use octocrab::{auth, models, Octocrab};
+use secrecy::ExposeSecret;
 use tracing::debug;
 
-use crate::error::KeaError;
+use crate::{error::KeaError, state::AppContext};
 
 use super::scm_client::{AuthResponse, ScmClient};
 
 const GITHUB_REDIRECT_URI: &str = "/login/github";
 pub const GITHUB_LOGIN_URI: &str = GITHUB_REDIRECT_URI;
+
+const GITHUB_COOKIE: &str = "github-sid";
 
 #[derive(Clone)]
 struct GitHubConfig {
