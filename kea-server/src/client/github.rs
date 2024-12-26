@@ -89,11 +89,12 @@ impl ScmClient for GitHubClient {
     async fn login(
         &self,
         query: Option<Query<AuthResponse>>,
-        base_url: &Uri,
+        jar: &PrivateCookieJar,
+        ctx: &mut AppContext,
     ) -> Result<Redirect, KeaError> {
         let auth_response = match query {
             Some(Query(auth)) => auth,
-            None => return Ok(Redirect::to(&self.get_oauth_redirect_url(base_url))),
+            None => return Ok(Redirect::to(&self.get_oauth_redirect_url(&ctx.base_url))),
         };
 
         let token = match auth_response {
@@ -119,35 +120,37 @@ impl ScmClient for GitHubClient {
                 let token: auth::OAuth = self
                     .create_anonymous_client()?
                     .post("login/oauth/access_token", Some(&body))
-                    .await
-                    .map_err(|e| KeaError::GitHubAuthError {
-                        error: "OAuthError".to_string(),
-                        error_description: e.to_string(),
-                        error_url: "".to_string(),
-                    })?;
+                    .await?;
 
                 token
             }
         };
 
         if !token.token_type.eq_ignore_ascii_case("bearer") {
-            return Err(KeaError::GitHubAuthError {
-                error: "InvalidTokenType".to_string(),
-                error_description: "Invalid token type received".to_string(),
-                error_url: "".to_string(),
-            });
+            return Err(KeaError::GitHubTokenError(
+                "Invalid token type received".to_string(),
+            ));
         }
 
         if token.scope.is_empty() {
-            return Err(KeaError::GitHubAuthError {
-                error: "EmptyScope".to_string(),
-                error_description: "Empty scope received".to_string(),
-                error_url: "".to_string(),
-            });
+            return Err(KeaError::GitHubTokenError("No scopes received".to_string()));
         }
 
-        // TODO: Store the token in the database
-        // TODO: Redirect to the web app's url which triggered the auth
+        let Some(secs) = token.expires_in else {
+            return Err(KeaError::GitHubTokenError(
+                "No expiry time received".to_string(),
+            ));
+        };
+        let max_age = time::Duration::seconds(secs.try_into().unwrap());
+        let cookie = Cookie::build((GITHUB_COOKIE, token.access_token.expose_secret()))
+            .domain(&ctx.base_url.host().unwrap().to_string())
+            .path("/")
+            .secure(true)
+            .http_only(true)
+            .max_age(max_age);
+
+        jar.add(cookie);
+
         Ok(Redirect::to("/"))
     }
 }

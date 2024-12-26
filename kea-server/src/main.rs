@@ -1,9 +1,8 @@
 use axum::http::header::CONTENT_TYPE;
-use axum::http::{header, HeaderName, Uri};
+use axum::http::{header, HeaderName};
 use axum::{routing::get, Router};
 use client::github::GITHUB_LOGIN_URI;
-use client::{github::GitHubClient, scm_client::ScmClient};
-use std::str::FromStr;
+use state::AppState;
 use std::time::Duration;
 use tower_http::catch_panic::CatchPanicLayer;
 use tower_http::request_id::{PropagateRequestIdLayer, SetRequestIdLayer};
@@ -14,34 +13,12 @@ use tower_http::{sensitive_headers::SetSensitiveRequestHeadersLayer, trace::Trac
 mod client;
 mod error;
 mod router;
-
-#[derive(Clone)]
-pub struct AppState {
-    github_client: GitHubClient,
-    base_url: Uri,
-}
+mod state;
 
 #[tokio::main]
 async fn main() {
     dotenvy::dotenv().expect("Failed to load .env file");
-
-    let base_url = Uri::from_str(
-        std::env::var("BASE_URL")
-            .expect("BASE_URL must be set")
-            .trim_end_matches('/'),
-    )
-    .expect("Invalid base URL");
-
-    let timeout_secs = std::env::var("TIMEOUT_SECS")
-        .expect("TIMEOUT_SECS must be set")
-        .parse::<u64>()
-        .expect("Invalid timeout seconds");
-
-    let state = AppState {
-        github_client: GitHubClient::new(),
-        base_url,
-    };
-
+    let state = AppState::new().await;
     let x_request_id = HeaderName::from_static("x-request-id");
 
     let app = Router::new()
@@ -64,7 +41,9 @@ async fn main() {
                 ))
                 // Propagate `x-request-id` header from requests to responses.
                 .layer(PropagateRequestIdLayer::new(x_request_id.clone()))
-                .layer(TimeoutLayer::new(Duration::from_secs(timeout_secs)))
+                .layer(TimeoutLayer::new(Duration::from_secs(
+                    state.ctx.cookie_timeout_secs,
+                )))
                 // If the response has a known size set the `Content-Length` header
                 .layer(SetResponseHeaderLayer::overriding(
                     CONTENT_TYPE,

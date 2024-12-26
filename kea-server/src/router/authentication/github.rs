@@ -2,6 +2,7 @@ use axum::{
     extract::{Query, State},
     response::Redirect,
 };
+use axum_extra::extract::cookie::PrivateCookieJar;
 
 use crate::{
     client::scm_client::{AuthResponse, ScmClient},
@@ -11,11 +12,13 @@ use crate::{
 
 #[axum::debug_handler]
 pub async fn login(
-    State(AppState {
-        github_client,
-        base_url,
-    }): State<AppState>,
+    State(mut state): State<AppState>,
+    jar: PrivateCookieJar,
     query: Option<Query<AuthResponse>>,
 ) -> Result<Redirect, KeaError> {
-    github_client.login(query, &base_url).await
+    state
+        .clients
+        .github
+        .login(query, &jar, &mut state.ctx)
+        .await
 }

@@ -1,7 +1,8 @@
-use axum::{extract::Query, http::Uri, response::Redirect};
+use axum::{extract::Query, response::Redirect};
+use axum_extra::extract::PrivateCookieJar;
 use serde::{de, Deserialize, Deserializer};
 
-use crate::error::KeaError;
+use crate::{error::KeaError, state::AppContext};
 
 #[derive(Debug)]
 pub enum AuthResponse {
@@ -51,7 +52,8 @@ pub trait ScmClient {
     async fn login(
         &self,
         query: Option<Query<AuthResponse>>,
-        base_url: &Uri,
+        jar: &PrivateCookieJar,
+        state: &mut AppContext,
     ) -> Result<Redirect, KeaError>;
 
     // TODO: Implement this method

@@ -7,12 +7,12 @@ edition = "2021"
 axum = { version = "0.7.9", features = ["macros", "tracing"] }
 anyhow = "1.0.95"
 axum-extra = { version = "0.9.6", features = ["cookie-private"] }
-chrono = { version = "0.4.39", features = ["clock"] }
 octocrab = "0.42.1"
 sqlx = { version = "0.8.2", features = [
     "runtime-tokio-rustls",
     "macros",
     "chrono",
+    "postgres",
 ] }
 thiserror = "2.0.9"
 tokio = { version = "1.42.0", features = ["macros", "rt-multi-thread"] }
@@ -35,3 +35,4 @@ dotenvy = "0.15.7"
 tower = "0.5.2"
 uuid = "1.11.0"
 oauth2 = "4.4.2"
+time = "0.3.37"

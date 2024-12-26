@@ -1,4 +1,5 @@
 use axum::{http::Response, response::IntoResponse};
+use octocrab::models::UserId;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -10,8 +11,17 @@ pub enum KeaError {
         error_url: String,
     },
 
+    #[error("GitHub token error: {0}")]
+    GitHubTokenError(String),
+
     #[error("Github client creation error: {0}")]
     GitHubClientCreationError(Box<octocrab::Error>),
+
+    #[error("GitHub API error: {0}")]
+    GitHubApiError(octocrab::Error),
+
+    #[error("GitHub user with id {0} has no email")]
+    GitHubUserHasNoEmail(UserId),
 }
 
 impl IntoResponse for KeaError {
@@ -25,5 +35,11 @@ impl IntoResponse for KeaError {
             .status(status)
             .body(self.to_string().into())
             .unwrap()
+    }
+}
+
+impl From<octocrab::Error> for KeaError {
+    fn from(err: octocrab::Error) -> Self {
+        KeaError::GitHubApiError(err)
     }
 }
