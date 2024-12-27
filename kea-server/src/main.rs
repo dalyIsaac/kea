@@ -1,7 +1,7 @@
 use axum::http::header::CONTENT_TYPE;
 use axum::http::{header, HeaderName};
 use axum::{routing::get, Router};
-use client::github::GITHUB_LOGIN_URI;
+use router::authentication::github::GITHUB_LOGIN_ROUTE;
 use state::AppState;
 use std::time::Duration;
 use tower_http::catch_panic::CatchPanicLayer;
@@ -10,9 +10,8 @@ use tower_http::set_header::SetResponseHeaderLayer;
 use tower_http::timeout::TimeoutLayer;
 use tower_http::{sensitive_headers::SetSensitiveRequestHeadersLayer, trace::TraceLayer};
 
-mod client;
-mod error;
 mod router;
+mod scm;
 mod state;
 
 #[tokio::main]
@@ -24,7 +23,10 @@ async fn main() {
 
     let app = Router::new()
         .route("/", get(|| async { "Hello, world!" }))
-        .route(GITHUB_LOGIN_URI, get(router::authentication::github::login))
+        .route(
+            GITHUB_LOGIN_ROUTE,
+            get(router::authentication::github::login),
+        )
         .with_state(state)
         .layer(
             tower::ServiceBuilder::new()

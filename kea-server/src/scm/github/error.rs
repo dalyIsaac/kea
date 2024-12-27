@@ -3,31 +3,31 @@ use octocrab::models::UserId;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
-pub enum KeaError {
+pub enum KeaGitHubError {
     #[error("GitHub authentication error: {error_description}")]
-    GitHubAuthError {
+    AuthError {
         error: String,
         error_description: String,
         error_url: String,
     },
 
     #[error("GitHub token error: {0}")]
-    GitHubTokenError(String),
+    TokenError(String),
 
     #[error("Github client creation error: {0}")]
-    GitHubClientCreationError(Box<octocrab::Error>),
+    ClientCreationError(Box<octocrab::Error>),
 
     #[error("GitHub API error: {0}")]
-    GitHubApiError(octocrab::Error),
+    ApiError(Box<octocrab::Error>),
 
     #[error("GitHub user with id {0} has no email")]
-    GitHubUserHasNoEmail(UserId),
+    UserHasNoEmail(UserId),
 }
 
-impl IntoResponse for KeaError {
+impl IntoResponse for KeaGitHubError {
     fn into_response(self) -> Response<axum::body::Body> {
         let status = match self {
-            KeaError::GitHubAuthError { .. } => axum::http::StatusCode::UNAUTHORIZED,
+            KeaGitHubError::AuthError { .. } => axum::http::StatusCode::UNAUTHORIZED,
             _ => axum::http::StatusCode::INTERNAL_SERVER_ERROR,
         };
 
@@ -38,8 +38,8 @@ impl IntoResponse for KeaError {
     }
 }
 
-impl From<octocrab::Error> for KeaError {
+impl From<octocrab::Error> for KeaGitHubError {
     fn from(err: octocrab::Error) -> Self {
-        KeaError::GitHubApiError(err)
+        KeaGitHubError::ApiError(Box::new(err))
     }
 }

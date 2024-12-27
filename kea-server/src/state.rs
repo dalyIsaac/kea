@@ -3,7 +3,8 @@ use std::{env, str::FromStr};
 use axum::{extract::FromRef, http::Uri};
 use axum_extra::extract::cookie::Key;
 
-use crate::client::{github::GitHubClient, scm_client::ScmClient};
+use crate::scm::github::client::GitHubClient;
+use crate::scm::scm_client::ScmClient;
 
 #[derive(Clone)]
 pub struct AppClients {

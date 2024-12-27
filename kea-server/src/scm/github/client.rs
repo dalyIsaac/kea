@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use axum::{
     extract::Query,
     http::Uri,
-    response::{Redirect, Response},
+    response::{IntoResponse, Redirect, Response},
 };
 use axum_extra::extract::{cookie::Cookie, PrivateCookieJar};
 use oauth2::ClientSecret;
@@ -11,12 +11,14 @@ use octocrab::{auth, models, Octocrab};
 use secrecy::ExposeSecret;
 use tracing::debug;
 
-use crate::{error::KeaError, state::AppContext};
+use crate::{
+    scm::scm_client::{AuthResponse, ScmClient},
+    state::AppContext,
+};
 
-use super::scm_client::{AuthResponse, ScmClient};
+use super::error::KeaGitHubError;
 
-const GITHUB_REDIRECT_URI: &str = "/login/github";
-pub const GITHUB_LOGIN_URI: &str = GITHUB_REDIRECT_URI;
+pub const GITHUB_REDIRECT_URI: &str = "/login/github";
 
 const GITHUB_COOKIE: &str = "github-sid";
 
@@ -34,21 +36,21 @@ pub struct GitHubClient {
 }
 
 impl GitHubClient {
-    pub fn create_anonymous_client(&self) -> Result<Octocrab, KeaError> {
+    pub fn create_anonymous_client(&self) -> Result<Octocrab, KeaGitHubError> {
         Octocrab::builder()
             .app(self.config.app_id, self.config.app_key.clone())
             .build()
-            .map_err(|e| KeaError::GitHubClientCreationError(Box::new(e)))
+            .map_err(|e| KeaGitHubError::ClientCreationError(Box::new(e)))
     }
 
     pub fn create_user_client(
         &self,
         user_access_token: secrecy::SecretString,
-    ) -> Result<Octocrab, KeaError> {
+    ) -> Result<Octocrab, KeaGitHubError> {
         Octocrab::builder()
             .user_access_token(user_access_token)
             .build()
-            .map_err(|e| KeaError::GitHubClientCreationError(Box::new(e)))
+            .map_err(|e| KeaGitHubError::ClientCreationError(Box::new(e)))
     }
 
     pub fn get_oauth_redirect_url(&self, base_url: &Uri) -> String {
@@ -61,7 +63,7 @@ impl GitHubClient {
     }
 }
 
-impl ScmClient for GitHubClient {
+impl ScmClient<KeaGitHubError> for GitHubClient {
     fn new() -> Self {
         let app_id: models::AppId = std::env::var("GITHUB_APP_ID")
             .expect("GITHUB_APP_ID must be set")
@@ -99,10 +101,12 @@ impl ScmClient for GitHubClient {
         query: Option<Query<AuthResponse>>,
         jar: PrivateCookieJar,
         ctx: AppContext,
-    ) -> Result<Response, KeaError> {
+    ) -> Result<Response, KeaGitHubError> {
         let auth_response = match query {
             Some(Query(auth)) => auth,
-            None => return Ok(Redirect::to(&self.get_oauth_redirect_url(&ctx.base_url))),
+            None => {
+                return Ok(Redirect::to(&self.get_oauth_redirect_url(&ctx.base_url)).into_response())
+            }
         };
 
         let token = match auth_response {
@@ -112,7 +116,7 @@ impl ScmClient for GitHubClient {
                 error_url,
             } => {
                 debug!(?error, ?error_description, ?error_url);
-                return Err(KeaError::GitHubAuthError {
+                return Err(KeaGitHubError::AuthError {
                     error,
                     error_description,
                     error_url,
@@ -135,17 +139,17 @@ impl ScmClient for GitHubClient {
         };
 
         if !token.token_type.eq_ignore_ascii_case("bearer") {
-            return Err(KeaError::GitHubTokenError(
+            return Err(KeaGitHubError::TokenError(
                 "Invalid token type received".to_string(),
             ));
         }
 
         if token.scope.is_empty() {
-            return Err(KeaError::GitHubTokenError("No scopes received".to_string()));
+            return Err(KeaGitHubError::TokenError("No scopes received".to_string()));
         }
 
         let Some(secs) = token.expires_in else {
-            return Err(KeaError::GitHubTokenError(
+            return Err(KeaGitHubError::TokenError(
                 "No expiry time received".to_string(),
             ));
         };
@@ -161,6 +165,6 @@ impl ScmClient for GitHubClient {
             .http_only(true)
             .max_age(max_age);
 
-        Ok((jar.add(cookie), Redirect::to("/")))
+        Ok((jar.add(cookie), Redirect::to("/")).into_response())
     }
 }

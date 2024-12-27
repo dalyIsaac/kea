@@ -2,7 +2,7 @@ use axum::{extract::Query, response::Response};
 use axum_extra::extract::PrivateCookieJar;
 use serde::{de, Deserialize, Deserializer};
 
-use crate::{error::KeaError, state::AppContext};
+use crate::state::AppContext;
 
 #[derive(Debug)]
 pub enum AuthResponse {
@@ -46,7 +46,7 @@ impl<'de> Deserialize<'de> for AuthResponse {
     }
 }
 
-pub trait ScmClient {
+pub trait ScmClient<E> {
     fn new() -> Self;
 
     async fn login(
@@ -54,8 +54,7 @@ pub trait ScmClient {
         query: Option<Query<AuthResponse>>,
         jar: PrivateCookieJar,
         state: AppContext,
-    ) -> Result<Response, KeaError>;
+    ) -> Result<Response, E>;
 
-    // TODO: Implement this method
-    // async fn logout(&self, query: Option<Query<AuthResponse>>) -> Result<Redirect, KeaError>;
+    // TODO: logout
 }
