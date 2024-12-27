@@ -1,6 +1,6 @@
 use axum::{
     extract::{Query, State},
-    response::Redirect,
+    response::Response,
 };
 use axum_extra::extract::cookie::PrivateCookieJar;
 
@@ -12,13 +12,10 @@ use crate::{
 
 #[axum::debug_handler]
 pub async fn login(
-    State(mut state): State<AppState>,
+    State(state): State<AppState>,
     jar: PrivateCookieJar,
     query: Option<Query<AuthResponse>>,
-) -> Result<Redirect, KeaError> {
-    state
-        .clients
-        .github
-        .login(query, &jar, &mut state.ctx)
-        .await
+) -> Result<Response, KeaError> {
+    let AppState { clients, ctx } = state;
+    clients.github.login(query, jar, ctx).await
 }

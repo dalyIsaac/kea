@@ -1,4 +1,4 @@
-use axum::{extract::Query, response::Redirect};
+use axum::{extract::Query, response::Response};
 use axum_extra::extract::PrivateCookieJar;
 use serde::{de, Deserialize, Deserializer};
 
@@ -52,9 +52,9 @@ pub trait ScmClient {
     async fn login(
         &self,
         query: Option<Query<AuthResponse>>,
-        jar: &PrivateCookieJar,
-        state: &mut AppContext,
-    ) -> Result<Redirect, KeaError>;
+        jar: PrivateCookieJar,
+        state: AppContext,
+    ) -> Result<Response, KeaError>;
 
     // TODO: Implement this method
     // async fn logout(&self, query: Option<Query<AuthResponse>>) -> Result<Redirect, KeaError>;

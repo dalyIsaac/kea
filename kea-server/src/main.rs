@@ -19,6 +19,7 @@ mod state;
 async fn main() {
     dotenvy::dotenv().expect("Failed to load .env file");
     let state = AppState::new().await;
+    let timeout_secs = state.ctx.cookie_timeout_secs;
     let x_request_id = HeaderName::from_static("x-request-id");
 
     let app = Router::new()
@@ -41,9 +42,7 @@ async fn main() {
                 ))
                 // Propagate `x-request-id` header from requests to responses.
                 .layer(PropagateRequestIdLayer::new(x_request_id.clone()))
-                .layer(TimeoutLayer::new(Duration::from_secs(
-                    state.ctx.cookie_timeout_secs,
-                )))
+                .layer(TimeoutLayer::new(Duration::from_secs(timeout_secs)))
                 // If the response has a known size set the `Content-Length` header
                 .layer(SetResponseHeaderLayer::overriding(
                     CONTENT_TYPE,

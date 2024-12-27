@@ -1,6 +1,10 @@
 use std::path::PathBuf;
 
-use axum::{extract::Query, http::Uri, response::Redirect};
+use axum::{
+    extract::Query,
+    http::Uri,
+    response::{Redirect, Response},
+};
 use axum_extra::extract::{cookie::Cookie, PrivateCookieJar};
 use oauth2::ClientSecret;
 use octocrab::{auth, models, Octocrab};
@@ -93,9 +97,9 @@ impl ScmClient for GitHubClient {
     async fn login(
         &self,
         query: Option<Query<AuthResponse>>,
-        jar: &PrivateCookieJar,
-        ctx: &mut AppContext,
-    ) -> Result<Redirect, KeaError> {
+        jar: PrivateCookieJar,
+        ctx: AppContext,
+    ) -> Result<Response, KeaError> {
         let auth_response = match query {
             Some(Query(auth)) => auth,
             None => return Ok(Redirect::to(&self.get_oauth_redirect_url(&ctx.base_url))),
@@ -145,16 +149,18 @@ impl ScmClient for GitHubClient {
                 "No expiry time received".to_string(),
             ));
         };
+
         let max_age = time::Duration::seconds(secs.try_into().unwrap());
-        let cookie = Cookie::build((GITHUB_COOKIE, token.access_token.expose_secret()))
-            .domain(&ctx.base_url.host().unwrap().to_string())
+        let access_token = token.access_token.clone().expose_secret().to_string();
+        let domain = ctx.base_url.clone().host().unwrap().to_string();
+
+        let cookie = Cookie::build((GITHUB_COOKIE, access_token))
+            .domain(domain)
             .path("/")
             .secure(true)
             .http_only(true)
             .max_age(max_age);
 
-        jar.add(cookie);
-
-        Ok(Redirect::to("/"))
+        Ok((jar.add(cookie), Redirect::to("/")))
     }
 }
