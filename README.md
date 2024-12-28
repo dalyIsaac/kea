@@ -20,6 +20,7 @@
 
 - [x] Set up Axum
 - [ ] Set up authentication
+- [ ] Add a protected route
 - [ ] Set up Cargo clippy as a pre-commit hook
 
 ### Stage 2: Pull Requests

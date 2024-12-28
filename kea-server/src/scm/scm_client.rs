@@ -56,5 +56,7 @@ pub trait ScmClient<E> {
         state: AppContext,
     ) -> Result<Response, E>;
 
+    async fn me(&self, jar: PrivateCookieJar, state: AppContext) -> Result<Response, E>;
+
     // TODO: logout
 }

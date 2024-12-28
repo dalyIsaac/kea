@@ -14,11 +14,8 @@ pub enum KeaGitHubError {
     #[error("GitHub token error: {0}")]
     TokenError(String),
 
-    #[error("Github client creation error: {0}")]
-    ClientCreationError(Box<octocrab::Error>),
-
     #[error("GitHub API error: {0}")]
-    ApiError(Box<octocrab::Error>),
+    ApiError(#[from] octocrab::Error),
 
     #[error("GitHub user with id {0} has no email")]
     UserHasNoEmail(UserId),
@@ -31,15 +28,28 @@ impl IntoResponse for KeaGitHubError {
             _ => axum::http::StatusCode::INTERNAL_SERVER_ERROR,
         };
 
+        let body = match self {
+            KeaGitHubError::AuthError {
+                error_description,
+                error_url,
+                error,
+                ..
+            } => format!("{}: {}\n{}", error, error_description, error_url),
+            KeaGitHubError::ApiError(e) => match e {
+                octocrab::Error::GitHub {
+                    source,
+                    backtrace: _,
+                } => {
+                    format!("{}: {}", source.status_code, source.message)
+                }
+                _ => e.to_string(),
+            },
+            _ => self.to_string(),
+        };
+
         Response::builder()
             .status(status)
-            .body(self.to_string().into())
+            .body(body.into())
             .unwrap()
-    }
-}
-
-impl From<octocrab::Error> for KeaGitHubError {
-    fn from(err: octocrab::Error) -> Self {
-        KeaGitHubError::ApiError(Box::new(err))
     }
 }

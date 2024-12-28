@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
 use axum::{
+    body::Body,
     extract::Query,
     http::Uri,
     response::{IntoResponse, Redirect, Response},
@@ -18,7 +19,7 @@ use crate::{
 
 use super::error::KeaGitHubError;
 
-pub const GITHUB_REDIRECT_URI: &str = "/login/github";
+pub const GITHUB_REDIRECT_URI: &str = "/github/login";
 
 const GITHUB_COOKIE: &str = "github-sid";
 
@@ -40,7 +41,7 @@ impl GitHubClient {
         Octocrab::builder()
             .app(self.config.app_id, self.config.app_key.clone())
             .build()
-            .map_err(|e| KeaGitHubError::ClientCreationError(Box::new(e)))
+            .map_err(|e| KeaGitHubError::ApiError(e))
     }
 
     pub fn create_user_client(
@@ -50,7 +51,7 @@ impl GitHubClient {
         Octocrab::builder()
             .user_access_token(user_access_token)
             .build()
-            .map_err(|e| KeaGitHubError::ClientCreationError(Box::new(e)))
+            .map_err(|e| KeaGitHubError::ApiError(e))
     }
 
     pub fn get_oauth_redirect_url(&self, base_url: &Uri) -> String {
@@ -131,7 +132,7 @@ impl ScmClient<KeaGitHubError> for GitHubClient {
 
                 let token: auth::OAuth = self
                     .create_anonymous_client()?
-                    .post("login/oauth/access_token", Some(&body))
+                    .post("/login/oauth/access_token", Some(&body))
                     .await?;
 
                 token
@@ -166,5 +167,26 @@ impl ScmClient<KeaGitHubError> for GitHubClient {
             .max_age(max_age);
 
         Ok((jar.add(cookie), Redirect::to("/")).into_response())
+    }
+
+    async fn me(
+        &self,
+        jar: PrivateCookieJar,
+        state: AppContext,
+    ) -> Result<Response, KeaGitHubError> {
+        let access_token = match jar.get(GITHUB_COOKIE) {
+            Some(cookie) => secrecy::SecretString::new(cookie.value().into()),
+            None => {
+                return Ok(
+                    Redirect::to(&self.get_oauth_redirect_url(&state.base_url)).into_response()
+                )
+            }
+        };
+
+        let client = self.create_user_client(access_token)?;
+
+        let user = client.current().user().await?;
+        let body = Body::from(serde_json::to_string(&user).unwrap());
+        Ok(Response::new(body))
     }
 }

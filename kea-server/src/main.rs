@@ -1,7 +1,7 @@
 use axum::http::header::CONTENT_TYPE;
 use axum::http::{header, HeaderName};
 use axum::{routing::get, Router};
-use router::authentication::github::GITHUB_LOGIN_ROUTE;
+
 use state::AppState;
 use std::time::Duration;
 use tower_http::catch_panic::CatchPanicLayer;
@@ -21,12 +21,13 @@ async fn main() {
     let timeout_secs = state.ctx.cookie_timeout_secs;
     let x_request_id = HeaderName::from_static("x-request-id");
 
+    let github_routes = Router::new()
+        .route("/login", get(router::authentication::github::login))
+        .route("/me", get(router::authentication::github::me));
+
     let app = Router::new()
         .route("/", get(|| async { "Hello, world!" }))
-        .route(
-            GITHUB_LOGIN_ROUTE,
-            get(router::authentication::github::login),
-        )
+        .nest("/github", github_routes)
         .with_state(state)
         .layer(
             tower::ServiceBuilder::new()

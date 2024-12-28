@@ -45,8 +45,8 @@ impl AppState {
             .expect("Invalid timeout seconds");
 
         let key = Key::from(
-            env::var("COOKIE_KEY")
-                .expect("COOKIE_KEY must be set")
+            env::var("COOKIE_HEX_KEY")
+                .expect("COOKIE_HEX_KEY must be set")
                 .as_bytes(),
         );
 
