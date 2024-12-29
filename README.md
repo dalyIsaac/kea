@@ -19,7 +19,8 @@
 #### Backend
 
 - [x] Set up Axum
-- [ ] Set up authentication
+- [x] Set up authentication
+- [ ] Set up refresh tokens
 - [ ] Add a protected route
 - [ ] Set up Cargo clippy as a pre-commit hook
 

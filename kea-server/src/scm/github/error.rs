@@ -35,15 +35,16 @@ impl IntoResponse for KeaGitHubError {
                 error,
                 ..
             } => format!("{}: {}\n{}", error, error_description, error_url),
+
             KeaGitHubError::ApiError(e) => match e {
                 octocrab::Error::GitHub {
                     source,
                     backtrace: _,
-                } => {
-                    format!("{}: {}", source.status_code, source.message)
-                }
+                } => format!("{}: {}", source.status_code, source.message),
+
                 _ => e.to_string(),
             },
+
             _ => self.to_string(),
         };
 

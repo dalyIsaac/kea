@@ -1,33 +1,45 @@
 use std::path::PathBuf;
 
-use axum::{
-    body::Body,
-    extract::Query,
-    http::Uri,
-    response::{IntoResponse, Redirect, Response},
-};
-use axum_extra::extract::{cookie::Cookie, PrivateCookieJar};
-use oauth2::ClientSecret;
-use octocrab::{auth, models, Octocrab};
-use secrecy::ExposeSecret;
-use tracing::debug;
-
+use super::error::KeaGitHubError;
 use crate::{
     scm::scm_client::{AuthResponse, ScmClient},
     state::AppContext,
 };
-
-use super::error::KeaGitHubError;
-
-pub const GITHUB_REDIRECT_URI: &str = "/github/login";
+use axum::{
+    body::Body,
+    extract::Query,
+    response::{IntoResponse, Redirect, Response},
+};
+use axum_extra::extract::{cookie::Cookie, PrivateCookieJar};
+use oauth2::{
+    basic::BasicTokenType, reqwest::async_http_client, AuthUrl, AuthorizationCode, ClientId,
+    ClientSecret, CsrfToken, RedirectUrl, TokenResponse, TokenUrl,
+};
+use octocrab::{models, Octocrab};
+use tracing::debug;
 
 const GITHUB_COOKIE: &str = "github-sid";
+
+macro_rules! redirect_if_no_cookie {
+    ($jar:expr, $state:expr) => {
+        match $jar.get(GITHUB_COOKIE) {
+            Some(cookie) => secrecy::SecretString::new(cookie.value().into()),
+            None => {
+                return Ok(
+                    Redirect::to(format!("{}github/login", $state.base_url).as_str())
+                        .into_response(),
+                )
+            }
+        }
+    };
+    () => {};
+}
 
 #[derive(Clone)]
 struct GitHubConfig {
     app_id: models::AppId,
     app_key: jsonwebtoken::EncodingKey,
-    client_id: String,
+    client_id: ClientId,
     client_secret: ClientSecret,
 }
 
@@ -53,15 +65,6 @@ impl GitHubClient {
             .build()
             .map_err(|e| KeaGitHubError::ApiError(e))
     }
-
-    pub fn get_oauth_redirect_url(&self, base_url: &Uri) -> String {
-        format!(
-            "https://github.com/login/oauth/authorize?client_id={}&redirect_uri={}{}",
-            self.config.client_id,
-            base_url.to_string().trim_end_matches('/'),
-            GITHUB_REDIRECT_URI
-        )
-    }
 }
 
 impl ScmClient<KeaGitHubError> for GitHubClient {
@@ -81,7 +84,8 @@ impl ScmClient<KeaGitHubError> for GitHubClient {
         let app_key = jsonwebtoken::EncodingKey::from_rsa_pem(key_contents.as_bytes())
             .expect("Invalid RSA key");
 
-        let client_id = std::env::var("GITHUB_CLIENT_ID").expect("GITHUB_CLIENT_ID must be set");
+        let client_id =
+            ClientId::new(std::env::var("GITHUB_CLIENT_ID").expect("GITHUB_CLIENT_ID must be set"));
 
         let client_secret = ClientSecret::new(
             std::env::var("GITHUB_CLIENT_SECRET").expect("GITHUB_CLIENT_SECRET must be set"),
@@ -103,14 +107,31 @@ impl ScmClient<KeaGitHubError> for GitHubClient {
         jar: PrivateCookieJar,
         ctx: AppContext,
     ) -> Result<Response, KeaGitHubError> {
+        let auth_url = AuthUrl::new("https://github.com/login/oauth/authorize".to_string())
+            .expect("Invalid authorization endpoint URL");
+        let token_url = TokenUrl::new("https://github.com/login/oauth/access_token".to_string())
+            .expect("Invalid token endpoint URL");
+
+        let client = oauth2::basic::BasicClient::new(
+            self.config.client_id.clone(),
+            Some(self.config.client_secret.clone()),
+            auth_url,
+            Some(token_url),
+        )
+        .set_redirect_uri(
+            RedirectUrl::new(format!("{}github/login", ctx.base_url))
+                .expect("Invalid redirect URL"),
+        );
+
         let auth_response = match query {
             Some(Query(auth)) => auth,
             None => {
-                return Ok(Redirect::to(&self.get_oauth_redirect_url(&ctx.base_url)).into_response())
+                let (auth_url, _csrf_token) = client.authorize_url(CsrfToken::new_random).url();
+                return Ok(Redirect::to(auth_url.as_str()).into_response());
             }
         };
 
-        let token = match auth_response {
+        let code = match auth_response {
             AuthResponse::Failure {
                 error,
                 error_description,
@@ -123,40 +144,36 @@ impl ScmClient<KeaGitHubError> for GitHubClient {
                     error_url,
                 });
             }
-            AuthResponse::Success { code } => {
-                let body = [
-                    ("client_id", self.config.client_id.as_str()),
-                    ("client_secret", self.config.client_secret.secret()),
-                    ("code", code.as_str()),
-                ];
-
-                let token: auth::OAuth = self
-                    .create_anonymous_client()?
-                    .post("/login/oauth/access_token", Some(&body))
-                    .await?;
-
-                token
-            }
+            AuthResponse::Success { code } => AuthorizationCode::new(code),
         };
 
-        if !token.token_type.eq_ignore_ascii_case("bearer") {
-            return Err(KeaGitHubError::TokenError(
-                "Invalid token type received".to_string(),
-            ));
+        let token_result = client
+            .exchange_code(code)
+            .request_async(async_http_client)
+            .await
+            .map_err(|e| KeaGitHubError::TokenError(e.to_string()))?;
+
+        match token_result.token_type() {
+            BasicTokenType::Bearer => (),
+            _ => {
+                return Err(KeaGitHubError::TokenError(
+                    "Invalid token type received".to_string(),
+                ))
+            }
         }
 
-        if token.scope.is_empty() {
-            return Err(KeaGitHubError::TokenError("No scopes received".to_string()));
-        }
-
-        let Some(secs) = token.expires_in else {
+        let Some(max_age) = token_result.expires_in() else {
             return Err(KeaGitHubError::TokenError(
                 "No expiry time received".to_string(),
             ));
         };
 
-        let max_age = time::Duration::seconds(secs.try_into().unwrap());
-        let access_token = token.access_token.clone().expose_secret().to_string();
+        let max_age =
+            time::Duration::seconds(max_age.as_secs().try_into().map_err(|_| {
+                KeaGitHubError::TokenError("Token expiry time too large".to_string())
+            })?);
+        let access_token = token_result.access_token().secret().clone();
+
         let domain = ctx.base_url.clone().host().unwrap().to_string();
 
         let cookie = Cookie::build((GITHUB_COOKIE, access_token))
@@ -166,7 +183,7 @@ impl ScmClient<KeaGitHubError> for GitHubClient {
             .http_only(true)
             .max_age(max_age);
 
-        Ok((jar.add(cookie), Redirect::to("/")).into_response())
+        Ok((jar.add(cookie), Redirect::to("/github/me")).into_response())
     }
 
     async fn me(
@@ -174,14 +191,7 @@ impl ScmClient<KeaGitHubError> for GitHubClient {
         jar: PrivateCookieJar,
         state: AppContext,
     ) -> Result<Response, KeaGitHubError> {
-        let access_token = match jar.get(GITHUB_COOKIE) {
-            Some(cookie) => secrecy::SecretString::new(cookie.value().into()),
-            None => {
-                return Ok(
-                    Redirect::to(&self.get_oauth_redirect_url(&state.base_url)).into_response()
-                )
-            }
-        };
+        let access_token = redirect_if_no_cookie!(jar, state);
 
         let client = self.create_user_client(access_token)?;
 
