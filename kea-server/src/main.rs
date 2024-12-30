@@ -21,12 +21,11 @@ async fn main() {
     let timeout_secs = state.ctx.cookie_timeout_secs;
     let x_request_id = HeaderName::from_static("x-request-id");
 
-    let github_routes = Router::new()
-        .route("/login", get(router::authentication::github::login))
-        .route("/me", get(router::authentication::github::me));
+    let github_routes = Router::new().route("/login", get(router::authentication::github::login));
 
     let app = Router::new()
         .route("/", get(|| async { "Hello, world!" }))
+        .route("/me", get(router::authentication::me::me))
         .nest("/github", github_routes)
         .with_state(state)
         .layer(

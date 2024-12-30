@@ -1,13 +1,11 @@
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
 
 use super::error::KeaGitHubError;
 use crate::{
-    scm::scm_client::{AuthResponse, ScmClient},
+    scm::scm_client::{AuthResponse, ScmClient, ScmUser},
     state::AppContext,
 };
 use axum::{
-    body::Body,
     extract::Query,
     response::{IntoResponse, Redirect, Response},
 };
@@ -16,7 +14,7 @@ use oauth2::{
     basic::BasicTokenType, reqwest::async_http_client, AuthUrl, AuthorizationCode, ClientId,
     ClientSecret, CsrfToken, RedirectUrl, TokenResponse, TokenUrl,
 };
-use octocrab::{models, Octocrab};
+use octocrab::Octocrab;
 use tracing::debug;
 
 const GITHUB_COOKIE: &str = "github-tokens";
@@ -48,8 +46,6 @@ struct TokenCookie {
 
 #[derive(Clone)]
 struct GitHubConfig {
-    app_id: models::AppId,
-    app_key: jsonwebtoken::EncodingKey,
     client_id: ClientId,
     client_secret: ClientSecret,
     auth_url: AuthUrl,
@@ -150,24 +146,23 @@ impl GitHubClient {
         Redirect::to(format!("{}github/login", state.base_url).as_str()).into_response()
     }
 
-    /// Extract the token cookie from the cookie jar.
-    fn extract_token_cookie(
-        &self,
-        jar: &PrivateCookieJar,
-        state: &AppContext,
-    ) -> Result<TokenCookie, Response> {
+    /// Extract the GitHub token cookie from the cookie jar.
+    fn extract_token_cookie(&self, jar: &PrivateCookieJar) -> Option<TokenCookie> {
         let cookie = match jar.get(GITHUB_COOKIE) {
             Some(cookie) => cookie,
             None => {
                 debug!("No token cookie found in jar");
-                return Err(self.create_login_redirect(state));
+                return None;
             }
         };
 
-        serde_json::from_str(cookie.value()).map_err(|e| {
-            debug!(?e, "Failed to deserialize token cookie");
-            self.create_login_redirect(state)
-        })
+        match serde_json::from_str(cookie.value()) {
+            Ok(cookie) => Some(cookie),
+            Err(e) => {
+                debug!(?e, "Failed to deserialize token cookie");
+                None
+            }
+        }
     }
 
     /// Get a client with a valid token, refreshing it if necessary.
@@ -175,83 +170,76 @@ impl GitHubClient {
     async fn get_client_with_token(
         &self,
         jar: PrivateCookieJar,
-        state: &AppContext,
-    ) -> Result<(PrivateCookieJar, Octocrab), Response> {
-        let token_cookie = match self.extract_token_cookie(&jar, state) {
-            Ok(cookie) => cookie,
-            Err(response) => return Err(response),
+        ctx: &AppContext,
+    ) -> Option<(PrivateCookieJar, Octocrab)> {
+        let token_cookie = match self.extract_token_cookie(&jar) {
+            Some(cookie) => cookie,
+            None => return None,
         };
 
         if self.is_token_valid(&token_cookie) {
-            let client = self
-                .create_github_user_client(secrecy::SecretString::new(
-                    token_cookie.access_token.into(),
-                ))
-                .map_err(|e| {
-                    debug!(?e, "Failed to create client with valid token");
-                    self.create_login_redirect(state)
-                })?;
 
-            return Ok((jar, client));
+
+            let client = match self.create_github_user_client(secrecy::SecretString::new(
+                token_cookie.access_token.into(),
+            )) {
+                Ok(client) => client,
+                Err(e) => {
+                    debug!(?e, "Failed to create client with valid token");
+                    return None;
+                }
+            };
+
+            return Some((jar, client));
         }
 
         debug!("Token expired, attempting refresh");
         let Some(refresh_token) = token_cookie.refresh_token else {
             debug!("No refresh token available");
-            return Err(self.create_login_redirect(state));
+            return None;
         };
 
-        let new_token = self
-            .refresh_token(refresh_token, state)
-            .await
-            .map_err(|e| {
+        let new_token = match self.refresh_token(refresh_token, ctx).await {
+            Ok(token) => token,
+            Err(e) => {
                 debug!(?e, "Failed to refresh token");
-                self.create_login_redirect(state)
-            })?;
+                return None;
+            }
+        };
 
-        let domain = state.base_url.clone().host().unwrap().to_string();
-        let cookie = Cookie::build((
-            GITHUB_COOKIE,
-            serde_json::to_string(&new_token).map_err(|e| {
+        let domain = ctx.base_url.clone().host().unwrap().to_string();
+        let cookie_value = match serde_json::to_string(&new_token) {
+            Ok(value) => value,
+            Err(e) => {
                 debug!(?e, "Failed to serialize new token cookie");
-                self.create_login_redirect(state)
-            })?,
-        ))
-        .domain(domain)
-        .path("/")
-        .secure(true)
-        .same_site(axum_extra::extract::cookie::SameSite::Strict)
-        .http_only(true);
+                return None;
+            }
+        };
+
+        let cookie = Cookie::build((GITHUB_COOKIE, cookie_value))
+            .domain(domain)
+            .path("/")
+            .secure(true)
+            .same_site(axum_extra::extract::cookie::SameSite::Strict)
+            .http_only(true);
 
         let jar = jar.add(cookie);
-        let client = self
+        let client = match self
             .create_github_user_client(secrecy::SecretString::new(new_token.access_token.into()))
-            .map_err(|e| {
+        {
+            Ok(client) => client,
+            Err(e) => {
                 debug!(?e, "Failed to create client with refreshed token");
-                self.create_login_redirect(state)
-            })?;
+                return None;
+            }
+        };
 
-        Ok((jar, client))
+        Some((jar, client))
     }
 }
 
 impl ScmClient<Box<KeaGitHubError>> for GitHubClient {
     fn new() -> Self {
-        let app_id: models::AppId = std::env::var("GITHUB_APP_ID")
-            .expect("GITHUB_APP_ID must be set")
-            .parse::<u64>()
-            .expect("Invalid GitHub App ID")
-            .into();
-
-        let key_path: PathBuf = std::env::var("GITHUB_APP_KEY_PATH")
-            .expect("GITHUB_APP_KEY_PATH must be set")
-            .parse()
-            .expect("Invalid GitHub App key path");
-
-        let key_contents = std::fs::read_to_string(key_path).expect("Failed to read key file");
-        let app_key = jsonwebtoken::EncodingKey::from_rsa_pem(key_contents.as_bytes())
-            .expect("Invalid RSA key");
-
         let client_id =
             ClientId::new(std::env::var("GITHUB_CLIENT_ID").expect("GITHUB_CLIENT_ID must be set"));
 
@@ -266,8 +254,6 @@ impl ScmClient<Box<KeaGitHubError>> for GitHubClient {
 
         GitHubClient {
             config: GitHubConfig {
-                app_id,
-                app_key,
                 client_id,
                 client_secret,
                 auth_url,
@@ -340,18 +326,25 @@ impl ScmClient<Box<KeaGitHubError>> for GitHubClient {
         .http_only(true)
         .max_age(max_age);
 
-        Ok((jar.add(cookie), Redirect::to("/github/me")).into_response())
+        Ok((jar.add(cookie), Redirect::to("/me")).into_response())
     }
 
-    async fn me(
+    async fn get_cookie_user(
         &self,
         jar: PrivateCookieJar,
-        state: AppContext,
-    ) -> Result<Response, Box<KeaGitHubError>> {
-        let (jar, client) = with_valid_client!(jar, self, state);
+        ctx: AppContext,
+    ) -> Result<(PrivateCookieJar, ScmUser), Box<KeaGitHubError>> {
+        if let Some((jar, client)) = self.get_client_with_token(jar, &ctx).await {
+            let user = client.current().user().await?;
 
-        let user = client.current().user().await?;
-        let body = Body::from(serde_json::to_string(&user).unwrap());
-        Ok((jar, Response::new(body)).into_response())
+            let scm_user = ScmUser {
+                id: user.id.to_string(),
+                login: user.login,
+            };
+
+            return Ok((jar, scm_user));
+        } else {
+            return Err(Box::new(KeaGitHubError::NotAuthenticated));
+        }
     }
 }

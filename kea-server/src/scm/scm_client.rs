@@ -1,6 +1,6 @@
 use axum::{extract::Query, response::Response};
 use axum_extra::extract::PrivateCookieJar;
-use serde::{de, Deserialize, Deserializer};
+use serde::{de, Deserialize, Deserializer, Serialize};
 
 use crate::state::AppContext;
 
@@ -14,6 +14,15 @@ pub enum AuthResponse {
         error_description: String,
         error_url: String,
     },
+}
+
+#[derive(Debug, Serialize)]
+pub struct ScmUser {
+    /// The user's unique ID.
+    pub id: String,
+
+    /// The user's login. This is typically the user's username.
+    pub login: String,
 }
 
 impl<'de> Deserialize<'de> for AuthResponse {
@@ -56,7 +65,12 @@ pub trait ScmClient<E> {
         state: AppContext,
     ) -> Result<Response, E>;
 
-    async fn me(&self, jar: PrivateCookieJar, state: AppContext) -> Result<Response, E>;
+    /// Get the user associated with the cookie in the given jar.
+    async fn get_cookie_user(
+        &self,
+        jar: PrivateCookieJar,
+        state: AppContext,
+    ) -> Result<(PrivateCookieJar, ScmUser), E>;
 
     // TODO: logout
 }

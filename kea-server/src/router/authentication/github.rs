@@ -16,12 +16,3 @@ pub async fn login(
     let AppState { clients, ctx } = state;
     clients.github.login(query, jar, ctx).await
 }
-
-#[axum::debug_handler]
-pub async fn me(
-    State(state): State<AppState>,
-    jar: PrivateCookieJar,
-) -> Result<Response, Box<KeaGitHubError>> {
-    let AppState { clients, ctx } = state;
-    clients.github.me(jar, ctx).await
-}

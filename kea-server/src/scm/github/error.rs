@@ -17,6 +17,9 @@ pub enum KeaGitHubError {
     #[error("GitHub API error: {0}")]
     ApiError(#[from] octocrab::Error),
 
+    #[error("User not authenticated")]
+    NotAuthenticated,
+
     #[error("GitHub user with id {0} has no email")]
     UserHasNoEmail(UserId),
 }
