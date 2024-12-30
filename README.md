@@ -20,7 +20,7 @@
 
 - [x] Set up Axum
 - [x] Set up authentication
-- [ ] Set up refresh tokens
+- [x] Set up refresh tokens
 - [ ] Add a protected route
 - [ ] Set up Cargo clippy as a pre-commit hook
 

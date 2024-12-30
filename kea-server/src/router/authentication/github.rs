@@ -12,7 +12,7 @@ pub async fn login(
     State(state): State<AppState>,
     jar: PrivateCookieJar,
     query: Option<Query<AuthResponse>>,
-) -> Result<Response, KeaGitHubError> {
+) -> Result<Response, Box<KeaGitHubError>> {
     let AppState { clients, ctx } = state;
     clients.github.login(query, jar, ctx).await
 }
@@ -21,7 +21,7 @@ pub async fn login(
 pub async fn me(
     State(state): State<AppState>,
     jar: PrivateCookieJar,
-) -> Result<Response, KeaGitHubError> {
+) -> Result<Response, Box<KeaGitHubError>> {
     let AppState { clients, ctx } = state;
     clients.github.me(jar, ctx).await
 }

@@ -21,14 +21,14 @@ pub enum KeaGitHubError {
     UserHasNoEmail(UserId),
 }
 
-impl IntoResponse for KeaGitHubError {
+impl IntoResponse for Box<KeaGitHubError> {
     fn into_response(self) -> Response<axum::body::Body> {
-        let status = match self {
+        let status = match *self {
             KeaGitHubError::AuthError { .. } => axum::http::StatusCode::UNAUTHORIZED,
             _ => axum::http::StatusCode::INTERNAL_SERVER_ERROR,
         };
 
-        let body = match self {
+        let body = match *self {
             KeaGitHubError::AuthError {
                 error_description,
                 error_url,
@@ -52,5 +52,11 @@ impl IntoResponse for KeaGitHubError {
             .status(status)
             .body(body.into())
             .unwrap()
+    }
+}
+
+impl From<octocrab::Error> for Box<KeaGitHubError> {
+    fn from(e: octocrab::Error) -> Box<KeaGitHubError> {
+        Box::new(KeaGitHubError::ApiError(e))
     }
 }
