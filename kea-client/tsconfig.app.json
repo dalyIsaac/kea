@@ -22,6 +22,8 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
+    "noUncheckedIndexedAccess": true,
+    "allowArbitraryExtensions": true,
 
     "baseUrl": ".",
     "paths": {

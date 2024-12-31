@@ -7,8 +7,9 @@ import {
   CardTitle,
 } from "../shadcn/card";
 import { Button } from "~/components/shadcn/button";
-import { FaBrandsGithub, FaBrandsGitlab } from "solid-icons/fa";
+import { FaBrandsGithub } from "solid-icons/fa";
 import { IconTypes } from "solid-icons";
+import { createMeQuery } from "~/api/api";
 
 const Account: Component<{
   provider: string;
@@ -24,6 +25,8 @@ const Account: Component<{
 };
 
 export const Accounts: Component = () => {
+  const meQuery = createMeQuery();
+
   return (
     <Card>
       <CardHeader class="space-y-1">
@@ -34,7 +37,6 @@ export const Accounts: Component = () => {
       <CardContent class="flex gap-4">
         <div class="flex w-full flex-col gap-6">
           <Account provider="GitHub" icon={FaBrandsGithub} onClick={() => {}} />
-          <Account provider="GitLab" icon={FaBrandsGitlab} onClick={() => {}} />
         </div>
       </CardContent>
     </Card>
