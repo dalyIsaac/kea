@@ -1,9 +1,10 @@
 use axum::http::header::CONTENT_TYPE;
-use axum::http::{header, HeaderName};
+use axum::http::{header, HeaderName, HeaderValue};
 use openapi::BaseOpenApi;
 use state::AppState;
 use std::time::Duration;
 use tower_http::catch_panic::CatchPanicLayer;
+use tower_http::cors::CorsLayer;
 use tower_http::request_id::{PropagateRequestIdLayer, SetRequestIdLayer};
 use tower_http::set_header::SetResponseHeaderLayer;
 use tower_http::timeout::TimeoutLayer;
@@ -20,6 +21,9 @@ mod state;
 async fn main() {
     dotenvy::dotenv().expect("Failed to load .env file");
     let state = AppState::new().await;
+
+    let base_url = format!("0.0.0.0:{}", state.ctx.port);
+    let cors_allowed_origin = state.ctx.cors_allowed_origin.clone();
     let timeout_secs = state.ctx.cookie_timeout_secs;
     let x_request_id = HeaderName::from_static("x-request-id");
 
@@ -50,6 +54,11 @@ async fn main() {
                     CONTENT_TYPE,
                     router::middleware::utils::content_length_from_response,
                 ))
+                // CORS
+                .layer(
+                    CorsLayer::new()
+                        .allow_origin(cors_allowed_origin.parse::<HeaderValue>().unwrap()),
+                )
                 // Catch panics and return a 500 Internal Server Error.
                 .layer(CatchPanicLayer::new()),
         )
@@ -57,7 +66,7 @@ async fn main() {
 
     let router = router.merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", openapi));
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    let listener = tokio::net::TcpListener::bind(base_url).await.unwrap();
 
     axum::serve(listener, router).await.unwrap();
 }

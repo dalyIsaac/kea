@@ -12,9 +12,6 @@ use crate::scm::github::client::GITHUB_COOKIE;
         license(),
     ),
     modifiers(&SecurityAddon),
-    servers(
-        (url = "localhost:3000", description = "Local development server."),
-    ),
 )]
 pub struct BaseOpenApi;
 

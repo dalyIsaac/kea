@@ -67,7 +67,7 @@ impl GitHubClient {
             Some(self.config.token_url.clone()),
         )
         .set_redirect_uri(
-            RedirectUrl::new(format!("{}github/login", ctx.base_url))
+            RedirectUrl::new(format!("{}/github/login", ctx.get_server_url()))
                 .expect("Invalid redirect URL"),
         )
     }
@@ -125,13 +125,12 @@ impl GitHubClient {
             token_cookie.expires_at - time::OffsetDateTime::now_utc().unix_timestamp(),
         );
 
-        let domain = ctx.base_url.clone().host().unwrap().to_string();
         let cookie = Cookie::build((
             GITHUB_COOKIE,
             serde_json::to_string(&token_cookie)
                 .map_err(|e| Box::new(KeaGitHubError::OAuth2Error(e.to_string())))?,
         ))
-        .domain(domain)
+        .domain(ctx.domain.clone())
         .path("/")
         .secure(true)
         .http_only(true)
@@ -160,14 +159,6 @@ impl GitHubClient {
         jar = self.add_cookie(jar, &token_cookie, ctx)?;
 
         Ok((jar, token_cookie))
-    }
-
-    /// Create a redirect to the Kea GitHub login route. This route will either:
-    ///
-    /// - Redirect to the GitHub login page if the user is not logged in.
-    /// - Redirect to the GitHub OAuth callback if the user is logged in.
-    fn create_login_redirect(&self, state: &AppContext) -> Response {
-        Redirect::to(format!("{}github/login", state.base_url).as_str()).into_response()
     }
 
     /// Extract the GitHub token cookie from the cookie jar.

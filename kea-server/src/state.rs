@@ -1,6 +1,6 @@
-use std::{env, str::FromStr};
+use std::env;
 
-use axum::{extract::FromRef, http::Uri};
+use axum::extract::FromRef;
 use axum_extra::extract::cookie::Key;
 
 use crate::scm::github::client::GitHubClient;
@@ -13,9 +13,17 @@ pub struct AppClients {
 
 #[derive(Clone)]
 pub struct AppContext {
-    pub base_url: Uri,
-    pub key: Key,
+    pub domain: String,
+    pub port: u16,
+    pub cors_allowed_origin: String,
     pub cookie_timeout_secs: u64,
+    pub key: Key,
+}
+
+impl AppContext {
+    pub fn get_server_url(&self) -> String {
+        format!("{}:{}", self.domain, self.port)
+    }
 }
 
 #[derive(Clone)]
@@ -32,14 +40,17 @@ impl FromRef<AppState> for Key {
 
 impl AppState {
     pub async fn new() -> Self {
-        let base_url = Uri::from_str(
-            env::var("BASE_URL")
-                .expect("BASE_URL must be set")
-                .trim_end_matches('/'),
-        )
-        .expect("Invalid base URL");
+        let domain = env::var("DOMAIN").expect("DOMAIN must be set");
 
-        let timeout_secs = env::var("TIMEOUT_SECS")
+        let port = env::var("PORT")
+            .expect("PORT must be set")
+            .parse::<u16>()
+            .expect("Invalid port");
+
+        let cors_allowed_origin =
+            env::var("CORS_ALLOWED_ORIGIN").expect("CORS_ALLOWED_ORIGIN must be set");
+
+        let cookie_timeout_secs = env::var("TIMEOUT_SECS")
             .expect("TIMEOUT_SECS must be set")
             .parse::<u64>()
             .expect("Invalid timeout seconds");
@@ -55,8 +66,10 @@ impl AppState {
                 github: GitHubClient::new(),
             },
             ctx: AppContext {
-                base_url,
-                cookie_timeout_secs: timeout_secs,
+                domain,
+                port,
+                cors_allowed_origin,
+                cookie_timeout_secs,
                 key,
             },
         }
