@@ -77,7 +77,7 @@ impl GitHubClient {
         token_result: oauth2::StandardTokenResponse<oauth2::EmptyExtraTokenFields, BasicTokenType>,
     ) -> Result<TokenCookie, Box<KeaGitHubError>> {
         let expires_in = token_result.expires_in().ok_or_else(|| {
-            Box::new(KeaGitHubError::TokenError(
+            Box::new(KeaGitHubError::TokenCookieConstruction(
                 "No expiry time received".to_string(),
             ))
         })?;
@@ -85,13 +85,13 @@ impl GitHubClient {
         let expires_at = time::OffsetDateTime::now_utc()
             .checked_add(time::Duration::seconds(
                 expires_in.as_secs().try_into().map_err(|_| {
-                    Box::new(KeaGitHubError::TokenError(
+                    Box::new(KeaGitHubError::TokenCookieConstruction(
                         "Token expiry time too large".to_string(),
                     ))
                 })?,
             ))
             .ok_or_else(|| {
-                Box::new(KeaGitHubError::TokenError(
+                Box::new(KeaGitHubError::TokenCookieConstruction(
                     "Failed to calculate expiry time".to_string(),
                 ))
             })?
@@ -112,30 +112,54 @@ impl GitHubClient {
         Octocrab::builder()
             .user_access_token(user_access_token)
             .build()
-            .map_err(|e| Box::new(KeaGitHubError::ApiError(e)))
+            .map_err(|e| Box::new(KeaGitHubError::Api(e)))
+    }
+
+    fn add_cookie(
+        &self,
+        jar: PrivateCookieJar,
+        token_cookie: &TokenCookie,
+        ctx: &AppContext,
+    ) -> Result<PrivateCookieJar, Box<KeaGitHubError>> {
+        let max_age = time::Duration::seconds(
+            token_cookie.expires_at - time::OffsetDateTime::now_utc().unix_timestamp(),
+        );
+
+        let domain = ctx.base_url.clone().host().unwrap().to_string();
+        let cookie = Cookie::build((
+            GITHUB_COOKIE,
+            serde_json::to_string(&token_cookie)
+                .map_err(|e| Box::new(KeaGitHubError::OAuth2Error(e.to_string())))?,
+        ))
+        .domain(domain)
+        .path("/")
+        .secure(true)
+        .http_only(true)
+        .max_age(max_age);
+
+        Ok(jar.add(cookie))
     }
 
     /// Refresh the access token using the refresh token.
     async fn refresh_token(
         &self,
+        jar: PrivateCookieJar,
         refresh_token: String,
         ctx: &AppContext,
-    ) -> Result<TokenCookie, Box<KeaGitHubError>> {
+    ) -> Result<(PrivateCookieJar, TokenCookie), Box<KeaGitHubError>> {
+        let mut jar = jar;
         let client = self.create_oauth_client(ctx);
 
         let token_result = client
             .exchange_refresh_token(&oauth2::RefreshToken::new(refresh_token))
             .request_async(async_http_client)
             .await
-            .map_err(|e| Box::new(KeaGitHubError::TokenError(e.to_string())))?;
+            .map_err(|e| Box::new(KeaGitHubError::OAuth2Error(e.to_string())))?;
 
-        Self::create_token_cookie(token_result).map_err(|e| Box::new(*e))
-    }
+        let token_cookie = Self::create_token_cookie(token_result)?;
+        jar = self.add_cookie(jar, &token_cookie, ctx)?;
 
-    /// Check if the token is still valid given the current time.
-    fn is_token_valid(&self, token_cookie: &TokenCookie) -> bool {
-        let now = time::OffsetDateTime::now_utc().unix_timestamp();
-        now < token_cookie.expires_at
+        return Ok((jar, token_cookie));
     }
 
     /// Create a redirect to the Kea GitHub login route. This route will either:
@@ -147,22 +171,28 @@ impl GitHubClient {
     }
 
     /// Extract the GitHub token cookie from the cookie jar.
-    fn extract_token_cookie(&self, jar: &PrivateCookieJar) -> Option<TokenCookie> {
+    fn extract_token_cookie(
+        &self,
+        jar: &PrivateCookieJar,
+    ) -> Result<TokenCookie, Box<KeaGitHubError>> {
         let cookie = match jar.get(GITHUB_COOKIE) {
             Some(cookie) => cookie,
             None => {
                 debug!("No token cookie found in jar");
-                return None;
+                return Err(Box::new(KeaGitHubError::NoTokenCookie));
             }
         };
 
         match serde_json::from_str(cookie.value()) {
-            Ok(cookie) => Some(cookie),
-            Err(e) => {
-                debug!(?e, "Failed to deserialize token cookie");
-                None
-            }
+            Ok(cookie) => Ok(cookie),
+            Err(_e) => return Err(Box::new(KeaGitHubError::TokenCookieDeserialization)),
         }
+    }
+
+    /// Check if the token is still valid given the current time.
+    fn is_token_valid(&self, token_cookie: &TokenCookie) -> bool {
+        let now = time::OffsetDateTime::now_utc().unix_timestamp();
+        now < token_cookie.expires_at
     }
 
     /// Get a client with a valid token, refreshing it if necessary.
@@ -171,70 +201,41 @@ impl GitHubClient {
         &self,
         jar: PrivateCookieJar,
         ctx: &AppContext,
-    ) -> Option<(PrivateCookieJar, Octocrab)> {
-        let token_cookie = match self.extract_token_cookie(&jar) {
-            Some(cookie) => cookie,
-            None => return None,
+    ) -> Result<(PrivateCookieJar, Octocrab), Box<KeaGitHubError>> {
+        let mut jar = jar;
+        let mut token_cookie = match self.extract_token_cookie(&jar) {
+            Ok(cookie) => cookie,
+            Err(e) => return Err(e),
         };
 
-        if self.is_token_valid(&token_cookie) {
-
-
-            let client = match self.create_github_user_client(secrecy::SecretString::new(
-                token_cookie.access_token.into(),
-            )) {
-                Ok(client) => client,
-                Err(e) => {
-                    debug!(?e, "Failed to create client with valid token");
-                    return None;
-                }
-            };
-
-            return Some((jar, client));
+        if !self.is_token_valid(&token_cookie) {
+            return Err(Box::new(KeaGitHubError::NotAuthenticated));
         }
 
-        debug!("Token expired, attempting refresh");
-        let Some(refresh_token) = token_cookie.refresh_token else {
-            debug!("No refresh token available");
-            return None;
-        };
+        // Refresh if there is less than 5 minutes left on the token.
+        let now = time::OffsetDateTime::now_utc().unix_timestamp();
+        let secs_left = token_cookie.expires_at - now;
+        let should_refresh = secs_left < 300;
 
-        let new_token = match self.refresh_token(refresh_token, ctx).await {
-            Ok(token) => token,
-            Err(e) => {
-                debug!(?e, "Failed to refresh token");
-                return None;
-            }
-        };
+        if should_refresh {
+            debug!("Token is about to expire, refreshing");
+            (jar, token_cookie) = match self
+                .refresh_token(jar, token_cookie.refresh_token.clone().unwrap(), ctx)
+                .await
+            {
+                Ok(token) => token,
+                Err(e) => {
+                    debug!(?e, "Failed to refresh token");
+                    return Err(e);
+                }
+            };
+        }
 
-        let domain = ctx.base_url.clone().host().unwrap().to_string();
-        let cookie_value = match serde_json::to_string(&new_token) {
-            Ok(value) => value,
-            Err(e) => {
-                debug!(?e, "Failed to serialize new token cookie");
-                return None;
-            }
-        };
+        let client = self.create_github_user_client(secrecy::SecretString::new(
+            token_cookie.access_token.into(),
+        ))?;
 
-        let cookie = Cookie::build((GITHUB_COOKIE, cookie_value))
-            .domain(domain)
-            .path("/")
-            .secure(true)
-            .same_site(axum_extra::extract::cookie::SameSite::Strict)
-            .http_only(true);
-
-        let jar = jar.add(cookie);
-        let client = match self
-            .create_github_user_client(secrecy::SecretString::new(new_token.access_token.into()))
-        {
-            Ok(client) => client,
-            Err(e) => {
-                debug!(?e, "Failed to create client with refreshed token");
-                return None;
-            }
-        };
-
-        Some((jar, client))
+        Ok((jar, client))
     }
 }
 
@@ -268,6 +269,7 @@ impl ScmClient<Box<KeaGitHubError>> for GitHubClient {
         jar: PrivateCookieJar,
         ctx: AppContext,
     ) -> Result<Response, Box<KeaGitHubError>> {
+        let mut jar = jar;
         let client = self.create_oauth_client(&ctx);
 
         let auth_response = match query {
@@ -285,7 +287,7 @@ impl ScmClient<Box<KeaGitHubError>> for GitHubClient {
                 error_url,
             } => {
                 debug!(?error, ?error_description, ?error_url);
-                return Err(Box::new(KeaGitHubError::AuthError {
+                return Err(Box::new(KeaGitHubError::Auth {
                     error,
                     error_description,
                     error_url,
@@ -298,35 +300,19 @@ impl ScmClient<Box<KeaGitHubError>> for GitHubClient {
             .exchange_code(code)
             .request_async(async_http_client)
             .await
-            .map_err(|e| Box::new(KeaGitHubError::TokenError(e.to_string())))?;
+            .map_err(|e| Box::new(KeaGitHubError::OAuth2Error(e.to_string())))?;
 
         match token_result.token_type() {
             BasicTokenType::Bearer => (),
             _ => {
-                return Err(Box::new(KeaGitHubError::TokenError(
-                    "Invalid token type received".to_string(),
-                )))
+                return Err(Box::new(KeaGitHubError::InvalidTokenType));
             }
         }
 
-        let token_cookie = Self::create_token_cookie(token_result).map_err(|e| Box::new(*e))?;
-        let max_age = time::Duration::seconds(
-            token_cookie.expires_at - time::OffsetDateTime::now_utc().unix_timestamp(),
-        );
+        let token_cookie = Self::create_token_cookie(token_result)?;
+        jar = self.add_cookie(jar, &token_cookie, &ctx)?;
 
-        let domain = ctx.base_url.clone().host().unwrap().to_string();
-        let cookie = Cookie::build((
-            GITHUB_COOKIE,
-            serde_json::to_string(&token_cookie)
-                .map_err(|e| Box::new(KeaGitHubError::TokenError(e.to_string())))?,
-        ))
-        .domain(domain)
-        .path("/")
-        .secure(true)
-        .http_only(true)
-        .max_age(max_age);
-
-        Ok((jar.add(cookie), Redirect::to("/me")).into_response())
+        Ok((jar, Redirect::to("/me")).into_response())
     }
 
     async fn get_cookie_user(
@@ -334,17 +320,18 @@ impl ScmClient<Box<KeaGitHubError>> for GitHubClient {
         jar: PrivateCookieJar,
         ctx: AppContext,
     ) -> Result<(PrivateCookieJar, ScmUser), Box<KeaGitHubError>> {
-        if let Some((jar, client)) = self.get_client_with_token(jar, &ctx).await {
-            let user = client.current().user().await?;
+        match self.get_client_with_token(jar, &ctx).await {
+            Ok((jar, client)) => {
+                let user = client.current().user().await?;
 
-            let scm_user = ScmUser {
-                id: user.id.to_string(),
-                login: user.login,
-            };
+                let scm_user = ScmUser {
+                    id: user.id.to_string(),
+                    login: user.login,
+                };
 
-            return Ok((jar, scm_user));
-        } else {
-            return Err(Box::new(KeaGitHubError::NotAuthenticated));
+                Ok((jar, scm_user))
+            }
+            Err(e) => Err(e),
         }
     }
 }

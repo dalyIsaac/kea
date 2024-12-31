@@ -5,17 +5,29 @@ use thiserror::Error;
 #[derive(Debug, Error)]
 pub enum KeaGitHubError {
     #[error("GitHub authentication error: {error_description}")]
-    AuthError {
+    Auth {
         error: String,
         error_description: String,
         error_url: String,
     },
 
-    #[error("GitHub token error: {0}")]
-    TokenError(String),
+    #[error("GitHub token cookie construction error: {0}")]
+    TokenCookieConstruction(String),
+
+    #[error("OAuth2 error: {0}")]
+    OAuth2Error(String),
+
+    #[error("Invalid token type received from GitHub, expected 'bearer'")]
+    InvalidTokenType,
+
+    #[error("No GitHub token cookie found in request")]
+    NoTokenCookie,
+
+    #[error("Failed to deserialize GitHub token cookie")]
+    TokenCookieDeserialization,
 
     #[error("GitHub API error: {0}")]
-    ApiError(#[from] octocrab::Error),
+    Api(#[from] octocrab::Error),
 
     #[error("User not authenticated")]
     NotAuthenticated,
@@ -27,19 +39,19 @@ pub enum KeaGitHubError {
 impl IntoResponse for Box<KeaGitHubError> {
     fn into_response(self) -> Response<axum::body::Body> {
         let status = match *self {
-            KeaGitHubError::AuthError { .. } => axum::http::StatusCode::UNAUTHORIZED,
+            KeaGitHubError::Auth { .. } => axum::http::StatusCode::UNAUTHORIZED,
             _ => axum::http::StatusCode::INTERNAL_SERVER_ERROR,
         };
 
         let body = match *self {
-            KeaGitHubError::AuthError {
+            KeaGitHubError::Auth {
                 error_description,
                 error_url,
                 error,
                 ..
             } => format!("{}: {}\n{}", error, error_description, error_url),
 
-            KeaGitHubError::ApiError(e) => match e {
+            KeaGitHubError::Api(e) => match e {
                 octocrab::Error::GitHub {
                     source,
                     backtrace: _,
@@ -60,6 +72,6 @@ impl IntoResponse for Box<KeaGitHubError> {
 
 impl From<octocrab::Error> for Box<KeaGitHubError> {
     fn from(e: octocrab::Error) -> Box<KeaGitHubError> {
-        Box::new(KeaGitHubError::ApiError(e))
+        Box::new(KeaGitHubError::Api(e))
     }
 }
