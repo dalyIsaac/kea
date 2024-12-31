@@ -1,7 +1,6 @@
 use axum::http::header::CONTENT_TYPE;
 use axum::http::{header, HeaderName};
-use axum::{routing::get, Router};
-
+use openapi::BaseOpenApi;
 use state::AppState;
 use std::time::Duration;
 use tower_http::catch_panic::CatchPanicLayer;
@@ -9,7 +8,10 @@ use tower_http::request_id::{PropagateRequestIdLayer, SetRequestIdLayer};
 use tower_http::set_header::SetResponseHeaderLayer;
 use tower_http::timeout::TimeoutLayer;
 use tower_http::{sensitive_headers::SetSensitiveRequestHeadersLayer, trace::TraceLayer};
+use utoipa_axum::routes;
+use utoipa_swagger_ui::SwaggerUi;
 
+mod openapi;
 mod router;
 mod scm;
 mod state;
@@ -21,12 +23,10 @@ async fn main() {
     let timeout_secs = state.ctx.cookie_timeout_secs;
     let x_request_id = HeaderName::from_static("x-request-id");
 
-    let github_routes = Router::new().route("/login", get(router::authentication::github::login));
-
-    let app = Router::new()
-        .route("/", get(|| async { "Hello, world!" }))
-        .route("/me", get(router::authentication::me::me))
-        .nest("/github", github_routes)
+    let (router, openapi) = BaseOpenApi::router()
+        .routes(routes!(router::me::me))
+        .routes(routes!(router::github::login))
+        .routes(routes!(router::healthcheck::healthcheck))
         .with_state(state)
         .layer(
             tower::ServiceBuilder::new()
@@ -52,8 +52,12 @@ async fn main() {
                 ))
                 // Catch panics and return a 500 Internal Server Error.
                 .layer(CatchPanicLayer::new()),
-        );
+        )
+        .split_for_parts();
+
+    let router = router.merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", openapi));
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
-    axum::serve(listener, app).await.unwrap();
+
+    axum::serve(listener, router).await.unwrap();
 }

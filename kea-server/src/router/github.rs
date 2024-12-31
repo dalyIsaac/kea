@@ -8,6 +8,7 @@ use axum::{
 use axum_extra::extract::cookie::PrivateCookieJar;
 
 #[axum::debug_handler]
+#[utoipa::path(get, path = "/github/login", responses((status = OK, body = String)))]
 pub async fn login(
     State(state): State<AppState>,
     jar: PrivateCookieJar,

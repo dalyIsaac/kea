@@ -7,6 +7,7 @@ use axum::{extract::State, response::Response};
 use axum_extra::extract::cookie::PrivateCookieJar;
 
 #[axum::debug_handler]
+#[utoipa::path(get, path = "/me", responses((status = OK, body = String)))]
 pub async fn me(
     State(state): State<AppState>,
     jar: PrivateCookieJar,

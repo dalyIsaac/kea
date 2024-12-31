@@ -17,7 +17,7 @@ use oauth2::{
 use octocrab::Octocrab;
 use tracing::debug;
 
-const GITHUB_COOKIE: &str = "github-tokens";
+pub const GITHUB_COOKIE: &str = "github-tokens";
 
 /// Ensures that the user is authenticated. If the user's access token has expired, the refresh token
 /// is used to obtain a new access token.
