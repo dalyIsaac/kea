@@ -159,7 +159,7 @@ impl GitHubClient {
         let token_cookie = Self::create_token_cookie(token_result)?;
         jar = self.add_cookie(jar, &token_cookie, ctx)?;
 
-        return Ok((jar, token_cookie));
+        Ok((jar, token_cookie))
     }
 
     /// Create a redirect to the Kea GitHub login route. This route will either:
@@ -185,7 +185,7 @@ impl GitHubClient {
 
         match serde_json::from_str(cookie.value()) {
             Ok(cookie) => Ok(cookie),
-            Err(_e) => return Err(Box::new(KeaGitHubError::TokenCookieDeserialization)),
+            Err(_e) => Err(Box::new(KeaGitHubError::TokenCookieDeserialization)),
         }
     }
 
