@@ -55,7 +55,17 @@ export interface paths {
 }
 export type webhooks = Record<string, never>;
 export interface components {
-    schemas: never;
+    schemas: {
+        MeClients: {
+            github?: null | components["schemas"]["ScmUser"];
+        };
+        ScmUser: {
+            /** @description The user's unique ID. */
+            id: string;
+            /** @description The user's login. This is typically the user's username. */
+            login: string;
+        };
+    };
     responses: never;
     parameters: never;
     requestBodies: never;
@@ -116,7 +126,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "text/plain": string;
+                    "application/json": components["schemas"]["MeClients"];
                 };
             };
         };

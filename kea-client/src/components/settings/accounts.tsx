@@ -6,21 +6,29 @@ import {
   CardHeader,
   CardTitle,
 } from "../shadcn/card";
-import { Button } from "~/components/shadcn/button";
 import { FaBrandsGithub } from "solid-icons/fa";
 import { IconTypes } from "solid-icons";
 import { createMeQuery } from "~/api/api";
+import { components } from "~/api/openapi.g";
+
+type ScmUser = components["schemas"]["ScmUser"] | null | undefined;
 
 const Account: Component<{
   provider: string;
   icon: IconTypes;
-  onClick: () => void;
+  user: ScmUser;
+  isLoading: boolean;
 }> = (props) => {
   return (
-    <Button variant="outline" onClick={props.onClick}>
-      <props.icon class="mr-2 size-4" />
-      {props.provider}
-    </Button>
+    <div class="flex items-center gap-4">
+      <props.icon class="size-8" />
+      <div class="flex flex-col">
+        <div class="font-bold">{props.provider}</div>
+        <div class="text-sm">
+          {props.user ? <>{props.user.login}</> : "Not connected"}
+        </div>
+      </div>
+    </div>
   );
 };
 
@@ -36,7 +44,12 @@ export const Accounts: Component = () => {
 
       <CardContent class="flex gap-4">
         <div class="flex w-full flex-col gap-6">
-          <Account provider="GitHub" icon={FaBrandsGithub} onClick={() => {}} />
+          <Account
+            provider="GitHub"
+            icon={FaBrandsGithub}
+            user={meQuery.data?.data?.github}
+            isLoading={meQuery.isLoading}
+          />
         </div>
       </CardContent>
     </Card>

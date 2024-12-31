@@ -16,7 +16,7 @@ pub enum AuthResponse {
     },
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, utoipa::ToSchema)]
 pub struct ScmUser {
     /// The user's unique ID.
     pub id: String,
