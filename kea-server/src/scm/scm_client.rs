@@ -55,9 +55,7 @@ impl<'de> Deserialize<'de> for AuthResponse {
     }
 }
 
-pub trait ScmClient<E> {
-    fn new() -> Self;
-
+pub trait ScmAuthClient<E> {
     async fn sign_in(
         &self,
         query: Option<Query<AuthResponse>>,
@@ -73,4 +71,13 @@ pub trait ScmClient<E> {
         jar: PrivateCookieJar,
         state: AppContext,
     ) -> Result<(PrivateCookieJar, ScmUser), E>;
+}
+
+pub trait ScmClient<E> {
+    async fn get_pull_request_details(
+        &self,
+        owner: &str,
+        repo: &str,
+        pr_number: u64,
+    ) -> Result<(), E>;
 }

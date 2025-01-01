@@ -1,5 +1,5 @@
 use crate::scm::github::error::KeaGitHubError;
-use crate::scm::scm_client::{AuthResponse, ScmClient};
+use crate::scm::scm_client::{AuthResponse, ScmAuthClient};
 use crate::state::AppState;
 use axum::{
     extract::{Query, State},

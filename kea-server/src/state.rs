@@ -4,7 +4,6 @@ use axum::extract::FromRef;
 use axum_extra::extract::cookie::Key;
 
 use crate::scm::github::client::GitHubClient;
-use crate::scm::scm_client::ScmClient;
 
 #[derive(Clone)]
 pub struct AppClients {
