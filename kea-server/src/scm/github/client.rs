@@ -303,7 +303,29 @@ impl ScmClient<Box<KeaGitHubError>> for GitHubClient {
         let token_cookie = Self::create_token_cookie(token_result)?;
         jar = self.add_cookie(jar, &token_cookie, &ctx)?;
 
-        Ok((jar, Redirect::to("/me")).into_response())
+        Ok((jar, Redirect::to(&ctx.client_url)).into_response())
+    }
+
+    async fn sign_out(
+        &self,
+        jar: PrivateCookieJar,
+        ctx: AppContext,
+    ) -> Result<Response, Box<KeaGitHubError>> {
+        let mut jar = jar;
+
+        jar = jar.remove(Cookie::build(GITHUB_COOKIE));
+
+        // Create a new cookie with an expiry time in the past to delete the cookie.
+        let cookie = Cookie::build((GITHUB_COOKIE, ""))
+            .domain(ctx.domain.clone())
+            .path("/")
+            .secure(true)
+            .http_only(true)
+            .max_age(time::Duration::seconds(-1));
+
+        jar = jar.add(cookie);
+
+        Ok((jar, Redirect::to(&ctx.client_url)).into_response())
     }
 
     async fn get_cookie_user(

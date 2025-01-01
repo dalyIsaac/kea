@@ -29,7 +29,8 @@ async fn main() {
 
     let (router, openapi) = BaseOpenApi::router()
         .routes(routes!(router::me::me))
-        .routes(routes!(router::github::signin))
+        .routes(routes!(router::github::sign_in))
+        .routes(routes!(router::github::sign_out))
         .routes(routes!(router::healthcheck::healthcheck))
         .with_state(state)
         .layer(

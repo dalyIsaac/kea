@@ -65,12 +65,12 @@ pub trait ScmClient<E> {
         state: AppContext,
     ) -> Result<Response, E>;
 
+    async fn sign_out(&self, jar: PrivateCookieJar, state: AppContext) -> Result<Response, E>;
+
     /// Get the user associated with the cookie in the given jar.
     async fn get_cookie_user(
         &self,
         jar: PrivateCookieJar,
         state: AppContext,
     ) -> Result<(PrivateCookieJar, ScmUser), E>;
-
-    // TODO: logout
 }

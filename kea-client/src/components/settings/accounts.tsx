@@ -11,13 +11,13 @@ import { IconTypes } from "solid-icons";
 import { createMeQuery } from "~/api/api";
 import { components } from "~/api/openapi.g";
 import { Skeleton } from "~/components/shadcn/skeleton";
-import { Button } from "~/components/shadcn/button";
 import { VsSignIn, VsSignOut } from "solid-icons/vs";
 import {
   Tooltip,
   TooltipTrigger,
   TooltipContent,
 } from "~/components/shadcn/tooltip";
+import { Link } from "@kobalte/core/link";
 
 type ScmUser = components["schemas"]["ScmUser"] | null | undefined;
 
@@ -30,14 +30,14 @@ const Account: Component<{
   const actionProps = () => {
     if (props.user) {
       return {
-        href: "http://localhost:3000/github/signout",
-        icon: <VsSignOut class="size-1" />,
+        href: `http://localhost:3000/${props.provider.toLowerCase()}/signout`,
+        icon: <VsSignOut class="size-5" />,
         text: "Sign out of GitHub",
       };
     } else {
       return {
-        href: "http://localhost:3000/github/signin",
-        icon: <VsSignIn class="size-1" />,
+        href: `http://localhost:3000/${props.provider.toLowerCase()}/signin`,
+        icon: <VsSignIn class="size-5" />,
         text: "Sign in to GitHub",
       };
     }
@@ -65,11 +65,7 @@ const Account: Component<{
 
       {props.isLoading ? null : (
         <Tooltip>
-          <TooltipTrigger
-            as={Button<"a">}
-            variant="ghost"
-            href={actionProps().href}
-          >
+          <TooltipTrigger as={Link} variant="ghost" href={actionProps().href}>
             {actionProps().icon}
           </TooltipTrigger>
 
