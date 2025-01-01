@@ -21,7 +21,7 @@ pub const GITHUB_COOKIE: &str = "github-tokens";
 
 /// Ensures that the user is authenticated. If the user's access token has expired, the refresh token
 /// is used to obtain a new access token.
-/// If the user is not authenticated, the user is redirected to the GitHub login page.
+/// If the user is not authenticated, the user is redirected to the GitHub sign in page.
 /// If the user is authenticated, the cookie jar and the authenticated GitHub client are returned.
 ///
 /// The cookie jar should always be returned in the response.
@@ -67,7 +67,7 @@ impl GitHubClient {
             Some(self.config.token_url.clone()),
         )
         .set_redirect_uri(
-            RedirectUrl::new(format!("{}/github/login", ctx.get_server_url()))
+            RedirectUrl::new(format!("{}/github/signin", ctx.get_server_url()))
                 .expect("Invalid redirect URL"),
         )
     }
@@ -254,7 +254,7 @@ impl ScmClient<Box<KeaGitHubError>> for GitHubClient {
         }
     }
 
-    async fn login(
+    async fn sign_in(
         &self,
         query: Option<Query<AuthResponse>>,
         jar: PrivateCookieJar,

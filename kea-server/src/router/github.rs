@@ -8,12 +8,12 @@ use axum::{
 use axum_extra::extract::cookie::PrivateCookieJar;
 
 #[axum::debug_handler]
-#[utoipa::path(get, path = "/github/login", responses((status = OK, body = String)))]
-pub async fn login(
+#[utoipa::path(get, path = "/github/signin", responses((status = OK, body = String)))]
+pub async fn signin(
     State(state): State<AppState>,
     jar: PrivateCookieJar,
     query: Option<Query<AuthResponse>>,
 ) -> Result<Response, Box<KeaGitHubError>> {
     let AppState { clients, ctx } = state;
-    clients.github.login(query, jar, ctx).await
+    clients.github.sign_in(query, jar, ctx).await
 }
