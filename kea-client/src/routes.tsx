@@ -35,7 +35,7 @@ export const isKeaRouteDefinition = (
 export const routes: RouteDefinition[] = [
   {
     path: "/",
-    component: () => <div>Home</div>,
+    component: lazy(() => import("./routes/home")),
     info: {
       title: "Home",
     },

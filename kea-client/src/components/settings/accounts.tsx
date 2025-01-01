@@ -6,24 +6,19 @@ import {
   CardHeader,
   CardTitle,
 } from "~/components/shadcn/card";
-import { FaBrandsGithub } from "solid-icons/fa";
-import { IconTypes } from "solid-icons";
 import { createMeQuery } from "~/api/api";
 import { components } from "~/api/openapi.g";
 import { Skeleton } from "~/components/shadcn/skeleton";
-import { VsSignIn, VsSignOut } from "solid-icons/vs";
-import {
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-} from "~/components/shadcn/tooltip";
-import { Link } from "@kobalte/core/link";
+import { IconButtonLink } from "~/components/common/icon-button-link";
+import LogInIcon from "lucide-solid/icons/log-in";
+import LogOutIcon from "lucide-solid/icons/log-out";
+import { IconBrandGithub } from "~/components/shadcn/icons";
 
 type ScmUser = components["schemas"]["ScmUser"] | null | undefined;
 
 const Account: Component<{
   provider: string;
-  icon: IconTypes;
+  icon: Component<{ class: string }>;
   user: ScmUser;
   isLoading: boolean;
 }> = (props) => {
@@ -31,13 +26,13 @@ const Account: Component<{
     if (props.user) {
       return {
         href: `http://localhost:3000/${props.provider.toLowerCase()}/signout`,
-        icon: <VsSignOut class="size-5" />,
+        icon: LogOutIcon,
         text: "Sign out of GitHub",
       };
     } else {
       return {
         href: `http://localhost:3000/${props.provider.toLowerCase()}/signin`,
-        icon: <VsSignIn class="size-5" />,
+        icon: LogInIcon,
         text: "Sign in to GitHub",
       };
     }
@@ -64,15 +59,11 @@ const Account: Component<{
       </div>
 
       {props.isLoading ? null : (
-        <Tooltip>
-          <TooltipTrigger as={Link} variant="ghost" href={actionProps().href}>
-            {actionProps().icon}
-          </TooltipTrigger>
-
-          <TooltipContent>
-            <div>{actionProps().text}</div>
-          </TooltipContent>
-        </Tooltip>
+        <IconButtonLink
+          href={actionProps().href}
+          icon={actionProps().icon}
+          tooltip={actionProps().text}
+        />
       )}
     </div>
   );
@@ -91,7 +82,7 @@ export const Accounts: Component = () => {
       <CardContent class="flex w-full flex-col gap-4">
         <Account
           provider="GitHub"
-          icon={FaBrandsGithub}
+          icon={IconBrandGithub}
           user={meQuery.data?.data?.github}
           isLoading={meQuery.isLoading}
         />
