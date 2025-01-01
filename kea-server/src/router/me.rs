@@ -1,9 +1,9 @@
 use crate::scm::github::error::KeaGitHubError;
 use crate::scm::scm_client::{ScmClient, ScmUser};
 use crate::state::AppState;
-use axum::body::Body;
+use axum::extract::State;
 use axum::response::IntoResponse;
-use axum::{extract::State, response::Response};
+use axum::Json;
 use axum_extra::extract::cookie::PrivateCookieJar;
 use serde::Serialize;
 use tracing::error;
@@ -18,7 +18,7 @@ struct MeClients {
 pub async fn me(
     State(state): State<AppState>,
     jar: PrivateCookieJar,
-) -> Result<Response, Box<KeaGitHubError>> {
+) -> Result<impl IntoResponse, Box<KeaGitHubError>> {
     let AppState { clients, ctx } = state;
 
     let mut jar = jar;
@@ -38,6 +38,5 @@ pub async fn me(
         github: github_user,
     };
 
-    let body = Body::from(serde_json::to_string(&me).unwrap());
-    Ok((jar, body).into_response())
+    Ok((jar, Json(me)))
 }

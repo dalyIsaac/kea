@@ -23,7 +23,7 @@ async fn main() {
     let state = AppState::new().await;
 
     let base_url = format!("0.0.0.0:{}", state.ctx.port);
-    let cors_allowed_origin = state.ctx.cors_allowed_origin.clone();
+    let client_url = state.ctx.client_url.clone();
     let timeout_secs = state.ctx.cookie_timeout_secs;
     let x_request_id = HeaderName::from_static("x-request-id");
 
@@ -57,7 +57,8 @@ async fn main() {
                 // CORS
                 .layer(
                     CorsLayer::new()
-                        .allow_origin(cors_allowed_origin.parse::<HeaderValue>().unwrap()),
+                        .allow_origin(client_url.parse::<HeaderValue>().unwrap())
+                        .allow_credentials(true),
                 )
                 // Catch panics and return a 500 Internal Server Error.
                 .layer(CatchPanicLayer::new()),

@@ -15,14 +15,14 @@ pub struct AppClients {
 pub struct AppContext {
     pub domain: String,
     pub port: u16,
-    pub cors_allowed_origin: String,
+    pub client_url: String,
     pub cookie_timeout_secs: u64,
     pub key: Key,
 }
 
 impl AppContext {
     pub fn get_server_url(&self) -> String {
-        format!("{}:{}", self.domain, self.port)
+        format!("http://{}:{}", self.domain, self.port)
     }
 }
 
@@ -47,8 +47,7 @@ impl AppState {
             .parse::<u16>()
             .expect("Invalid port");
 
-        let cors_allowed_origin =
-            env::var("CORS_ALLOWED_ORIGIN").expect("CORS_ALLOWED_ORIGIN must be set");
+        let client_url = env::var("CLIENT_URL").expect("CLIENT_URL must be set");
 
         let cookie_timeout_secs = env::var("TIMEOUT_SECS")
             .expect("TIMEOUT_SECS must be set")
@@ -68,7 +67,7 @@ impl AppState {
             ctx: AppContext {
                 domain,
                 port,
-                cors_allowed_origin,
+                client_url,
                 cookie_timeout_secs,
                 key,
             },

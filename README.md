@@ -73,9 +73,25 @@ Considered alternatives for the backend which have OpenAPI built-in:
 | OpenAPI           | [openapi-typescript](https://github.com/openapi-ts/openapi-typescript)            | Chosen for its popularity                                                                           |
 | Component Library | [solid-ui](https://github.com/stefan-karger/solid-ui)                             | Chosen for its similiarity to shadcn-ui for React, and popularity compared to other shadcn variants |
 
-## Random commands
+## Useful commands
 
 ```shell
 cd kea-client
 npx openapi-typescript http://localhost:3000/api-docs/openapi.json --output ./src/api/openapi.g.d.ts
+```
+
+## Environment variables
+
+Set up a `.env` file in the project root with the following:
+
+```env
+DOMAIN=localhost
+PORT=3000
+CLIENT_URL=http://localhost:5173
+
+TIMEOUT_SECS=120
+COOKIE_HEX_KEY=TODO       # 64-character hex string
+
+GITHUB_CLIENT_ID=TODO     # GitHub OAuth application client ID
+GITHUB_CLIENT_SECRET=TODO # GitHub OAuth application client secret
 ```
