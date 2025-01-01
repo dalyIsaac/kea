@@ -5,11 +5,19 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "../shadcn/card";
+} from "~/components/shadcn/card";
 import { FaBrandsGithub } from "solid-icons/fa";
 import { IconTypes } from "solid-icons";
 import { createMeQuery } from "~/api/api";
 import { components } from "~/api/openapi.g";
+import { Skeleton } from "~/components/shadcn/skeleton";
+import { Button } from "~/components/shadcn/button";
+import { VsSignIn, VsSignOut } from "solid-icons/vs";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "~/components/shadcn/tooltip";
 
 type ScmUser = components["schemas"]["ScmUser"] | null | undefined;
 
@@ -19,15 +27,57 @@ const Account: Component<{
   user: ScmUser;
   isLoading: boolean;
 }> = (props) => {
+  const actionProps = () => {
+    if (props.user) {
+      return {
+        href: "http://localhost:3000/github/signout",
+        icon: <VsSignOut class="size-1" />,
+        text: "Sign out of GitHub",
+      };
+    } else {
+      return {
+        href: "http://localhost:3000/github/signin",
+        icon: <VsSignIn class="size-1" />,
+        text: "Sign in to GitHub",
+      };
+    }
+  };
+
   return (
-    <div class="flex items-center gap-4">
-      <props.icon class="size-8" />
-      <div class="flex flex-col">
-        <div class="font-bold">{props.provider}</div>
-        <div class="text-sm">
-          {props.user ? <>{props.user.login}</> : "Not connected"}
+    <div class="flex w-full items-center justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <props.icon class="size-8" />
+
+        <div class="flex flex-col">
+          <div class="font-bold">{props.provider}</div>
+
+          <div class="text-sm">
+            {props.isLoading ? (
+              <Skeleton height={20} width={100} radius={10} />
+            ) : props.user ? (
+              <>@{props.user.login}</>
+            ) : (
+              "Not connected"
+            )}
+          </div>
         </div>
       </div>
+
+      {props.isLoading ? null : (
+        <Tooltip>
+          <TooltipTrigger
+            as={Button<"a">}
+            variant="ghost"
+            href={actionProps().href}
+          >
+            {actionProps().icon}
+          </TooltipTrigger>
+
+          <TooltipContent>
+            <div>{actionProps().text}</div>
+          </TooltipContent>
+        </Tooltip>
+      )}
     </div>
   );
 };
@@ -36,21 +86,19 @@ export const Accounts: Component = () => {
   const meQuery = createMeQuery();
 
   return (
-    <Card>
+    <Card class="w-72">
       <CardHeader class="space-y-1">
         <CardTitle>Accounts</CardTitle>
         <CardDescription>Source Control Providers</CardDescription>
       </CardHeader>
 
-      <CardContent class="flex gap-4">
-        <div class="flex w-full flex-col gap-6">
-          <Account
-            provider="GitHub"
-            icon={FaBrandsGithub}
-            user={meQuery.data?.data?.github}
-            isLoading={meQuery.isLoading}
-          />
-        </div>
+      <CardContent class="flex w-full flex-col gap-4">
+        <Account
+          provider="GitHub"
+          icon={FaBrandsGithub}
+          user={meQuery.data?.data?.github}
+          isLoading={meQuery.isLoading}
+        />
       </CardContent>
     </Card>
   );
