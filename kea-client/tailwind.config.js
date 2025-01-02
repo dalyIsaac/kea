@@ -15,7 +15,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ["Inter", ...fontFamily.sans],
+        sans: ["Monaspace Neon", ...fontFamily.sans],
       },
       colors: {
         border: "hsl(var(--border))",

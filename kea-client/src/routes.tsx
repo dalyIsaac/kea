@@ -1,8 +1,11 @@
-import { Params, RouteDefinition } from "@solidjs/router";
-import { lazy } from "solid-js";
+import { Params, Route as _Route, RouteProps, Router } from "@solidjs/router";
+import { JSX, lazy } from "solid-js";
 
-export interface RepoRoute {
+export interface OwnerRoute {
   owner: string;
+}
+
+export interface RepoRoute extends OwnerRoute {
   repo: string;
 }
 
@@ -18,61 +21,77 @@ export interface CommiteRouteFileParams extends CommitRouteParams {
   file: string;
 }
 
-export interface KeaRouteDefinition extends RouteDefinition {
-  info: {
-    title:
-      | string
-      | ((params: Params) => string | Array<{ title: string; url: string }>);
-  };
-}
-
-export const isKeaRouteDefinition = (
-  route: RouteDefinition,
-): route is KeaRouteDefinition => {
-  return route.info !== undefined && route.info.title !== undefined;
+export type KeaComponentRouteProps = Omit<
+  RouteProps<string, Params>,
+  "children"
+> & {
+  path: string;
 };
 
-export const routes: RouteDefinition[] = [
-  {
-    path: "/",
-    component: lazy(() => import("./routes/home")),
-    info: {
-      title: "Home",
-    },
-  },
-  {
-    path: "/settings",
-    component: lazy(() => import("./routes/settings")),
-    info: {
-      title: "Settings",
-    },
-  },
-  {
-    path: "/:owner/:repo/pull/:pull",
-    component: lazy(() => import("./routes/pull-request")),
-    info: {
-      title: ({ owner, repo, pull }: PullRequestRouteParams) =>
-        `Pull Request #${pull} - ${owner}/${repo}`,
-    },
-    matchFilters: {
-      pull: /^\d+$/,
-    },
-  },
-  {
-    path: "/:owner/:repo/commit/:commit/*file",
-    component: lazy(() => import("./routes/commit")),
-    info: {
-      title: ({ owner, repo, commit }: CommitRouteParams) =>
-        `Commit ${commit} - ${owner}/${repo}`,
-    },
-    matchFilters: {
-      commit: /^[a-f0-9]+$/,
-    },
-  },
+const KeaComponentRoute = (props: KeaComponentRouteProps) => (
+  <_Route {...props} />
+);
 
-  // 404
-  {
-    path: "*",
-    component: () => <div>404</div>,
-  },
-];
+export type KeaBaseRouteProps = Omit<KeaComponentRouteProps, "component"> & {
+  children: JSX.Element;
+};
+
+const KeaBaseRoute = (props: KeaBaseRouteProps) => <_Route {...props} />;
+
+export const KeaRouter = () => (
+  <Router>
+    <KeaComponentRoute
+      path="/"
+      component={() => <div>Home</div>}
+      info={{ crumb: "Home" }}
+    />
+    <KeaComponentRoute
+      path="/settings"
+      component={lazy(() => import("./routes/settings"))}
+      info={{ crumb: "Settings" }}
+    />
+
+    <KeaBaseRoute path="/gh">
+      <KeaComponentRoute
+        path="/"
+        component={() => <div>gh</div>}
+        info={{ crumb: "GitHub" }}
+      />
+
+      <KeaBaseRoute
+        path="/:owner"
+        info={{
+          crumb: (params: OwnerRoute) => params.owner,
+        }}
+      >
+        <KeaComponentRoute
+          path="/"
+          component={() => <div>owner</div>}
+          info={{ crumb: "Owner" }}
+        />
+
+        <KeaBaseRoute path="/:repo">
+          <KeaComponentRoute
+            path="/"
+            component={lazy(() => import("./routes/repo"))}
+            info={{ crumb: (params: RepoRoute) => params.repo }}
+          />
+          <KeaComponentRoute path="/pulls" component={() => <div>pulls</div>} />
+          <_Route
+            path="/pull/:pull"
+            component={lazy(() => import("./routes/pull-request"))}
+            matchFilters={{
+              pull: /^\d+$/,
+            }}
+          />
+          <KeaComponentRoute
+            path="/commit/:commit"
+            component={() => <div>commit</div>}
+          />
+        </KeaBaseRoute>
+      </KeaBaseRoute>
+    </KeaBaseRoute>
+
+    <KeaComponentRoute path="*" component={() => <div>404</div>} />
+  </Router>
+);

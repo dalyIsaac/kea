@@ -1,5 +1,5 @@
-import { A, useCurrentMatches } from "@solidjs/router";
-import { Component, FlowComponent, For } from "solid-js";
+import { A } from "@solidjs/router";
+import { Component, FlowComponent } from "solid-js";
 import { createMeQuery } from "~/api/api";
 import { IconButtonLink } from "~/components/common/icon-button-link";
 import {
@@ -13,9 +13,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "~/components/shadcn/dropdown-menu";
-import { isKeaRouteDefinition } from "~/routes";
 import LogInIcon from "lucide-solid/icons/log-in";
 import SettingsIcon from "lucide-solid/icons/settings";
+import { Crumbs } from "~/components/common/crumbs";
 
 export const Page: FlowComponent = (props) => (
   <div class="flex h-full flex-col">
@@ -33,54 +33,11 @@ const TopBar: Component = () => {
           <img class="size-12" src="/kea.png" alt="Kea logo" />
         </A>
 
-        <BreadCrumbs />
+        <Crumbs />
       </div>
 
       <RightSide />
     </header>
-  );
-};
-
-const BreadCrumbs: Component = () => {
-  const matches = useCurrentMatches();
-  const parts = () => {
-    const p: Array<{ title: string; url: string; isLast?: boolean }> = [];
-    for (const match of matches()) {
-      const route = match.route;
-
-      if (!isKeaRouteDefinition(route)) {
-        continue;
-      }
-
-      if (typeof route.info.title === "string") {
-        p.push({ title: route.info.title, url: match.path });
-      } else {
-        const result = route.info.title(match.params);
-
-        if (typeof result === "string") {
-          p.push({ title: result, url: match.path });
-        } else {
-          p.push(...result);
-        }
-      }
-    }
-
-    if (p.length > 0) {
-      p[p.length - 1]!.isLast = true;
-    }
-    return p;
-  };
-
-  return (
-    <For each={parts()}>
-      {(part) => (
-        <div class="flex items-center gap-2">
-          <a href={part.url}>{part.title}</a>
-
-          {!part.isLast && <span>&gt;</span>}
-        </div>
-      )}
-    </For>
   );
 };
 

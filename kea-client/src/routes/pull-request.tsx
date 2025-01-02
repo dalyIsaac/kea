@@ -8,13 +8,11 @@ import {
   TabsTrigger,
 } from "~/components/shadcn/tabs";
 import { FileTree } from "~/components/common/file-tree";
-import { createPullRequestFilesQuery } from "~/queries";
 import { Page } from "~/components/common/page";
 
 const PullRequest: Component = () => {
   const params = useParams<PullRequestRouteParams>();
   const paramsFn = () => params;
-  const filesQuery = createPullRequestFilesQuery(paramsFn);
 
   return (
     <div class="flex gap-2">
@@ -25,7 +23,7 @@ const PullRequest: Component = () => {
         </TabsList>
 
         <TabsContent value="files">
-          <FileTree files={filesQuery.data?.data ?? []} />
+          {/* <FileTree files={filesQuery.data?.data ?? []} /> */}
         </TabsContent>
         <TabsContent value="timeline">Timeline Tab</TabsContent>
       </Tabs>
