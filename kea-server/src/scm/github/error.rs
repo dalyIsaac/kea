@@ -27,7 +27,7 @@ pub enum KeaGitHubError {
     TokenCookieDeserialization,
 
     #[error("GitHub API error: {0}")]
-    Api(#[from] octocrab::Error),
+    Octocrab(#[from] octocrab::Error),
 
     #[error("User not authenticated")]
     NotAuthenticated,
@@ -51,7 +51,7 @@ impl IntoResponse for Box<KeaGitHubError> {
                 ..
             } => format!("{}: {}\n{}", error, error_description, error_url),
 
-            KeaGitHubError::Api(e) => match e {
+            KeaGitHubError::Octocrab(e) => match e {
                 octocrab::Error::GitHub {
                     source,
                     backtrace: _,
@@ -72,6 +72,6 @@ impl IntoResponse for Box<KeaGitHubError> {
 
 impl From<octocrab::Error> for Box<KeaGitHubError> {
     fn from(e: octocrab::Error) -> Box<KeaGitHubError> {
-        Box::new(KeaGitHubError::Api(e))
+        Box::new(KeaGitHubError::Octocrab(e))
     }
 }

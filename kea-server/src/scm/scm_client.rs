@@ -4,6 +4,8 @@ use serde::{de, Deserialize, Deserializer, Serialize};
 
 use crate::state::AppContext;
 
+use super::payloads::KeaPullRequestDetails;
+
 #[derive(Debug)]
 pub enum AuthResponse {
     Success {
@@ -60,24 +62,26 @@ pub trait ScmAuthClient<E> {
         &self,
         query: Option<Query<AuthResponse>>,
         jar: PrivateCookieJar,
-        state: AppContext,
+        state: &AppContext,
     ) -> Result<Response, E>;
 
-    async fn sign_out(&self, jar: PrivateCookieJar, state: AppContext) -> Result<Response, E>;
+    async fn sign_out(&self, jar: PrivateCookieJar, state: &AppContext) -> Result<Response, E>;
 
     /// Get the user associated with the cookie in the given jar.
     async fn get_cookie_user(
         &self,
         jar: PrivateCookieJar,
-        state: AppContext,
+        state: &AppContext,
     ) -> Result<(PrivateCookieJar, ScmUser), E>;
 }
 
-pub trait ScmClient<E> {
+pub trait ScmApiClient<E> {
     async fn get_pull_request_details(
         &self,
+        jar: PrivateCookieJar,
+        ctx: &AppContext,
         owner: &str,
         repo: &str,
         pr_number: u64,
-    ) -> Result<(), E>;
+    ) -> Result<(PrivateCookieJar, KeaPullRequestDetails), E>;
 }

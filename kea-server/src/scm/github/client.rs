@@ -11,22 +11,6 @@ use tracing::debug;
 
 pub const GITHUB_COOKIE: &str = "github-tokens";
 
-/// Ensures that the user is authenticated. If the user's access token has expired, the refresh token
-/// is used to obtain a new access token.
-/// If the user is not authenticated, the user is redirected to the GitHub sign in page.
-/// If the user is authenticated, the cookie jar and the authenticated GitHub client are returned.
-///
-/// The cookie jar should always be returned in the response.
-///
-macro_rules! with_valid_client {
-    ($jar:expr, $client:expr, $state:expr) => {
-        match $client.get_client_with_token($jar, &$state).await {
-            Ok((jar, client)) => (jar, client),
-            Err(response) => return Ok(response),
-        }
-    };
-}
-
 #[derive(Serialize, Deserialize)]
 pub struct TokenCookie {
     access_token: String,
@@ -127,7 +111,7 @@ impl GitHubClient {
         Octocrab::builder()
             .user_access_token(user_access_token)
             .build()
-            .map_err(|e| Box::new(KeaGitHubError::Api(e)))
+            .map_err(|e| Box::new(KeaGitHubError::Octocrab(e)))
     }
 
     pub fn add_cookie(
@@ -242,5 +226,11 @@ impl GitHubClient {
         ))?;
 
         Ok((jar, client))
+    }
+}
+
+impl Default for GitHubClient {
+    fn default() -> Self {
+        Self::new()
     }
 }

@@ -4,14 +4,46 @@
  */
 
 export interface paths {
-  "/github/login": {
+  "/github/:owner/:repo/pull/:pr_number": {
     parameters: {
       query?: never;
       header?: never;
       path?: never;
       cookie?: never;
     };
-    get: operations["login"];
+    get: operations["get_pull_request_details"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/github/signin": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["sign_in"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/github/signout": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["sign_out"];
     put?: never;
     post?: never;
     delete?: never;
@@ -56,6 +88,13 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
+    KeaPullRequestDetails: {
+      /** Format: int64 */
+      id: number;
+      /** Format: int64 */
+      number: number;
+      title?: string | null;
+    };
     MeClients: {
       github?: null | components["schemas"]["ScmUser"];
     };
@@ -74,7 +113,45 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-  login: {
+  get_pull_request_details: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["KeaPullRequestDetails"];
+        };
+      };
+    };
+  };
+  sign_in: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "text/plain": string;
+        };
+      };
+    };
+  };
+  sign_out: {
     parameters: {
       query?: never;
       header?: never;

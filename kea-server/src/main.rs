@@ -31,6 +31,7 @@ async fn main() {
         .routes(routes!(router::me::me))
         .routes(routes!(router::github::sign_in))
         .routes(routes!(router::github::sign_out))
+        .routes(routes!(router::github::get_pull_request_details))
         .routes(routes!(router::healthcheck::healthcheck))
         .with_state(state)
         .layer(

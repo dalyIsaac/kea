@@ -21,10 +21,10 @@ impl ScmAuthClient<Box<KeaGitHubError>> for GitHubClient {
         &self,
         query: Option<Query<AuthResponse>>,
         jar: PrivateCookieJar,
-        ctx: AppContext,
+        ctx: &AppContext,
     ) -> Result<Response, Box<KeaGitHubError>> {
         let mut jar = jar;
-        let client = self.create_oauth_client(&ctx);
+        let client = self.create_oauth_client(ctx);
 
         let auth_response = match query {
             Some(Query(auth)) => auth,
@@ -64,7 +64,7 @@ impl ScmAuthClient<Box<KeaGitHubError>> for GitHubClient {
         }
 
         let token_cookie = Self::create_token_cookie(token_result)?;
-        jar = self.add_cookie(jar, &token_cookie, &ctx)?;
+        jar = self.add_cookie(jar, &token_cookie, ctx)?;
 
         Ok((jar, Redirect::to(&ctx.client_url)).into_response())
     }
@@ -72,7 +72,7 @@ impl ScmAuthClient<Box<KeaGitHubError>> for GitHubClient {
     async fn sign_out(
         &self,
         jar: PrivateCookieJar,
-        ctx: AppContext,
+        ctx: &AppContext,
     ) -> Result<Response, Box<KeaGitHubError>> {
         let mut jar = jar;
 
@@ -94,9 +94,9 @@ impl ScmAuthClient<Box<KeaGitHubError>> for GitHubClient {
     async fn get_cookie_user(
         &self,
         jar: PrivateCookieJar,
-        ctx: AppContext,
+        ctx: &AppContext,
     ) -> Result<(PrivateCookieJar, ScmUser), Box<KeaGitHubError>> {
-        match self.get_client_with_token(jar, &ctx).await {
+        match self.get_client_with_token(jar, ctx).await {
             Ok((jar, client)) => {
                 let user = client.current().user().await?;
 

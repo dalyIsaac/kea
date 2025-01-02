@@ -23,7 +23,7 @@ pub async fn me(
 
     let mut jar = jar;
 
-    let github_user = match clients.github.get_cookie_user(jar.clone(), ctx).await {
+    let github_user = match clients.github.get_cookie_user(jar.clone(), &ctx).await {
         Ok((new_jar, new_user)) => {
             jar = new_jar;
             Some(new_user)
