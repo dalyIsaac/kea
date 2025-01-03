@@ -1,4 +1,4 @@
-import { Component } from "solid-js";
+import { Component, createEffect } from "solid-js";
 import { PullRequestRouteParams } from "../routes";
 import { useParams } from "@solidjs/router";
 import {
@@ -7,12 +7,34 @@ import {
   TabsList,
   TabsTrigger,
 } from "~/components/shadcn/tabs";
-import { FileTree } from "~/components/common/file-tree";
 import { Page } from "~/components/common/page";
+import {
+  createOwnerCrumb,
+  createPullCrumb,
+  createPullsListCrumb,
+  createRepoCrumb,
+  setCrumbs,
+} from "~/components/common/crumbs";
+import { createPullRequestDetailsQuery } from "~/api/api";
 
 const PullRequest: Component = () => {
   const params = useParams<PullRequestRouteParams>();
-  const paramsFn = () => params;
+  const detailsQuery = createPullRequestDetailsQuery(
+    params.owner,
+    params.repo,
+    parseInt(params.pull),
+  );
+
+  createEffect(() => {
+    const data = detailsQuery.data?.data;
+
+    setCrumbs([
+      createOwnerCrumb(params.owner, data?.owner ?? params.owner),
+      createRepoCrumb(params.owner, params.repo, data?.repo ?? params.repo),
+      createPullsListCrumb(params.owner, params.repo),
+      createPullCrumb(params.owner, params.repo, params.pull),
+    ]);
+  });
 
   return (
     <div class="flex gap-2">

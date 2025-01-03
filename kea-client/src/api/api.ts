@@ -12,3 +12,22 @@ export const createMeQuery = () =>
     queryKey: ["me"],
     queryFn: () => client.GET("/me"),
   }));
+
+export const createPullRequestDetailsQuery = (
+  owner: string,
+  repo: string,
+  pr_number: number,
+) =>
+  createQuery(() => ({
+    queryKey: ["pullRequestDetails", owner, repo, pr_number],
+    queryFn: () =>
+      client.GET(`/github/{owner}/{repo}/pull/{pr_number}`, {
+        params: {
+          path: {
+            owner,
+            repo,
+            pr_number,
+          },
+        },
+      }),
+  }));

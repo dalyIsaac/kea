@@ -4,22 +4,6 @@
  */
 
 export interface paths {
-  "/github/:owner/:repo/pull/:pr_number": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get: operations["get_pull_request_details"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
   "/github/signin": {
     parameters: {
       query?: never;
@@ -44,6 +28,22 @@ export interface paths {
       cookie?: never;
     };
     get: operations["sign_out"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/github/{owner}/{repo}/pull/{pr_number}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["get_pull_request_details"];
     put?: never;
     post?: never;
     delete?: never;
@@ -93,6 +93,8 @@ export interface components {
       id: number;
       /** Format: int64 */
       number: number;
+      owner: string;
+      repo: string;
       title?: string | null;
     };
     MeClients: {
@@ -113,25 +115,6 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-  get_pull_request_details: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["KeaPullRequestDetails"];
-        };
-      };
-    };
-  };
   sign_in: {
     parameters: {
       query?: never;
@@ -166,6 +149,32 @@ export interface operations {
         };
         content: {
           "text/plain": string;
+        };
+      };
+    };
+  };
+  get_pull_request_details: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Owner of the repository */
+        owner: string;
+        /** @description Repository name */
+        repo: string;
+        /** @description Pull request number */
+        pr_number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["KeaPullRequestDetails"];
         };
       };
     };
