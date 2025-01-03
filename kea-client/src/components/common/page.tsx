@@ -21,13 +21,13 @@ export const Page: FlowComponent = (props) => (
   <div class="flex h-full flex-col">
     <TopBar />
 
-    <div class="flex-1 overflow-y-auto">{props.children}</div>
+    <div class="flex-1 overflow-y-auto p-2">{props.children}</div>
   </div>
 );
 
 const TopBar: Component = () => {
   return (
-    <header class="mb-2 flex h-12 w-full items-center justify-between border-b p-2">
+    <header class="flex h-12 w-full items-center justify-between p-2 shadow-sm">
       <div class="flex items-center gap-2">
         <A href="/">
           <img class="size-12" src="/kea.png" alt="Kea logo" />

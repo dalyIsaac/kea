@@ -9,4 +9,5 @@ pub struct KeaPullRequestDetails {
     pub id: u64,
     pub number: u64,
     pub title: Option<String>,
+    pub body: Option<String>,
 }

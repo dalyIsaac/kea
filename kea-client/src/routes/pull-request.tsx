@@ -1,12 +1,5 @@
 import { Component, createEffect } from "solid-js";
 import { PullRequestRouteParams } from "../routes";
-import { useParams } from "@solidjs/router";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "~/components/shadcn/tabs";
 import { Page } from "~/components/common/page";
 import {
   createOwnerCrumb,
@@ -16,17 +9,15 @@ import {
   setCrumbs,
 } from "~/components/common/crumbs";
 import { createPullRequestDetailsQuery } from "~/api/api";
+import { Pane } from "~/components/common/pane";
+import { Details } from "~/components/pull-request/details";
+import { usePullRequestDetails } from "~/components/pull-request/utils";
 
 const PullRequest: Component = () => {
-  const params = useParams<PullRequestRouteParams>();
-  const detailsQuery = createPullRequestDetailsQuery(
-    params.owner,
-    params.repo,
-    parseInt(params.pull),
-  );
+  const [details, params] = usePullRequestDetails();
 
   createEffect(() => {
-    const data = detailsQuery.data?.data;
+    const data = details.data?.data;
 
     setCrumbs([
       createOwnerCrumb(params.owner, data?.owner ?? params.owner),
@@ -37,19 +28,11 @@ const PullRequest: Component = () => {
   });
 
   return (
-    <div class="flex gap-2">
-      <Tabs defaultValue="files" class="w-60">
-        <TabsList class="grid w-full grid-cols-2">
-          <TabsTrigger value="files">Files</TabsTrigger>
-          <TabsTrigger value="timeline">Timeline </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="files">
-          {/* <FileTree files={filesQuery.data?.data ?? []} /> */}
-        </TabsContent>
-        <TabsContent value="timeline">Timeline Tab</TabsContent>
-      </Tabs>
-      Pull request information goes here
+    <div class="flex h-full gap-2">
+      <Details class="w-1/3" />
+      <Pane class="w-1/3" />
+      <Pane class="w-1/6" />
+      <Pane class="w-1/6" />
     </div>
   );
 };

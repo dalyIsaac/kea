@@ -103,6 +103,9 @@ export default {
         "content-hide": "content-hide 0.2s ease-out",
         "caret-blink": "caret-blink 1.25s ease-out infinite",
       },
+      boxShadow: {
+        pane: "0px 0px 4px 1px rgba(17, 17, 26, 0.08)",
+      },
     },
     sidebar: {
       DEFAULT: "hsl(var(--sidebar-background))",

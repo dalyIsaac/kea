@@ -41,7 +41,8 @@ pub async fn sign_out(
         ("owner" = String, Path, description = "Owner of the repository"),
         ("repo" = String, Path, description = "Repository name"),
         ("pr_number" = u64, Path, description = "Pull request number")
-    )
+    ),
+    responses((status = OK, body = KeaPullRequestDetails))
 )]
 pub async fn get_pull_request_details(
     State(state): State<AppState>,

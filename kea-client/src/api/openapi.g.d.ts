@@ -89,6 +89,7 @@ export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
     KeaPullRequestDetails: {
+      body?: string | null;
       /** Format: int64 */
       id: number;
       /** Format: int64 */
