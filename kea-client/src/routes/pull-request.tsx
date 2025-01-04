@@ -7,7 +7,6 @@ import {
   setCrumbs,
 } from "~/components/common/crumbs";
 import { Page } from "~/components/common/page";
-import { Pane } from "~/components/common/pane";
 import { Details } from "~/components/pull-request/details";
 import { usePullRequestDetails } from "~/components/pull-request/utils";
 
@@ -27,10 +26,10 @@ const PullRequest: Component = () => {
 
   return (
     <div class="flex h-full gap-2">
-      <Details class="w-1/3" />
-      <Pane class="w-1/3" />
+      <Details />
+      {/* <Pane class="w-1/3" />
       <Pane class="w-1/6" />
-      <Pane class="w-1/6" />
+      <Pane class="w-1/6" /> */}
     </div>
   );
 };

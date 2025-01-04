@@ -1,6 +1,7 @@
 import { Component, splitProps } from "solid-js";
 import { Pane } from "~/components/common/pane";
 import { usePullRequestDetails } from "~/components/pull-request/utils";
+import { Markdown } from "~/markdown/markdown";
 
 export const Details: Component<{ class: string }> = (props) => {
   const [local, others] = splitProps(props, ["class"]);
@@ -22,9 +23,7 @@ export const Details: Component<{ class: string }> = (props) => {
       </div>
 
       {/* Description */}
-      <p class="overflow-auto text-sm text-muted-foreground">
-        {details.data?.data?.body}
-      </p>
+      <Markdown>{details.data?.data?.body ?? ""}</Markdown>
     </Pane>
   );
 };
