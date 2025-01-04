@@ -1,4 +1,4 @@
-import { Params, Route as _Route, RouteProps, Router } from "@solidjs/router";
+import { Route as _Route, Params, RouteProps, Router } from "@solidjs/router";
 import { JSX, lazy } from "solid-js";
 
 export interface OwnerRoute {

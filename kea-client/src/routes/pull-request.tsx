@@ -1,6 +1,4 @@
 import { Component, createEffect } from "solid-js";
-import { PullRequestRouteParams } from "../routes";
-import { Page } from "~/components/common/page";
 import {
   createOwnerCrumb,
   createPullCrumb,
@@ -8,7 +6,7 @@ import {
   createRepoCrumb,
   setCrumbs,
 } from "~/components/common/crumbs";
-import { createPullRequestDetailsQuery } from "~/api/api";
+import { Page } from "~/components/common/page";
 import { Pane } from "~/components/common/pane";
 import { Details } from "~/components/pull-request/details";
 import { usePullRequestDetails } from "~/components/pull-request/utils";

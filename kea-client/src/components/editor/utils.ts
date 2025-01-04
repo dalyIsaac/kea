@@ -1,6 +1,6 @@
 import { Monaco } from "@monaco-editor/loader";
-import { MonacoDiffEditorProps } from "./monaco-diff-editor";
 import { createSignal } from "solid-js";
+import { MonacoDiffEditorProps } from "./monaco-diff-editor";
 import { Editor, IEditorDecorationsCollection } from "./types";
 
 export const [editor, setEditor] = createSignal<Editor>();

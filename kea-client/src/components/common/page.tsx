@@ -1,6 +1,9 @@
 import { A } from "@solidjs/router";
+import LogInIcon from "lucide-solid/icons/log-in";
+import SettingsIcon from "lucide-solid/icons/settings";
 import { Component, FlowComponent } from "solid-js";
 import { createMeQuery } from "~/api/api";
+import { Crumbs } from "~/components/common/crumbs";
 import { IconButtonLink } from "~/components/common/icon-button-link";
 import {
   Avatar,
@@ -13,9 +16,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "~/components/shadcn/dropdown-menu";
-import LogInIcon from "lucide-solid/icons/log-in";
-import SettingsIcon from "lucide-solid/icons/settings";
-import { Crumbs } from "~/components/common/crumbs";
 
 export const Page: FlowComponent = (props) => (
   <div class="flex h-full flex-col">

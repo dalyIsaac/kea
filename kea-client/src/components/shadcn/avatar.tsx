@@ -61,4 +61,4 @@ const AvatarFallback = <T extends ValidComponent = "span">(
   );
 };
 
-export { Avatar, AvatarImage, AvatarFallback };
+export { Avatar, AvatarFallback, AvatarImage };

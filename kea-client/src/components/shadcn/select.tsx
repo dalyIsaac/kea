@@ -115,9 +115,9 @@ const SelectItem = <T extends ValidComponent = "li">(
 
 export {
   Select,
-  SelectValue,
-  SelectHiddenSelect,
-  SelectTrigger,
   SelectContent,
+  SelectHiddenSelect,
   SelectItem,
+  SelectTrigger,
+  SelectValue,
 };

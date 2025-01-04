@@ -1,18 +1,18 @@
+import loader, { Monaco } from "@monaco-editor/loader";
+import * as monacoEditor from "monaco-editor";
 import {
   createEffect,
-  onCleanup,
   JSX,
-  onMount,
   mergeProps,
   on,
+  onCleanup,
+  onMount,
 } from "solid-js";
-import * as monacoEditor from "monaco-editor";
-import loader, { Monaco } from "@monaco-editor/loader";
 import { LoaderParams } from "./types";
 import {
   createEditor,
-  getOrCreateModel,
   editor,
+  getOrCreateModel,
   monaco,
   setMonaco,
 } from "./utils";

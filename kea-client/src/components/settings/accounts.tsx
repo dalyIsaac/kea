@@ -1,4 +1,9 @@
+import LogInIcon from "lucide-solid/icons/log-in";
+import LogOutIcon from "lucide-solid/icons/log-out";
 import { Component } from "solid-js";
+import { createMeQuery } from "~/api/api";
+import { components } from "~/api/openapi.g";
+import { IconButtonLink } from "~/components/common/icon-button-link";
 import {
   Card,
   CardContent,
@@ -6,13 +11,8 @@ import {
   CardHeader,
   CardTitle,
 } from "~/components/shadcn/card";
-import { createMeQuery } from "~/api/api";
-import { components } from "~/api/openapi.g";
-import { Skeleton } from "~/components/shadcn/skeleton";
-import { IconButtonLink } from "~/components/common/icon-button-link";
-import LogInIcon from "lucide-solid/icons/log-in";
-import LogOutIcon from "lucide-solid/icons/log-out";
 import { IconBrandGithub } from "~/components/shadcn/icons";
+import { Skeleton } from "~/components/shadcn/skeleton";
 
 type ScmUser = components["schemas"]["ScmUser"] | null | undefined;
 
