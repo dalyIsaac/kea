@@ -9,17 +9,21 @@
     "build": "vite build",
     "serve": "vite preview",
     "start": "vite",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "lint": "npx eslint ."
   },
   "devDependencies": {
+    "@eslint/js": "^9.17.0",
     "@tanstack/router-plugin": "^1.95.1",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.2",
+    "eslint": "^9.17.0",
     "openapi-typescript": "^7.5.1",
     "prettier": "^3.4.2",
     "prettier-plugin-organize-imports": "^4.1.0",
     "typescript": "^5.7.2",
+    "typescript-eslint": "^8.19.0",
     "vite": "^6.0.3"
   },
   "dependencies": {
