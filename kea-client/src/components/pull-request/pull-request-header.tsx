@@ -22,7 +22,7 @@ const NavItem = styled(Link)`
   position: relative;
   border: 1px solid transparent;
   border-radius: 6px 6px 0 0;
-  margin-bottom: -1px;
+  margin-bottom: 0;
   background-color: ${themeGet("colors.canvas.subtle")};
   margin-right: 1px;
 
@@ -33,7 +33,6 @@ const NavItem = styled(Link)`
 
   &[data-status="active"] {
     color: ${themeGet("colors.fg.default")};
-    font-weight: 600;
     background-color: ${themeGet("colors.canvas.default")};
     border-color: ${themeGet("colors.border.default")};
     border-bottom-color: ${themeGet("colors.canvas.default")};
@@ -48,7 +47,17 @@ export const PullRequestNav: FC = () => (
       pt: 2,
     }}
   >
-    <NavItem to="/$provider/$owner/$repo/pull/$prId">Overview</NavItem>
-    <NavItem to="/$provider/$owner/$repo/pull/$prId/review">Review</NavItem>
+    <NavItem
+      to="/$provider/$owner/$repo/pull/$prId"
+      activeOptions={{ exact: true }}
+    >
+      Overview
+    </NavItem>
+    <NavItem
+      to="/$provider/$owner/$repo/pull/$prId/review"
+      activeOptions={{ exact: true }}
+    >
+      Review
+    </NavItem>
   </Box>
 );

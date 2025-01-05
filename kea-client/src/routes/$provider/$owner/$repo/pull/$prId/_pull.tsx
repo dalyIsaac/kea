@@ -79,25 +79,27 @@ function RouteComponent() {
       <Box sx={{ marginBottom: 3 }}>
         <PullRequestTitle title={details.data?.title} id={prId} />
       </Box>
+
       <Box
         sx={{
           border: "1px solid",
           borderColor: "border.default",
           borderRadius: 6,
           backgroundColor: "canvas.default",
+          overflow: "hidden",
         }}
       >
-        <Box
-          sx={{
-            borderBottom: "1px solid",
-            borderColor: "border.default",
-            backgroundColor: "canvas.subtle",
-          }}
-        >
+        <Box sx={{ backgroundColor: "canvas.subtle" }}>
           <PullRequestNav />
         </Box>
 
-        <Box sx={{ padding: 3 }}>
+        <Box
+          sx={{
+            borderTop: "1px solid",
+            borderColor: "border.default",
+            padding: 3,
+          }}
+        >
           <Outlet />
         </Box>
       </Box>
