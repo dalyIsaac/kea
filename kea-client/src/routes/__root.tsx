@@ -1,18 +1,13 @@
-import { Header as PrimerHeader, themeGet } from "@primer/react";
-import { Outlet, createRootRoute } from "@tanstack/react-router";
+import { Button, Header } from "@primer/react";
+import { Link, Outlet, createRootRoute } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/router-devtools";
 import { FC } from "react";
-import styled from "styled-components";
 import logo from "~/assets/logo-light.gif";
-
-const Header = styled(PrimerHeader)`
-  background: ${themeGet("colors.pageHeaderBg")};
-`;
 
 const RootComponent: FC = () => {
   return (
     <>
-      <Header sx={{ bg: "colors.pageHeaderBg" }}>
+      <Header sx={{ display: "flex", justifyContent: "space-between" }}>
         <Header.Item>
           <Header.Link href="/">
             <img
@@ -21,6 +16,12 @@ const RootComponent: FC = () => {
               style={{ imageRendering: "pixelated", height: 32 }}
             />
           </Header.Link>
+        </Header.Item>
+
+        <Header.Item sx={{ mr: 0 }}>
+          <Button as={Link} to="http://localhost:3000/github/signin">
+            Sign In
+          </Button>
         </Header.Item>
       </Header>
 
