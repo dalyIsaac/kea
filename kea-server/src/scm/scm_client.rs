@@ -25,6 +25,9 @@ pub struct ScmUser {
 
     /// The user's login. This is typically the user's username.
     pub login: String,
+
+    /// The user's display name.
+    pub avatar_url: String,
 }
 
 impl<'de> Deserialize<'de> for AuthResponse {

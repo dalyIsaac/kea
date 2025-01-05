@@ -103,6 +103,7 @@ impl ScmAuthClient<Box<KeaGitHubError>> for GitHubClient {
                 let scm_user = ScmUser {
                     id: user.id.to_string(),
                     login: user.login,
+                    avatar_url: user.avatar_url.to_string(),
                 };
 
                 Ok((jar, scm_user))
