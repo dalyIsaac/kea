@@ -10,104 +10,138 @@
 
 // Import Routes
 
-import { Route as rootRoute } from './routes/__root'
-import { Route as IndexImport } from './routes/index'
-import { Route as ProviderIndexImport } from './routes/$provider/index'
-import { Route as ProviderOwnerRepoPullPrIdImport } from './routes/$provider/$owner/$repo/pull/$prId'
+import { Route as ProviderOwnerRepoPullPrIdIndexImport } from "./routes/$provider/$owner/$repo/pull/$prId/index";
+import { Route as ProviderOwnerRepoPullPrIdReviewImport } from "./routes/$provider/$owner/$repo/pull/$prId/review";
+import { Route as ProviderIndexImport } from "./routes/$provider/index";
+import { Route as rootRoute } from "./routes/__root";
+import { Route as IndexImport } from "./routes/index";
 
 // Create/Update Routes
 
 const IndexRoute = IndexImport.update({
-  id: '/',
-  path: '/',
+  id: "/",
+  path: "/",
   getParentRoute: () => rootRoute,
-} as any)
+} as any);
 
 const ProviderIndexRoute = ProviderIndexImport.update({
-  id: '/$provider/',
-  path: '/$provider/',
+  id: "/$provider/",
+  path: "/$provider/",
   getParentRoute: () => rootRoute,
-} as any)
+} as any);
 
-const ProviderOwnerRepoPullPrIdRoute = ProviderOwnerRepoPullPrIdImport.update({
-  id: '/$provider/$owner/$repo/pull/$prId',
-  path: '/$provider/$owner/$repo/pull/$prId',
-  getParentRoute: () => rootRoute,
-} as any)
+const ProviderOwnerRepoPullPrIdIndexRoute =
+  ProviderOwnerRepoPullPrIdIndexImport.update({
+    id: "/$provider/$owner/$repo/pull/$prId/",
+    path: "/$provider/$owner/$repo/pull/$prId/",
+    getParentRoute: () => rootRoute,
+  } as any);
+
+const ProviderOwnerRepoPullPrIdReviewRoute =
+  ProviderOwnerRepoPullPrIdReviewImport.update({
+    id: "/$provider/$owner/$repo/pull/$prId/review",
+    path: "/$provider/$owner/$repo/pull/$prId/review",
+    getParentRoute: () => rootRoute,
+  } as any);
 
 // Populate the FileRoutesByPath interface
 
-declare module '@tanstack/react-router' {
+declare module "@tanstack/react-router" {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexImport
-      parentRoute: typeof rootRoute
-    }
-    '/$provider/': {
-      id: '/$provider/'
-      path: '/$provider'
-      fullPath: '/$provider'
-      preLoaderRoute: typeof ProviderIndexImport
-      parentRoute: typeof rootRoute
-    }
-    '/$provider/$owner/$repo/pull/$prId': {
-      id: '/$provider/$owner/$repo/pull/$prId'
-      path: '/$provider/$owner/$repo/pull/$prId'
-      fullPath: '/$provider/$owner/$repo/pull/$prId'
-      preLoaderRoute: typeof ProviderOwnerRepoPullPrIdImport
-      parentRoute: typeof rootRoute
-    }
+    "/": {
+      id: "/";
+      path: "/";
+      fullPath: "/";
+      preLoaderRoute: typeof IndexImport;
+      parentRoute: typeof rootRoute;
+    };
+    "/$provider/": {
+      id: "/$provider/";
+      path: "/$provider";
+      fullPath: "/$provider";
+      preLoaderRoute: typeof ProviderIndexImport;
+      parentRoute: typeof rootRoute;
+    };
+    "/$provider/$owner/$repo/pull/$prId/review": {
+      id: "/$provider/$owner/$repo/pull/$prId/review";
+      path: "/$provider/$owner/$repo/pull/$prId/review";
+      fullPath: "/$provider/$owner/$repo/pull/$prId/review";
+      preLoaderRoute: typeof ProviderOwnerRepoPullPrIdReviewImport;
+      parentRoute: typeof rootRoute;
+    };
+    "/$provider/$owner/$repo/pull/$prId/": {
+      id: "/$provider/$owner/$repo/pull/$prId/";
+      path: "/$provider/$owner/$repo/pull/$prId";
+      fullPath: "/$provider/$owner/$repo/pull/$prId";
+      preLoaderRoute: typeof ProviderOwnerRepoPullPrIdIndexImport;
+      parentRoute: typeof rootRoute;
+    };
   }
 }
 
 // Create and export the route tree
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/$provider': typeof ProviderIndexRoute
-  '/$provider/$owner/$repo/pull/$prId': typeof ProviderOwnerRepoPullPrIdRoute
+  "/": typeof IndexRoute;
+  "/$provider": typeof ProviderIndexRoute;
+  "/$provider/$owner/$repo/pull/$prId/review": typeof ProviderOwnerRepoPullPrIdReviewRoute;
+  "/$provider/$owner/$repo/pull/$prId": typeof ProviderOwnerRepoPullPrIdIndexRoute;
 }
 
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/$provider': typeof ProviderIndexRoute
-  '/$provider/$owner/$repo/pull/$prId': typeof ProviderOwnerRepoPullPrIdRoute
+  "/": typeof IndexRoute;
+  "/$provider": typeof ProviderIndexRoute;
+  "/$provider/$owner/$repo/pull/$prId/review": typeof ProviderOwnerRepoPullPrIdReviewRoute;
+  "/$provider/$owner/$repo/pull/$prId": typeof ProviderOwnerRepoPullPrIdIndexRoute;
 }
 
 export interface FileRoutesById {
-  __root__: typeof rootRoute
-  '/': typeof IndexRoute
-  '/$provider/': typeof ProviderIndexRoute
-  '/$provider/$owner/$repo/pull/$prId': typeof ProviderOwnerRepoPullPrIdRoute
+  __root__: typeof rootRoute;
+  "/": typeof IndexRoute;
+  "/$provider/": typeof ProviderIndexRoute;
+  "/$provider/$owner/$repo/pull/$prId/review": typeof ProviderOwnerRepoPullPrIdReviewRoute;
+  "/$provider/$owner/$repo/pull/$prId/": typeof ProviderOwnerRepoPullPrIdIndexRoute;
 }
 
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/$provider' | '/$provider/$owner/$repo/pull/$prId'
-  fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/$provider' | '/$provider/$owner/$repo/pull/$prId'
-  id: '__root__' | '/' | '/$provider/' | '/$provider/$owner/$repo/pull/$prId'
-  fileRoutesById: FileRoutesById
+  fileRoutesByFullPath: FileRoutesByFullPath;
+  fullPaths:
+    | "/"
+    | "/$provider"
+    | "/$provider/$owner/$repo/pull/$prId/review"
+    | "/$provider/$owner/$repo/pull/$prId";
+  fileRoutesByTo: FileRoutesByTo;
+  to:
+    | "/"
+    | "/$provider"
+    | "/$provider/$owner/$repo/pull/$prId/review"
+    | "/$provider/$owner/$repo/pull/$prId";
+  id:
+    | "__root__"
+    | "/"
+    | "/$provider/"
+    | "/$provider/$owner/$repo/pull/$prId/review"
+    | "/$provider/$owner/$repo/pull/$prId/";
+  fileRoutesById: FileRoutesById;
 }
 
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  ProviderIndexRoute: typeof ProviderIndexRoute
-  ProviderOwnerRepoPullPrIdRoute: typeof ProviderOwnerRepoPullPrIdRoute
+  IndexRoute: typeof IndexRoute;
+  ProviderIndexRoute: typeof ProviderIndexRoute;
+  ProviderOwnerRepoPullPrIdReviewRoute: typeof ProviderOwnerRepoPullPrIdReviewRoute;
+  ProviderOwnerRepoPullPrIdIndexRoute: typeof ProviderOwnerRepoPullPrIdIndexRoute;
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ProviderIndexRoute: ProviderIndexRoute,
-  ProviderOwnerRepoPullPrIdRoute: ProviderOwnerRepoPullPrIdRoute,
-}
+  ProviderOwnerRepoPullPrIdReviewRoute: ProviderOwnerRepoPullPrIdReviewRoute,
+  ProviderOwnerRepoPullPrIdIndexRoute: ProviderOwnerRepoPullPrIdIndexRoute,
+};
 
 export const routeTree = rootRoute
   ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>()
+  ._addFileTypes<FileRouteTypes>();
 
 /* ROUTE_MANIFEST_START
 {
@@ -117,7 +151,8 @@ export const routeTree = rootRoute
       "children": [
         "/",
         "/$provider/",
-        "/$provider/$owner/$repo/pull/$prId"
+        "/$provider/$owner/$repo/pull/$prId/review",
+        "/$provider/$owner/$repo/pull/$prId/"
       ]
     },
     "/": {
@@ -126,8 +161,11 @@ export const routeTree = rootRoute
     "/$provider/": {
       "filePath": "$provider/index.tsx"
     },
-    "/$provider/$owner/$repo/pull/$prId": {
-      "filePath": "$provider/$owner/$repo/pull/$prId.tsx"
+    "/$provider/$owner/$repo/pull/$prId/review": {
+      "filePath": "$provider/$owner/$repo/pull/$prId/review.tsx"
+    },
+    "/$provider/$owner/$repo/pull/$prId/": {
+      "filePath": "$provider/$owner/$repo/pull/$prId/index.tsx"
     }
   }
 }
