@@ -4,6 +4,7 @@ import { TanStackRouterDevtools } from "@tanstack/router-devtools";
 import { ReactElement, ReactNode } from "react";
 import { $api } from "~/api/api";
 import logo from "~/assets/logo-light.gif";
+import { AppCrumbs } from "~/components/app-crumbs/app-crumbs";
 
 export const Route = createRootRoute({
   component: RootComponent,
@@ -46,7 +47,7 @@ function RootComponent() {
           color: "header.bg",
         }}
       >
-        <Header.Item>
+        <Header.Item sx={{ display: "flex", gap: 2 }}>
           <Header.Link href="/">
             <img
               src={logo}
@@ -54,6 +55,8 @@ function RootComponent() {
               style={{ imageRendering: "pixelated", height: 32 }}
             />
           </Header.Link>
+
+          <AppCrumbs />
         </Header.Item>
 
         <Header.Item sx={{ mr: 0 }}>{user}</Header.Item>
