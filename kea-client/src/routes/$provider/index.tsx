@@ -1,13 +1,13 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute('/$provider/')({
+export const Route = createFileRoute("/$provider/")({
   component: ProviderComponent,
-})
+});
 
-const ALLOWED_PROVIDERS = ['gh']
+const ALLOWED_PROVIDERS = ["gh"];
 
 function ProviderComponent() {
-  const { provider } = Route.useParams()
+  const { provider } = Route.useParams();
 
   return (
     <div className="p-2">
@@ -17,5 +17,5 @@ function ProviderComponent() {
         <h3>Invalid Provider</h3>
       )}
     </div>
-  )
+  );
 }

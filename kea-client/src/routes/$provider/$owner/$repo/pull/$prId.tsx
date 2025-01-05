@@ -1,8 +1,7 @@
-import { Box, Text } from "@primer/react";
+import { Box } from "@primer/react";
 import { createFileRoute } from "@tanstack/react-router";
-import Markdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import { $api } from "~/api/api";
+import { PullRequestDetails } from "~/components/pull-request-details";
 import { validatePrId, validateProvider } from "~/utils/validate-routes";
 
 export const Route = createFileRoute("/$provider/$owner/$repo/pull/$prId")({
@@ -38,14 +37,7 @@ function PullRequestComponent() {
 
   return (
     <Box>
-      <Box>
-        <Text size="large">{details.data?.title}</Text>
-        <Text size="large">{details.data?.id}</Text>
-      </Box>
-
-      <div className="markdown-body">
-        <Markdown remarkPlugins={[remarkGfm]}>{details.data?.body}</Markdown>
-      </div>
+      <PullRequestDetails details={details.data} />
     </Box>
   );
 }
