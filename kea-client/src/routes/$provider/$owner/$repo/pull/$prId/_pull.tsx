@@ -1,27 +1,22 @@
 import { Box } from "@primer/react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { useAtom } from "jotai";
 import { useEffect } from "react";
 import { $api } from "~/api/api";
 import * as apiTypes from "~/api/types";
 import { appCrumbs } from "~/components/app-crumbs/app-crumbs";
-import { PullRequestDetails } from "~/components/pull-request/pull-request-details";
 import {
   PullRequestNav,
   PullRequestTitle,
 } from "~/components/pull-request/pull-request-header";
-import { PullRequestDetailsParams } from "~/components/pull-request/types";
-import { validatePrId, validateProvider } from "~/utils/validate-routes";
+import { validatePullRequestRoute } from "~/utils/validate-routes";
 
-export const Route = createFileRoute("/$provider/$owner/$repo/pull/$prId/")({
-  component: PullRequestComponent,
+export const Route = createFileRoute(
+  "/$provider/$owner/$repo/pull/$prId/_pull",
+)({
+  component: RouteComponent,
   params: {
-    parse: (params): PullRequestDetailsParams => ({
-      provider: validateProvider(params.provider),
-      owner: params.owner,
-      repo: params.repo,
-      prId: validatePrId(params.prId),
-    }),
+    parse: validatePullRequestRoute,
   },
 });
 
@@ -60,7 +55,7 @@ const useBreadcrumbs = (details: apiTypes.PullRequestDetails | undefined) => {
   }, [owner, repo, prId, setAppCrumbs, provider, details]);
 };
 
-function PullRequestComponent() {
+function RouteComponent() {
   const { owner, repo, prId } = Route.useParams();
 
   const details = $api.useQuery(
@@ -84,7 +79,6 @@ function PullRequestComponent() {
       <Box sx={{ marginBottom: 3 }}>
         <PullRequestTitle title={details.data?.title} id={prId} />
       </Box>
-
       <Box
         sx={{
           border: "1px solid",
@@ -102,8 +96,9 @@ function PullRequestComponent() {
         >
           <PullRequestNav />
         </Box>
+
         <Box sx={{ padding: 3 }}>
-          <PullRequestDetails details={details.data} />
+          <Outlet />
         </Box>
       </Box>
     </Box>

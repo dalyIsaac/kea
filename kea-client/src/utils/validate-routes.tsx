@@ -14,3 +14,19 @@ export const validateProvider = (provider: string): string => {
 
   return provider;
 };
+
+export interface PullRequestDetailsParams {
+  provider: string;
+  owner: string;
+  repo: string;
+  prId: number;
+}
+
+export const validatePullRequestRoute = (
+  params: Record<keyof PullRequestDetailsParams, string>,
+): PullRequestDetailsParams => ({
+  provider: validateProvider(params.provider),
+  owner: params.owner,
+  repo: params.repo,
+  prId: validatePrId(params.prId),
+});
