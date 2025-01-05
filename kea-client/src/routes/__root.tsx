@@ -1,11 +1,15 @@
 import { Avatar, Button, Header } from "@primer/react";
 import { Link, Outlet, createRootRoute } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/router-devtools";
-import { FC, ReactElement, ReactNode } from "react";
+import { ReactElement, ReactNode } from "react";
 import { $api } from "~/api/api";
 import logo from "~/assets/logo-light.gif";
 
-const RootComponent: FC = () => {
+export const Route = createRootRoute({
+  component: RootComponent,
+});
+
+function RootComponent() {
   const { isLoading, data } = $api.useQuery("get", "/me");
 
   let user: ReactNode = null;
@@ -60,8 +64,4 @@ const RootComponent: FC = () => {
       <TanStackRouterDevtools position="bottom-right" />
     </>
   );
-};
-
-export const Route = createRootRoute({
-  component: RootComponent,
-});
+}
