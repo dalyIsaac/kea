@@ -2,11 +2,16 @@ use axum_extra::extract::PrivateCookieJar;
 use kea_server::try_chain;
 
 use crate::{
-    scm::{payloads::KeaPullRequestDetails, scm_client::ScmApiClient},
+    scm::{
+        payloads::{KeaCommit, KeaPullRequestDetails},
+        scm_client::ScmApiClient,
+    },
     state::AppContext,
 };
 
 use super::{client::GitHubClient, error::KeaGitHubError};
+
+const COMMIT_PAGE_SIZE: u8 = 250;
 
 impl ScmApiClient<Box<KeaGitHubError>> for GitHubClient {
     async fn get_pull_request_details(
@@ -30,5 +35,24 @@ impl ScmApiClient<Box<KeaGitHubError>> for GitHubClient {
         );
 
         Ok((jar, pr))
+    }
+
+    async fn get_pull_request_commits(
+        &self,
+        jar: PrivateCookieJar,
+        ctx: &AppContext,
+        owner: &str,
+        repo: &str,
+        pr_number: u64,
+    ) -> Result<(PrivateCookieJar, Vec<KeaCommit>), Box<KeaGitHubError>> {
+        let (jar, client) = self.get_client_with_token(jar, ctx).await?;
+        let commits = client
+            .pulls(owner, repo)
+            .pr_commits(pr_number)
+            .per_page(COMMIT_PAGE_SIZE)
+            .send()
+            .await?;
+
+        Ok((jar, commits.into_iter().map(Into::into).collect()))
     }
 }

@@ -1,5 +1,5 @@
 use crate::scm::github::error::KeaGitHubError;
-use crate::scm::payloads::KeaPullRequestDetails;
+use crate::scm::payloads::{KeaCommit, KeaPullRequestDetails};
 use crate::scm::scm_client::{AuthResponse, ScmApiClient, ScmAuthClient};
 use crate::state::AppState;
 use axum::extract::Path;
@@ -36,7 +36,6 @@ pub async fn sign_out(
 #[utoipa::path(
     get,
     path = "/github/{owner}/{repo}/pull/{pr_number}",
-    responses((status = OK, body = KeaPullRequestDetails)),
     params(
         ("owner" = String, Path, description = "Owner of the repository"),
         ("repo" = String, Path, description = "Repository name"),
@@ -57,6 +56,35 @@ pub async fn get_pull_request_details(
         .await
     {
         Ok((new_jar, pr)) => Ok((new_jar, Json(pr))),
+        Err(e) => Err(e),
+    }
+}
+
+#[axum::debug_handler]
+#[utoipa::path(
+    get,
+    path = "/github/{owner}/{repo}/pull/{pr_number}/commits",
+    responses((status = OK, body = Vec<KeaCommit>)),
+    params(
+        ("owner" = String, Path, description = "Owner of the repository"),
+        ("repo" = String, Path, description = "Repository name"),
+        ("pr_number" = u64, Path, description = "Pull request number")
+    ),
+    responses((status = OK, body = Vec<KeaCommit>))
+)]
+pub async fn get_pull_request_commits(
+    State(state): State<AppState>,
+    jar: PrivateCookieJar,
+    Path((owner, repo, pr_number)): Path<(String, String, u64)>,
+) -> Result<impl IntoResponse, Box<KeaGitHubError>> {
+    let AppState { clients, ctx } = state;
+
+    match clients
+        .github
+        .get_pull_request_commits(jar, &ctx, &owner, &repo, pr_number)
+        .await
+    {
+        Ok((new_jar, commits)) => Ok((new_jar, Json(commits))),
         Err(e) => Err(e),
     }
 }
