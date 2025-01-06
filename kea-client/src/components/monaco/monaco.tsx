@@ -1,8 +1,7 @@
-import { Box } from "@primer/react";
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 import { FC, useEffect, useRef, useState } from "react";
 
-export const Monaco: FC = () => {
+export const Monaco: FC<{ className?: string }> = ({ className }) => {
   const [editor, setEditor] =
     useState<monaco.editor.IStandaloneCodeEditor | null>(null);
   const monacoEl = useRef<HTMLDivElement | null>(null);
@@ -29,5 +28,5 @@ export const Monaco: FC = () => {
     return () => editor?.dispose();
   }, [editor]);
 
-  return <Box ref={monacoEl} sx={{ height: "50vh" }} />;
+  return <div ref={monacoEl} className={className} />;
 };

@@ -4,3 +4,4 @@
 import { components } from "./openapi.g";
 
 export type PullRequestDetails = components["schemas"]["KeaPullRequestDetails"];
+export type Commit = components["schemas"]["KeaCommit"];

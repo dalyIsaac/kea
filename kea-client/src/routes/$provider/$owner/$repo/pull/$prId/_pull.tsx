@@ -58,7 +58,7 @@ const useBreadcrumbs = (details: apiTypes.PullRequestDetails | undefined) => {
 function RouteComponent() {
   const { owner, repo, prId } = Route.useParams();
 
-  const details = $api.useQuery(
+  const detailsQuery = $api.useQuery(
     "get",
     "/github/{owner}/{repo}/pull/{pr_number}",
     {
@@ -72,12 +72,12 @@ function RouteComponent() {
     },
   );
 
-  useBreadcrumbs(details.data);
+  useBreadcrumbs(detailsQuery.data);
 
   return (
     <Box sx={{ padding: 2 }}>
       <Box sx={{ marginBottom: 3 }}>
-        <PullRequestTitle title={details.data?.title} id={prId} />
+        <PullRequestTitle title={detailsQuery.data?.title} id={prId} />
       </Box>
 
       <Box
