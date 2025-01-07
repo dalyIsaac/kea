@@ -2,10 +2,12 @@ import { useNavigate } from "@tanstack/react-router";
 import { Check, GitCompare, X } from "lucide-react";
 import { FC, ReactElement, useState } from "react";
 import * as apiTypes from "~/api/types";
+import { cn } from "~/lib/utils";
 import { Avatar } from "~/shadcn/ui/avatar";
 import { Button } from "~/shadcn/ui/button";
 import { Card } from "~/shadcn/ui/card";
 import { Checkbox } from "~/shadcn/ui/checkbox";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "~/shadcn/ui/tooltip";
 import { trimSha } from "~/utils/git";
 import { PullRequestDetailsParams } from "~/utils/validate-routes";
 
@@ -58,25 +60,39 @@ export const PullRequestCommits: FC<{
   let buttons: ReactElement;
   if (showCheckboxes) {
     const cancelButton = (
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={() => {
-          setShowCheckboxes(false);
-          setSelectedCommits([]);
-        }}
-      >
-        <X className="h-4 w-4" />
-      </Button>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              className="h-5 w-5 p-0"
+              onClick={() => {
+                setShowCheckboxes(false);
+                setSelectedCommits([]);
+              }}
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Cancel selection</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     );
 
     if (selectedCommits.length === 2) {
       buttons = (
-        <div className="flex gap-1">
+        <div className="flex gap-0.5">
           {cancelButton}
-          <Button variant="ghost" size="icon" onClick={onCompareClick}>
-            <Check className="h-4 w-4" />
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" className="h-5 w-5 p-0" onClick={onCompareClick}>
+                  <Check className="h-3 w-3" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Compare selected commits</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       );
     } else {
@@ -84,14 +100,21 @@ export const PullRequestCommits: FC<{
     }
   } else {
     buttons = (
-      <Button variant="ghost" size="icon" onClick={() => setShowCheckboxes(true)}>
-        <GitCompare className="h-4 w-4" />
-      </Button>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="ghost" className="h-5 w-5 p-0" onClick={() => setShowCheckboxes(true)}>
+              <GitCompare className="h-3 w-3" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Compare commits</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     );
   }
 
   return (
-    <Card className={`${className} p-0`}>
+    <Card className={cn(className, "p-0 rounded-none")}>
       <div className="flex justify-between items-center h-7 px-1 border-b">
         <h3 className="text-sm font-medium leading-none">Commits</h3>
         {commits && commits.length > 1 && <div className="flex items-center -mr-1">{buttons}</div>}
@@ -107,13 +130,14 @@ export const PullRequestCommits: FC<{
           >
             <div className="flex items-center gap-0.5 flex-1 min-w-0">
               {showCheckboxes && (
-                <Checkbox
-                  className="h-3 w-3 mt-0.5"
-                  checked={selectedCommits.includes(commit.sha)}
-                  disabled={selectedCommits.length === 2 && !selectedCommits.includes(commit.sha)}
-                  onCheckedChange={() => onCheckboxChange(commit.sha)}
-                  aria-label={`Select commit ${commit.sha}`}
-                />
+                <div className="pl-0.5 pr-1">
+                  <Checkbox
+                    checked={selectedCommits.includes(commit.sha)}
+                    disabled={selectedCommits.length === 2 && !selectedCommits.includes(commit.sha)}
+                    onCheckedChange={() => onCheckboxChange(commit.sha)}
+                    aria-label={`Select commit ${commit.sha}`}
+                  />
+                </div>
               )}
 
               <div className="flex-1 min-w-0 leading-tight">
@@ -121,7 +145,7 @@ export const PullRequestCommits: FC<{
                   <a
                     href={`#commit-${commit.sha}`}
                     title={commit.message}
-                    className="flex-1 truncate hover:underline"
+                    className="flex-1 truncate hover:underline text-xs"
                   >
                     {commit.message}
                   </a>
