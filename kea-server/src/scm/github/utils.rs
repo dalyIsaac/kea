@@ -1,7 +1,7 @@
 use octocrab::models::{repos::RepoCommit, Author};
 
 use crate::scm::{
-    payloads::{KeaCommit, KeaParentCommit},
+    payloads::{KeaCommit, KeaCommitRef},
     scm_client::ScmUser,
 };
 
@@ -16,7 +16,7 @@ impl From<RepoCommit> for KeaCommit {
                 .parents
                 .into_iter()
                 .filter_map(|p| p.sha)
-                .map(KeaParentCommit::new)
+                .map(|sha| KeaCommitRef::new(sha, None))
                 .collect(),
         )
     }

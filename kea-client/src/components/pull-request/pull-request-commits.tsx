@@ -1,9 +1,12 @@
 import { CheckIcon, GitCompareIcon, XIcon } from "@primer/octicons-react";
 import { Avatar, Box, ButtonGroup, IconButton } from "@primer/react";
+import { useNavigate } from "@tanstack/react-router";
 import { FC, ReactElement, useState } from "react";
 import styled from "styled-components";
 import * as apiTypes from "~/api/types";
 import { Checkbox } from "~/components/checkbox";
+import { trimSha } from "~/utils/git";
+import { PullRequestDetailsParams } from "~/utils/validate-routes";
 
 const Link = styled.a`
   color: inherit;
@@ -23,18 +26,46 @@ const iconButtonProps = {
 export const PullRequestCommits: FC<{
   className?: string;
   commits: apiTypes.Commit[] | undefined;
-}> = ({ className, commits }) => {
-  const formatSha = (sha: string) => sha.substring(0, 7);
+  params: PullRequestDetailsParams;
+  headSha: string | undefined;
+  baseSha: string | undefined;
+  selectedBase: string | undefined;
+  selectedCompare: string | undefined;
+}> = ({ className, commits, params, headSha, baseSha, selectedBase, selectedCompare }) => {
   const [showCheckboxes, setShowCheckboxes] = useState(false);
   const [selectedCommits, setSelectedCommits] = useState<string[]>([]);
+  const navigate = useNavigate();
 
-  const onCheckboxChange = (sha: string) => {
+  const onCheckboxChange = (sha: string) =>
     setSelectedCommits((prevSelectedCommits) => {
-      if (prevSelectedCommits.includes(sha)) {
-        return prevSelectedCommits.filter((selectedSha) => selectedSha !== sha);
-      } else {
-        return [...prevSelectedCommits, sha];
-      }
+      const newSelection = prevSelectedCommits.includes(sha)
+        ? prevSelectedCommits.filter((selectedSha) => selectedSha !== sha)
+        : [...prevSelectedCommits, sha];
+
+      return newSelection;
+    });
+
+  const onCompareClick = () => {
+    const [firstSha, secondSha] = selectedCommits;
+
+    if (!firstSha || !secondSha || !commits) {
+      return;
+    }
+
+    const firstShaIndex = commits.findIndex((commit) => commit.sha === firstSha);
+    const secondShaIndex = commits.findIndex((commit) => commit.sha === secondSha);
+
+    if (firstShaIndex === -1 || secondShaIndex === -1) {
+      return;
+    }
+
+    const [from, to] =
+      firstShaIndex < secondShaIndex ? [firstSha, secondSha] : [secondSha, firstSha];
+
+    navigate({
+      to: "/$provider/$owner/$repo/pull/$prId/review",
+      params,
+      search: { base: from, compare: to },
     });
   };
 
@@ -56,7 +87,12 @@ export const PullRequestCommits: FC<{
       buttons = (
         <>
           {cancelButton}
-          <IconButton {...iconButtonProps} icon={CheckIcon} aria-label="Compare selected commits" />
+          <IconButton
+            {...iconButtonProps}
+            icon={CheckIcon}
+            aria-label="Compare selected commits"
+            onClick={onCompareClick}
+          />
         </>
       );
     } else {
@@ -117,6 +153,10 @@ export const PullRequestCommits: FC<{
               py: 1,
               borderBottom: "1px solid",
               borderColor: "border.default",
+              bg:
+                commit.sha === selectedBase || commit.sha === selectedCompare
+                  ? "accent.subtle"
+                  : undefined,
               "&:last-child": { borderBottom: "none" },
               "&:hover": { bg: "canvas.subtle" },
             }}
@@ -146,6 +186,12 @@ export const PullRequestCommits: FC<{
                       {commit.message}
                     </Link>
                   </Box>
+                  {commit.sha === headSha && (
+                    <Box sx={{ fontSize: 0, color: "fg.muted", px: 1 }}>HEAD</Box>
+                  )}
+                  {commit.sha === baseSha && (
+                    <Box sx={{ fontSize: 0, color: "fg.muted", px: 1 }}>BASE</Box>
+                  )}
                   {commit.author && (
                     <Avatar src={commit.author.avatar_url} alt={commit.author.login} size={16} />
                   )}
@@ -153,7 +199,7 @@ export const PullRequestCommits: FC<{
 
                 <Box sx={{ fontFamily: "mono", fontSize: 0, color: "fg.muted" }}>
                   <Link href={`#commit-${commit.sha}`} title={commit.sha}>
-                    {formatSha(commit.sha)}
+                    {trimSha(commit.sha)}
                   </Link>
                 </Box>
               </Box>

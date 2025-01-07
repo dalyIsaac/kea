@@ -65,13 +65,15 @@ Considered alternatives for the backend which have OpenAPI built-in:
 
 ## Frontend
 
-| Layer             | Technology                                                                        | Notes                                                                                               |
-| ----------------- | --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| Web Framework     | [SolidJS](https://www.solidjs.com/)                                               | Performance and similarity to React                                                                 |
-| Styling           | [Tailwind CSS](https://tailwindcss.com/)                                          | Utility-first CSS framework                                                                         |
-| Querying          | [Tanstack Query](https://tanstack.com/query/latest/docs/framework/solid/overview) | It works in SolidJS                                                                                 |
-| OpenAPI           | [openapi-typescript](https://github.com/openapi-ts/openapi-typescript)            | Chosen for its popularity                                                                           |
-| Component Library | [solid-ui](https://github.com/stefan-karger/solid-ui)                             | Chosen for its similiarity to shadcn-ui for React, and popularity compared to other shadcn variants |
+| Layer             | Technology                                                             | Notes                                  |
+| ----------------- | ---------------------------------------------------------------------- | -------------------------------------- |
+| Web Framework     | React                                                                  | Chosen for its ecosystem               |
+| Styling           | [Styled Components](https://styled-components.com/)                    | Chosen for its integration with Primer |
+| Querying          | [Tanstack Query](https://tanstack.com/query/latest/docs/)              | Best choice for React querying         |
+| OpenAPI           | [openapi-typescript](https://github.com/openapi-ts/openapi-typescript) | Chosen for its popularity              |
+| Component Library | [Primer](https://primer.style/components/)                             | Chosen for its GitHub look and feel    |
+
+The frontend may be moved to Tailwind and shadcn in the future.
 
 ## Useful commands
 
