@@ -1,4 +1,4 @@
-import { Avatar, Button, Header } from "@primer/react";
+import { Avatar, Box, Button, Header } from "@primer/react";
 import { Link, Outlet, createRootRoute } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/router-devtools";
 import { ReactElement, ReactNode } from "react";
@@ -32,7 +32,7 @@ function RootComponent() {
   }
 
   return (
-    <>
+    <Box sx={{ display: "flex", flexDirection: "column", height: "100vh" }}>
       <Header
         sx={{
           display: "flex",
@@ -52,9 +52,12 @@ function RootComponent() {
         <Header.Item sx={{ mr: 0 }}>{user}</Header.Item>
       </Header>
 
-      <Outlet />
+      {/* Main content area that takes remaining space and allows children to shrink */}
+      <Box sx={{ flex: 1, minHeight: 0 }}>
+        <Outlet />
+      </Box>
 
       <TanStackRouterDevtools position="bottom-right" />
-    </>
+    </Box>
   );
 }

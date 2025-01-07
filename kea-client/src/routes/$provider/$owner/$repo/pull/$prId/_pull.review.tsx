@@ -32,7 +32,7 @@ function RouteComponent() {
   });
 
   return (
-    <Box sx={{ display: "flex" }}>
+    <Box sx={{ display: "flex", height: "100%" }}>
       <StyledPullRequestCommits commits={commitsQuery.data} />
       <StyledMonaco />
     </Box>

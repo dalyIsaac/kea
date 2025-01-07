@@ -75,7 +75,6 @@ export const PullRequestCommits: FC<{
 
   return (
     <Box
-      as="ul"
       className={className}
       sx={{
         listStyle: "none",
@@ -106,60 +105,62 @@ export const PullRequestCommits: FC<{
         )}
       </Box>
 
-      {commits?.map((commit) => (
-        <Box
-          key={commit.sha}
-          as="li"
-          sx={{
-            display: "flex",
-            alignItems: "flex-start",
-            px: 3,
-            py: 1,
-            borderBottom: "1px solid",
-            borderColor: "border.default",
-            "&:last-child": { borderBottom: "none" },
-            "&:hover": { bg: "canvas.subtle" },
-          }}
-        >
-          <Box sx={{ display: "flex", alignItems: "center", gap: 2, flex: 1, minWidth: 0 }}>
-            {showCheckboxes && (
-              <Checkbox
-                checked={selectedCommits.includes(commit.sha)}
-                disabled={selectedCommits.length === 2 && !selectedCommits.includes(commit.sha)}
-                onCheckedChange={() => onCheckboxChange(commit.sha)}
-                aria-label={`Select commit ${commit.sha}`}
-              />
-            )}
+      <Box as="ul">
+        {commits?.map((commit) => (
+          <Box
+            key={commit.sha}
+            as="li"
+            sx={{
+              display: "flex",
+              alignItems: "flex-start",
+              px: 3,
+              py: 1,
+              borderBottom: "1px solid",
+              borderColor: "border.default",
+              "&:last-child": { borderBottom: "none" },
+              "&:hover": { bg: "canvas.subtle" },
+            }}
+          >
+            <Box sx={{ display: "flex", alignItems: "center", gap: 2, flex: 1, minWidth: 0 }}>
+              {showCheckboxes && (
+                <Checkbox
+                  checked={selectedCommits.includes(commit.sha)}
+                  disabled={selectedCommits.length === 2 && !selectedCommits.includes(commit.sha)}
+                  onCheckedChange={() => onCheckboxChange(commit.sha)}
+                  aria-label={`Select commit ${commit.sha}`}
+                />
+              )}
 
-            <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1 }}>
-                <Box
-                  sx={{
-                    flex: 1,
-                    fontSize: 0,
-                    overflow: "hidden",
-                    whiteSpace: "nowrap",
-                    textOverflow: "ellipsis",
-                  }}
-                >
-                  <Link href={`#commit-${commit.sha}`} title={commit.message}>
-                    {commit.message}
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1 }}>
+                  <Box
+                    sx={{
+                      flex: 1,
+                      fontSize: 0,
+                      overflow: "hidden",
+                      whiteSpace: "nowrap",
+                      textOverflow: "ellipsis",
+                    }}
+                  >
+                    <Link href={`#commit-${commit.sha}`} title={commit.message}>
+                      {commit.message}
+                    </Link>
+                  </Box>
+                  {commit.author && (
+                    <Avatar src={commit.author.avatar_url} alt={commit.author.login} size={16} />
+                  )}
+                </Box>
+
+                <Box sx={{ fontFamily: "mono", fontSize: 0, color: "fg.muted" }}>
+                  <Link href={`#commit-${commit.sha}`} title={commit.sha}>
+                    {formatSha(commit.sha)}
                   </Link>
                 </Box>
-                {commit.author && (
-                  <Avatar src={commit.author.avatar_url} alt={commit.author.login} size={16} />
-                )}
-              </Box>
-
-              <Box sx={{ fontFamily: "mono", fontSize: 0, color: "fg.muted" }}>
-                <Link href={`#commit-${commit.sha}`} title={commit.sha}>
-                  {formatSha(commit.sha)}
-                </Link>
               </Box>
             </Box>
           </Box>
-        </Box>
-      ))}
+        ))}
+      </Box>
     </Box>
   );
 };

@@ -73,6 +73,8 @@ function RouteComponent() {
         display: "flex",
         flexDirection: "column",
         height: "100%",
+        // Required to allow container to shrink below content size
+        minHeight: 0,
       }}
     >
       <PullRequestHeader title={detailsQuery.data?.title} {...params} />
@@ -87,6 +89,8 @@ function RouteComponent() {
           display: "flex",
           flexDirection: "column",
           padding: 3,
+          // Required for nested flex containers to prevent overflow
+          minHeight: 0,
         }}
       >
         <Outlet />
