@@ -1,4 +1,5 @@
-import { createFileRoute, SearchSchemaInput } from "@tanstack/react-router";
+import { createFileRoute, SearchSchemaInput, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { $api } from "~/api/api";
 import { Monaco } from "~/components/monaco/monaco";
 import { PullRequestCommits } from "~/components/pull-request/pull-request-commits";
@@ -14,6 +15,7 @@ export const Route = createFileRoute("/$provider/$owner/$repo/pull/$prId/_pull/r
 });
 
 function RouteComponent() {
+  const navigate = useNavigate();
   const params = Route.useParams();
   const { owner, repo, prId } = params;
   const { base, compare } = Route.useSearch();
@@ -37,6 +39,19 @@ function RouteComponent() {
       },
     },
   });
+
+  useEffect(() => {
+    if (!base && !compare && commitsQuery.data && prQuery.data) {
+      navigate({
+        to: "/$provider/$owner/$repo/pull/$prId/review",
+        params,
+        search: {
+          base: prQuery.data.base.sha,
+          compare: prQuery.data.head.sha,
+        },
+      });
+    }
+  }, [base, compare, commitsQuery.data, prQuery.data, navigate, params]);
 
   return (
     <div className="flex h-full">
