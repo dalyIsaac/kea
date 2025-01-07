@@ -5,15 +5,10 @@ import { useEffect } from "react";
 import { $api } from "~/api/api";
 import * as apiTypes from "~/api/types";
 import { appCrumbs } from "~/components/app-crumbs/app-crumbs";
-import {
-  PullRequestNav,
-  PullRequestTitle,
-} from "~/components/pull-request/pull-request-header";
+import { PullRequestHeader } from "~/components/pull-request/pull-request-header";
 import { validatePullRequestRoute } from "~/utils/validate-routes";
 
-export const Route = createFileRoute(
-  "/$provider/$owner/$repo/pull/$prId/_pull",
-)({
+export const Route = createFileRoute("/$provider/$owner/$repo/pull/$prId/_pull")({
   component: RouteComponent,
   params: {
     parse: validatePullRequestRoute,
@@ -56,29 +51,31 @@ const useBreadcrumbs = (details: apiTypes.PullRequestDetails | undefined) => {
 };
 
 function RouteComponent() {
-  const { owner, repo, prId } = Route.useParams();
+  const params = Route.useParams();
+  const { owner, repo, prId } = params;
 
-  const detailsQuery = $api.useQuery(
-    "get",
-    "/github/{owner}/{repo}/pull/{pr_number}",
-    {
-      params: {
-        path: {
-          owner,
-          repo,
-          pr_number: prId,
-        },
+  const detailsQuery = $api.useQuery("get", "/github/{owner}/{repo}/pull/{pr_number}", {
+    params: {
+      path: {
+        owner,
+        repo,
+        pr_number: prId,
       },
     },
-  );
+  });
 
   useBreadcrumbs(detailsQuery.data);
 
   return (
-    <Box sx={{ padding: 2 }}>
-      <Box sx={{ marginBottom: 3 }}>
-        <PullRequestTitle title={detailsQuery.data?.title} id={prId} />
-      </Box>
+    <Box
+      sx={{
+        padding: 2,
+        display: "flex",
+        flexDirection: "column",
+        height: "100%",
+      }}
+    >
+      <PullRequestHeader title={detailsQuery.data?.title} {...params} />
 
       <Box
         sx={{
@@ -86,22 +83,13 @@ function RouteComponent() {
           borderColor: "border.default",
           borderRadius: 6,
           backgroundColor: "canvas.default",
-          overflow: "hidden",
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          padding: 3,
         }}
       >
-        <Box sx={{ backgroundColor: "canvas.subtle" }}>
-          <PullRequestNav />
-        </Box>
-
-        <Box
-          sx={{
-            borderTop: "1px solid",
-            borderColor: "border.default",
-            padding: 3,
-          }}
-        >
-          <Outlet />
-        </Box>
+        <Outlet />
       </Box>
     </Box>
   );

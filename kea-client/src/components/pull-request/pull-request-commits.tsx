@@ -1,134 +1,165 @@
-import { Avatar } from "@primer/react";
-import { FC } from "react";
+import { CheckIcon, GitCompareIcon, XIcon } from "@primer/octicons-react";
+import { Avatar, Box, ButtonGroup, IconButton } from "@primer/react";
+import { FC, ReactElement, useState } from "react";
 import styled from "styled-components";
 import * as apiTypes from "~/api/types";
+import { Checkbox } from "~/components/checkbox";
 
-const CommitContent = styled.div`
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  gap: 1px;
-`;
-
-const MessageRow = styled.div`
-  margin: 0;
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 1.3;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-`;
-
-const CommitRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  min-width: 0;
-  margin-bottom: 2px;
-
-  ${MessageRow} {
-    flex: 1;
-    min-width: 0;
-  }
-`;
-
-const ShaRow = styled.div`
-  display: flex;
-  align-items: center;
-  font-family: ui-monospace, monospace;
-  font-size: 11px;
-  color: #57606a;
-  line-height: 1;
-`;
-
-const CommitLink = styled.a`
-  color: #24292f;
+const Link = styled.a`
+  color: inherit;
   text-decoration: none;
 
   &:hover {
-    color: #0969da;
+    color: inherit;
     text-decoration: underline;
   }
 `;
 
-const CommitList = styled.ul`
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  border: 1px solid #d0d7de;
-  border-radius: 6px;
-
-  h3 {
-    margin: 0;
-    padding: 3px 12px;
-    font-size: 12px;
-    border-bottom: 1px solid #d0d7de;
-    background-color: #f6f8fa;
-  }
-
-  li {
-    border-bottom: 1px solid #d0d7de;
-    padding: 4px 12px;
-  }
-
-  li:last-child {
-    border-bottom: none;
-  }
-
-  a {
-    text-decoration: none;
-  }
-
-  li:hover {
-    background-color: #f6f8fa;
-  }
-
-  img {
-    flex-shrink: 0;
-  }
-`;
+const iconButtonProps = {
+  size: "small",
+  variant: "invisible",
+} as const;
 
 export const PullRequestCommits: FC<{
   className?: string;
   commits: apiTypes.Commit[] | undefined;
 }> = ({ className, commits }) => {
   const formatSha = (sha: string) => sha.substring(0, 7);
+  const [showCheckboxes, setShowCheckboxes] = useState(false);
+  const [selectedCommits, setSelectedCommits] = useState<string[]>([]);
+
+  const onCheckboxChange = (sha: string) => {
+    setSelectedCommits((prevSelectedCommits) => {
+      if (prevSelectedCommits.includes(sha)) {
+        return prevSelectedCommits.filter((selectedSha) => selectedSha !== sha);
+      } else {
+        return [...prevSelectedCommits, sha];
+      }
+    });
+  };
+
+  let buttons: ReactElement;
+  if (showCheckboxes) {
+    const cancelButton = (
+      <IconButton
+        {...iconButtonProps}
+        icon={XIcon}
+        aria-label="Cancel selection"
+        onClick={() => {
+          setShowCheckboxes(false);
+          setSelectedCommits([]);
+        }}
+      />
+    );
+
+    if (selectedCommits.length === 2) {
+      buttons = (
+        <>
+          {cancelButton}
+          <IconButton {...iconButtonProps} icon={CheckIcon} aria-label="Compare selected commits" />
+        </>
+      );
+    } else {
+      buttons = cancelButton;
+    }
+  } else {
+    buttons = (
+      <IconButton
+        {...iconButtonProps}
+        icon={GitCompareIcon}
+        aria-label="Compare commits"
+        onClick={() => setShowCheckboxes(true)}
+      />
+    );
+  }
 
   return (
-    <CommitList className={className}>
-      <h3>Commits</h3>
+    <Box
+      as="ul"
+      className={className}
+      sx={{
+        listStyle: "none",
+        m: 0,
+        p: 0,
+        border: "1px solid",
+        borderColor: "border.default",
+        borderRadius: 2,
+      }}
+    >
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          px: 3,
+          py: 1,
+          borderBottom: "1px solid",
+          borderColor: "border.default",
+          bg: "canvas.subtle",
+        }}
+      >
+        <Box as="h3" sx={{ m: 0, fontSize: 0 }}>
+          Commits
+        </Box>
+        {commits && commits.length > 1 && (
+          <ButtonGroup sx={{ display: "flex", mr: -1 }}>{buttons}</ButtonGroup>
+        )}
+      </Box>
+
       {commits?.map((commit) => (
-        <li key={commit.sha}>
-          <CommitContent>
-            <CommitRow>
-              <MessageRow>
-                <CommitLink
-                  href={`#commit-${commit.sha}`}
-                  title={commit.message}
+        <Box
+          key={commit.sha}
+          as="li"
+          sx={{
+            display: "flex",
+            alignItems: "flex-start",
+            px: 3,
+            py: 1,
+            borderBottom: "1px solid",
+            borderColor: "border.default",
+            "&:last-child": { borderBottom: "none" },
+            "&:hover": { bg: "canvas.subtle" },
+          }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2, flex: 1, minWidth: 0 }}>
+            {showCheckboxes && (
+              <Checkbox
+                checked={selectedCommits.includes(commit.sha)}
+                disabled={selectedCommits.length === 2 && !selectedCommits.includes(commit.sha)}
+                onCheckedChange={() => onCheckboxChange(commit.sha)}
+                aria-label={`Select commit ${commit.sha}`}
+              />
+            )}
+
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1 }}>
+                <Box
+                  sx={{
+                    flex: 1,
+                    fontSize: 0,
+                    overflow: "hidden",
+                    whiteSpace: "nowrap",
+                    textOverflow: "ellipsis",
+                  }}
                 >
-                  {commit.message}
-                </CommitLink>
-              </MessageRow>
-              {commit.author && (
-                <Avatar
-                  src={commit.author.avatar_url}
-                  alt={commit.author.login}
-                  size={16}
-                />
-              )}
-            </CommitRow>
-            <ShaRow>
-              <CommitLink href={`#commit-${commit.sha}`} title={commit.sha}>
-                {formatSha(commit.sha)}
-              </CommitLink>
-            </ShaRow>
-          </CommitContent>
-        </li>
+                  <Link href={`#commit-${commit.sha}`} title={commit.message}>
+                    {commit.message}
+                  </Link>
+                </Box>
+                {commit.author && (
+                  <Avatar src={commit.author.avatar_url} alt={commit.author.login} size={16} />
+                )}
+              </Box>
+
+              <Box sx={{ fontFamily: "mono", fontSize: 0, color: "fg.muted" }}>
+                <Link href={`#commit-${commit.sha}`} title={commit.sha}>
+                  {formatSha(commit.sha)}
+                </Link>
+              </Box>
+            </Box>
+          </Box>
+        </Box>
       ))}
-    </CommitList>
+    </Box>
   );
 };

@@ -5,9 +5,7 @@ import { $api } from "~/api/api";
 import { Monaco } from "~/components/monaco/monaco";
 import { PullRequestCommits } from "~/components/pull-request/pull-request-commits";
 
-export const Route = createFileRoute(
-  "/$provider/$owner/$repo/pull/$prId/_pull/review",
-)({
+export const Route = createFileRoute("/$provider/$owner/$repo/pull/$prId/_pull/review")({
   component: RouteComponent,
 });
 
@@ -23,19 +21,15 @@ const StyledMonaco = styled(Monaco)`
 function RouteComponent() {
   const { owner, repo, prId } = Route.useParams();
 
-  const commitsQuery = $api.useQuery(
-    "get",
-    "/github/{owner}/{repo}/pull/{pr_number}/commits",
-    {
-      params: {
-        path: {
-          owner,
-          repo,
-          pr_number: prId,
-        },
+  const commitsQuery = $api.useQuery("get", "/github/{owner}/{repo}/pull/{pr_number}/commits", {
+    params: {
+      path: {
+        owner,
+        repo,
+        pr_number: prId,
       },
     },
-  );
+  });
 
   return (
     <Box sx={{ display: "flex" }}>

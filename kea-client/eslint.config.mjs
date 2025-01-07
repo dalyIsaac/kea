@@ -19,4 +19,10 @@ export default tseslint.config(
   {
     ignores: ["**/*.g.*"],
   },
+  {
+    rules: {
+      curly: ["error", "all"],
+      "no-console": "error",
+    },
+  },
 );

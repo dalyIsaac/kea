@@ -1,9 +1,9 @@
-import { Box, Text, themeGet } from "@primer/react";
-import { Link } from "@tanstack/react-router";
+import { Box, Text } from "@primer/react";
 import { FC } from "react";
-import styled from "styled-components";
+import { SegmentedLink, SegmentedLinkContainer } from "~/components/segmented-link-control";
+import { PullRequestDetailsParams } from "~/utils/validate-routes";
 
-export const PullRequestTitle: FC<{
+const PullRequestTitle: FC<{
   title: string | undefined | null;
   id: number;
 }> = ({ title, id }) => (
@@ -13,51 +13,30 @@ export const PullRequestTitle: FC<{
   </Box>
 );
 
-const NavItem = styled(Link)`
-  color: ${themeGet("colors.fg.muted")};
-  text-decoration: none;
-  padding: 8px 16px;
-  font-size: 14px;
-  line-height: 20px;
-  position: relative;
-  border: 1px solid transparent;
-  border-radius: 6px 6px 0 0;
-  margin-bottom: 0;
-  background-color: ${themeGet("colors.canvas.subtle")};
-  margin-right: 1px;
+interface PullRequestHeaderProps extends PullRequestDetailsParams {
+  title: string | undefined | null;
+}
 
-  &:hover {
-    color: ${themeGet("colors.fg.default")};
-    background-color: ${themeGet("colors.canvas.default")};
-  }
+export const PullRequestHeader: FC<PullRequestHeaderProps> = ({ title, ...params }) => (
+  <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 3 }}>
+    <PullRequestTitle title={title} id={params.prId} />
 
-  &[data-status="active"] {
-    color: ${themeGet("colors.fg.default")};
-    background-color: ${themeGet("colors.canvas.default")};
-    border-color: ${themeGet("colors.border.default")};
-    border-bottom-color: ${themeGet("colors.canvas.default")};
-  }
-`;
+    <SegmentedLinkContainer>
+      <SegmentedLink
+        params={params}
+        to="/$provider/$owner/$repo/pull/$prId"
+        activeOptions={{ exact: true }}
+      >
+        Overview
+      </SegmentedLink>
 
-export const PullRequestNav: FC = () => (
-  <Box
-    sx={{
-      display: "flex",
-      px: 3,
-      pt: 2,
-    }}
-  >
-    <NavItem
-      to="/$provider/$owner/$repo/pull/$prId"
-      activeOptions={{ exact: true }}
-    >
-      Overview
-    </NavItem>
-    <NavItem
-      to="/$provider/$owner/$repo/pull/$prId/review"
-      activeOptions={{ exact: true }}
-    >
-      Review
-    </NavItem>
+      <SegmentedLink
+        params={params}
+        to="/$provider/$owner/$repo/pull/$prId/review"
+        activeOptions={{ exact: true }}
+      >
+        Review
+      </SegmentedLink>
+    </SegmentedLinkContainer>
   </Box>
 );

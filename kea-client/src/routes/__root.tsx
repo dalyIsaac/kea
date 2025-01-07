@@ -19,13 +19,7 @@ function RootComponent() {
     let content: ReactElement;
 
     if (data?.github) {
-      content = (
-        <Avatar
-          src={data.github.avatar_url}
-          alt={data.github.login}
-          size={32}
-        />
-      );
+      content = <Avatar src={data.github.avatar_url} alt={data.github.login} size={32} />;
     } else {
       content = (
         <Button as={Link} to="http://localhost:3000/github/signin">
@@ -49,11 +43,7 @@ function RootComponent() {
       >
         <Header.Item sx={{ display: "flex", gap: 2 }}>
           <Header.Link href="/">
-            <img
-              src={logo}
-              alt="Kea Logo"
-              style={{ imageRendering: "pixelated", height: 32 }}
-            />
+            <img src={logo} alt="Kea Logo" style={{ imageRendering: "pixelated", height: 32 }} />
           </Header.Link>
 
           <AppCrumbs />
