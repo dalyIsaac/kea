@@ -4,7 +4,7 @@ use serde::{de, Deserialize, Deserializer, Serialize};
 
 use crate::state::AppContext;
 
-use super::payloads::KeaPullRequestDetails;
+use super::payloads::{KeaCommit, KeaPullRequestDetails};
 
 #[derive(Debug)]
 pub enum AuthResponse {
@@ -18,13 +18,16 @@ pub enum AuthResponse {
     },
 }
 
-#[derive(Debug, Serialize, utoipa::ToSchema)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize, utoipa::ToSchema, derive_new::new)]
 pub struct ScmUser {
     /// The user's unique ID.
     pub id: String,
 
     /// The user's login. This is typically the user's username.
     pub login: String,
+
+    /// The user's display name.
+    pub avatar_url: String,
 }
 
 impl<'de> Deserialize<'de> for AuthResponse {
@@ -84,4 +87,13 @@ pub trait ScmApiClient<E> {
         repo: &str,
         pr_number: u64,
     ) -> Result<(PrivateCookieJar, KeaPullRequestDetails), E>;
+
+    async fn get_pull_request_commits(
+        &self,
+        jar: PrivateCookieJar,
+        ctx: &AppContext,
+        owner: &str,
+        repo: &str,
+        pr_number: u64,
+    ) -> Result<(PrivateCookieJar, Vec<KeaCommit>), E>;
 }

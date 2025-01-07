@@ -1,33 +1,10 @@
-import { createQuery } from "@tanstack/solid-query";
-import createClient from "openapi-fetch";
-import type { paths } from "./openapi.g";
+import createFetchClient from "openapi-fetch";
+import createClient from "openapi-react-query";
+import { paths } from "./openapi.g";
 
-const client = createClient<paths>({
+const fetchClient = createFetchClient<paths>({
   baseUrl: "http://localhost:3000",
   credentials: "include",
 });
 
-export const createMeQuery = () =>
-  createQuery(() => ({
-    queryKey: ["me"],
-    queryFn: () => client.GET("/me"),
-  }));
-
-export const createPullRequestDetailsQuery = (
-  owner: string,
-  repo: string,
-  pr_number: number,
-) =>
-  createQuery(() => ({
-    queryKey: ["pullRequestDetails", owner, repo, pr_number],
-    queryFn: () =>
-      client.GET(`/github/{owner}/{repo}/pull/{pr_number}`, {
-        params: {
-          path: {
-            owner,
-            repo,
-            pr_number,
-          },
-        },
-      }),
-  }));
+export const $api = createClient(fetchClient);

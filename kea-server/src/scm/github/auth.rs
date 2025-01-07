@@ -98,14 +98,9 @@ impl ScmAuthClient<Box<KeaGitHubError>> for GitHubClient {
     ) -> Result<(PrivateCookieJar, ScmUser), Box<KeaGitHubError>> {
         match self.get_client_with_token(jar, ctx).await {
             Ok((jar, client)) => {
-                let user = client.current().user().await?;
+                let user: ScmUser = client.current().user().await?.into();
 
-                let scm_user = ScmUser {
-                    id: user.id.to_string(),
-                    login: user.login,
-                };
-
-                Ok((jar, scm_user))
+                Ok((jar, user))
             }
             Err(e) => Err(e),
         }
