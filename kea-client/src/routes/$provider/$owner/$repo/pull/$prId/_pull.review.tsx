@@ -1,4 +1,4 @@
-import { Box } from "@primer/react";
+import { Box, themeGet } from "@primer/react";
 import { createFileRoute } from "@tanstack/react-router";
 import styled from "styled-components";
 import { $api } from "~/api/api";
@@ -10,11 +10,10 @@ export const Route = createFileRoute("/$provider/$owner/$repo/pull/$prId/_pull/r
 });
 
 const StyledPullRequestCommits = styled(PullRequestCommits)`
-  width: 25%;
+  width: ${themeGet("sizes.small")};
 `;
 
 const StyledMonaco = styled(Monaco)`
-  width: 75%;
   height: 100%;
 `;
 

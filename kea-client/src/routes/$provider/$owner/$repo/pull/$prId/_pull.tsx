@@ -81,14 +81,9 @@ function RouteComponent() {
 
       <Box
         sx={{
-          border: "1px solid",
-          borderColor: "border.default",
-          borderRadius: 6,
-          backgroundColor: "canvas.default",
           flex: 1,
           display: "flex",
           flexDirection: "column",
-          padding: 3,
           // Required for nested flex containers to prevent overflow
           minHeight: 0,
         }}

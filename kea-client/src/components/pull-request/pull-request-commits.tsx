@@ -105,7 +105,7 @@ export const PullRequestCommits: FC<{
         )}
       </Box>
 
-      <Box as="ul">
+      <Box as="ul" sx={{ m: 0, p: 0 }}>
         {commits?.map((commit) => (
           <Box
             key={commit.sha}
