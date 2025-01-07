@@ -1,4 +1,3 @@
-import { BaseStyles, ThemeProvider } from "@primer/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider, createRouter } from "@tanstack/react-router";
 import "github-markdown-css";
@@ -27,11 +26,7 @@ if (!rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement);
   root.render(
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <BaseStyles>
-          <RouterProvider router={router} />
-        </BaseStyles>
-      </ThemeProvider>
+      <RouterProvider router={router} />
     </QueryClientProvider>,
   );
 }

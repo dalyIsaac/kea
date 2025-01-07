@@ -1,27 +1,13 @@
-import { CheckIcon, GitCompareIcon, XIcon } from "@primer/octicons-react";
-import { Avatar, Box, ButtonGroup, IconButton } from "@primer/react";
 import { useNavigate } from "@tanstack/react-router";
+import { Check, GitCompare, X } from "lucide-react";
 import { FC, ReactElement, useState } from "react";
-import styled from "styled-components";
 import * as apiTypes from "~/api/types";
-import { Checkbox } from "~/components/checkbox";
+import { Avatar } from "~/shadcn/ui/avatar";
+import { Button } from "~/shadcn/ui/button";
+import { Card } from "~/shadcn/ui/card";
+import { Checkbox } from "~/shadcn/ui/checkbox";
 import { trimSha } from "~/utils/git";
 import { PullRequestDetailsParams } from "~/utils/validate-routes";
-
-const Link = styled.a`
-  color: inherit;
-  text-decoration: none;
-
-  &:hover {
-    color: inherit;
-    text-decoration: underline;
-  }
-`;
-
-const iconButtonProps = {
-  size: "small",
-  variant: "invisible",
-} as const;
 
 export const PullRequestCommits: FC<{
   className?: string;
@@ -72,98 +58,57 @@ export const PullRequestCommits: FC<{
   let buttons: ReactElement;
   if (showCheckboxes) {
     const cancelButton = (
-      <IconButton
-        {...iconButtonProps}
-        icon={XIcon}
-        aria-label="Cancel selection"
+      <Button
+        variant="ghost"
+        size="icon"
         onClick={() => {
           setShowCheckboxes(false);
           setSelectedCommits([]);
         }}
-      />
+      >
+        <X className="h-4 w-4" />
+      </Button>
     );
 
     if (selectedCommits.length === 2) {
       buttons = (
-        <>
+        <div className="flex gap-1">
           {cancelButton}
-          <IconButton
-            {...iconButtonProps}
-            icon={CheckIcon}
-            aria-label="Compare selected commits"
-            onClick={onCompareClick}
-          />
-        </>
+          <Button variant="ghost" size="icon" onClick={onCompareClick}>
+            <Check className="h-4 w-4" />
+          </Button>
+        </div>
       );
     } else {
       buttons = cancelButton;
     }
   } else {
     buttons = (
-      <IconButton
-        {...iconButtonProps}
-        icon={GitCompareIcon}
-        aria-label="Compare commits"
-        onClick={() => setShowCheckboxes(true)}
-      />
+      <Button variant="ghost" size="icon" onClick={() => setShowCheckboxes(true)}>
+        <GitCompare className="h-4 w-4" />
+      </Button>
     );
   }
 
   return (
-    <Box
-      className={className}
-      sx={{
-        listStyle: "none",
-        m: 0,
-        p: 0,
-        border: "1px solid",
-        borderColor: "border.default",
-        borderRadius: 2,
-      }}
-    >
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          px: 3,
-          py: 1,
-          borderBottom: "1px solid",
-          borderColor: "border.default",
-          bg: "canvas.subtle",
-        }}
-      >
-        <Box as="h3" sx={{ m: 0, fontSize: 0 }}>
-          Commits
-        </Box>
-        {commits && commits.length > 1 && (
-          <ButtonGroup sx={{ display: "flex", mr: -1 }}>{buttons}</ButtonGroup>
-        )}
-      </Box>
+    <Card className={`${className} p-0`}>
+      <div className="flex justify-between items-center h-7 px-1 border-b">
+        <h3 className="text-sm font-medium leading-none">Commits</h3>
+        {commits && commits.length > 1 && <div className="flex items-center -mr-1">{buttons}</div>}
+      </div>
 
-      <Box as="ul" sx={{ m: 0, p: 0 }}>
+      <ul className="divide-y divide-border text-sm">
         {commits?.map((commit) => (
-          <Box
+          <li
             key={commit.sha}
-            as="li"
-            sx={{
-              display: "flex",
-              alignItems: "flex-start",
-              px: 3,
-              py: 1,
-              borderBottom: "1px solid",
-              borderColor: "border.default",
-              bg:
-                commit.sha === selectedBase || commit.sha === selectedCompare
-                  ? "accent.subtle"
-                  : undefined,
-              "&:last-child": { borderBottom: "none" },
-              "&:hover": { bg: "canvas.subtle" },
-            }}
+            className={`flex px-1 py-0.5 hover:bg-muted ${
+              commit.sha === selectedBase || commit.sha === selectedCompare ? "bg-accent/10" : ""
+            }`}
           >
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2, flex: 1, minWidth: 0 }}>
+            <div className="flex items-center gap-0.5 flex-1 min-w-0">
               {showCheckboxes && (
                 <Checkbox
+                  className="h-3 w-3 mt-0.5"
                   checked={selectedCommits.includes(commit.sha)}
                   disabled={selectedCommits.length === 2 && !selectedCommits.includes(commit.sha)}
                   onCheckedChange={() => onCheckboxChange(commit.sha)}
@@ -171,42 +116,42 @@ export const PullRequestCommits: FC<{
                 />
               )}
 
-              <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1 }}>
-                  <Box
-                    sx={{
-                      flex: 1,
-                      fontSize: 0,
-                      overflow: "hidden",
-                      whiteSpace: "nowrap",
-                      textOverflow: "ellipsis",
-                    }}
+              <div className="flex-1 min-w-0 leading-tight">
+                <div className="flex items-center gap-0.5">
+                  <a
+                    href={`#commit-${commit.sha}`}
+                    title={commit.message}
+                    className="flex-1 truncate hover:underline"
                   >
-                    <Link href={`#commit-${commit.sha}`} title={commit.message}>
-                      {commit.message}
-                    </Link>
-                  </Box>
-                  {commit.sha === headSha && (
-                    <Box sx={{ fontSize: 0, color: "fg.muted", px: 1 }}>HEAD</Box>
-                  )}
-                  {commit.sha === baseSha && (
-                    <Box sx={{ fontSize: 0, color: "fg.muted", px: 1 }}>BASE</Box>
-                  )}
-                  {commit.author && (
-                    <Avatar src={commit.author.avatar_url} alt={commit.author.login} size={16} />
-                  )}
-                </Box>
+                    {commit.message}
+                  </a>
+                  <div className="flex items-center gap-0.5 flex-shrink-0">
+                    {commit.sha === headSha && (
+                      <span className="text-xs text-muted-foreground">HEAD</span>
+                    )}
+                    {commit.sha === baseSha && (
+                      <span className="text-xs text-muted-foreground">BASE</span>
+                    )}
+                    {commit.author && (
+                      <Avatar className="h-3 w-3">
+                        <img src={commit.author.avatar_url} alt={commit.author.login} />
+                      </Avatar>
+                    )}
+                  </div>
+                </div>
 
-                <Box sx={{ fontFamily: "mono", fontSize: 0, color: "fg.muted" }}>
-                  <Link href={`#commit-${commit.sha}`} title={commit.sha}>
-                    {trimSha(commit.sha)}
-                  </Link>
-                </Box>
-              </Box>
-            </Box>
-          </Box>
+                <a
+                  href={`#commit-${commit.sha}`}
+                  title={commit.sha}
+                  className="font-mono text-xs text-muted-foreground hover:underline"
+                >
+                  {trimSha(commit.sha)}
+                </a>
+              </div>
+            </div>
+          </li>
         ))}
-      </Box>
-    </Box>
+      </ul>
+    </Card>
   );
 };

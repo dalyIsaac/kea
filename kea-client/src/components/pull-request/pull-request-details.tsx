@@ -1,4 +1,3 @@
-import { Box } from "@primer/react";
 import { FC } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -13,8 +12,8 @@ export const PullRequestDetails: FC<{
   }
 
   return (
-    <Box className="markdown-body">
+    <div className="markdown-body">
       <Markdown remarkPlugins={[remarkGfm]}>{details.body}</Markdown>
-    </Box>
+    </div>
   );
 };

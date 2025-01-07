@@ -1,4 +1,3 @@
-import { Box, themeGet } from "@primer/react";
 import { createFileRoute } from "@tanstack/react-router";
 import styled from "styled-components";
 import { $api } from "~/api/api";
@@ -16,7 +15,7 @@ export const Route = createFileRoute("/$provider/$owner/$repo/pull/$prId/_pull/r
 });
 
 const StyledPullRequestCommits = styled(PullRequestCommits)`
-  width: ${themeGet("sizes.small")};
+  width: 240px;
 `;
 
 const StyledMonaco = styled(Monaco)`
@@ -49,7 +48,7 @@ function RouteComponent() {
   });
 
   return (
-    <Box sx={{ display: "flex", height: "100%" }}>
+    <div className="flex h-full">
       <StyledPullRequestCommits
         commits={commitsQuery.data}
         headSha={prQuery.data?.head?.sha}
@@ -59,6 +58,6 @@ function RouteComponent() {
         params={params}
       />
       <StyledMonaco />
-    </Box>
+    </div>
   );
 }
