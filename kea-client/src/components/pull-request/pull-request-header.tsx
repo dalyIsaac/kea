@@ -1,6 +1,7 @@
+import { Link, useMatchRoute } from "@tanstack/react-router";
 import { GitPullRequest } from "lucide-react";
 import { FC } from "react";
-import { SegmentedLink, SegmentedLinkContainer } from "~/components/segmented-link-control";
+import { ToggleGroup, ToggleGroupItem } from "~/shadcn/ui/toggle-group";
 import { PullRequestDetailsParams } from "~/utils/validate-routes";
 
 const PullRequestTitle: FC<{
@@ -18,26 +19,36 @@ interface PullRequestHeaderProps extends PullRequestDetailsParams {
   title: string | undefined | null;
 }
 
-export const PullRequestHeader: FC<PullRequestHeaderProps> = ({ title, ...params }) => (
-  <div className="flex items-center justify-between mb-6">
-    <PullRequestTitle title={title} id={params.prId} />
+export const PullRequestHeader: FC<PullRequestHeaderProps> = ({ title, ...params }) => {
+  const matchRoute = useMatchRoute();
 
-    <SegmentedLinkContainer>
-      <SegmentedLink
-        params={params}
-        to="/$provider/$owner/$repo/pull/$prId"
-        activeOptions={{ exact: true }}
-      >
-        Overview
-      </SegmentedLink>
+  return (
+    <div className="flex items-center justify-between mb-6">
+      <PullRequestTitle title={title} id={params.prId} />
 
-      <SegmentedLink
-        params={params}
-        to="/$provider/$owner/$repo/pull/$prId/review"
-        activeOptions={{ exact: true }}
+      <ToggleGroup
+        type="single"
+        value={
+          matchRoute({
+            to: "/$provider/$owner/$repo/pull/$prId/review",
+            params,
+          })
+            ? "/review"
+            : "/"
+        }
       >
-        Review
-      </SegmentedLink>
-    </SegmentedLinkContainer>
-  </div>
-);
+        <ToggleGroupItem value="/" asChild>
+          <Link to="/$provider/$owner/$repo/pull/$prId" params={params}>
+            Overview
+          </Link>
+        </ToggleGroupItem>
+
+        <ToggleGroupItem value="/review" asChild>
+          <Link to="/$provider/$owner/$repo/pull/$prId/review" params={params}>
+            Review
+          </Link>
+        </ToggleGroupItem>
+      </ToggleGroup>
+    </div>
+  );
+};
