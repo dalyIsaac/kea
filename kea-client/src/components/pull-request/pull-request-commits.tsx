@@ -11,6 +11,23 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "~/shad
 import { trimSha } from "~/utils/git";
 import { PullRequestDetailsParams } from "~/utils/validate-routes";
 
+const ButtonWithTooltip: FC<{
+  tooltip: string;
+  icon: ReactElement;
+  onClick: () => void;
+}> = ({ tooltip, icon, onClick }) => (
+  <TooltipProvider>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button variant="ghost" className="h-5 w-5 p-0" onClick={onClick}>
+          {icon}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>{tooltip}</TooltipContent>
+    </Tooltip>
+  </TooltipProvider>
+);
+
 export const PullRequestCommits: FC<{
   className?: string;
   commits: apiTypes.Commit[] | undefined;
@@ -60,39 +77,25 @@ export const PullRequestCommits: FC<{
   let buttons: ReactElement;
   if (showCheckboxes) {
     const cancelButton = (
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              className="h-5 w-5 p-0"
-              onClick={() => {
-                setShowCheckboxes(false);
-                setSelectedCommits([]);
-              }}
-            >
-              <X className="h-3 w-3" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Cancel selection</TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+      <ButtonWithTooltip
+        tooltip="Cancel selection"
+        icon={<X className="h-3 w-3" />}
+        onClick={() => {
+          setShowCheckboxes(false);
+          setSelectedCommits([]);
+        }}
+      />
     );
 
     if (selectedCommits.length === 2) {
       buttons = (
         <div className="flex gap-0.5">
           {cancelButton}
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" className="h-5 w-5 p-0" onClick={onCompareClick}>
-                  <Check className="h-3 w-3" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Compare selected commits</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <ButtonWithTooltip
+            tooltip="Compare selected commits"
+            icon={<Check className="h-3 w-3" />}
+            onClick={onCompareClick}
+          />
         </div>
       );
     } else {
@@ -100,16 +103,11 @@ export const PullRequestCommits: FC<{
     }
   } else {
     buttons = (
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button variant="ghost" className="h-5 w-5 p-0" onClick={() => setShowCheckboxes(true)}>
-              <GitCompare className="h-3 w-3" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Compare commits</TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+      <ButtonWithTooltip
+        tooltip="Compare commits"
+        icon={<GitCompare className="h-3 w-3" />}
+        onClick={() => setShowCheckboxes(true)}
+      />
     );
   }
 
@@ -149,6 +147,7 @@ export const PullRequestCommits: FC<{
                   >
                     {commit.message}
                   </a>
+
                   <div className="flex items-center gap-0.5 flex-shrink-0">
                     {commit.sha === headSha && (
                       <span className="text-xs text-muted-foreground">HEAD</span>
