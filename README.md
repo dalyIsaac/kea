@@ -65,13 +65,13 @@ Considered alternatives for the backend which have OpenAPI built-in:
 
 ## Frontend
 
-| Layer             | Technology                                                             | Notes                                  |
-| ----------------- | ---------------------------------------------------------------------- | -------------------------------------- |
-| Web Framework     | React                                                                  | Chosen for its ecosystem               |
-| Styling           | [Styled Components](https://styled-components.com/)                    | Chosen for its integration with Primer |
-| Querying          | [Tanstack Query](https://tanstack.com/query/latest/docs/)              | Best choice for React querying         |
-| OpenAPI           | [openapi-typescript](https://github.com/openapi-ts/openapi-typescript) | Chosen for its popularity              |
-| Component Library | [Primer](https://primer.style/components/)                             | Chosen for its GitHub look and feel    |
+| Layer             | Technology                                                             | Notes                                         |
+| ----------------- | ---------------------------------------------------------------------- | --------------------------------------------- |
+| Web Framework     | React                                                                  | Chosen for its ecosystem                      |
+| Styling           | [Tailwind CSS](https://tailwindcss.com/)                               | Chosen for its utility-first approach         |
+| Component Library | [shadcn](https://shadcn.com/)                                          | Chosen for its simplicity and ease of styling |
+| Querying          | [Tanstack Query](https://tanstack.com/query/latest/docs/)              | Best choice for React querying                |
+| OpenAPI           | [openapi-typescript](https://github.com/openapi-ts/openapi-typescript) | Chosen for its popularity                     |
 
 The frontend may be moved to Tailwind and shadcn in the future.
 

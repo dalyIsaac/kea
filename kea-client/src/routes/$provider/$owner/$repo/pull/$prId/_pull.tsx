@@ -1,4 +1,3 @@
-import { Box } from "@primer/react";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { useAtom } from "jotai";
 import { useEffect } from "react";
@@ -67,29 +66,12 @@ function RouteComponent() {
   useBreadcrumbs(detailsQuery.data);
 
   return (
-    <Box
-      sx={{
-        padding: 2,
-        display: "flex",
-        flexDirection: "column",
-        height: "100%",
-        // Required to allow container to shrink below content size
-        minHeight: 0,
-      }}
-    >
+    <div className="p-4 flex flex-col h-full min-h-0">
       <PullRequestHeader title={detailsQuery.data?.title} {...params} />
 
-      <Box
-        sx={{
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
-          // Required for nested flex containers to prevent overflow
-          minHeight: 0,
-        }}
-      >
+      <div className="flex-1 flex flex-col min-h-0">
         <Outlet />
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 }

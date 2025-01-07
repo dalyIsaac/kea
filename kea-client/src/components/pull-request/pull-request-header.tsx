@@ -1,4 +1,4 @@
-import { Box, Text } from "@primer/react";
+import { GitPullRequest } from "lucide-react";
 import { FC } from "react";
 import { SegmentedLink, SegmentedLinkContainer } from "~/components/segmented-link-control";
 import { PullRequestDetailsParams } from "~/utils/validate-routes";
@@ -7,10 +7,11 @@ const PullRequestTitle: FC<{
   title: string | undefined | null;
   id: number;
 }> = ({ title, id }) => (
-  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-    <Text sx={{ fontSize: 22, fontWeight: "bold" }}>{title}</Text>
-    <Text sx={{ fontSize: 22, fontWeight: "light" }}>#{id}</Text>
-  </Box>
+  <div className="flex items-center gap-2">
+    <GitPullRequest className="w-5 h-5" />
+    <span className="text-2xl font-bold">{title}</span>
+    <span className="text-2xl font-light">#{id}</span>
+  </div>
 );
 
 interface PullRequestHeaderProps extends PullRequestDetailsParams {
@@ -18,7 +19,7 @@ interface PullRequestHeaderProps extends PullRequestDetailsParams {
 }
 
 export const PullRequestHeader: FC<PullRequestHeaderProps> = ({ title, ...params }) => (
-  <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 3 }}>
+  <div className="flex items-center justify-between mb-6">
     <PullRequestTitle title={title} id={params.prId} />
 
     <SegmentedLinkContainer>
@@ -38,5 +39,5 @@ export const PullRequestHeader: FC<PullRequestHeaderProps> = ({ title, ...params
         Review
       </SegmentedLink>
     </SegmentedLinkContainer>
-  </Box>
+  </div>
 );
