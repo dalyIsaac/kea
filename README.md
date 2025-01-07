@@ -1,4 +1,4 @@
-<img src="./public/kea.png" width="200" height="200" alt="Kea logo">
+![Kea logo](./kea-client/src/assets/logo-light.gif)
 
 # Kea
 
@@ -6,9 +6,9 @@
 
 ### Stage 1: Commits
 
-- [x] Route to commit based on URL
-- [x] Display files
-- [x] Display diffs between arbitrary commits
+- [ ] Route to commit based on URL
+- [ ] Display files
+- [ ] Display diffs between arbitrary commits
 - [ ] Show comments on a line
 - [ ] Show comments on a range of lines
 - [ ] Comment on lines
@@ -27,7 +27,7 @@
 
 ### Stage 2: Pull Requests
 
-- [x] Route to PR based on URL
+- [ ] Route to PR based on URL
 - [ ] Display files
 - [ ] Display diffs for a PR
 - [ ] Display diffs for a commit in a PR
