@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { atom, useAtom } from "jotai";
-import { FC } from "react";
+import { FC, Fragment } from "react";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -23,12 +23,15 @@ export const AppCrumbs: FC = () => {
     <Breadcrumb>
       <BreadcrumbList>
         {crumbs.map((crumb, i) => (
-          <BreadcrumbItem key={i}>
-            <BreadcrumbLink asChild>
-              <Link to={crumb.href}>{crumb.text}</Link>
-            </BreadcrumbLink>
+          <Fragment key={i}>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link to={crumb.href}>{crumb.text}</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+
             {i < crumbs.length - 1 && <BreadcrumbSeparator />}
-          </BreadcrumbItem>
+          </Fragment>
         ))}
       </BreadcrumbList>
     </Breadcrumb>

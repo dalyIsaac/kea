@@ -26,7 +26,7 @@ export function AppHeader() {
         <div className="flex items-center">
           {!isLoading &&
             (data?.github ? (
-              <Avatar>
+              <Avatar className="h-8 w-8">
                 <AvatarImage src={data.github.avatar_url} alt={data.github.login} />
                 <AvatarFallback>{data.github.login[0]}</AvatarFallback>
               </Avatar>
