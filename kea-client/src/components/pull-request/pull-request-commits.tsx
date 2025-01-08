@@ -35,8 +35,8 @@ export const PullRequestCommits: FC<{
   headSha: string | undefined;
   baseSha: string | undefined;
   selectedBase: string | undefined;
-  selectedCompare: string | undefined;
-}> = ({ className, commits, params, headSha, baseSha, selectedBase, selectedCompare }) => {
+  selectedHead: string | undefined;
+}> = ({ className, commits, params, headSha, baseSha, selectedBase, selectedHead }) => {
   const [showCheckboxes, setShowCheckboxes] = useState(false);
   const [selectedCommits, setSelectedCommits] = useState<string[]>([]);
   const navigate = useNavigate();
@@ -70,7 +70,7 @@ export const PullRequestCommits: FC<{
     navigate({
       to: "/$provider/$owner/$repo/pull/$prId/review",
       params,
-      search: { base: from, compare: to },
+      search: { base: from, head: to },
     });
   };
 
@@ -123,7 +123,7 @@ export const PullRequestCommits: FC<{
           <li
             key={commit.sha}
             className={`flex px-1 py-0.5 hover:bg-muted ${
-              commit.sha === selectedBase || commit.sha === selectedCompare ? "bg-accent/10" : ""
+              commit.sha === selectedBase || commit.sha === selectedHead ? "bg-accent/10" : ""
             }`}
           >
             <div className="flex items-center gap-0.5 flex-1 min-w-0">

@@ -6,10 +6,10 @@ import { PullRequestCommits } from "~/components/pull-request/pull-request-commi
 
 export const Route = createFileRoute("/$provider/$owner/$repo/pull/$prId/_pull/review")({
   component: RouteComponent,
-  validateSearch: (search: { base?: string; compare?: string } & SearchSchemaInput) => {
+  validateSearch: (search: { base?: string; head?: string } & SearchSchemaInput) => {
     return {
       base: search.base,
-      compare: search.compare,
+      head: search.head,
     };
   },
 });
@@ -18,7 +18,7 @@ function RouteComponent() {
   const navigate = useNavigate();
   const params = Route.useParams();
   const { owner, repo, prId } = params;
-  const { base, compare } = Route.useSearch();
+  const { base, head } = Route.useSearch();
 
   const prQuery = $api.useQuery("get", "/github/{owner}/{repo}/pull/{pr_number}", {
     params: {
@@ -41,17 +41,17 @@ function RouteComponent() {
   });
 
   useEffect(() => {
-    if (!base && !compare && commitsQuery.data && prQuery.data) {
+    if (!base && !head && commitsQuery.data && prQuery.data) {
       navigate({
         to: "/$provider/$owner/$repo/pull/$prId/review",
         params,
         search: {
           base: prQuery.data.base.sha,
-          compare: prQuery.data.head.sha,
+          head: prQuery.data.head.sha,
         },
       });
     }
-  }, [base, compare, commitsQuery.data, prQuery.data, navigate, params]);
+  }, [base, head, commitsQuery.data, prQuery.data, navigate, params]);
 
   return (
     <div className="flex h-full">
@@ -60,8 +60,8 @@ function RouteComponent() {
         commits={commitsQuery.data}
         headSha={prQuery.data?.head?.sha}
         baseSha={prQuery.data?.base?.sha}
-        selectedBase={base}
-        selectedCompare={compare}
+        selectedHead={head ?? prQuery.data?.head?.sha}
+        selectedBase={base ?? prQuery.data?.base?.sha}
         params={params}
       />
       <Monaco className="h-full" />
