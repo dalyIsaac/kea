@@ -5,10 +5,7 @@ use crate::state::AppState;
 use axum::extract::Path;
 use axum::response::IntoResponse;
 use axum::Json;
-use axum::{
-    extract::{Query, State},
-    response::Response,
-};
+use axum::{extract::State, response::Response};
 use axum_extra::extract::cookie::PrivateCookieJar;
 
 #[axum::debug_handler]
@@ -16,10 +13,10 @@ use axum_extra::extract::cookie::PrivateCookieJar;
 pub async fn sign_in(
     State(state): State<AppState>,
     jar: PrivateCookieJar,
-    query: Option<Query<AuthResponse>>,
+    auth_response: Option<AuthResponse>,
 ) -> Result<Response, Box<KeaGitHubError>> {
     let AppState { clients, ctx } = state;
-    clients.github.sign_in(query, jar, &ctx).await
+    clients.github.sign_in(auth_response, jar, &ctx).await
 }
 
 #[axum::debug_handler]

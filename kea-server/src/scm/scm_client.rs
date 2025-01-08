@@ -1,8 +1,14 @@
-use axum::{extract::Query, response::Response};
+use std::convert::Infallible;
+
+use axum::{
+    extract::{FromRequestParts, OptionalFromRequestParts, Query},
+    http::request::Parts,
+    response::{IntoResponse, Redirect, Response},
+};
 use axum_extra::extract::PrivateCookieJar;
 use serde::{de, Deserialize, Deserializer, Serialize};
 
-use crate::state::AppContext;
+use crate::state::{AppContext, AppState};
 
 use super::payloads::{KeaCommit, KeaPullRequestDetails};
 
@@ -16,6 +22,42 @@ pub enum AuthResponse {
         error_description: String,
         error_url: String,
     },
+}
+
+pub struct AuthRedirect;
+
+impl IntoResponse for AuthRedirect {
+    fn into_response(self) -> Response {
+        Redirect::temporary("/github/signin").into_response()
+    }
+}
+
+impl FromRequestParts<AppState> for AuthResponse {
+    type Rejection = AuthRedirect;
+
+    async fn from_request_parts(
+        parts: &mut Parts,
+        state: &AppState,
+    ) -> Result<Self, Self::Rejection> {
+        Query::<AuthResponse>::from_request_parts(parts, state)
+            .await
+            .map(|query| query.0)
+            .map_err(|_| AuthRedirect)
+    }
+}
+
+impl OptionalFromRequestParts<AppState> for AuthResponse {
+    type Rejection = Infallible;
+
+    async fn from_request_parts(
+        parts: &mut Parts,
+        state: &AppState,
+    ) -> Result<Option<Self>, Self::Rejection> {
+        Ok(Query::<AuthResponse>::from_request_parts(parts, state)
+            .await
+            .ok()
+            .map(|query| query.0))
+    }
 }
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize, utoipa::ToSchema, derive_new::new)]
@@ -63,7 +105,7 @@ impl<'de> Deserialize<'de> for AuthResponse {
 pub trait ScmAuthClient<E> {
     async fn sign_in(
         &self,
-        query: Option<Query<AuthResponse>>,
+        auth_response: Option<AuthResponse>,
         jar: PrivateCookieJar,
         state: &AppContext,
     ) -> Result<Response, E>;

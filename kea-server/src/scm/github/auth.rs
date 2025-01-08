@@ -6,10 +6,7 @@ use crate::{
     scm::scm_client::{AuthResponse, ScmAuthClient, ScmUser},
     state::AppContext,
 };
-use axum::{
-    extract::Query,
-    response::{IntoResponse, Redirect, Response},
-};
+use axum::response::{IntoResponse, Redirect, Response};
 use axum_extra::extract::{cookie::Cookie, PrivateCookieJar};
 use oauth2::{
     basic::BasicTokenType, reqwest::async_http_client, AuthorizationCode, CsrfToken, TokenResponse,
@@ -19,7 +16,7 @@ use tracing::debug;
 impl ScmAuthClient<Box<KeaGitHubError>> for GitHubClient {
     async fn sign_in(
         &self,
-        query: Option<Query<AuthResponse>>,
+        query: Option<AuthResponse>,
         jar: PrivateCookieJar,
         ctx: &AppContext,
     ) -> Result<Response, Box<KeaGitHubError>> {
@@ -27,7 +24,7 @@ impl ScmAuthClient<Box<KeaGitHubError>> for GitHubClient {
         let client = self.create_oauth_client(ctx);
 
         let auth_response = match query {
-            Some(Query(auth)) => auth,
+            Some(auth) => auth,
             None => {
                 let (auth_url, _csrf_token) = client.authorize_url(CsrfToken::new_random).url();
                 return Ok(Redirect::to(auth_url.as_str()).into_response());
