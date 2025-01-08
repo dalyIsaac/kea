@@ -3,13 +3,11 @@ import { Check, GitCompare, X } from "lucide-react";
 import { FC, ReactElement, useState } from "react";
 import * as apiTypes from "~/api/types";
 import { cn } from "~/lib/utils";
-import { Avatar } from "~/shadcn/ui/avatar";
 import { Button } from "~/shadcn/ui/button";
 import { Card } from "~/shadcn/ui/card";
-import { Checkbox } from "~/shadcn/ui/checkbox";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "~/shadcn/ui/tooltip";
-import { trimSha } from "~/utils/git";
-import { PullRequestDetailsParams } from "~/utils/validate-routes";
+import { createCompare, PullRequestDetailsParams } from "~/utils/routes";
+import { PullRequestCommitsItem } from "./pull-request-commits-item";
 
 const ButtonWithTooltip: FC<{
   tooltip: string;
@@ -64,13 +62,13 @@ export const PullRequestCommits: FC<{
       return;
     }
 
-    const [from, to] =
+    const [base, head] =
       firstShaIndex < secondShaIndex ? [firstSha, secondSha] : [secondSha, firstSha];
 
     navigate({
       to: "/$provider/$owner/$repo/pull/$prId/review",
       params,
-      search: { base: from, head: to },
+      search: { compare: createCompare(base, head) },
     });
   };
 
@@ -120,59 +118,17 @@ export const PullRequestCommits: FC<{
 
       <ul className="divide-y divide-border text-sm">
         {commits?.map((commit) => (
-          <li
+          <PullRequestCommitsItem
             key={commit.sha}
-            className={`flex px-1 py-0.5 hover:bg-muted ${
-              commit.sha === selectedBase || commit.sha === selectedHead ? "bg-accent/10" : ""
-            }`}
-          >
-            <div className="flex items-center gap-0.5 flex-1 min-w-0">
-              {showCheckboxes && (
-                <div className="pl-0.5 pr-1">
-                  <Checkbox
-                    checked={selectedCommits.includes(commit.sha)}
-                    disabled={selectedCommits.length === 2 && !selectedCommits.includes(commit.sha)}
-                    onCheckedChange={() => onCheckboxChange(commit.sha)}
-                    aria-label={`Select commit ${commit.sha}`}
-                  />
-                </div>
-              )}
-
-              <div className="flex-1 min-w-0 leading-tight">
-                <div className="flex items-center gap-0.5">
-                  <a
-                    href={`#commit-${commit.sha}`}
-                    title={commit.message}
-                    className="flex-1 truncate hover:underline text-xs"
-                  >
-                    {commit.message}
-                  </a>
-
-                  <div className="flex items-center gap-0.5 flex-shrink-0">
-                    {commit.sha === headSha && (
-                      <span className="text-xs text-muted-foreground">HEAD</span>
-                    )}
-                    {commit.sha === baseSha && (
-                      <span className="text-xs text-muted-foreground">BASE</span>
-                    )}
-                    {commit.author && (
-                      <Avatar className="h-3 w-3">
-                        <img src={commit.author.avatar_url} alt={commit.author.login} />
-                      </Avatar>
-                    )}
-                  </div>
-                </div>
-
-                <a
-                  href={`#commit-${commit.sha}`}
-                  title={commit.sha}
-                  className="font-mono text-xs text-muted-foreground hover:underline"
-                >
-                  {trimSha(commit.sha)}
-                </a>
-              </div>
-            </div>
-          </li>
+            commit={commit}
+            selectedBase={selectedBase}
+            selectedHead={selectedHead}
+            showCheckboxes={showCheckboxes}
+            selectedCommits={selectedCommits}
+            headSha={headSha}
+            baseSha={baseSha}
+            onCheckboxChange={onCheckboxChange}
+          />
         ))}
       </ul>
     </Card>

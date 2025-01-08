@@ -30,3 +30,34 @@ export const validatePullRequestRoute = (
   repo: params.repo,
   prId: validatePrId(params.prId),
 });
+
+/**
+ * Parse a string into a base and head sha.
+ * A valid form is `base...head`.
+ * This is typically used in the URL search parameter for a PR comparison.
+ *
+ * @param compare The string to parse.
+ * @returns An object with the base and head sha.
+ */
+export const parseCompare = (
+  compare: string | undefined,
+): {
+  base?: string;
+  head?: string;
+} => {
+  if (!compare) {
+    return {};
+  }
+
+  const [base, head] = compare.split("...");
+  if (!base || !head) {
+    throw new Error(`Invalid comparison format`);
+  }
+
+  return {
+    base,
+    head,
+  };
+};
+
+export const createCompare = (base: string, head: string): string => `${base}...${head}`;

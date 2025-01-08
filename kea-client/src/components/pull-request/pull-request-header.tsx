@@ -2,7 +2,7 @@ import { Link, useMatchRoute } from "@tanstack/react-router";
 import { GitPullRequest } from "lucide-react";
 import { FC, PropsWithChildren } from "react";
 import { ToggleGroup, ToggleGroupItem } from "~/shadcn/ui/toggle-group";
-import { PullRequestDetailsParams } from "~/utils/validate-routes";
+import { PullRequestDetailsParams } from "~/utils/routes";
 
 const PullRequestToggleItem: FC<PropsWithChildren<{ value: string }>> = ({ value, children }) => (
   <ToggleGroupItem

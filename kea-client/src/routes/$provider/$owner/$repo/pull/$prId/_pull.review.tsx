@@ -3,14 +3,13 @@ import { useEffect } from "react";
 import { $api } from "~/api/api";
 import { Monaco } from "~/components/monaco/monaco";
 import { PullRequestCommits } from "~/components/pull-request/pull-request-commits";
+import { parseCompare } from "~/utils/routes";
 
 export const Route = createFileRoute("/$provider/$owner/$repo/pull/$prId/_pull/review")({
   component: RouteComponent,
-  validateSearch: (search: { base?: string; head?: string } & SearchSchemaInput) => {
-    return {
-      base: search.base,
-      head: search.head,
-    };
+  validateSearch: (search: { compare?: string } & SearchSchemaInput) => {
+    parseCompare(search.compare);
+    return search;
   },
 });
 
@@ -18,7 +17,8 @@ function RouteComponent() {
   const navigate = useNavigate();
   const params = Route.useParams();
   const { owner, repo, prId } = params;
-  const { base, head } = Route.useSearch();
+  const { compare } = Route.useSearch();
+  const { base, head } = parseCompare(compare);
 
   const prQuery = $api.useQuery("get", "/github/{owner}/{repo}/pull/{pr_number}", {
     params: {
@@ -41,17 +41,16 @@ function RouteComponent() {
   });
 
   useEffect(() => {
-    if (!base && !head && commitsQuery.data && prQuery.data) {
+    if (!compare && commitsQuery.data && prQuery.data) {
       navigate({
         to: "/$provider/$owner/$repo/pull/$prId/review",
         params,
         search: {
-          base: prQuery.data.base.sha,
-          head: prQuery.data.head.sha,
+          compare: `${prQuery.data.base.sha}...${prQuery.data.head.sha}`,
         },
       });
     }
-  }, [base, head, commitsQuery.data, prQuery.data, navigate, params]);
+  }, [compare, commitsQuery.data, prQuery.data, navigate, params]);
 
   return (
     <div className="flex h-full">

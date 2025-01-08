@@ -5,7 +5,7 @@ import { $api } from "~/api/api";
 import * as apiTypes from "~/api/types";
 import { appCrumbs } from "~/components/app-crumbs/app-crumbs";
 import { PullRequestHeader } from "~/components/pull-request/pull-request-header";
-import { validatePullRequestRoute } from "~/utils/validate-routes";
+import { validatePullRequestRoute } from "~/utils/routes";
 
 export const Route = createFileRoute("/$provider/$owner/$repo/pull/$prId/_pull")({
   component: RouteComponent,
