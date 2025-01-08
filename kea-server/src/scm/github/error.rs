@@ -65,6 +65,7 @@ impl IntoResponse for Box<KeaGitHubError> {
 
         Response::builder()
             .status(status)
+            .header(axum::http::header::CONTENT_TYPE, "text/plain")
             .body(body.into())
             .unwrap()
     }
