@@ -1,4 +1,3 @@
-use axum::http::header::CONTENT_TYPE;
 use axum::http::{header, HeaderName, HeaderValue};
 use openapi::BaseOpenApi;
 use state::AppState;
@@ -6,7 +5,6 @@ use std::time::Duration;
 use tower_http::catch_panic::CatchPanicLayer;
 use tower_http::cors::CorsLayer;
 use tower_http::request_id::{PropagateRequestIdLayer, SetRequestIdLayer};
-use tower_http::set_header::SetResponseHeaderLayer;
 use tower_http::timeout::TimeoutLayer;
 use tower_http::{sensitive_headers::SetSensitiveRequestHeadersLayer, trace::TraceLayer};
 use utoipa_axum::routes;
@@ -52,11 +50,6 @@ async fn main() {
                 // Propagate `x-request-id` header from requests to responses.
                 .layer(PropagateRequestIdLayer::new(x_request_id.clone()))
                 .layer(TimeoutLayer::new(Duration::from_secs(timeout_secs)))
-                // If the response has a known size set the `Content-Length` header
-                .layer(SetResponseHeaderLayer::overriding(
-                    CONTENT_TYPE,
-                    router::middleware::utils::content_length_from_response,
-                ))
                 // CORS
                 .layer(
                     CorsLayer::new()
