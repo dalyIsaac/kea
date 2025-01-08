@@ -2,9 +2,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { Check, GitCompare, X } from "lucide-react";
 import { FC, ReactElement, useState } from "react";
 import * as apiTypes from "~/api/types";
-import { cn } from "~/lib/utils";
 import { Button } from "~/shadcn/ui/button";
-import { Card } from "~/shadcn/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "~/shadcn/ui/tooltip";
 import { createCompare, PullRequestDetailsParams } from "~/utils/routes";
 import { PullRequestCommitsItem } from "./pull-request-commits-item";
@@ -110,7 +108,7 @@ export const PullRequestCommits: FC<{
   }
 
   return (
-    <Card className={cn(className, "p-0 rounded-none")}>
+    <div className={className}>
       <div className="flex justify-between items-center h-7 px-1 border-b">
         <h3 className="text-sm font-medium leading-none">Commits</h3>
         {commits && commits.length > 1 && <div className="flex items-center -mr-1">{buttons}</div>}
@@ -131,6 +129,6 @@ export const PullRequestCommits: FC<{
           />
         ))}
       </ul>
-    </Card>
+    </div>
   );
 };

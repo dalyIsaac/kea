@@ -67,7 +67,7 @@ const PullRequestNav: FC<PullRequestDetailsParams> = (params) => {
         <Link
           to="/$provider/$owner/$repo/pull/$prId/review"
           params={params}
-          activeOptions={{ exact: true }}
+          activeOptions={{ exact: true, includeSearch: false }}
           className="px-2 py-0.5 block"
         >
           Review

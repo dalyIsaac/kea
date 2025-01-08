@@ -1,5 +1,6 @@
 import { FC } from "react";
 import * as apiTypes from "~/api/types";
+import { cn } from "~/lib/utils";
 import { Avatar } from "~/shadcn/ui/avatar";
 import { Checkbox } from "~/shadcn/ui/checkbox";
 import { trimSha } from "~/utils/git";
@@ -26,9 +27,10 @@ export const PullRequestCommitsItem: FC<CommitItemProps> = ({
   onCheckboxChange,
 }) => (
   <li
-    className={`flex px-1 py-0.5 hover:bg-muted ${
-      commit.sha === selectedBase || commit.sha === selectedHead ? "bg-accent/10" : ""
-    }`}
+    className={cn(
+      "flex px-1 py-0.5 hover:bg-muted",
+      (commit.sha === selectedBase || commit.sha === selectedHead) && "bg-accent/10",
+    )}
   >
     <div className="flex items-center gap-0.5 flex-1 min-w-0">
       {showCheckboxes && (

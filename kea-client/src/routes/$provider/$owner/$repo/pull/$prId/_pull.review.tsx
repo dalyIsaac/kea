@@ -55,7 +55,7 @@ function RouteComponent() {
   return (
     <div className="flex h-full">
       <PullRequestCommits
-        className="w-[240px]"
+        className="w-[240px] pr-4"
         commits={commitsQuery.data}
         headSha={prQuery.data?.head?.sha}
         baseSha={prQuery.data?.base?.sha}
@@ -63,7 +63,10 @@ function RouteComponent() {
         selectedBase={base ?? prQuery.data?.base?.sha}
         params={params}
       />
-      <Monaco className="h-full" />
+
+      <div className="border-l border-gray-200 mx-4" />
+
+      <Monaco className="h-full w-full" />
     </div>
   );
 }
