@@ -3,7 +3,7 @@ use kea_server::try_chain;
 
 use crate::{
     scm::{
-        payloads::{KeaCommit, KeaCommitRef, KeaPullRequestDetails},
+        payloads::{KeaCommit, KeaPullRequestCommit, KeaPullRequestDetails},
         scm_client::ScmApiClient,
     },
     state::AppContext,
@@ -27,8 +27,20 @@ impl ScmApiClient<Box<KeaGitHubError>> for GitHubClient {
 
         let pr_base = pr.base.as_ref().clone();
 
-        let head: KeaCommitRef = (*pr.head).into();
-        let base: KeaCommitRef = pr_base.clone().into();
+        let head_label = pr
+            .head
+            .label
+            .ok_or(KeaGitHubError::PullRequestCommitHasNoLabel(
+                pr.head.sha.clone(),
+            ))?;
+        let base_label = pr_base
+            .label
+            .ok_or(KeaGitHubError::PullRequestCommitHasNoLabel(
+                pr_base.sha.clone(),
+            ))?;
+
+        let head = KeaPullRequestCommit::new(pr.head.sha, head_label);
+        let base = KeaPullRequestCommit::new(pr_base.sha, base_label);
 
         let pr = KeaPullRequestDetails::new(
             pr.id.0,

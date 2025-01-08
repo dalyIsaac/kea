@@ -25,13 +25,19 @@ const PullRequestTitle: FC<{
   </div>
 );
 
-interface PullRequestHeaderProps extends PullRequestDetailsParams {
-  title: string | undefined | null;
-}
+const PullRequestBranches: FC<{
+  head: string;
+  base: string;
+}> = ({ head, base }) => (
+  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+    <span>{head}</span>
+    <span>→</span>
+    <span>{base}</span>
+  </div>
+);
 
-export const PullRequestHeader: FC<PullRequestHeaderProps> = ({ title, ...params }) => {
+const PullRequestNav: FC<PullRequestDetailsParams> = (params) => {
   const matchRoute = useMatchRoute();
-
   const baseRoute = `/${params.provider}/${params.owner}/${params.repo}/pull/${params.prId}`;
   const reviewRoute = `${baseRoute}/review`;
 
@@ -41,36 +47,51 @@ export const PullRequestHeader: FC<PullRequestHeaderProps> = ({ title, ...params
   });
 
   return (
-    <div className="flex items-center justify-between mb-6">
-      <PullRequestTitle title={title} id={params.prId} />
+    <ToggleGroup
+      type="single"
+      className="border rounded-md bg-secondary/30 text-xs h-fit m-1"
+      value={isReviewRoute ? reviewRoute : baseRoute}
+    >
+      <PullRequestToggleItem value={baseRoute}>
+        <Link
+          to="/$provider/$owner/$repo/pull/$prId"
+          params={params}
+          activeOptions={{ exact: true }}
+          className="px-2 py-0.5 block"
+        >
+          Overview
+        </Link>
+      </PullRequestToggleItem>
 
-      <ToggleGroup
-        type="single"
-        className="border rounded-md bg-secondary/30 text-xs h-fit"
-        value={isReviewRoute ? reviewRoute : baseRoute}
-      >
-        <PullRequestToggleItem value={baseRoute}>
-          <Link
-            to="/$provider/$owner/$repo/pull/$prId"
-            params={params}
-            activeOptions={{ exact: true }}
-            className="px-2 py-0.5 block"
-          >
-            Overview
-          </Link>
-        </PullRequestToggleItem>
+      <PullRequestToggleItem value={reviewRoute}>
+        <Link
+          to="/$provider/$owner/$repo/pull/$prId/review"
+          params={params}
+          activeOptions={{ exact: true }}
+          className="px-2 py-0.5 block"
+        >
+          Review
+        </Link>
+      </PullRequestToggleItem>
+    </ToggleGroup>
+  );
+};
 
-        <PullRequestToggleItem value={reviewRoute}>
-          <Link
-            to="/$provider/$owner/$repo/pull/$prId/review"
-            params={params}
-            activeOptions={{ exact: true }}
-            className="px-2 py-0.5 block"
-          >
-            Review
-          </Link>
-        </PullRequestToggleItem>
-      </ToggleGroup>
+interface PullRequestHeaderProps extends PullRequestDetailsParams {
+  title: string | undefined | null;
+  base?: string;
+  head?: string;
+}
+
+export const PullRequestHeader: FC<PullRequestHeaderProps> = ({ title, base, head, ...params }) => {
+  return (
+    <div className="flex gap-2 justify-between">
+      <div className="flex flex-col gap">
+        <PullRequestTitle title={title} id={params.prId} />
+        {base && head && <PullRequestBranches base={base} head={head} />}
+      </div>
+
+      <PullRequestNav {...params} />
     </div>
   );
 };

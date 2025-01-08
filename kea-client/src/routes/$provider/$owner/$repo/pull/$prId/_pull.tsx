@@ -66,8 +66,13 @@ function RouteComponent() {
   useBreadcrumbs(detailsQuery.data);
 
   return (
-    <div className="p-4 flex flex-col h-full min-h-0">
-      <PullRequestHeader title={detailsQuery.data?.title} {...params} />
+    <div className="p-4 flex flex-col h-full min-h-0 gap-1">
+      <PullRequestHeader
+        title={detailsQuery.data?.title}
+        base={detailsQuery.data?.base.label}
+        head={detailsQuery.data?.head.label}
+        {...params}
+      />
 
       <div className="flex-1 flex flex-col min-h-0">
         <Outlet />

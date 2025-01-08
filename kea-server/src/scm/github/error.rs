@@ -34,6 +34,9 @@ pub enum KeaGitHubError {
 
     #[error("GitHub user with id {0} has no email")]
     UserHasNoEmail(UserId),
+
+    #[error("Pull request commit {0} did not have a label")]
+    PullRequestCommitHasNoLabel(String),
 }
 
 impl IntoResponse for Box<KeaGitHubError> {

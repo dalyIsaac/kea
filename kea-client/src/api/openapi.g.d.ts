@@ -108,17 +108,20 @@ export interface components {
             author?: null | components["schemas"]["ScmUser"];
             committer?: null | components["schemas"]["ScmUser"];
             message: string;
-            parents: components["schemas"]["KeaCommitRef"][];
+            parents: components["schemas"]["KeaParentCommit"][];
             sha: string;
         };
-        KeaCommitRef: {
-            label?: string | null;
+        KeaParentCommit: {
+            sha: string;
+        };
+        KeaPullRequestCommit: {
+            label: string;
             sha: string;
         };
         KeaPullRequestDetails: {
-            base: components["schemas"]["KeaCommitRef"];
+            base: components["schemas"]["KeaPullRequestCommit"];
             body?: string | null;
-            head: components["schemas"]["KeaCommitRef"];
+            head: components["schemas"]["KeaPullRequestCommit"];
             /** Format: int64 */
             id: number;
             /** Format: int64 */

@@ -1,4 +1,3 @@
-use octocrab::models::pulls::{Base, Head};
 use serde::{Deserialize, Serialize};
 
 use super::scm_client::ScmUser;
@@ -12,8 +11,14 @@ pub struct KeaPullRequestDetails {
     pub number: u64,
     pub title: Option<String>,
     pub body: Option<String>,
-    pub head: KeaCommitRef,
-    pub base: KeaCommitRef,
+    pub head: KeaPullRequestCommit,
+    pub base: KeaPullRequestCommit,
+}
+
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize, derive_new::new, utoipa::ToSchema)]
+pub struct KeaPullRequestCommit {
+    pub sha: String,
+    pub label: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize, derive_new::new, utoipa::ToSchema)]
@@ -44,29 +49,10 @@ pub struct KeaCommit {
     pub message: String,
     pub author: Option<ScmUser>,
     pub committer: Option<ScmUser>,
-    pub parents: Vec<KeaCommitRef>,
+    pub parents: Vec<KeaParentCommit>,
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize, derive_new::new, utoipa::ToSchema)]
-pub struct KeaCommitRef {
+pub struct KeaParentCommit {
     pub sha: String,
-    pub label: Option<String>,
-}
-
-impl From<Head> for KeaCommitRef {
-    fn from(head: Head) -> Self {
-        Self {
-            sha: head.sha,
-            label: head.label,
-        }
-    }
-}
-
-impl From<Base> for KeaCommitRef {
-    fn from(base: Base) -> Self {
-        Self {
-            sha: base.sha,
-            label: base.label,
-        }
-    }
 }
