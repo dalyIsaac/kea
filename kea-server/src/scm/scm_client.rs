@@ -138,4 +138,14 @@ pub trait ScmApiClient<E> {
         repo: &str,
         pr_number: u64,
     ) -> Result<(PrivateCookieJar, Vec<KeaCommit>), E>;
+
+    async fn get_file_content(
+        &self,
+        jar: PrivateCookieJar,
+        ctx: &AppContext,
+        owner: &str,
+        repo: &str,
+        git_ref: &str,
+        path: &str,
+    ) -> Result<(PrivateCookieJar, String), E>;
 }

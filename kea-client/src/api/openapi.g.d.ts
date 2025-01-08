@@ -36,6 +36,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/github/{owner}/{repo}/file/{git_ref}/{path}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_file_content"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/github/{owner}/{repo}/pull/{pr_number}": {
         parameters: {
             query?: never;
@@ -174,6 +190,34 @@ export interface operations {
             query?: never;
             header?: never;
             path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": string;
+                };
+            };
+        };
+    };
+    get_file_content: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Owner of the repository */
+                owner: string;
+                /** @description Repository name */
+                repo: string;
+                /** @description Git reference */
+                git_ref: string;
+                /** @description Path to the file */
+                path: string;
+            };
             cookie?: never;
         };
         requestBody?: never;

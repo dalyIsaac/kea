@@ -85,3 +85,32 @@ pub async fn get_pull_request_commits(
         Err(e) => Err(e),
     }
 }
+
+#[axum::debug_handler]
+#[utoipa::path(
+    get,
+    path = "/github/{owner}/{repo}/file/{git_ref}/{path}",
+    responses((status = OK, body = String)),
+    params(
+        ("owner" = String, Path, description = "Owner of the repository"),
+        ("repo" = String, Path, description = "Repository name"),
+        ("git_ref" = String, Path, description = "Git reference"),
+        ("path" = String, Path, description = "Path to the file")
+    )
+)]
+pub async fn get_file_content(
+    State(state): State<AppState>,
+    jar: PrivateCookieJar,
+    Path((owner, repo, git_ref, path)): Path<(String, String, String, String)>,
+) -> Result<impl IntoResponse, Box<KeaGitHubError>> {
+    let AppState { clients, ctx } = state;
+
+    match clients
+        .github
+        .get_file_content(jar, &ctx, &owner, &repo, &git_ref, &path)
+        .await
+    {
+        Ok((new_jar, content)) => Ok((new_jar, content)),
+        Err(e) => Err(e),
+    }
+}

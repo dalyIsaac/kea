@@ -16,7 +16,7 @@ impl From<RepoCommit> for KeaCommit {
                 .parents
                 .into_iter()
                 .filter_map(|p| p.sha)
-                .map(|sha| KeaParentCommit::new(sha))
+                .map(KeaParentCommit::new)
                 .collect(),
         )
     }

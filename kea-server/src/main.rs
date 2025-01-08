@@ -31,6 +31,7 @@ async fn main() {
         .routes(routes!(router::github::sign_out))
         .routes(routes!(router::github::get_pull_request_details))
         .routes(routes!(router::github::get_pull_request_commits))
+        .routes(routes!(router::github::get_file_content))
         .routes(routes!(router::healthcheck::healthcheck))
         .with_state(state)
         .layer(

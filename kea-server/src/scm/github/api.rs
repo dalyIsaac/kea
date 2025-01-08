@@ -74,4 +74,36 @@ impl ScmApiClient<Box<KeaGitHubError>> for GitHubClient {
 
         Ok((jar, commits.into_iter().map(Into::into).collect()))
     }
+
+    async fn get_file_content(
+        &self,
+        jar: PrivateCookieJar,
+        ctx: &AppContext,
+        owner: &str,
+        repo: &str,
+        git_ref: &str,
+        path: &str,
+    ) -> Result<(PrivateCookieJar, String), Box<KeaGitHubError>> {
+        let (jar, client) = self.get_client_with_token(jar, ctx).await?;
+        let content = client
+            .repos(owner, repo)
+            .get_content()
+            .r#ref(git_ref)
+            .path(path)
+            .send()
+            .await?;
+
+        let content = content.items.first().ok_or(KeaGitHubError::FileNotFound(
+            path.to_string(),
+            git_ref.to_string(),
+        ))?;
+
+        match content.content.as_ref() {
+            Some(content) => Ok((jar, content.clone())),
+            None => Err(Box::new(KeaGitHubError::FileNotFound(
+                path.to_string(),
+                git_ref.to_string(),
+            ))),
+        }
+    }
 }

@@ -37,6 +37,9 @@ pub enum KeaGitHubError {
 
     #[error("Pull request commit {0} did not have a label")]
     PullRequestCommitHasNoLabel(String),
+
+    #[error("File at path {0} at ref {1} not found")]
+    FileNotFound(String, String),
 }
 
 impl IntoResponse for Box<KeaGitHubError> {
