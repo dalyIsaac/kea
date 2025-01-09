@@ -1,5 +1,5 @@
 use crate::scm::github::error::KeaGitHubError;
-use crate::scm::payloads::{KeaCommit, KeaPullRequestDetails};
+use crate::scm::payloads::{KeaCommit, KeaDiffEntry, KeaPullRequestDetails};
 use crate::scm::scm_client::{AuthResponse, ScmApiClient, ScmAuthClient};
 use crate::state::AppState;
 use axum::extract::Path;
@@ -111,6 +111,34 @@ pub async fn get_file_content(
         .await
     {
         Ok((new_jar, content)) => Ok((new_jar, content)),
+        Err(e) => Err(e),
+    }
+}
+
+#[axum::debug_handler]
+#[utoipa::path(
+    get,
+    path = "/github/{owner}/{repo}/pull/{pr_number}/files",
+    params(
+        ("owner" = String, Path, description = "Owner of the repository"),
+        ("repo" = String, Path, description = "Repository name"),
+        ("pr_number" = u64, Path, description = "Pull request number")
+    ),
+    responses((status = OK, body = Vec<KeaDiffEntry>))
+)]
+pub async fn get_pull_request_files(
+    State(state): State<AppState>,
+    jar: PrivateCookieJar,
+    Path((owner, repo, pr_number)): Path<(String, String, u64)>,
+) -> Result<impl IntoResponse, Box<KeaGitHubError>> {
+    let AppState { clients, ctx } = state;
+
+    match clients
+        .github
+        .get_pull_request_files(jar, &ctx, &owner, &repo, pr_number)
+        .await
+    {
+        Ok((new_jar, files)) => Ok((new_jar, Json(files))),
         Err(e) => Err(e),
     }
 }

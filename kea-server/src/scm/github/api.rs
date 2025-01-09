@@ -1,9 +1,10 @@
 use axum_extra::extract::PrivateCookieJar;
+use futures_util::TryStreamExt;
 use kea_server::try_chain;
 
 use crate::{
     scm::{
-        payloads::{KeaCommit, KeaPullRequestCommit, KeaPullRequestDetails},
+        payloads::{KeaCommit, KeaDiffEntry, KeaPullRequestCommit, KeaPullRequestDetails},
         scm_client::ScmApiClient,
     },
     state::AppContext,
@@ -105,5 +106,40 @@ impl ScmApiClient<Box<KeaGitHubError>> for GitHubClient {
                 git_ref.to_string(),
             ))),
         }
+    }
+
+    async fn get_pull_request_files(
+        &self,
+        jar: PrivateCookieJar,
+        ctx: &AppContext,
+        owner: &str,
+        repo: &str,
+        pr_number: u64,
+    ) -> Result<(PrivateCookieJar, Vec<KeaDiffEntry>), Box<KeaGitHubError>> {
+        let (jar, client) = self.get_client_with_token(jar, ctx).await?;
+        let files_stream = client
+            .pulls(owner, repo)
+            .list_files(pr_number)
+            .await?
+            .into_stream(&client);
+
+        let files = files_stream
+            .try_collect::<Vec<_>>()
+            .await?
+            .into_iter()
+            .map(|file| {
+                KeaDiffEntry::new(
+                    file.sha,
+                    file.filename,
+                    file.status.into(),
+                    file.additions,
+                    file.deletions,
+                    file.changes,
+                    file.previous_filename,
+                )
+            })
+            .collect();
+
+        Ok((jar, files))
     }
 }

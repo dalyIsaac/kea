@@ -10,7 +10,7 @@ use serde::{de, Deserialize, Deserializer, Serialize};
 
 use crate::state::{AppContext, AppState};
 
-use super::payloads::{KeaCommit, KeaPullRequestDetails};
+use super::payloads::{KeaCommit, KeaDiffEntry, KeaPullRequestDetails};
 
 #[derive(Debug)]
 pub enum AuthResponse {
@@ -148,4 +148,13 @@ pub trait ScmApiClient<E> {
         git_ref: &str,
         path: &str,
     ) -> Result<(PrivateCookieJar, String), E>;
+
+    async fn get_pull_request_files(
+        &self,
+        jar: PrivateCookieJar,
+        ctx: &AppContext,
+        owner: &str,
+        repo: &str,
+        pr_number: u64,
+    ) -> Result<(PrivateCookieJar, Vec<KeaDiffEntry>), E>;
 }

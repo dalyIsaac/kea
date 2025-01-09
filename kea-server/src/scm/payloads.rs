@@ -1,3 +1,4 @@
+use octocrab::models::repos::DiffEntryStatus;
 use serde::{Deserialize, Serialize};
 
 use super::scm_client::ScmUser;
@@ -30,6 +31,21 @@ pub enum KeaDiffEntryStatus {
     Copied,
     Changed,
     Unchanged,
+}
+
+impl From<DiffEntryStatus> for KeaDiffEntryStatus {
+    fn from(status: DiffEntryStatus) -> Self {
+        match status {
+            DiffEntryStatus::Added => KeaDiffEntryStatus::Added,
+            DiffEntryStatus::Removed => KeaDiffEntryStatus::Removed,
+            DiffEntryStatus::Modified => KeaDiffEntryStatus::Modified,
+            DiffEntryStatus::Renamed => KeaDiffEntryStatus::Renamed,
+            DiffEntryStatus::Copied => KeaDiffEntryStatus::Copied,
+            DiffEntryStatus::Changed => KeaDiffEntryStatus::Changed,
+            DiffEntryStatus::Unchanged => KeaDiffEntryStatus::Unchanged,
+            _ => KeaDiffEntryStatus::Unchanged,
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize, derive_new::new, utoipa::ToSchema)]
