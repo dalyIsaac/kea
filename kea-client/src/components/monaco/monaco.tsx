@@ -1,7 +1,7 @@
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 import { FC, useEffect, useRef } from "react";
 
-export const Monaco: FC<{ className?: string }> = ({ className }) => {
+export const Monaco: FC = () => {
   const editor = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const monacoEl = useRef<HTMLDivElement | null>(null);
 
@@ -14,16 +14,24 @@ export const Monaco: FC<{ className?: string }> = ({ className }) => {
       return;
     }
 
-    editor.current = monaco.editor.create(monacoEl.current, {
+    const editorElement = monacoEl.current;
+
+    editor.current = monaco.editor.create(editorElement, {
       value: ["function x() {", '\tconsole.log("Hello world!");', "}"].join("\n"),
       language: "typescript",
     });
 
+    const onResize = () => {
+      editor.current?.layout();
+    };
+    window.addEventListener("resize", onResize);
+
     return () => {
       editor.current?.dispose();
       editor.current = null;
+      window.removeEventListener("resize", onResize);
     };
   }, []);
 
-  return <div ref={monacoEl} className={className} />;
+  return <div ref={monacoEl} className="h-full w-full" />;
 };

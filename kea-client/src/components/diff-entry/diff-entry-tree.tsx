@@ -1,5 +1,6 @@
 import { FC, useMemo } from "react";
 import { DiffEntry } from "~/api/types";
+import { Sidebar, SidebarHeader, SidebarTitle } from "~/components/sidebar";
 import { DiffEntryNode } from "./diff-entry-node";
 
 declare module "react" {
@@ -46,10 +47,16 @@ export const DiffEntryTree: FC<{ data: DiffEntry[] }> = ({ data }) => {
   const tree = useMemo(() => toTree(data), [data]);
 
   return (
-    <div role="tree" className="pl-1">
-      {tree.map((node) => (
-        <DiffEntryNode key={node.entry.filename} node={node} />
-      ))}
-    </div>
+    <Sidebar>
+      <SidebarHeader>
+        <SidebarTitle>Changes</SidebarTitle>
+      </SidebarHeader>
+
+      <div role="tree" className="pl-1">
+        {tree.map((node) => (
+          <DiffEntryNode key={node.entry.filename} node={node} />
+        ))}
+      </div>
+    </Sidebar>
   );
 };

@@ -8,10 +8,6 @@ export const SidebarTitle: FC<{ children: ReactNode }> = ({ children }) => (
   <h2 className="text-sm font-semibold">{children}</h2>
 );
 
-export const SidebarSection: FC<{ children: ReactNode }> = ({ children }) => (
-  <section className="p-4">{children}</section>
-);
-
 export const SidebarTrigger: FC<{ children: ReactNode }> = ({ children }) => (
   <button className="flex items-center justify-between w-full px-4 py-2 text-left">
     {children}

@@ -69,7 +69,7 @@ function RouteComponent() {
     <div className="flex h-full">
       <DiffEntryTree data={filesQuery.data ?? []} />
       <VerticalSeparator />
-      <Monaco className="h-full w-full" />
+      <Monaco />
     </div>
   );
 }
