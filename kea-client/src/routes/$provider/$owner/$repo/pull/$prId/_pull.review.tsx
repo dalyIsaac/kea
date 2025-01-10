@@ -3,7 +3,6 @@ import { useEffect } from "react";
 import { $api } from "~/api/api";
 import { DiffEntryTree } from "~/components/diff-entry/diff-entry-tree";
 import { Monaco } from "~/components/monaco/monaco";
-import { VerticalSeparator } from "~/components/separator";
 import { parseCompare } from "~/utils/routes";
 
 export const Route = createFileRoute("/$provider/$owner/$repo/pull/$prId/_pull/review")({
@@ -68,7 +67,7 @@ function RouteComponent() {
   return (
     <div className="flex h-full">
       <DiffEntryTree data={filesQuery.data ?? []} />
-      <VerticalSeparator />
+
       <Monaco />
     </div>
   );
