@@ -2,7 +2,8 @@ import { createFileRoute, SearchSchemaInput, useNavigate } from "@tanstack/react
 import { useEffect } from "react";
 import { $api } from "~/api/api";
 import { DiffEntryTree } from "~/components/diff-entry/diff-entry-tree";
-import { PullRequestCommits } from "~/components/pull-request/pull-request-commits";
+import { Monaco } from "~/components/monaco/monaco";
+import { VerticalSeparator } from "~/components/separator";
 import { parseCompare } from "~/utils/routes";
 
 export const Route = createFileRoute("/$provider/$owner/$repo/pull/$prId/_pull/review")({
@@ -15,10 +16,12 @@ export const Route = createFileRoute("/$provider/$owner/$repo/pull/$prId/_pull/r
 
 function RouteComponent() {
   const navigate = useNavigate();
+
   const params = Route.useParams();
   const { owner, repo, prId } = params;
+
   const { compare } = Route.useSearch();
-  const { base, head } = parseCompare(compare);
+  // const { base, head } = parseCompare(compare);
 
   const prQuery = $api.useQuery("get", "/github/{owner}/{repo}/pull/{pr_number}", {
     params: {
@@ -64,21 +67,9 @@ function RouteComponent() {
 
   return (
     <div className="flex h-full">
-      <PullRequestCommits
-        className="w-[240px] pr-4"
-        commits={commitsQuery.data}
-        headSha={prQuery.data?.head?.sha}
-        baseSha={prQuery.data?.base?.sha}
-        selectedHead={head ?? prQuery.data?.head?.sha}
-        selectedBase={base ?? prQuery.data?.base?.sha}
-        params={params}
-      />
-
       <DiffEntryTree data={filesQuery.data ?? []} />
-
-      <div className="border-l border-gray-200 mx-4" />
-
-      {/* <Monaco className="h-full w-full" /> */}
+      <VerticalSeparator />
+      <Monaco className="h-full w-full" />
     </div>
   );
 }

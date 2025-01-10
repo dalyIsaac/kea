@@ -2,6 +2,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { Check, GitCompare, X } from "lucide-react";
 import { FC, ReactElement, useState } from "react";
 import * as apiTypes from "~/api/types";
+import { Sidebar, SidebarHeader, SidebarTitle } from "~/components/sidebar";
 import { Button } from "~/shadcn/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "~/shadcn/ui/tooltip";
 import { createCompare, PullRequestDetailsParams } from "~/utils/routes";
@@ -25,14 +26,13 @@ const ButtonWithTooltip: FC<{
 );
 
 export const PullRequestCommits: FC<{
-  className?: string;
   commits: apiTypes.Commit[] | undefined;
   params: PullRequestDetailsParams;
   headSha: string | undefined;
   baseSha: string | undefined;
   selectedBase: string | undefined;
   selectedHead: string | undefined;
-}> = ({ className, commits, params, headSha, baseSha, selectedBase, selectedHead }) => {
+}> = ({ commits, params, headSha, baseSha, selectedBase, selectedHead }) => {
   const [showCheckboxes, setShowCheckboxes] = useState(false);
   const [selectedCommits, setSelectedCommits] = useState<string[]>([]);
   const navigate = useNavigate();
@@ -108,11 +108,11 @@ export const PullRequestCommits: FC<{
   }
 
   return (
-    <div className={className}>
-      <div className="flex justify-between items-center h-7 px-1 border-b">
-        <h3 className="text-sm font-medium leading-none">Commits</h3>
+    <Sidebar>
+      <SidebarHeader>
+        <SidebarTitle>Commits</SidebarTitle>
         {commits && commits.length > 1 && <div className="flex items-center -mr-1">{buttons}</div>}
-      </div>
+      </SidebarHeader>
 
       <ul className="divide-y divide-border text-sm">
         {commits?.map((commit) => (
@@ -129,6 +129,6 @@ export const PullRequestCommits: FC<{
           />
         ))}
       </ul>
-    </div>
+    </Sidebar>
   );
 };
