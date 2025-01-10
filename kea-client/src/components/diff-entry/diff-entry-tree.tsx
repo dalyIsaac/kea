@@ -52,7 +52,7 @@ export const DiffEntryTree: FC<{ data: DiffEntry[] }> = ({ data }) => {
         <SidebarTitle>Changes</SidebarTitle>
       </SidebarHeader>
 
-      <div role="tree" className="pl-1">
+      <div role="tree" className="px-1 py-0.5">
         {tree.map((node) => (
           <DiffEntryNode key={node.entry.filename} node={node} />
         ))}
