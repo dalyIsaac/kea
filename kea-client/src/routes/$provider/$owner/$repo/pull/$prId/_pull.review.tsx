@@ -1,7 +1,7 @@
 import { createFileRoute, SearchSchemaInput, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { $api } from "~/api/api";
-import { Monaco } from "~/components/monaco/monaco";
+import { DiffEntryTree } from "~/components/diff-entry/diff-entry-tree";
 import { PullRequestCommits } from "~/components/pull-request/pull-request-commits";
 import { parseCompare } from "~/utils/routes";
 
@@ -40,6 +40,16 @@ function RouteComponent() {
     },
   });
 
+  const filesQuery = $api.useQuery("get", "/github/{owner}/{repo}/pull/{pr_number}/files", {
+    params: {
+      path: {
+        owner,
+        repo,
+        pr_number: prId,
+      },
+    },
+  });
+
   useEffect(() => {
     if (!compare && commitsQuery.data && prQuery.data) {
       navigate({
@@ -64,9 +74,11 @@ function RouteComponent() {
         params={params}
       />
 
+      <DiffEntryTree data={filesQuery.data ?? []} />
+
       <div className="border-l border-gray-200 mx-4" />
 
-      <Monaco className="h-full w-full" />
+      {/* <Monaco className="h-full w-full" /> */}
     </div>
   );
 }

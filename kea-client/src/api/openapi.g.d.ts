@@ -84,6 +84,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/github/{owner}/{repo}/pull/{pr_number}/files": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_pull_request_files"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/healthcheck": {
         parameters: {
             query?: never;
@@ -127,6 +143,20 @@ export interface components {
             parents: components["schemas"]["KeaParentCommit"][];
             sha: string;
         };
+        KeaDiffEntry: {
+            /** Format: int64 */
+            additions: number;
+            /** Format: int64 */
+            changes: number;
+            /** Format: int64 */
+            deletions: number;
+            filename: string;
+            previous_filename?: string | null;
+            sha: string;
+            status: components["schemas"]["KeaDiffEntryStatus"];
+        };
+        /** @enum {string} */
+        KeaDiffEntryStatus: "Added" | "Removed" | "Modified" | "Renamed" | "Copied" | "Changed" | "Unchanged";
         KeaParentCommit: {
             sha: string;
         };
@@ -280,6 +310,32 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["KeaCommit"][];
+                };
+            };
+        };
+    };
+    get_pull_request_files: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Owner of the repository */
+                owner: string;
+                /** @description Repository name */
+                repo: string;
+                /** @description Pull request number */
+                pr_number: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KeaDiffEntry"][];
                 };
             };
         };
