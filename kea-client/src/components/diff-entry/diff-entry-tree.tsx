@@ -29,13 +29,13 @@ const toTree = (data: DiffEntry[]) => {
         continue;
       }
 
-      const newParent = {
-        entry: { filename: prefix },
-        children: [],
-      };
-      parents.push(newParent);
+      const createdChild =
+        idx === path.length
+          ? { entry, children: [] }
+          : { entry: { filename: prefix }, children: [] };
 
-      parents = newParent.children;
+      parents.push(createdChild);
+      parents = createdChild.children;
     }
   }
 

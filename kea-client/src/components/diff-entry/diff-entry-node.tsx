@@ -1,4 +1,13 @@
-import { ChevronDown, ChevronRight } from "lucide-react";
+import {
+  ArrowRight,
+  Check,
+  ChevronDown,
+  ChevronRight,
+  Copy,
+  Edit,
+  Minus,
+  Plus,
+} from "lucide-react";
 import { FC, ReactNode, useState } from "react";
 import { DiffEntry } from "~/api/types";
 import { cn } from "~/lib/utils";
@@ -19,10 +28,39 @@ interface DiffEntryNodeProps {
   tabIndex?: number;
 }
 
+const iconProps = {
+  size: 12,
+  strokeWidth: 2.5,
+};
+
+function getIconByStatus(status: string | undefined): ReactNode {
+  switch (status) {
+    case "Added":
+      return <Plus className="text-green-500" {...iconProps} />;
+    case "Removed":
+      return <Minus className="text-red-500" {...iconProps} />;
+    case "Modified":
+    case "Changed":
+      return <Edit className="text-blue-500" {...iconProps} />;
+    case "Renamed":
+      return <ArrowRight className="text-yellow-500" {...iconProps} />;
+    case "Copied":
+      return <Copy className="text-purple-500" {...iconProps} />;
+    case "Unchanged":
+      return <Check className="text-gray-400" {...iconProps} />;
+    default:
+      return null;
+  }
+}
+
 export const DiffEntryNode: FC<DiffEntryNodeProps> = ({ node, tabIndex = 0 }) => {
   const [isExpanded, setIsExpanded] = useState(true);
   const hasChildren = node.children.length > 0;
   const isLeaf = !hasChildren;
+
+  const status = "status" in node.entry ? node.entry.status : undefined;
+
+  const statusIcon = getIconByStatus(status);
 
   const toggleExpand = () => {
     setIsExpanded(!isExpanded);
@@ -43,11 +81,7 @@ export const DiffEntryNode: FC<DiffEntryNodeProps> = ({ node, tabIndex = 0 }) =>
 
   let icon: ReactNode = null;
   if (hasChildren) {
-    icon = isExpanded ? (
-      <ChevronDown size={14} className="relative -top-px" />
-    ) : (
-      <ChevronRight size={14} className="relative -top-px" />
-    );
+    icon = isExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />;
   }
 
   return (
@@ -57,15 +91,18 @@ export const DiffEntryNode: FC<DiffEntryNodeProps> = ({ node, tabIndex = 0 }) =>
         aria-expanded={hasChildren ? isExpanded : undefined}
         tabIndex={tabIndex}
         className={cn(
-          "flex items-center gap-1 hover:bg-gray-100 rounded px-2 py-0.5",
+          "flex items-center justify-between gap-1 hover:bg-gray-100 rounded px-2 py-0.5",
           "cursor-pointer outline-none focus:bg-gray-100 focus:ring-1 focus:ring-gray-300",
         )}
         onClick={toggleExpand}
         onKeyDown={handleKeyDown}
       >
-        <span className="text-gray-500 w-3.5 h-3.5">{icon}</span>
         <span className={cn(isLeaf ? "text-gray-700" : "font-medium")}>
           {node.entry.filename.split("/").pop()}
+        </span>
+        <span className="flex items-center gap-1">
+          {statusIcon}
+          {icon}
         </span>
       </div>
 
