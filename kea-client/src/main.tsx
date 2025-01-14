@@ -2,6 +2,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider, createRouter } from "@tanstack/react-router";
 import "github-markdown-css";
 import ReactDOM from "react-dom/client";
+import { Provider } from "react-redux";
+import { store } from "~/state/store";
 import "./index.css";
 import { routeTree } from "./routeTree.gen";
 
@@ -26,7 +28,9 @@ if (!rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement);
   root.render(
     <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
+      <Provider store={store}>
+        <RouterProvider router={router} />
+      </Provider>
     </QueryClientProvider>,
   );
 }

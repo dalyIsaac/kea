@@ -1,5 +1,4 @@
 import { Link } from "@tanstack/react-router";
-import { atom, useAtom } from "jotai";
 import { FC, Fragment } from "react";
 import {
   Breadcrumb,
@@ -8,16 +7,15 @@ import {
   BreadcrumbList,
   BreadcrumbSeparator,
 } from "~/shadcn/ui/breadcrumb";
+import { useKeaSelector } from "~/state/store";
 
 export interface Crumb {
   text: string;
   href: string;
 }
 
-export const appCrumbs = atom<Crumb[]>([]);
-
 export const AppCrumbs: FC = () => {
-  const [crumbs] = useAtom(appCrumbs);
+  const crumbs = useKeaSelector((state) => state.crumbs.crumbs);
 
   return (
     <Breadcrumb>

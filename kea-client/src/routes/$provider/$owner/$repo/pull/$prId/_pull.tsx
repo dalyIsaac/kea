@@ -1,10 +1,10 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
-import { useAtom } from "jotai";
 import { useEffect } from "react";
+import { useDispatch } from "react-redux";
 import { $api } from "~/api/api";
 import * as apiTypes from "~/api/types";
-import { appCrumbs } from "~/components/app-crumbs/app-crumbs";
 import { PullRequestHeader } from "~/components/pull-request/pull-request-header";
+import { crumbsSlice } from "~/state/crumbs/slice";
 import { validatePullRequestRoute } from "~/utils/routes";
 
 export const Route = createFileRoute("/$provider/$owner/$repo/pull/$prId/_pull")({
@@ -16,20 +16,22 @@ export const Route = createFileRoute("/$provider/$owner/$repo/pull/$prId/_pull")
 
 const useBreadcrumbs = (details: apiTypes.PullRequestDetails | undefined) => {
   const { owner, repo, prId, provider } = Route.useParams();
-  const [, setAppCrumbs] = useAtom(appCrumbs);
+  const dispatch = useDispatch();
 
   // Initial render.
   useEffect(() => {
-    setAppCrumbs([
-      { text: owner, href: `/${provider}/${owner}` },
-      { text: repo, href: `/${provider}/${owner}/${repo}` },
-      { text: "pulls", href: `/${provider}/${owner}/${repo}/pulls` },
-      {
-        text: `#${prId}`,
-        href: `/${provider}/${owner}/${repo}/pull/${prId}`,
-      },
-    ]);
-  }, [owner, repo, prId, setAppCrumbs, provider]);
+    dispatch(
+      crumbsSlice.actions.setCrumbs([
+        { text: owner, href: `/${provider}/${owner}` },
+        { text: repo, href: `/${provider}/${owner}/${repo}` },
+        { text: "pulls", href: `/${provider}/${owner}/${repo}/pulls` },
+        {
+          text: `#${prId}`,
+          href: `/${provider}/${owner}/${repo}/pull/${prId}`,
+        },
+      ]),
+    );
+  }, [owner, repo, prId, provider, dispatch]);
 
   // Loaded state.
   useEffect(() => {
@@ -37,16 +39,18 @@ const useBreadcrumbs = (details: apiTypes.PullRequestDetails | undefined) => {
       return;
     }
 
-    setAppCrumbs([
-      { text: details.owner, href: `/${provider}/${owner}` },
-      { text: details.repo, href: `/${provider}/${owner}/${repo}` },
-      { text: "pulls", href: `/${provider}/${owner}/${repo}/pulls` },
-      {
-        text: `#${prId}`,
-        href: `/${provider}/${owner}/${repo}/pull/${prId}`,
-      },
-    ]);
-  }, [owner, repo, prId, setAppCrumbs, provider, details]);
+    dispatch(
+      crumbsSlice.actions.setCrumbs([
+        { text: details.owner, href: `/${provider}/${owner}` },
+        { text: details.repo, href: `/${provider}/${owner}/${repo}` },
+        { text: "pulls", href: `/${provider}/${owner}/${repo}/pulls` },
+        {
+          text: `#${prId}`,
+          href: `/${provider}/${owner}/${repo}/pull/${prId}`,
+        },
+      ]),
+    );
+  }, [owner, repo, prId, provider, details, dispatch]);
 };
 
 function RouteComponent() {
