@@ -35,29 +35,6 @@ export const toTree = (data: DiffEntry[]): EntryNode[] => {
   return roots;
 };
 
-export const getPathNodes = (path: string, tree: EntryNode[]): EntryNode[] => {
-  const nodes: EntryNode[] = [];
-  const pathParts = path.split("/");
-
-  let parents = tree;
-  for (const part of pathParts) {
-    const child = parents.find((node) => node.entry.filename === part);
-    if (!child) {
-      return [];
-    }
-
-    nodes.push(child);
-
-    if ("children" in child) {
-      parents = child.children;
-    } else {
-      break;
-    }
-  }
-
-  return nodes;
-};
-
 /**
  * Returns the node at the given path, regardless of whether it is a leaf or parent node. Returns null if the node does not exist.
  * @param path The path to the node.

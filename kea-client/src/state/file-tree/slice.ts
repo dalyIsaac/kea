@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { EntryNode, FileTreeState } from "./types";
-import { getPathNodes } from "./utils";
+import { getNode, isParentNode } from "./utils";
 
 export const initialFileTreeState: FileTreeState = {
   tree: [],
@@ -17,20 +17,18 @@ export const fileTreeSlice = createSlice({
     },
 
     setIsExpanded: (state, action: PayloadAction<{ path: string; isExpanded: boolean }>) => {
-      const pathNodes = getPathNodes(action.payload.path, state.tree);
-      const nodeAtPath = pathNodes.at(-1);
+      const node = getNode(action.payload.path, state.tree);
 
-      if (nodeAtPath && "children" in nodeAtPath) {
-        nodeAtPath.isExpanded = action.payload.isExpanded;
+      if (node && isParentNode(node)) {
+        node.isExpanded = action.payload.isExpanded;
       }
     },
 
     toggleExpand: (state, action: PayloadAction<string>) => {
-      const pathNodes = getPathNodes(action.payload, state.tree);
-      const nodeAtPath = pathNodes.at(-1);
+      const node = getNode(action.payload, state.tree);
 
-      if (nodeAtPath && "children" in nodeAtPath) {
-        nodeAtPath.isExpanded = !nodeAtPath.isExpanded;
+      if (node && isParentNode(node)) {
+        node.isExpanded = !node.isExpanded;
       }
     },
 
