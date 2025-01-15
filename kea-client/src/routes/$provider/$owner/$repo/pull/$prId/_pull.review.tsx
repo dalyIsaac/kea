@@ -22,7 +22,7 @@ function RouteComponent() {
   const { compare } = Route.useSearch();
   // const { base, head } = parseCompare(compare);
 
-  const prQuery = $api.useQuery("get", "/github/{owner}/{repo}/pull/{pr_number}", {
+  const queryParams = {
     params: {
       path: {
         owner,
@@ -30,27 +30,21 @@ function RouteComponent() {
         pr_number: prId,
       },
     },
-  });
+  };
 
-  const commitsQuery = $api.useQuery("get", "/github/{owner}/{repo}/pull/{pr_number}/commits", {
-    params: {
-      path: {
-        owner,
-        repo,
-        pr_number: prId,
-      },
-    },
-  });
+  const prQuery = $api.useQuery("get", "/github/{owner}/{repo}/pull/{pr_number}", queryParams);
 
-  const filesQuery = $api.useQuery("get", "/github/{owner}/{repo}/pull/{pr_number}/files", {
-    params: {
-      path: {
-        owner,
-        repo,
-        pr_number: prId,
-      },
-    },
-  });
+  const commitsQuery = $api.useQuery(
+    "get",
+    "/github/{owner}/{repo}/pull/{pr_number}/commits",
+    queryParams,
+  );
+
+  const filesQuery = $api.useQuery(
+    "get",
+    "/github/{owner}/{repo}/pull/{pr_number}/files",
+    queryParams,
+  );
 
   useEffect(() => {
     if (!compare && commitsQuery.data && prQuery.data) {
