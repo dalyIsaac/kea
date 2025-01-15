@@ -27,5 +27,5 @@ function getIconByStatus(status: string | undefined): React.ReactNode {
 
 export const DiffTreeLeafNode: React.FC<DiffTreeLeafNodeProps> = ({ node, ...rest }) => {
   const statusIcon = getIconByStatus(node.entry.status);
-  return <DiffTreeBaseNode node={node} icon={statusIcon} {...rest} />;
+  return <DiffTreeBaseNode node={node} rightIcon={statusIcon} {...rest} />;
 };

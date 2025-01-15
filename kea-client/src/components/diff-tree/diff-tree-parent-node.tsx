@@ -60,7 +60,7 @@ export const DiffTreeParentNode: React.FC<DiffTreeParentNodeProps> = ({ node, ta
   return (
     <DiffTreeBaseNode
       node={node}
-      icon={icon}
+      leftIcon={icon}
       ariaExpanded={isExpanded}
       onClick={toggleExpand}
       onKeyDown={handleKeyDown}
@@ -70,7 +70,7 @@ export const DiffTreeParentNode: React.FC<DiffTreeParentNodeProps> = ({ node, ta
         role="group"
         aria-hidden={!isExpanded}
         className={cn(
-          "ml-3.5 overflow-hidden border-l border-gray-200 pl-1 transition-all duration-200",
+          "ml-3 overflow-hidden border-l border-gray-200 transition-all duration-200",
           isExpanded ? "max-h-[1000px] opacity-100" : "max-h-0 opacity-0",
         )}
       >
