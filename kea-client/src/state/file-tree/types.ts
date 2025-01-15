@@ -1,18 +1,18 @@
 import { DiffEntry } from "~/api/types";
 
-export interface ParentNode {
+export interface ParentEntryNode {
   entry: { filename: string };
-  children: FileEntryNode[];
+  children: EntryNode[];
   isExpanded: boolean;
 }
 
-export interface LeafNode {
+export interface LeafEntryNode {
   entry: DiffEntry;
 }
 
-export type FileEntryNode = ParentNode | LeafNode;
+export type EntryNode = ParentEntryNode | LeafEntryNode;
 
 export interface FileTreeState {
-  tree: FileEntryNode[];
-  selectedPath: string;
+  tree: EntryNode[];
+  selectedPath: string | null;
 }

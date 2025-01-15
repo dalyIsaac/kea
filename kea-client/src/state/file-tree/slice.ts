@@ -1,37 +1,36 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { DiffEntry } from "~/api/types";
-import { FileTreeState } from "~/state/file-tree/types";
-import { getPathNodes, toTree } from "./utils";
+import { EntryNode, FileTreeState } from "./types";
+import { getPathNodes } from "./utils";
 
 export const initialFileTreeState: FileTreeState = {
   tree: [],
-  selectedPath: "",
+  selectedPath: null,
 };
 
 export const fileTreeSlice = createSlice({
   name: "fileTree",
   initialState: initialFileTreeState,
   reducers: {
-    setTree: (state, action: PayloadAction<DiffEntry[]>) => {
-      state.tree = toTree(action.payload);
+    setTree: (state, action: PayloadAction<EntryNode[]>) => {
+      state.tree = action.payload;
+      state.selectedPath = null;
     },
 
-    expandNode: (state, action: PayloadAction<string>) => {
-      const pathNodes = getPathNodes(action.payload, state.tree);
+    setIsExpanded: (state, action: PayloadAction<{ path: string; isExpanded: boolean }>) => {
+      const pathNodes = getPathNodes(action.payload.path, state.tree);
+      const nodeAtPath = pathNodes.at(-1);
 
-      for (const node of pathNodes) {
-        if ("children" in node) {
-          node.isExpanded = true;
-        }
+      if (nodeAtPath && "children" in nodeAtPath) {
+        nodeAtPath.isExpanded = action.payload.isExpanded;
       }
     },
 
-    collapseNode: (state, action: PayloadAction<string>) => {
+    toggleExpand: (state, action: PayloadAction<string>) => {
       const pathNodes = getPathNodes(action.payload, state.tree);
       const nodeAtPath = pathNodes.at(-1);
 
       if (nodeAtPath && "children" in nodeAtPath) {
-        nodeAtPath.isExpanded = false;
+        nodeAtPath.isExpanded = !nodeAtPath.isExpanded;
       }
     },
 

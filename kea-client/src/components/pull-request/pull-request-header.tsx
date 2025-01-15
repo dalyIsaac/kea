@@ -1,10 +1,12 @@
 import { Link, useMatchRoute } from "@tanstack/react-router";
 import { GitPullRequest } from "lucide-react";
-import { FC, PropsWithChildren } from "react";
 import { ToggleGroup, ToggleGroupItem } from "~/shadcn/ui/toggle-group";
 import { PullRequestDetailsParams } from "~/utils/routes";
 
-const PullRequestToggleItem: FC<PropsWithChildren<{ value: string }>> = ({ value, children }) => (
+const PullRequestToggleItem: React.FC<{ value: string; children: React.ReactNode }> = ({
+  value,
+  children,
+}) => (
   <ToggleGroupItem
     value={value}
     className="h-fit border border-transparent rounded-sm [&[data-status=active]]:bg-background [&[data-status=active]]:shadow-sm [&[data-status=active]]:font-medium [&[data-status=active]]:border-border [&:not([data-status=active])]:text-muted-foreground"
@@ -14,7 +16,7 @@ const PullRequestToggleItem: FC<PropsWithChildren<{ value: string }>> = ({ value
   </ToggleGroupItem>
 );
 
-const PullRequestTitle: FC<{
+const PullRequestTitle: React.FC<{
   title: string | undefined | null;
   id: number;
 }> = ({ title, id }) => (
@@ -25,7 +27,7 @@ const PullRequestTitle: FC<{
   </div>
 );
 
-const PullRequestBranches: FC<{
+const PullRequestBranches: React.FC<{
   head: string;
   base: string;
 }> = ({ head, base }) => (
@@ -36,7 +38,7 @@ const PullRequestBranches: FC<{
   </div>
 );
 
-const PullRequestNav: FC<PullRequestDetailsParams> = (params) => {
+const PullRequestNav: React.FC<PullRequestDetailsParams> = (params) => {
   const matchRoute = useMatchRoute();
   const baseRoute = `/${params.provider}/${params.owner}/${params.repo}/pull/${params.prId}`;
   const reviewRoute = `${baseRoute}/review`;
@@ -83,7 +85,12 @@ interface PullRequestHeaderProps extends PullRequestDetailsParams {
   head?: string;
 }
 
-export const PullRequestHeader: FC<PullRequestHeaderProps> = ({ title, base, head, ...params }) => {
+export const PullRequestHeader: React.FC<PullRequestHeaderProps> = ({
+  title,
+  base,
+  head,
+  ...params
+}) => {
   return (
     <div className="flex gap-2 justify-between">
       <div className="flex flex-col gap">

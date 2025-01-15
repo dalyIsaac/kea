@@ -1,6 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
 import { Check, GitCompare, X } from "lucide-react";
-import { FC, ReactElement, useState } from "react";
+import { ReactElement, useState } from "react";
 import * as apiTypes from "~/api/types";
 import { Sidebar, SidebarHeader, SidebarTitle } from "~/components/sidebar";
 import { Button } from "~/shadcn/ui/button";
@@ -8,7 +8,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "~/shad
 import { createCompare, PullRequestDetailsParams } from "~/utils/routes";
 import { PullRequestCommitsItem } from "./pull-request-commits-item";
 
-const ButtonWithTooltip: FC<{
+const ButtonWithTooltip: React.FC<{
   tooltip: string;
   icon: ReactElement;
   onClick: () => void;
@@ -25,7 +25,7 @@ const ButtonWithTooltip: FC<{
   </TooltipProvider>
 );
 
-export const PullRequestCommits: FC<{
+export const PullRequestCommits: React.FC<{
   commits: apiTypes.Commit[] | undefined;
   params: PullRequestDetailsParams;
   headSha: string | undefined;

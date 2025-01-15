@@ -1,7 +1,7 @@
 import { createFileRoute, SearchSchemaInput, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { $api } from "~/api/api";
-import { DiffEntryTree } from "~/components/diff-entry/diff-entry-tree";
+import { DiffTree } from "~/components/diff-tree/diff-tree";
 import { Monaco } from "~/components/monaco/monaco";
 import { parseCompare } from "~/utils/routes";
 
@@ -66,7 +66,7 @@ function RouteComponent() {
 
   return (
     <div className="flex h-full">
-      <DiffEntryTree data={filesQuery.data ?? []} />
+      <DiffTree data={filesQuery.data} />
 
       <Monaco />
     </div>
