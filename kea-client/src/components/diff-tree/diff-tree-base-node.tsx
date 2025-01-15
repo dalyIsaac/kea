@@ -26,7 +26,7 @@ export const DiffTreeBaseNode = <T extends ParentEntryNode | LeafEntryNode>({
   children,
   tabIndex = 0,
 }: DiffTreeBaseNodeProps<T>): React.ReactElement => (
-  <div className="select-none text-center font-mono text-xs">
+  <div className="select-none text-center text-xs">
     <div
       role="treeitem"
       aria-expanded={ariaExpanded}
