@@ -70,7 +70,7 @@ function RouteComponent() {
   useBreadcrumbs(detailsQuery.data);
 
   return (
-    <div className="p-4 flex flex-col h-full min-h-0 gap-1">
+    <div className="flex h-full min-h-0 flex-col gap-1 p-4">
       <PullRequestHeader
         title={detailsQuery.data?.title}
         base={detailsQuery.data?.base.label}
@@ -78,7 +78,7 @@ function RouteComponent() {
         {...params}
       />
 
-      <div className="flex-1 flex flex-col min-h-0">
+      <div className="flex min-h-0 flex-1 flex-col">
         <Outlet />
       </div>
     </div>

@@ -31,7 +31,7 @@ export const PullRequestCommitsItem: React.FC<CommitItemProps> = ({
       (commit.sha === selectedBase || commit.sha === selectedHead) && "bg-accent/10",
     )}
   >
-    <div className="flex items-center gap-0.5 flex-1 min-w-0">
+    <div className="flex min-w-0 flex-1 items-center gap-0.5">
       {showCheckboxes && (
         <div className="pl-0.5 pr-1">
           <Checkbox
@@ -43,17 +43,17 @@ export const PullRequestCommitsItem: React.FC<CommitItemProps> = ({
         </div>
       )}
 
-      <div className="flex-1 min-w-0 leading-tight">
+      <div className="min-w-0 flex-1 leading-tight">
         <div className="flex items-center gap-0.5">
           <a
             href={`#commit-${commit.sha}`}
             title={commit.message}
-            className="flex-1 truncate hover:underline text-xs"
+            className="flex-1 truncate text-xs hover:underline"
           >
             {commit.message}
           </a>
 
-          <div className="flex items-center gap-0.5 flex-shrink-0">
+          <div className="flex flex-shrink-0 items-center gap-0.5">
             {commit.sha === headSha && <span className="text-xs text-muted-foreground">HEAD</span>}
             {commit.sha === baseSha && <span className="text-xs text-muted-foreground">BASE</span>}
             {commit.author && (

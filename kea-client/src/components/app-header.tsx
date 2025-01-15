@@ -10,7 +10,7 @@ export function AppHeader() {
 
   return (
     <div className="border-b">
-      <div className="flex h-14 items-center px-4 justify-between">
+      <div className="flex h-14 items-center justify-between px-4">
         <div className="flex items-center gap-4">
           <Link to="/">
             <img

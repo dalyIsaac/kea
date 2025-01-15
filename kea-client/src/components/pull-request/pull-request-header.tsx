@@ -9,7 +9,7 @@ const PullRequestToggleItem: React.FC<{ value: string; children: React.ReactNode
 }) => (
   <ToggleGroupItem
     value={value}
-    className="h-fit border border-transparent rounded-sm [&[data-status=active]]:bg-background [&[data-status=active]]:shadow-sm [&[data-status=active]]:font-medium [&[data-status=active]]:border-border [&:not([data-status=active])]:text-muted-foreground"
+    className="h-fit rounded-sm border border-transparent [&:not([data-status=active])]:text-muted-foreground [&[data-status=active]]:border-border [&[data-status=active]]:bg-background [&[data-status=active]]:font-medium [&[data-status=active]]:shadow-sm"
     asChild
   >
     {children}
@@ -21,7 +21,7 @@ const PullRequestTitle: React.FC<{
   id: number;
 }> = ({ title, id }) => (
   <div className="flex items-center gap-2">
-    <GitPullRequest className="w-5 h-5" />
+    <GitPullRequest className="h-5 w-5" />
     <span className="text-2xl font-bold">{title}</span>
     <span className="text-2xl font-light">#{id}</span>
   </div>
@@ -51,7 +51,7 @@ const PullRequestNav: React.FC<PullRequestDetailsParams> = (params) => {
   return (
     <ToggleGroup
       type="single"
-      className="border rounded-md bg-secondary/30 text-xs h-fit m-1"
+      className="m-1 h-fit rounded-md border bg-secondary/30 text-xs"
       value={isReviewRoute ? reviewRoute : baseRoute}
     >
       <PullRequestToggleItem value={baseRoute}>
@@ -59,7 +59,7 @@ const PullRequestNav: React.FC<PullRequestDetailsParams> = (params) => {
           to="/$provider/$owner/$repo/pull/$prId"
           params={params}
           activeOptions={{ exact: true }}
-          className="px-2 py-0.5 block"
+          className="block px-2 py-0.5"
         >
           Overview
         </Link>
@@ -70,7 +70,7 @@ const PullRequestNav: React.FC<PullRequestDetailsParams> = (params) => {
           to="/$provider/$owner/$repo/pull/$prId/review"
           params={params}
           activeOptions={{ exact: true, includeSearch: false }}
-          className="px-2 py-0.5 block"
+          className="block px-2 py-0.5"
         >
           Review
         </Link>
@@ -92,8 +92,8 @@ export const PullRequestHeader: React.FC<PullRequestHeaderProps> = ({
   ...params
 }) => {
   return (
-    <div className="flex gap-2 justify-between">
-      <div className="flex flex-col gap">
+    <div className="flex justify-between gap-2">
+      <div className="gap flex flex-col">
         <PullRequestTitle title={title} id={params.prId} />
         {base && head && <PullRequestBranches base={base} head={head} />}
       </div>

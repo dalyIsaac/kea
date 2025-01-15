@@ -70,8 +70,8 @@ export const DiffTreeParentNode: React.FC<DiffTreeParentNodeProps> = ({ node, ta
         role="group"
         aria-hidden={!isExpanded}
         className={cn(
-          "ml-3.5 pl-1 border-l border-gray-200 overflow-hidden transition-all duration-200",
-          isExpanded ? "opacity-100 max-h-[1000px]" : "opacity-0 max-h-0",
+          "ml-3.5 overflow-hidden border-l border-gray-200 pl-1 transition-all duration-200",
+          isExpanded ? "max-h-[1000px] opacity-100" : "max-h-0 opacity-0",
         )}
       >
         {node.children.map((child) =>

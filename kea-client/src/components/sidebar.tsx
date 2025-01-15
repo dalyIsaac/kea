@@ -1,5 +1,5 @@
 export const SidebarHeader: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <header className="flex justify-between items-center h-7 px-1 border-b">{children}</header>
+  <header className="flex h-7 items-center justify-between border-b px-1">{children}</header>
 );
 
 export const SidebarTitle: React.FC<{ children: React.ReactNode }> = ({ children }) => (
@@ -7,11 +7,11 @@ export const SidebarTitle: React.FC<{ children: React.ReactNode }> = ({ children
 );
 
 export const SidebarTrigger: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <button className="flex items-center justify-between w-full px-4 py-2 text-left">
+  <button className="flex w-full items-center justify-between px-4 py-2 text-left">
     {children}
   </button>
 );
 
 export const Sidebar: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <aside className="flex-none w-60 bg-background border-r border-border">{children}</aside>
+  <aside className="w-60 flex-none border-r border-border bg-background">{children}</aside>
 );

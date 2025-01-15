@@ -111,7 +111,7 @@ export const PullRequestCommits: React.FC<{
     <Sidebar>
       <SidebarHeader>
         <SidebarTitle>Commits</SidebarTitle>
-        {commits && commits.length > 1 && <div className="flex items-center -mr-1">{buttons}</div>}
+        {commits && commits.length > 1 && <div className="-mr-1 flex items-center">{buttons}</div>}
       </SidebarHeader>
 
       <ul className="divide-y divide-border text-sm">
