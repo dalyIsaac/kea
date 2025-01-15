@@ -6,4 +6,16 @@ import tsconfigPaths from "vite-tsconfig-paths";
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [TanStackRouterVite({}), react(), tsconfigPaths()],
+  build: {
+    rollupOptions: {
+      output: {
+        assetFileNames: (assetInfo) => {
+          if (assetInfo.name === "codicon.ttf") {
+            return "assets/codicon.[ext]";
+          }
+          return "assets/[name].[hash].[ext]";
+        },
+      },
+    },
+  },
 });

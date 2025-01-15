@@ -68,7 +68,17 @@ function RouteComponent() {
     <div className="flex h-full">
       <DiffTree data={filesQuery.data} />
 
-      <Monaco />
+      <Monaco
+        mode="diff"
+        original={{
+          content: 'fn main() {\n    println!("Hello, world!");\n}',
+          language: "rust",
+        }}
+        modified={{
+          content: 'fn main() {\n    println!("Hello, Rust!");\n    println!("How are you?");\n}',
+          language: "rust",
+        }}
+      />
     </div>
   );
 }
