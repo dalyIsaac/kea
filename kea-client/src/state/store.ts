@@ -10,6 +10,6 @@ export const store = configureStore({
   },
 });
 
-export type KeaState = ReturnType<typeof store.getState>;
+export type KeaRootState = ReturnType<typeof store.getState>;
 export type KeaDispatch = typeof store.dispatch;
-export const useKeaSelector: <T>(selector: (state: KeaState) => T) => T = useRawSelector;
+export const useKeaSelector: <T>(selector: (state: KeaRootState) => T) => T = useRawSelector;

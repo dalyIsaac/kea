@@ -1,8 +1,8 @@
 import { DiffEntry } from "~/api/types";
-import { FileEntryNode } from "./types";
+import { EntryNode, ParentEntryNode } from "./types";
 
-export const toTree = (data: DiffEntry[]): FileEntryNode[] => {
-  const roots: FileEntryNode[] = [];
+export const toTree = (data: DiffEntry[]): EntryNode[] => {
+  const roots: EntryNode[] = [];
 
   for (const entry of data) {
     let parents = roots;
@@ -17,10 +17,10 @@ export const toTree = (data: DiffEntry[]): FileEntryNode[] => {
         continue;
       }
 
-      const createdChild: FileEntryNode =
+      const createdChild: EntryNode =
         idx === path.length
           ? { entry }
-          : { entry: { filename: prefix }, children: [], isExpanded: false };
+          : { entry: { filename: prefix }, children: [], isExpanded: true };
 
       parents.push(createdChild);
 
@@ -35,25 +35,40 @@ export const toTree = (data: DiffEntry[]): FileEntryNode[] => {
   return roots;
 };
 
-export const getPathNodes = (path: string, tree: FileEntryNode[]): FileEntryNode[] => {
-  const nodes: FileEntryNode[] = [];
-  const pathParts = path.split("/");
+/**
+ * Returns the node at the given path, regardless of whether it is a leaf or parent node. Returns null if the node does not exist.
+ * @param path The path to the node.
+ * @param tree The tree to search in.
+ * @returns The node at the given path, or null if it does not exist.
+ */
+export const getNode = (path: string, tree: EntryNode[]): EntryNode | null => {
+  let parentNode: ParentEntryNode | null = null;
+  const parts = path.split("/");
 
-  let parents = tree;
-  for (const part of pathParts) {
-    const child = parents.find((node) => node.entry.filename === part);
-    if (!child) {
-      return [];
+  for (let idx = 0; idx < parts.length; idx += 1) {
+    const part = parts.slice(0, idx + 1).join("/");
+    let node: EntryNode | undefined;
+
+    if (parentNode) {
+      node = parentNode.children.find((child) => child.entry.filename === part);
+    } else {
+      node = tree.find((child) => child.entry.filename === part);
     }
 
-    nodes.push(child);
+    if (!node) {
+      return null;
+    }
 
-    if ("children" in child) {
-      parents = child.children;
+    if ("children" in node) {
+      parentNode = node;
     } else {
-      break;
+      return node;
     }
   }
 
-  return nodes;
+  return parentNode;
+};
+
+export const isParentNode = (node: EntryNode): node is ParentEntryNode => {
+  return "children" in node;
 };

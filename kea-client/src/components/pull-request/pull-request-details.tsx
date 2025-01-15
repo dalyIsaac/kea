@@ -1,9 +1,8 @@
-import { FC } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import * as apiTypes from "~/api/types";
 
-export const PullRequestDetails: FC<{
+export const PullRequestDetails: React.FC<{
   details: apiTypes.PullRequestDetails | undefined;
 }> = ({ details }) => {
   if (!details) {

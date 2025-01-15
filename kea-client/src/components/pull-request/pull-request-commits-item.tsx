@@ -1,4 +1,3 @@
-import { FC } from "react";
 import * as apiTypes from "~/api/types";
 import { cn } from "~/lib/utils";
 import { Avatar } from "~/shadcn/ui/avatar";
@@ -16,7 +15,7 @@ interface CommitItemProps {
   onCheckboxChange: (sha: string) => void;
 }
 
-export const PullRequestCommitsItem: FC<CommitItemProps> = ({
+export const PullRequestCommitsItem: React.FC<CommitItemProps> = ({
   commit,
   selectedBase,
   selectedHead,
