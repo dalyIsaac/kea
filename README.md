@@ -4,51 +4,74 @@
 
 ## Plan
 
-### Stage 1: Commits
+### Stage 1: Pull Requests
 
-- [ ] Route to commit based on URL
-- [ ] Display files
-- [ ] Display diffs between arbitrary commits
-- [ ] Show comments on a line
-- [ ] Show comments on a range of lines
+#### UI
+
+- [x] Route to PR based on URL
+- [x] Display pull request description
+- [x] Display commits in a list
+- [x] Display files in a tree
+- [ ] Display moved files in the tree
+- [ ] Select the first file in the tree by default
+- [ ] Route to file based on URL
+- [ ] Route to file and line based on URL
+
+#### Review
+
+- [ ] Determine language based on file extension
 - [ ] Comment on lines
 - [ ] Add suggestions on lines
-- [ ] Handle moved files
-- [ ] Copy link to a line
+- [ ] Show comments on a PR
+- [ ] Show comments on a commit in a PR
 
 #### Backend
 
 - [x] Set up Axum
 - [x] Set up authentication
 - [x] Set up refresh tokens
-- [ ] Add a protected route
+- [ ] Handle authentication gracefully with redirects back to the location the user was trying to access
 - [ ] Set up Cargo clippy as a pre-commit hook
 - [ ] Set up openapi generation in the backend and frontend as a pre-commit hook
 
-### Stage 2: Pull Requests
+### Stage 2: Pull Request Commits
 
-- [ ] Route to PR based on URL
-- [ ] Display files
-- [ ] Display diffs for a PR
-- [ ] Display diffs for a commit in a PR
+#### UI
+
+- [ ] Route to commit based on URL
+
+#### Review
+
 - [ ] Comment on lines
 - [ ] Add suggestions on lines
-- [ ] Show comments on a PR
-- [ ] Show comments on a commit in a PR
+- [ ] Show comments on a commit
 
-### Stage 3: Better diffs
+### Stage 3: Pull Request Timeline
 
-- [ ] Show diffs between commits while ignoring merge commits to the main branch
+- [ ] Display comments
+- [ ] Create comments
+- [ ] Reply to comments
 
-### Stage 5: Extensibility
+### Stage 4: Complex Commit Comparisons
 
-- [ ] GitLab interface
-- [ ] Add suggestions by inline editing
-- [ ] Flexible widget system
+- [ ] Add the ability to compare commits while ignoring changes from other commits (e.g., a merge commit)
+
+### Stage 5: GitLab interface
+
+- [ ] Add support for GitLab
+
+### Stage 6: Edge cases
+
+- [ ] Display images in a diff, instead of using Monaco
+
+### Stage 7: Complex Monaco Editor
+
+- [ ] Make suggestions by typing in the Monaco editor
 
 ## Notes
 
 - A backend is necessary - commit comments requires a hunk position, and hunks can only be provided for the entire commit.
+- I need an excuse to write Rust.
 
 ## Backend
 

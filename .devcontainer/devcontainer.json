@@ -17,7 +17,8 @@
         "dbaeumer.vscode-eslint",
         "bradlc.vscode-tailwindcss",
         "styled-components.vscode-styled-components",
-        "YoavBls.pretty-ts-errors"
+        "YoavBls.pretty-ts-errors",
+        "bierner.github-markdown-preview"
       ]
     }
   },
