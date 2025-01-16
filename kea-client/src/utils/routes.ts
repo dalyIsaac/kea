@@ -15,10 +15,13 @@ export const validateProvider = (provider: string): string => {
   return provider;
 };
 
-export interface PullRequestDetailsParams {
-  provider: string;
+export interface RepoParams {
   owner: string;
   repo: string;
+}
+
+export interface PullRequestDetailsParams extends RepoParams {
+  provider: string;
   prId: number;
 }
 

@@ -1,8 +1,6 @@
-import { createFileRoute, SearchSchemaInput, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
-import { $api } from "~/api/api";
-import { DiffTree } from "~/components/diff-tree/diff-tree";
-import { Monaco } from "~/components/monaco/monaco";
+import { createFileRoute, SearchSchemaInput } from "@tanstack/react-router";
+import { PullRequestDiffTree } from "~/components/pull-request/pull-request-diff-tree";
+import { PullRequestDiffViewer } from "~/components/pull-request/pull-request-diff-viewer";
 import { parseCompare } from "~/utils/routes";
 
 export const Route = createFileRoute("/$provider/$owner/$repo/pull/$prId/_pull/review")({
@@ -14,65 +12,19 @@ export const Route = createFileRoute("/$provider/$owner/$repo/pull/$prId/_pull/r
 });
 
 function RouteComponent() {
-  const navigate = useNavigate();
-
   const params = Route.useParams();
   const { owner, repo, prId } = params;
 
-  const { compare } = Route.useSearch();
-  // const { base, head } = parseCompare(compare);
-
   const queryParams = {
-    params: {
-      path: {
-        owner,
-        repo,
-        pr_number: prId,
-      },
-    },
+    owner,
+    repo,
+    pr_number: prId,
   };
-
-  const prQuery = $api.useQuery("get", "/github/{owner}/{repo}/pull/{pr_number}", queryParams);
-
-  const commitsQuery = $api.useQuery(
-    "get",
-    "/github/{owner}/{repo}/pull/{pr_number}/commits",
-    queryParams,
-  );
-
-  const filesQuery = $api.useQuery(
-    "get",
-    "/github/{owner}/{repo}/pull/{pr_number}/files",
-    queryParams,
-  );
-
-  useEffect(() => {
-    if (!compare && commitsQuery.data && prQuery.data) {
-      navigate({
-        to: "/$provider/$owner/$repo/pull/$prId/review",
-        params,
-        search: {
-          compare: `${prQuery.data.base.sha}...${prQuery.data.head.sha}`,
-        },
-      });
-    }
-  }, [compare, commitsQuery.data, prQuery.data, navigate, params]);
 
   return (
     <div className="flex h-full">
-      <DiffTree data={filesQuery.data} />
-
-      <Monaco
-        mode="diff"
-        original={{
-          content: 'fn main() {\n    println!("Hello, world!");\n}',
-          language: "rust",
-        }}
-        modified={{
-          content: 'fn main() {\n    println!("Hello, Rust!");\n    println!("How are you?");\n}',
-          language: "rust",
-        }}
-      />
+      <PullRequestDiffTree params={queryParams} />
+      <PullRequestDiffViewer params={queryParams} />
     </div>
   );
 }

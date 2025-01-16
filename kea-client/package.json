@@ -10,7 +10,8 @@
     "serve": "vite preview",
     "start": "vite",
     "format": "prettier --write .",
-    "lint": "npx eslint ."
+    "lint": "npx eslint .",
+    "generate": "npx openapi-typescript http://localhost:3000/api-docs/openapi.json --output ./src/api/openapi.g.d.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
@@ -40,6 +41,7 @@
     "@radix-ui/react-toggle-group": "^1.1.1",
     "@radix-ui/react-tooltip": "^1.1.6",
     "@reduxjs/toolkit": "^2.5.0",
+    "@tanstack/react-query-devtools": "^5.64.1",
     "@tanstack/react-router": "^1.95.1",
     "@tanstack/router-devtools": "^1.95.1",
     "class-variance-authority": "^0.7.1",

@@ -1,3 +1,4 @@
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Outlet, createRootRoute } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/router-devtools";
 import { AppHeader } from "~/components/app-header";
@@ -16,6 +17,7 @@ function RootComponent() {
       </div>
 
       <TanStackRouterDevtools position="bottom-right" />
+      <ReactQueryDevtools initialIsOpen={true} />
     </div>
   );
 }

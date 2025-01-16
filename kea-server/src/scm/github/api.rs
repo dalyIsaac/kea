@@ -99,8 +99,8 @@ impl ScmApiClient<Box<KeaGitHubError>> for GitHubClient {
             git_ref.to_string(),
         ))?;
 
-        match content.content.as_ref() {
-            Some(content) => Ok((jar, content.clone())),
+        match &content.decoded_content() {
+            Some(decoded_content) => Ok((jar, decoded_content.clone())),
             None => Err(Box::new(KeaGitHubError::FileNotFound(
                 path.to_string(),
                 git_ref.to_string(),

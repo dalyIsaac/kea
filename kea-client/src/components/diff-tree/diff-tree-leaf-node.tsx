@@ -1,4 +1,6 @@
+import { useDispatch } from "react-redux";
 import { cn } from "~/lib/utils";
+import { fileTreeSlice } from "~/state/file-tree/slice";
 import { LeafEntryNode } from "~/state/file-tree/types";
 import { BaseProps, DiffTreeBaseNode } from "./diff-tree-base-node";
 
@@ -30,5 +32,11 @@ function getIconByStatus(status: string | undefined): React.ReactNode {
 
 export const DiffTreeLeafNode: React.FC<DiffTreeLeafNodeProps> = ({ node, ...rest }) => {
   const statusIcon = getIconByStatus(node.entry.status);
-  return <DiffTreeBaseNode node={node} rightIcon={statusIcon} {...rest} />;
+  const dispatch = useDispatch();
+
+  const onSelectNode = () => {
+    dispatch(fileTreeSlice.actions.setSelectedPath(node.entry.filename));
+  };
+
+  return <DiffTreeBaseNode node={node} rightIcon={statusIcon} {...rest} onClick={onSelectNode} />;
 };

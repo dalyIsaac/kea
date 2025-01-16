@@ -75,13 +75,6 @@ Considered alternatives for the backend which have OpenAPI built-in:
 
 The frontend may be moved to Tailwind and shadcn in the future.
 
-## Useful commands
-
-```shell
-cd kea-client
-npx openapi-typescript http://localhost:3000/api-docs/openapi.json --output ./src/api/openapi.g.d.ts
-```
-
 ## Environment variables
 
 Set up a `.env` file in the project root with the following:
