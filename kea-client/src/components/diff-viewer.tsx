@@ -17,6 +17,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
 }) => {
   const selectedFile = useSelector(selectSelectedNode);
 
+  const originalFileName = selectedFile?.entry.previous_filename ?? selectedFile?.entry.filename;
   const originalFileQuery = $api.useQuery(
     "get",
     "/github/{owner}/{repo}/file/{git_ref}/{path}",
@@ -26,7 +27,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
           owner,
           repo,
           git_ref: originalRef ?? "",
-          path: selectedFile?.entry.filename ?? "",
+          path: originalFileName ?? "",
         },
       },
       parseAs: "text",
@@ -61,10 +62,12 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
       original={{
         content: originalFileQuery.data ?? "",
         language: "plaintext",
+        filename: originalFileName,
       }}
       modified={{
         content: modifiedFileQuery.data ?? "",
         language: "plaintext",
+        filename: selectedFile?.entry.filename,
       }}
     />
   );

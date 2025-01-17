@@ -1,75 +1,65 @@
-import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
+import * as monaco from "monaco-editor";
 import "monaco-editor/min/vs/editor/editor.main.css";
 import { useEffect, useRef } from "react";
-
-interface SingleFileProps {
-  mode: "single";
-  content: string;
-  language: string;
-}
-
-interface DiffFileProps {
-  mode: "diff";
-  original: {
-    content: string;
-    language: string;
-  };
-  modified: {
-    content: string;
-    language: string;
-  };
-}
-
-type MonacoProps = SingleFileProps | DiffFileProps;
+import {
+  cleanupEditor,
+  createDiffEditor,
+  createSingleEditor,
+  doesModeEqualEditor,
+  updateDiffEditor,
+  updateSingleEditor,
+} from "./monaco-utils";
+import { Editor, MonacoProps } from "./types";
 
 export const Monaco: React.FC<MonacoProps> = (props) => {
-  const editor = useRef<
-    monaco.editor.IStandaloneCodeEditor | monaco.editor.IStandaloneDiffEditor | null
-  >(null);
+  const editor = useRef<Editor | null>(null);
+  const onResize = useRef(() => editor.current?.layout());
   const monacoEl = useRef<HTMLDivElement | null>(null);
+  const mounted = useRef(false);
 
+  // Main effect for editor initialization and updates
   useEffect(() => {
     if (monacoEl.current === null) {
       return;
     }
 
-    if (editor.current) {
-      editor.current.dispose();
-      editor.current = null;
+    if (!mounted.current) {
+      mounted.current = true;
+      window.addEventListener("resize", onResize.current);
     }
 
-    const editorElement = monacoEl.current;
+    if (editor.current && doesModeEqualEditor(editor.current, props.mode)) {
+      if (props.mode === "single") {
+        updateSingleEditor(editor.current as monaco.editor.IStandaloneCodeEditor, props);
+      } else {
+        updateDiffEditor(editor.current as monaco.editor.IStandaloneDiffEditor, props);
+      }
+
+      return;
+    }
+
+    // Only cleanup the existing editor when switching modes
+    if (editor.current) {
+      cleanupEditor(editor.current);
+    }
 
     if (props.mode === "single") {
-      editor.current = monaco.editor.create(editorElement, {
-        value: props.content,
-        language: props.language,
-        automaticLayout: true,
-      });
+      editor.current = createSingleEditor(monacoEl.current, props);
     } else {
-      const diffEditor = monaco.editor.createDiffEditor(editorElement, {
-        automaticLayout: true,
-      });
-
-      diffEditor.setModel({
-        original: monaco.editor.createModel(props.original.content, props.original.language),
-        modified: monaco.editor.createModel(props.modified.content, props.modified.language),
-      });
-
-      editor.current = diffEditor;
+      editor.current = createDiffEditor(monacoEl.current, props);
     }
-
-    const onResize = () => {
-      editor.current?.layout();
-    };
-    window.addEventListener("resize", onResize);
-
-    return () => {
-      editor.current?.dispose();
-      editor.current = null;
-      window.removeEventListener("resize", onResize);
-    };
   }, [props]);
+
+  // Cleanup effect that only runs on unmount
+  useEffect(() => {
+    return () => {
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      window.removeEventListener("resize", onResize.current);
+      cleanupEditor(editor.current);
+      editor.current = null;
+      mounted.current = false;
+    };
+  }, []);
 
   return <div ref={monacoEl} className="h-full w-full" />;
 };
