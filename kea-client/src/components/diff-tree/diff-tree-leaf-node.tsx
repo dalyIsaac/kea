@@ -8,7 +8,8 @@ interface DiffTreeLeafNodeProps extends BaseProps {
   node: LeafEntryNode;
 }
 
-const statusStyles = "font-mono font-semibold";
+// Padding top to align with the filename text.
+const statusStyles = "font-mono font-semibold pt-0.5";
 
 function getIconByStatus(status: string | undefined): React.ReactNode {
   switch (status) {

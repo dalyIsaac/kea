@@ -68,8 +68,8 @@ export const Monaco: React.FC<MonacoProps> = (props) => {
           props.filename || "Untitled"
         ) : (
           <div className="flex flex-col justify-between md:flex-row">
-            <span>Original: {props.original.filename || "Untitled"}</span>
-            <span>Modified: {props.modified.filename || "Untitled"}</span>
+            <span>{props.original.filename || "Untitled"}</span>
+            <span>{props.modified.filename || "Untitled"}</span>
           </div>
         )}
       </div>
