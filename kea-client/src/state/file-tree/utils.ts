@@ -1,10 +1,16 @@
 import { DiffEntry } from "~/api/types";
 import { EntryNode, ParentEntryNode } from "./types";
 
+/**
+ * Converts a flat list of diff entries from the API into a tree structure.
+ * @param data The flat list of diff entries.
+ * @returns The tree structure.
+ */
 export const toTree = (data: DiffEntry[]): EntryNode[] => {
+  const sortedData = data.sort((a, b) => a.filename.localeCompare(b.filename));
   const roots: EntryNode[] = [];
 
-  for (const entry of data) {
+  for (const entry of sortedData) {
     let parents = roots;
     const path = entry.filename.split("/");
 
