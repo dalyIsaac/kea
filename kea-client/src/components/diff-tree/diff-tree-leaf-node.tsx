@@ -15,12 +15,12 @@ function getIconByStatus(status: string | undefined): React.ReactNode {
     case "Added":
       return <span className={cn(statusStyles, "text-green-500")}>A</span>;
     case "Removed":
-      return <span className={cn(statusStyles, "text-red-500")}>R</span>;
+      return <span className={cn(statusStyles, "text-red-500")}>D</span>;
     case "Modified":
     case "Changed":
       return <span className={cn(statusStyles, "text-blue-500")}>M</span>;
     case "Renamed":
-      return <span className={cn(statusStyles, "text-yellow-500")}>N</span>;
+      return <span className={cn(statusStyles, "text-yellow-500")}>R</span>;
     case "Copied":
       return <span className={cn(statusStyles, "text-purple-500")}>C</span>;
     case "Unchanged":
