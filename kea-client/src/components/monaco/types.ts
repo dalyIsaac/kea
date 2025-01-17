@@ -1,24 +1,19 @@
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 
-export interface SingleFileProps {
-  mode: "single";
+interface BaseFileProps {
   content: string;
   language: string;
   filename?: string;
 }
 
+export interface SingleFileProps extends BaseFileProps {
+  mode: "single";
+}
+
 export interface DiffFileProps {
   mode: "diff";
-  original: {
-    content: string;
-    language: string;
-    filename?: string;
-  };
-  modified: {
-    content: string;
-    language: string;
-    filename?: string;
-  };
+  original: BaseFileProps;
+  modified: BaseFileProps;
 }
 
 export type MonacoProps = SingleFileProps | DiffFileProps;

@@ -61,5 +61,20 @@ export const Monaco: React.FC<MonacoProps> = (props) => {
     };
   }, []);
 
-  return <div ref={monacoEl} className="h-full w-full" />;
+  return (
+    <div className="flex h-full w-full flex-col">
+      <div className="px-4 py-1 text-sm">
+        {props.mode === "single" ? (
+          props.filename || "Untitled"
+        ) : (
+          <div className="flex flex-col justify-between md:flex-row">
+            <span>Original: {props.original.filename || "Untitled"}</span>
+            <span>Modified: {props.modified.filename || "Untitled"}</span>
+          </div>
+        )}
+      </div>
+
+      <div ref={monacoEl} className="h-full w-full" />
+    </div>
+  );
 };

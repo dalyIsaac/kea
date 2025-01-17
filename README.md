@@ -12,10 +12,10 @@
 - [x] Display pull request description
 - [x] Display commits in a list
 - [x] Display files in a tree
-- [ ] Display moved files in the tree
+- [x] Display moved files in the tree
   - [x] Display file contents in Monaco
-  - [ ] Display file names in the tree
-  - [ ] Display file names in Monaco
+  - [x] Display file names in the tree
+  - [x] Display file names in Monaco
 - [ ] Loading state for the file contents
 - [ ] Select the first file in the tree by default
 - [ ] Route to file based on URL
