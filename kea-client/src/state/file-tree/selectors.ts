@@ -20,6 +20,12 @@ export const createSelectFileTreeNode = (path: string) =>
     },
   );
 
+export const createIsNodeSelected = (path: string) =>
+  createSelector(
+    (state: KeaRootState) => state.fileTree.selectedPath,
+    (selectedPath) => selectedPath === path,
+  );
+
 export const selectFileTreeLength = createSelector(
   (state: KeaRootState) => state.fileTree.tree,
   (tree) => tree.length,

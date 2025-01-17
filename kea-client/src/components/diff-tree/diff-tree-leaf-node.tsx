@@ -1,7 +1,10 @@
+import { useMemo } from "react";
 import { useDispatch } from "react-redux";
 import { cn } from "~/lib/utils";
+import { createIsNodeSelected } from "~/state/file-tree/selectors";
 import { fileTreeSlice } from "~/state/file-tree/slice";
 import { LeafEntryNode } from "~/state/file-tree/types";
+import { useKeaSelector } from "~/state/store";
 import { BaseProps, DiffTreeBaseNode } from "./diff-tree-base-node";
 
 interface DiffTreeLeafNodeProps extends BaseProps {
@@ -32,12 +35,27 @@ function getIconByStatus(status: string | undefined): React.ReactNode {
 }
 
 export const DiffTreeLeafNode: React.FC<DiffTreeLeafNodeProps> = ({ node, ...rest }) => {
-  const statusIcon = getIconByStatus(node.entry.status);
   const dispatch = useDispatch();
+
+  const selectIsNodeSelected = useMemo(
+    () => createIsNodeSelected(node.entry.filename),
+    [node.entry.filename],
+  );
+  const isSelected = useKeaSelector(selectIsNodeSelected);
+
+  const statusIcon = getIconByStatus(node.entry.status);
 
   const onSelectNode = () => {
     dispatch(fileTreeSlice.actions.setSelectedPath(node.entry.filename));
   };
 
-  return <DiffTreeBaseNode node={node} rightIcon={statusIcon} {...rest} onClick={onSelectNode} />;
+  return (
+    <DiffTreeBaseNode
+      node={node}
+      rightIcon={statusIcon}
+      {...rest}
+      onClick={onSelectNode}
+      isSelected={isSelected}
+    />
+  );
 };

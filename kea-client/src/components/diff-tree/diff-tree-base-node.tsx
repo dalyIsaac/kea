@@ -14,6 +14,7 @@ export interface DiffTreeBaseNodeProps<T extends ParentEntryNode | LeafEntryNode
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
   children?: React.ReactElement;
+  isSelected?: boolean;
 }
 
 export const DiffTreeBaseNode = <T extends ParentEntryNode | LeafEntryNode>({
@@ -25,6 +26,7 @@ export const DiffTreeBaseNode = <T extends ParentEntryNode | LeafEntryNode>({
   rightIcon,
   children,
   tabIndex = 0,
+  isSelected,
 }: DiffTreeBaseNodeProps<T>): React.ReactElement => (
   <div className="select-none text-center text-sm">
     <div
@@ -34,6 +36,7 @@ export const DiffTreeBaseNode = <T extends ParentEntryNode | LeafEntryNode>({
       className={cn(
         "my-0.5 ml-0.5 flex items-center gap-1 rounded px-1 py-0.5 hover:bg-gray-100",
         "cursor-pointer outline-none focus:bg-gray-100 focus:ring-1 focus:ring-gray-300",
+        isSelected && "bg-gray-200",
       )}
       onClick={onClick}
       onKeyDown={onKeyDown}

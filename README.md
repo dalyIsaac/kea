@@ -17,8 +17,8 @@
   - [x] Display file names in the tree
   - [x] Display file names in Monaco
 - [x] Loading state for the file contents
-- [ ] Select the first file in the tree by default
-- [ ] Route to file based on URL
+- [x] Select the first file in the tree by default
+- [x] Route to file based on URL
 - [ ] Route to file and line based on URL
 
 #### Review
