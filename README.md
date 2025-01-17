@@ -16,13 +16,14 @@
   - [x] Display file contents in Monaco
   - [x] Display file names in the tree
   - [x] Display file names in Monaco
-- [ ] Loading state for the file contents
+- [x] Loading state for the file contents
 - [ ] Select the first file in the tree by default
 - [ ] Route to file based on URL
 - [ ] Route to file and line based on URL
 
 #### Review
 
+- [ ] Added files should display in single file view
 - [ ] Determine language based on file extension
 - [ ] Comment on lines
 - [ ] Add suggestions on lines

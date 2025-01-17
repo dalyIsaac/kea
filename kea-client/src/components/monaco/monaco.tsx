@@ -1,6 +1,7 @@
+import { Loader2 } from "lucide-react";
 import * as monaco from "monaco-editor";
 import "monaco-editor/min/vs/editor/editor.main.css";
-import { useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import {
   cleanupEditor,
   createDiffEditor,
@@ -11,13 +12,24 @@ import {
 } from "./monaco-utils";
 import { Editor, MonacoProps } from "./types";
 
+const Loading: React.FC<{ filename: string | undefined; hasContentLoaded: boolean }> = ({
+  filename,
+  hasContentLoaded,
+}) => {
+  if (!filename || hasContentLoaded) {
+    return null;
+  }
+
+  return <Loader2 className="ml-2 inline-block h-4 w-4 animate-spin text-gray-500" />;
+};
+
 export const Monaco: React.FC<MonacoProps> = (props) => {
   const editor = useRef<Editor | null>(null);
   const onResize = useRef(() => editor.current?.layout());
   const monacoEl = useRef<HTMLDivElement | null>(null);
   const mounted = useRef(false);
 
-  // Main effect for editor initialization and updates
+  // Main effect for editor initialization and updates.
   useEffect(() => {
     if (monacoEl.current === null) {
       return;
@@ -38,7 +50,7 @@ export const Monaco: React.FC<MonacoProps> = (props) => {
       return;
     }
 
-    // Only cleanup the existing editor when switching modes
+    // Only cleanup the existing editor when switching modes.
     if (editor.current) {
       cleanupEditor(editor.current);
     }
@@ -50,7 +62,7 @@ export const Monaco: React.FC<MonacoProps> = (props) => {
     }
   }, [props]);
 
-  // Cleanup effect that only runs on unmount
+  // Cleanup effect that only runs on unmount.
   useEffect(() => {
     return () => {
       // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -61,18 +73,32 @@ export const Monaco: React.FC<MonacoProps> = (props) => {
     };
   }, []);
 
+  let filenameWrapper: React.ReactNode = null;
+  if (props.mode === "single") {
+    filenameWrapper = (
+      <div className="flex items-center">
+        {props.filename ?? "Untitled"}
+        <Loading filename={props.filename} hasContentLoaded={!!props.content} />
+      </div>
+    );
+  } else if (props.original.filename && props.modified.filename) {
+    filenameWrapper = (
+      <div className="flex flex-col justify-between md:flex-row">
+        <div className="flex items-center">
+          {props.original.filename}
+          <Loading filename={props.original.filename} hasContentLoaded={!!props.original.content} />
+        </div>
+        <div className="flex items-center">
+          {props.modified.filename}
+          <Loading filename={props.modified.filename} hasContentLoaded={!!props.modified.content} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-full w-full flex-col">
-      <div className="px-4 py-1 text-sm">
-        {props.mode === "single" ? (
-          props.filename || "Untitled"
-        ) : (
-          <div className="flex flex-col justify-between md:flex-row">
-            <span>{props.original.filename || "Untitled"}</span>
-            <span>{props.modified.filename || "Untitled"}</span>
-          </div>
-        )}
-      </div>
+      <div className="px-4 py-1 text-sm">{filenameWrapper}</div>
 
       <div ref={monacoEl} className="h-full w-full" />
     </div>
