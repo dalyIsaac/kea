@@ -13,7 +13,6 @@ export const fileTreeSlice = createSlice({
   reducers: {
     setTree: (state, action: PayloadAction<EntryNode[]>) => {
       state.tree = action.payload;
-      state.selectedPath = null;
     },
 
     setIsExpanded: (state, action: PayloadAction<{ path: string; isExpanded: boolean }>) => {
