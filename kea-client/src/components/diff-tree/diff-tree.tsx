@@ -28,13 +28,15 @@ export const DiffTree: React.FC<{ data: DiffEntry[] | undefined }> = ({ data }) 
   const canRenderNodes = storeTreeLength > 0 && tree !== null;
 
   return (
-    <Sidebar>
-      <SidebarHeader>
-        <SidebarTitle>Changes</SidebarTitle>
-      </SidebarHeader>
+    <Sidebar className="flex h-full flex-col">
+      <div className="sticky top-0 z-10 bg-white">
+        <SidebarHeader>
+          <SidebarTitle>Changes</SidebarTitle>
+        </SidebarHeader>
+      </div>
 
       {canRenderNodes ? (
-        <div role="tree" className="px-1 py-0.5">
+        <div role="tree" className="h-0 flex-1 overflow-y-auto px-1 py-0.5">
           {tree.map((node) =>
             isParentNode(node) ? (
               <DiffTreeParentNode key={node.entry.filename} node={node} tabIndex={0} />

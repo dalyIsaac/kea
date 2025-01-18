@@ -41,11 +41,13 @@ export const DiffTreeBaseNode = <T extends ParentEntryNode | LeafEntryNode>({
       onClick={onClick}
       onKeyDown={onKeyDown}
     >
-      <span className="flex w-4 items-center justify-center">{leftIcon}</span>
-      <span className="flex-grow text-left text-gray-700">
+      <span className="flex w-4 flex-shrink-0 items-center justify-center">{leftIcon}</span>
+      <span className="flex-1 truncate text-left text-gray-700">
         {node.entry.filename.split("/").pop()}
       </span>
-      <span className="flex w-4 items-center justify-center">{rightIcon}</span>
+      <span className="ml-auto flex w-4 flex-shrink-0 items-center justify-center">
+        {rightIcon}
+      </span>
     </div>
     {children}
   </div>
