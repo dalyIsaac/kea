@@ -4,7 +4,9 @@ import { getNode, isParentNode } from "./utils";
 
 export const initialFileTreeState: FileTreeState = {
   tree: [],
-  selectedPath: null,
+  selectedFileSha: null,
+  selectedLeftLine: null,
+  selectedRightLine: null,
 };
 
 export const fileTreeSlice = createSlice({
@@ -31,8 +33,13 @@ export const fileTreeSlice = createSlice({
       }
     },
 
-    setSelectedPath: (state, action: PayloadAction<string>) => {
-      state.selectedPath = action.payload;
+    setSelectedPath: (
+      state,
+      action: PayloadAction<{ sha: string; leftLine?: number; rightLine?: number }>,
+    ) => {
+      state.selectedFileSha = action.payload.sha;
+      state.selectedLeftLine = action.payload.leftLine ?? null;
+      state.selectedRightLine = action.payload.rightLine ?? null;
     },
   },
 });

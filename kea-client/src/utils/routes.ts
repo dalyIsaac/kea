@@ -63,4 +63,42 @@ export const parseCompare = (
   };
 };
 
+export interface FileParams {
+  sha: string;
+  leftLine?: number;
+  rightLine?: number;
+}
+
+const parseFileLine = (line: string | undefined): number | undefined => {
+  const l = line ? parseInt(line, 10) : undefined;
+  if (l !== undefined && isNaN(l)) {
+    throw new Error("Invalid line number");
+  }
+  return l;
+};
+
+/**
+ * Parse a string into a file sha and line number.
+ * @param file The string to parse.
+ * @returns An object with the sha and line number.
+ */
+export const parseFile = (file: string | undefined): FileParams | undefined => {
+  if (!file) {
+    return undefined;
+  }
+
+  const [sha, leftLine] = file.split("L");
+  const [, rightLine] = file.split("R");
+
+  if (!sha) {
+    throw new Error("Invalid file format");
+  }
+
+  return {
+    sha,
+    leftLine: parseFileLine(leftLine),
+    rightLine: parseFileLine(rightLine),
+  };
+};
+
 export const createCompare = (base: string, head: string): string => `${base}...${head}`;

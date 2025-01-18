@@ -1,3 +1,4 @@
+import { Link, LinkProps } from "@tanstack/react-router";
 import { cn } from "~/lib/utils";
 import { LeafEntryNode, ParentEntryNode } from "~/state/file-tree/types";
 
@@ -15,6 +16,8 @@ export interface DiffTreeBaseNodeProps<T extends ParentEntryNode | LeafEntryNode
   rightIcon?: React.ReactNode;
   children?: React.ReactElement;
   isSelected?: boolean;
+  to?: LinkProps["to"];
+  search?: LinkProps["search"];
 }
 
 export const DiffTreeBaseNode = <T extends ParentEntryNode | LeafEntryNode>({
@@ -27,20 +30,11 @@ export const DiffTreeBaseNode = <T extends ParentEntryNode | LeafEntryNode>({
   children,
   tabIndex = 0,
   isSelected,
-}: DiffTreeBaseNodeProps<T>): React.ReactElement => (
-  <div className="select-none text-center text-sm">
-    <div
-      role="treeitem"
-      aria-expanded={ariaExpanded}
-      tabIndex={tabIndex}
-      className={cn(
-        "my-0.5 ml-0.5 flex items-center gap-1 rounded px-1 py-0.5 hover:bg-gray-100",
-        "cursor-pointer outline-none focus:bg-gray-100 focus:ring-1 focus:ring-gray-300",
-        isSelected && "bg-gray-200",
-      )}
-      onClick={onClick}
-      onKeyDown={onKeyDown}
-    >
+  to,
+  search,
+}: DiffTreeBaseNodeProps<T>): React.ReactElement => {
+  const contentElement = (
+    <>
       <span className="flex w-4 flex-shrink-0 items-center justify-center">{leftIcon}</span>
       <span className="flex-1 truncate text-left text-gray-700">
         {node.entry.filename.split("/").pop()}
@@ -48,7 +42,34 @@ export const DiffTreeBaseNode = <T extends ParentEntryNode | LeafEntryNode>({
       <span className="ml-auto flex w-4 flex-shrink-0 items-center justify-center">
         {rightIcon}
       </span>
+    </>
+  );
+
+  const className = cn(
+    "my-0.5 ml-0.5 flex items-center gap-1 rounded px-1 py-0.5 hover:bg-gray-100",
+    "cursor-pointer outline-none focus:bg-gray-100 focus:ring-1 focus:ring-gray-300",
+    isSelected && "bg-gray-200",
+  );
+
+  const treeItemProps = {
+    role: "treeitem",
+    "aria-expanded": ariaExpanded,
+    tabIndex,
+    className,
+    onClick,
+    onKeyDown,
+  };
+
+  return (
+    <div className="select-none text-center text-sm">
+      {to ? (
+        <Link to={to} search={search} {...treeItemProps}>
+          {contentElement}
+        </Link>
+      ) : (
+        <div {...treeItemProps}>{contentElement}</div>
+      )}
+      {children}
     </div>
-    {children}
-  </div>
-);
+  );
+};

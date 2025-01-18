@@ -1,4 +1,4 @@
-import { createFileRoute, SearchSchemaInput } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { $api } from "~/api/api";
@@ -6,23 +6,24 @@ import { DiffTree } from "~/components/diff-tree/diff-tree";
 import { PullRequestDiffViewer } from "~/components/pull-request/pull-request-diff-viewer";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "~/shadcn/ui/resizable";
 import { fileTreeSlice } from "~/state/file-tree/slice";
-import { parseCompare } from "~/utils/routes";
+import { parseCompare, parseFile } from "~/utils/routes";
 
 export const Route = createFileRoute("/$provider/$owner/$repo/pull/$prId/_pull/review")({
   component: RouteComponent,
-  validateSearch: (search: { compare?: string; path?: string } & SearchSchemaInput) => {
+  validateSearch: (search: { compare?: string; file?: string }) => {
     parseCompare(search.compare);
+    parseFile(search.file);
     return search;
   },
 });
 
 function RouteComponent() {
   const dispatch = useDispatch();
+  const navigate = Route.useNavigate();
 
-  const { path } = Route.useSearch();
+  const { file } = Route.useSearch();
   const params = Route.useParams();
   const { owner, repo, prId } = params;
-  const navigate = Route.useNavigate();
 
   const queryParams = {
     owner,
@@ -36,7 +37,6 @@ function RouteComponent() {
     },
   });
 
-  // Redirect to the first file in the list.
   useEffect(() => {
     if (!filesQuery.data) {
       return;
@@ -48,20 +48,22 @@ function RouteComponent() {
     }
 
     navigate({
-      search: {
-        path: firstFile.filename,
-      },
+      search: { file: firstFile.sha },
     });
   }, [filesQuery.data, navigate]);
 
-  // Update the selected file when the path changes.
   useEffect(() => {
-    if (!path) {
+    if (!file) {
       return;
     }
 
-    dispatch(fileTreeSlice.actions.setSelectedPath(path));
-  }, [dispatch, path]);
+    const selectedFile = parseFile(file);
+    if (!selectedFile) {
+      return;
+    }
+
+    dispatch(fileTreeSlice.actions.setSelectedPath(selectedFile));
+  }, [dispatch, file]);
 
   return (
     <ResizablePanelGroup direction="horizontal">

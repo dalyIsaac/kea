@@ -1,6 +1,6 @@
 import { createSelector } from "@reduxjs/toolkit";
 import { KeaRootState } from "~/state/store";
-import { getNode, isParentNode } from "./utils";
+import { findNode, getNode, isParentNode } from "./utils";
 
 export const createSelectFileTreeNode = (path: string) =>
   createSelector(
@@ -20,15 +20,15 @@ export const createSelectFileTreeNode = (path: string) =>
     },
   );
 
-export const createIsNodeSelected = (path: string) =>
+export const createIsNodeSelected = (sha: string) =>
   createSelector(
-    (state: KeaRootState) => state.fileTree.selectedPath,
-    (selectedPath) => selectedPath === path,
+    (state: KeaRootState) => state.fileTree.selectedFileSha,
+    (selectedPath) => selectedPath === sha,
   );
 
 export const createSelectIsChildSelected = (path: string) =>
   createSelector(
-    (state: KeaRootState) => state.fileTree.selectedPath,
+    (state: KeaRootState) => state.fileTree.selectedFileSha,
     (selectedPath) => selectedPath?.startsWith(path) ?? false,
   );
 
@@ -45,13 +45,13 @@ export const selectFileTreeLength = createSelector(
 
 export const selectSelectedNode = createSelector(
   (state: KeaRootState) => state.fileTree.tree,
-  (state: KeaRootState) => state.fileTree.selectedPath,
-  (tree, selectedPath) => {
-    if (selectedPath === null) {
+  (state: KeaRootState) => state.fileTree.selectedFileSha,
+  (tree, selectedSha) => {
+    if (selectedSha === null) {
       return null;
     }
 
-    const node = getNode(selectedPath, tree);
+    const node = findNode((n) => !isParentNode(n) && n.entry.sha === selectedSha, tree);
     if (node !== null && !isParentNode(node)) {
       return node;
     }

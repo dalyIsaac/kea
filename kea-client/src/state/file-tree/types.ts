@@ -14,5 +14,7 @@ export type EntryNode = ParentEntryNode | LeafEntryNode;
 
 export interface FileTreeState {
   tree: EntryNode[];
-  selectedPath: string | null;
+  selectedFileSha: string | null;
+  selectedLeftLine: number | null;
+  selectedRightLine: number | null;
 }

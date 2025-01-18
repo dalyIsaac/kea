@@ -75,6 +75,31 @@ export const getNode = (path: string, tree: EntryNode[]): EntryNode | null => {
   return parentNode;
 };
 
+export type Predicate<T> = (node: T) => boolean;
+
+/**
+ * Finds a node in the tree that satisfies the given predicate.
+ * @param predicate The predicate to satisfy.
+ * @param tree The tree to search in.
+ * @returns The node that satisfies the predicate, or null if no such node exists.
+ */
+export const findNode = (predicate: Predicate<EntryNode>, tree: EntryNode[]): EntryNode | null => {
+  for (const node of tree) {
+    if (predicate(node)) {
+      return node;
+    }
+
+    if (isParentNode(node)) {
+      const child = findNode(predicate, node.children);
+      if (child) {
+        return child;
+      }
+    }
+  }
+
+  return null;
+};
+
 export const isParentNode = (node: EntryNode): node is ParentEntryNode => {
   return "children" in node;
 };

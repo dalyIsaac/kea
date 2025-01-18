@@ -20,6 +20,9 @@
 - [x] Select the first file in the tree by default
 - [x] Route to file based on URL
 - [ ] Route to file and line based on URL
+- [ ] Don't display loading icon for files which don't exist (e.g., added/removed files)
+- [ ] Display loading icon for diff tree
+- [ ] Display loading icon for commits list
 
 #### Review
 
