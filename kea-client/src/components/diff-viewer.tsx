@@ -17,11 +17,8 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
   originalRef,
 }) => {
   const selectedNode = useKeaSelector(selectSelectedNode);
-
-  const { originalLine, modifiedLine } = useKeaSelector((state) => ({
-    originalLine: state.fileTree.selectedLeftLine,
-    modifiedLine: state.fileTree.selectedRightLine,
-  }));
+  const originalLine = useKeaSelector((state) => state.fileTree.selectedLeftLine);
+  const modifiedLine = useKeaSelector((state) => state.fileTree.selectedRightLine);
 
   const originalFileName = selectedNode?.entry.previous_filename ?? selectedNode?.entry.filename;
   const originalFileQuery = $api.useQuery(
