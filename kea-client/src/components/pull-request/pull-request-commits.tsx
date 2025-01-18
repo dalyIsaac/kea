@@ -108,7 +108,7 @@ export const PullRequestCommits: React.FC<{
   }
 
   return (
-    <Sidebar className="w-64">
+    <Sidebar>
       <SidebarHeader>
         <SidebarTitle>Commits</SidebarTitle>
         {commits && commits.length > 1 && <div className="-mr-1 flex items-center">{buttons}</div>}
