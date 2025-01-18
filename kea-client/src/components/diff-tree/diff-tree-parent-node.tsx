@@ -2,7 +2,10 @@ import { ChevronDown, ChevronRight } from "lucide-react";
 import { useMemo } from "react";
 import { useDispatch } from "react-redux";
 import { cn } from "~/lib/utils";
-import { createSelectFileTreeNode } from "~/state/file-tree/selectors";
+import {
+  createSelectFileTreeNode,
+  createSelectIsNodeCollapsedAndChildSelected,
+} from "~/state/file-tree/selectors";
 import { fileTreeSlice } from "~/state/file-tree/slice";
 import { ParentEntryNode } from "~/state/file-tree/types";
 import { isParentNode } from "~/state/file-tree/utils";
@@ -15,12 +18,19 @@ interface DiffTreeParentNodeProps extends BaseProps {
 }
 
 export const DiffTreeParentNode: React.FC<DiffTreeParentNodeProps> = ({ node, tabIndex }) => {
+  const dispatch = useDispatch();
+
   const selectFileTreeNode = useMemo(
     () => createSelectFileTreeNode(node.entry.filename),
     [node.entry.filename],
   );
   const entryNode = useKeaSelector(selectFileTreeNode) as ParentEntryNode;
-  const dispatch = useDispatch();
+
+  const selectIsNodeCollapsedAndChildSelected = useMemo(
+    () => createSelectIsNodeCollapsedAndChildSelected(node.entry.filename),
+    [node.entry.filename],
+  );
+  const isCollapsedAndChildSelected = useKeaSelector(selectIsNodeCollapsedAndChildSelected);
 
   const isExpanded = entryNode.isExpanded;
   const icon = isExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />;
@@ -65,6 +75,7 @@ export const DiffTreeParentNode: React.FC<DiffTreeParentNodeProps> = ({ node, ta
       onClick={toggleExpand}
       onKeyDown={handleKeyDown}
       tabIndex={tabIndex}
+      isSelected={isCollapsedAndChildSelected}
     >
       <div
         role="group"

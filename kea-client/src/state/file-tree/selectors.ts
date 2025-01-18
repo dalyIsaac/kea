@@ -26,6 +26,18 @@ export const createIsNodeSelected = (path: string) =>
     (selectedPath) => selectedPath === path,
   );
 
+export const createSelectIsChildSelected = (path: string) =>
+  createSelector(
+    (state: KeaRootState) => state.fileTree.selectedPath,
+    (selectedPath) => selectedPath?.startsWith(path) ?? false,
+  );
+
+export const createSelectIsNodeCollapsedAndChildSelected = (path: string) =>
+  createSelector(
+    createSelectIsChildSelected(path),
+    createSelectFileTreeNode(path),
+    (isChildSelected, node) => !!node && isParentNode(node) && !node.isExpanded && isChildSelected,
+  );
 export const selectFileTreeLength = createSelector(
   (state: KeaRootState) => state.fileTree.tree,
   (tree) => tree.length,
