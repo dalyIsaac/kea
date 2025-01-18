@@ -4,6 +4,7 @@ interface BaseFileProps {
   content: string;
   language: string;
   filename?: string;
+  line?: number;
 }
 
 export interface SingleFileProps extends BaseFileProps {

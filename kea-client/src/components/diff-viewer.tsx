@@ -1,12 +1,13 @@
-import { useSelector } from "react-redux";
 import { $api } from "~/api/api";
 import { selectSelectedNode } from "~/state/file-tree/selectors";
+import { useKeaSelector } from "~/state/store";
 import { RepoParams } from "~/utils/routes";
 import { Monaco } from "./monaco/monaco";
 
 export interface DiffViewerProps extends RepoParams {
   originalRef: string | undefined;
   modifiedRef: string | undefined;
+  line?: number;
 }
 
 export const DiffViewer: React.FC<DiffViewerProps> = ({
@@ -15,9 +16,14 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
   modifiedRef,
   originalRef,
 }) => {
-  const selectedFile = useSelector(selectSelectedNode);
+  const selectedNode = useKeaSelector(selectSelectedNode);
 
-  const originalFileName = selectedFile?.entry.previous_filename ?? selectedFile?.entry.filename;
+  const { originalLine, modifiedLine } = useKeaSelector((state) => ({
+    originalLine: state.fileTree.selectedLeftLine,
+    modifiedLine: state.fileTree.selectedRightLine,
+  }));
+
+  const originalFileName = selectedNode?.entry.previous_filename ?? selectedNode?.entry.filename;
   const originalFileQuery = $api.useQuery(
     "get",
     "/github/{owner}/{repo}/file/{git_ref}/{path}",
@@ -33,7 +39,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
       parseAs: "text",
     },
     {
-      enabled: !!selectedFile && !!originalRef,
+      enabled: !!selectedNode && !!originalRef,
     },
   );
 
@@ -46,13 +52,13 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
           owner,
           repo,
           git_ref: modifiedRef ?? "",
-          path: selectedFile?.entry.filename ?? "",
+          path: selectedNode?.entry.filename ?? "",
         },
       },
       parseAs: "text",
     },
     {
-      enabled: !!selectedFile && !!modifiedRef,
+      enabled: !!selectedNode && !!modifiedRef,
     },
   );
 
@@ -63,11 +69,13 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
         content: originalFileQuery.data ?? "",
         language: "plaintext",
         filename: originalFileName,
+        line: originalLine ?? undefined,
       }}
       modified={{
         content: modifiedFileQuery.data ?? "",
         language: "plaintext",
-        filename: selectedFile?.entry.filename,
+        filename: selectedNode?.entry.filename,
+        line: modifiedLine ?? undefined,
       }}
     />
   );

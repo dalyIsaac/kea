@@ -116,3 +116,10 @@ export const cleanupEditor = (
     diffEditor.getModifiedEditor().getModel()?.dispose();
   }
 };
+
+export const scrollToLine = (editor: monaco.editor.IEditor, line?: number): void => {
+  if (line !== undefined) {
+    editor.revealLineInCenter(line);
+    editor.setPosition({ lineNumber: line, column: 1 });
+  }
+};

@@ -74,6 +74,7 @@ const parseFileLine = (line: string | undefined): number | undefined => {
   if (l !== undefined && isNaN(l)) {
     throw new Error("Invalid line number");
   }
+
   return l;
 };
 
@@ -87,16 +88,22 @@ export const parseFile = (file: string | undefined): FileParams | undefined => {
     return undefined;
   }
 
-  const [sha, leftLine] = file.split("L");
-  const [, rightLine] = file.split("R");
+  const [sha1, leftLine] = file.split("L");
+  const [sha2, rightLine] = file.split("R");
 
-  if (!sha) {
+  if (!sha1 || !sha2) {
     throw new Error("Invalid file format");
   }
 
+  if (leftLine) {
+    return {
+      sha: sha1,
+      leftLine: parseFileLine(leftLine),
+    };
+  }
+
   return {
-    sha,
-    leftLine: parseFileLine(leftLine),
+    sha: sha2,
     rightLine: parseFileLine(rightLine),
   };
 };

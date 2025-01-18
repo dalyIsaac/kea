@@ -38,7 +38,7 @@ function RouteComponent() {
   });
 
   useEffect(() => {
-    if (!filesQuery.data) {
+    if (!filesQuery.data || file) {
       return;
     }
 
@@ -50,7 +50,7 @@ function RouteComponent() {
     navigate({
       search: { file: firstFile.sha },
     });
-  }, [filesQuery.data, navigate]);
+  }, [file, filesQuery.data, navigate]);
 
   useEffect(() => {
     if (!file) {

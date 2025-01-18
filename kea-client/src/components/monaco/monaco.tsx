@@ -7,6 +7,7 @@ import {
   createDiffEditor,
   createSingleEditor,
   doesModeEqualEditor,
+  scrollToLine,
   updateDiffEditor,
   updateSingleEditor,
 } from "./monaco-utils";
@@ -43,10 +44,18 @@ export const Monaco: React.FC<MonacoProps> = (props) => {
     if (editor.current && doesModeEqualEditor(editor.current, props.mode)) {
       if (props.mode === "single") {
         updateSingleEditor(editor.current as monaco.editor.IStandaloneCodeEditor, props);
-      } else {
-        updateDiffEditor(editor.current as monaco.editor.IStandaloneDiffEditor, props);
+        scrollToLine(editor.current, props.line);
+        return;
       }
 
+      updateDiffEditor(editor.current as monaco.editor.IStandaloneDiffEditor, props);
+      const diffEditor = editor.current as monaco.editor.IStandaloneDiffEditor;
+      if (props.original.line !== undefined) {
+        scrollToLine(diffEditor.getOriginalEditor(), props.original.line);
+      }
+      if (props.modified.line !== undefined) {
+        scrollToLine(diffEditor.getModifiedEditor(), props.modified.line);
+      }
       return;
     }
 
