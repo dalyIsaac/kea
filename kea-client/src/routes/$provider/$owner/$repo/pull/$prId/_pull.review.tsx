@@ -4,6 +4,7 @@ import { useDispatch } from "react-redux";
 import { $api } from "~/api/api";
 import { DiffTree } from "~/components/diff-tree/diff-tree";
 import { PullRequestDiffViewer } from "~/components/pull-request/pull-request-diff-viewer";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "~/shadcn/ui/resizable";
 import { fileTreeSlice } from "~/state/file-tree/slice";
 import { parseCompare } from "~/utils/routes";
 
@@ -63,9 +64,16 @@ function RouteComponent() {
   }, [dispatch, path]);
 
   return (
-    <div className="flex h-full">
-      <DiffTree data={filesQuery.data} />
-      <PullRequestDiffViewer params={queryParams} />
-    </div>
+    <ResizablePanelGroup direction="horizontal">
+      <ResizablePanel defaultSize={20}>
+        <DiffTree data={filesQuery.data} />
+      </ResizablePanel>
+
+      <ResizableHandle />
+
+      <ResizablePanel>
+        <PullRequestDiffViewer params={queryParams} />
+      </ResizablePanel>
+    </ResizablePanelGroup>
   );
 }
