@@ -28,13 +28,12 @@
 
 #### Review
 
-- [ ] Added files should display in single file view
-- [ ] Copy link to line
-- [ ] Determine language based on file extension
 - [ ] Comment on lines
 - [ ] Add suggestions on lines
 - [ ] Show comments on a PR
 - [ ] Show comments on a commit in a PR
+- [ ] Determine language based on file extension
+- [ ] Copy link to line
 
 #### Backend
 
