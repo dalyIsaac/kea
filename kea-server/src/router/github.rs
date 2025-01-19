@@ -1,5 +1,7 @@
 use crate::scm::github::error::KeaGitHubError;
-use crate::scm::payloads::{KeaCommit, KeaDiffEntry, KeaPullRequestDetails};
+use crate::scm::payloads::{
+    KeaCommit, KeaDiffEntry, KeaPullRequestDetails, KeaPullRequestReviewComment,
+};
 use crate::scm::scm_client::{AuthResponse, ScmApiClient, ScmAuthClient};
 use crate::state::AppState;
 use axum::extract::Path;
@@ -139,6 +141,34 @@ pub async fn get_pull_request_files(
         .await
     {
         Ok((new_jar, files)) => Ok((new_jar, Json(files))),
+        Err(e) => Err(e),
+    }
+}
+
+#[axum::debug_handler]
+#[utoipa::path(
+    get,
+    path = "/github/{owner}/{repo}/pull/{pr_number}/comments",
+    params(
+        ("owner" = String, Path, description = "Owner of the repository"),
+        ("repo" = String, Path, description = "Repository name"),
+        ("pr_number" = u64, Path, description = "Pull request number")
+    ),
+    responses((status = OK, body = Vec<KeaPullRequestReviewComment>))
+)]
+pub async fn get_pull_request_comments(
+    State(state): State<AppState>,
+    jar: PrivateCookieJar,
+    Path((owner, repo, pr_number)): Path<(String, String, u64)>,
+) -> Result<impl IntoResponse, Box<KeaGitHubError>> {
+    let AppState { clients, ctx } = state;
+
+    match clients
+        .github
+        .get_pull_request_comments(jar, &ctx, &owner, &repo, pr_number)
+        .await
+    {
+        Ok((new_jar, comments)) => Ok((new_jar, Json(comments))),
         Err(e) => Err(e),
     }
 }

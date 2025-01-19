@@ -1,7 +1,14 @@
-use octocrab::models::{repos::RepoCommit, Author};
+use octocrab::models::{
+    pulls,
+    repos::{DiffEntry, RepoCommit},
+    Author,
+};
 
 use crate::scm::{
-    payloads::{KeaCommit, KeaParentCommit},
+    payloads::{
+        KeaCommit, KeaDiffEntry, KeaParentCommit, KeaPullRequestReviewComment,
+        KeaPullRequestReviewCommentPosition,
+    },
     scm_client::ScmUser,
 };
 
@@ -28,6 +35,49 @@ impl From<Author> for ScmUser {
             author.id.to_string(),
             author.login,
             author.avatar_url.to_string(),
+        )
+    }
+}
+
+impl From<DiffEntry> for KeaDiffEntry {
+    fn from(entry: DiffEntry) -> Self {
+        KeaDiffEntry::new(
+            entry.sha,
+            entry.filename,
+            entry.status.into(),
+            entry.additions,
+            entry.deletions,
+            entry.changes,
+            entry.previous_filename,
+        )
+    }
+}
+
+impl From<pulls::Comment> for KeaPullRequestReviewComment {
+    fn from(comment: pulls::Comment) -> Self {
+        KeaPullRequestReviewComment::new(
+            comment.id.0,
+            comment.user.map(|user| user.into()),
+            comment.body,
+            comment.commit_id,
+            comment.path,
+            comment.created_at,
+            comment.updated_at,
+            match (comment.start_line, comment.line) {
+                (Some(start_line), Some(end_line)) => Some(
+                    KeaPullRequestReviewCommentPosition::new(start_line, end_line),
+                ),
+                _ => None,
+            },
+            match (comment.original_start_line, comment.original_line) {
+                (Some(original_start_line), Some(original_end_line)) => {
+                    Some(KeaPullRequestReviewCommentPosition::new(
+                        original_start_line,
+                        original_end_line,
+                    ))
+                }
+                _ => None,
+            },
         )
     }
 }

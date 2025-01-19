@@ -34,6 +34,7 @@ time = "0.3.37"
 reqwest = "0.12.12"
 utoipa-axum = "0.1.4"
 utoipa-swagger-ui = { version = "8.1.1", features = ["axum", "vendored"] }
-utoipa = "5.3.1"
+utoipa = { version = "5.3.1", features = ["chrono"] }
 derive-new = "0.7.0"
 futures-util = "0.3.31"
+chrono = "0.4.39"

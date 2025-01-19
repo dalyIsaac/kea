@@ -4,7 +4,10 @@ use kea_server::try_chain;
 
 use crate::{
     scm::{
-        payloads::{KeaCommit, KeaDiffEntry, KeaPullRequestCommit, KeaPullRequestDetails},
+        payloads::{
+            KeaCommit, KeaDiffEntry, KeaPullRequestCommit, KeaPullRequestDetails,
+            KeaPullRequestReviewComment,
+        },
         scm_client::ScmApiClient,
     },
     state::AppContext,
@@ -127,19 +130,30 @@ impl ScmApiClient<Box<KeaGitHubError>> for GitHubClient {
             .try_collect::<Vec<_>>()
             .await?
             .into_iter()
-            .map(|file| {
-                KeaDiffEntry::new(
-                    file.sha,
-                    file.filename,
-                    file.status.into(),
-                    file.additions,
-                    file.deletions,
-                    file.changes,
-                    file.previous_filename,
-                )
-            })
+            .map(Into::into)
             .collect();
 
         Ok((jar, files))
+    }
+
+    async fn get_pull_request_comments(
+        &self,
+        jar: PrivateCookieJar,
+        ctx: &AppContext,
+        owner: &str,
+        repo: &str,
+        pr_number: u64,
+    ) -> Result<(PrivateCookieJar, Vec<KeaPullRequestReviewComment>), Box<KeaGitHubError>> {
+        let (jar, client) = self.get_client_with_token(jar, ctx).await?;
+        let comments = client
+            .pulls(owner, repo)
+            .list_comments(Some(pr_number))
+            .send()
+            .await?
+            .into_iter()
+            .map(Into::into)
+            .collect();
+
+        Ok((jar, comments))
     }
 }
