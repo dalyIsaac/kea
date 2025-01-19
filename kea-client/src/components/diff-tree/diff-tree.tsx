@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from "react";
 import { useDispatch } from "react-redux";
 import { DiffEntry } from "~/api/types";
+import { InlineLoaderIcon } from "~/components/icons/inline-loader-icon";
 import { Sidebar, SidebarHeader, SidebarTitle } from "~/components/sidebar";
 import { selectFileTreeLength } from "~/state/file-tree/selectors";
 import { fileTreeSlice } from "~/state/file-tree/slice";
@@ -31,7 +32,12 @@ export const DiffTree: React.FC<{ data: DiffEntry[] | undefined }> = ({ data }) 
     <Sidebar className="flex h-full flex-col">
       <div className="sticky top-0 z-10 bg-white">
         <SidebarHeader>
-          <SidebarTitle>Changes</SidebarTitle>
+          <div className="flex items-center gap-2">
+            <SidebarTitle>
+              Changes
+              {data === undefined && <InlineLoaderIcon className="ml-2" />}
+            </SidebarTitle>
+          </div>
         </SidebarHeader>
       </div>
 

@@ -1,7 +1,7 @@
-import { Loader2 } from "lucide-react";
 import * as monaco from "monaco-editor";
 import "monaco-editor/min/vs/editor/editor.main.css";
 import React, { useEffect, useRef } from "react";
+import { InlineLoaderIcon } from "~/components/icons/inline-loader-icon";
 import {
   cleanupEditor,
   createDiffEditor,
@@ -21,7 +21,7 @@ const Loading: React.FC<{ filename: string | undefined; hasContentLoaded: boolea
     return null;
   }
 
-  return <Loader2 className="ml-2 inline-block h-4 w-4 animate-spin text-gray-500" />;
+  return <InlineLoaderIcon className="ml-2" />;
 };
 
 export const Monaco: React.FC<MonacoProps> = (props) => {
