@@ -22,8 +22,9 @@
 - [x] Route to file and line based on URL
 - [x] Don't display loading icon for files which don't exist (e.g., added/removed files)
 - [x] Display loading icon for diff tree
-- [ ] Display loading icon for commits list
-- [ ] Console warnings
+- [x] Display loading icon for commits list
+- [x] Console warnings
+- [ ] Address Edge accessibility warnings
 
 #### Review
 

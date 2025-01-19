@@ -2,6 +2,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { Check, GitCompare, X } from "lucide-react";
 import { ReactElement, useState } from "react";
 import * as apiTypes from "~/api/types";
+import { InlineLoaderIcon } from "~/components/icons/inline-loader-icon";
 import { Sidebar, SidebarHeader, SidebarTitle } from "~/components/sidebar";
 import { Button } from "~/shadcn/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "~/shadcn/ui/tooltip";
@@ -110,7 +111,10 @@ export const PullRequestCommits: React.FC<{
   return (
     <Sidebar>
       <SidebarHeader>
-        <SidebarTitle>Commits</SidebarTitle>
+        <SidebarTitle>
+          Commits
+          {commits === undefined && <InlineLoaderIcon className="ml-2" />}
+        </SidebarTitle>
         {commits && commits.length > 1 && <div className="-mr-1 flex items-center">{buttons}</div>}
       </SidebarHeader>
 
