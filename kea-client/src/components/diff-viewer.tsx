@@ -20,6 +20,9 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
   const originalLine = useKeaSelector((state) => state.fileTree.selectedLeftLine);
   const modifiedLine = useKeaSelector((state) => state.fileTree.selectedRightLine);
 
+  const isAdded = selectedNode?.entry.status === "Added";
+  const isDeleted = selectedNode?.entry.status === "Removed";
+
   const originalFileName = selectedNode?.entry.previous_filename ?? selectedNode?.entry.filename;
   const originalFileQuery = $api.useQuery(
     "get",
@@ -36,7 +39,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
       parseAs: "text",
     },
     {
-      enabled: !!selectedNode && !!originalRef,
+      enabled: !!selectedNode && !!originalRef && !isAdded,
     },
   );
 
@@ -55,7 +58,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
       parseAs: "text",
     },
     {
-      enabled: !!selectedNode && !!modifiedRef,
+      enabled: !!selectedNode && !!modifiedRef && !isDeleted,
     },
   );
 
@@ -63,15 +66,15 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
     <Monaco
       mode="diff"
       original={{
-        content: originalFileQuery.data ?? "",
+        content: isAdded ? "" : (originalFileQuery.data ?? ""),
         language: "plaintext",
-        filename: originalFileName,
+        filename: isAdded ? undefined : originalFileName,
         line: originalLine ?? undefined,
       }}
       modified={{
-        content: modifiedFileQuery.data ?? "",
+        content: isDeleted ? "" : (modifiedFileQuery.data ?? ""),
         language: "plaintext",
-        filename: selectedNode?.entry.filename,
+        filename: isDeleted ? undefined : selectedNode?.entry.filename,
         line: modifiedLine ?? undefined,
       }}
     />
