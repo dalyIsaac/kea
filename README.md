@@ -35,6 +35,7 @@
 - [ ] Determine language based on file extension
 - [ ] Copy link to line
 - [ ] Selecting a leaf node should navigate to the first diff in the file
+- [ ] Worker thread
 
 #### Backend
 
