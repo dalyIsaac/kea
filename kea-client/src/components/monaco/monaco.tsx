@@ -1,17 +1,11 @@
-import * as monaco from "monaco-editor";
 import "monaco-editor/min/vs/editor/editor.main.css";
 import React, { useEffect, useRef } from "react";
 import { InlineLoaderIcon } from "~/components/icons/inline-loader-icon";
-import {
-  cleanupEditor,
-  createDiffEditor,
-  createSingleEditor,
-  doesModeEqualEditor,
-  scrollToLine,
-  updateDiffEditor,
-  updateSingleEditor,
-} from "./monaco-utils";
+import { cleanupEditor } from "./cleaup-editor";
+import { createEditor } from "./create-editor";
+import { doesModeEqualEditor } from "./monaco-utils";
 import { Editor, MonacoProps } from "./types";
+import { updateEditor } from "./update-editor";
 
 const Loading: React.FC<{ filename: string | undefined; hasContentLoaded: boolean }> = ({
   filename,
@@ -42,20 +36,7 @@ export const Monaco: React.FC<MonacoProps> = (props) => {
     }
 
     if (editor.current && doesModeEqualEditor(editor.current, props.mode)) {
-      if (props.mode === "single") {
-        updateSingleEditor(editor.current as monaco.editor.IStandaloneCodeEditor, props);
-        scrollToLine(editor.current, props.line);
-        return;
-      }
-
-      updateDiffEditor(editor.current as monaco.editor.IStandaloneDiffEditor, props);
-      const diffEditor = editor.current as monaco.editor.IStandaloneDiffEditor;
-      if (props.original.line !== undefined) {
-        scrollToLine(diffEditor.getOriginalEditor(), props.original.line);
-      }
-      if (props.modified.line !== undefined) {
-        scrollToLine(diffEditor.getModifiedEditor(), props.modified.line);
-      }
+      updateEditor(editor.current, props);
       return;
     }
 
@@ -64,11 +45,7 @@ export const Monaco: React.FC<MonacoProps> = (props) => {
       cleanupEditor(editor.current);
     }
 
-    if (props.mode === "single") {
-      editor.current = createSingleEditor(monacoEl.current, props);
-    } else {
-      editor.current = createDiffEditor(monacoEl.current, props);
-    }
+    editor.current = createEditor(monacoEl.current, props);
   }, [props]);
 
   // Cleanup effect that only runs on unmount.
