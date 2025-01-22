@@ -35,6 +35,19 @@ const updateDiffEditor = (
   modifiedModel.setValue(props.modified.content);
   monaco.editor.setModelLanguage(modifiedModel, props.modified.language);
 
+  // Crude way to only add it once.
+  if (props.modified.content.length > 0) {
+    editor.getModifiedEditor().changeViewZones((accessor) => {
+      const domNode = document.createElement("div");
+      domNode.innerHTML = "Hello, world! This is a view zone.";
+      accessor.addZone({
+        afterLineNumber: 5,
+        heightInLines: 20,
+        domNode,
+      });
+    });
+  }
+
   return editor;
 };
 
