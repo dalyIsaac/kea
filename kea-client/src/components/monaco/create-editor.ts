@@ -1,4 +1,6 @@
 import * as monaco from "monaco-editor";
+import { ContentMessageWidget } from "~/monaco/content-message-widget";
+import { OverlayMessageWidget } from "~/monaco/overlay-message-widget";
 import { DiffFileProps, MonacoProps, SingleFileProps } from "./types";
 
 const createSingleEditor = (
@@ -39,6 +41,13 @@ const createDiffEditor = (
     original: originalModel,
     modified: modifiedModel,
   });
+
+  diffEditor.getModifiedEditor().addContentWidget(new ContentMessageWidget("Hello, world!"));
+  diffEditor
+    .getModifiedEditor()
+    .addOverlayWidget(
+      new OverlayMessageWidget("Hello, world! This is the overlay widget, and it's pretty long."),
+    );
 
   return diffEditor;
 };
