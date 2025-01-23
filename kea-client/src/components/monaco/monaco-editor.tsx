@@ -2,7 +2,7 @@ import "monaco-editor/min/vs/editor/editor.main.css";
 import React, { useEffect, useRef } from "react";
 import { InlineLoaderIcon } from "~/components/icons/inline-loader-icon";
 import { doesModeEqualEditor } from "./monaco-utils";
-import { Editor, MonacoProps } from "./types";
+import { Editor, MonacoEditorProps } from "./types";
 import { updateEditor } from "./update-editor";
 import { useMonacoLifecycle } from "./use-monaco-lifecycle";
 
@@ -17,16 +17,16 @@ const Loading: React.FC<{ filename: string | undefined; hasContentLoaded: boolea
   return <InlineLoaderIcon className="ml-2" />;
 };
 
-export const Monaco: React.FC<MonacoProps> = (props) => {
-  const editorRef = useRef<Editor | null>(null);
+export const Monaco: React.FC<MonacoEditorProps> = (props) => {
   const monacoElRef = useRef<HTMLDivElement | null>(null);
+  const editorRef = useRef<Editor | null>(null);
 
-  useMonacoLifecycle(props, monacoElRef);
+  useMonacoLifecycle(props, monacoElRef, editorRef);
 
   useEffect(() => {
     if (editorRef.current && doesModeEqualEditor(editorRef.current, props.mode)) {
       updateEditor(editorRef.current, props);
-      return;
+      props.commentStore?.updateViewZones(editorRef.current, props.mode);
     }
   }, [props]);
 

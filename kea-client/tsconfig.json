@@ -2,6 +2,14 @@
   "compilerOptions": {
     "baseUrl": "./",
     "paths": {
+      "~/api/*": ["./src/api/*"],
+      "~/components/*": ["./src/components/*"],
+      "~/lib/*": ["./src/lib/*"],
+      "~/monaco/*": ["./src/monaco/*"],
+      "~/routes/*": ["./src/routes/*"],
+      "~/shadcn/*": ["./src/shadcn/*"],
+      "~/state/*": ["./src/state/*"],
+      "~/utils/*": ["./src/utils/*"],
       "~/*": ["./src/*"]
     },
 

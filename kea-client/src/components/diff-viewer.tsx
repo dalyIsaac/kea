@@ -1,4 +1,5 @@
 import { $api } from "~/api/api";
+import { CommentStore } from "~/monaco/comment-store";
 import { selectSelectedNode } from "~/state/file-tree/selectors";
 import { useKeaSelector } from "~/state/store";
 import { RepoParams } from "~/utils/routes";
@@ -7,6 +8,7 @@ import { Monaco } from "./monaco/monaco-editor";
 export interface DiffViewerProps extends RepoParams {
   originalRef: string | undefined;
   modifiedRef: string | undefined;
+  commentStore: CommentStore | undefined;
   line?: number;
 }
 
@@ -15,6 +17,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
   repo,
   modifiedRef,
   originalRef,
+  commentStore,
 }) => {
   const selectedNode = useKeaSelector(selectSelectedNode);
   const originalLine = useKeaSelector((state) => state.fileTree.selectedLeftLine);
@@ -77,6 +80,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
         filename: isDeleted ? undefined : selectedNode?.entry.filename,
         line: modifiedLine ?? undefined,
       }}
+      commentStore={commentStore}
     />
   );
 };

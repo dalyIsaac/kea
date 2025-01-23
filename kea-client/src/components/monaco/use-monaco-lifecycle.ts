@@ -9,8 +9,8 @@ import { updateEditor } from "./update-editor";
 export const useMonacoLifecycle = (
   props: MonacoProps,
   monacoElRef: React.RefObject<HTMLDivElement>,
+  editorRef: React.MutableRefObject<Editor | null>,
 ): void => {
-  const editorRef = useRef<Editor | null>(null);
   const onResizeRef = useRef(() => editorRef.current?.layout());
   const mountedRef = useRef(false);
 
@@ -36,7 +36,7 @@ export const useMonacoLifecycle = (
     }
 
     editorRef.current = createEditor(monacoElRef.current, props);
-  }, [monacoElRef, props]);
+  }, [editorRef, monacoElRef, props]);
 
   // Cleanup effect that only runs on unmount.
   useEffect(() => {
@@ -47,5 +47,5 @@ export const useMonacoLifecycle = (
       editorRef.current = null;
       mountedRef.current = false;
     };
-  }, []);
+  }, [editorRef]);
 };

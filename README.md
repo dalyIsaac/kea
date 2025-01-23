@@ -28,7 +28,9 @@
 
 #### Review
 
-- [ ] Comment on lines
+- [ ] Display single-line comments
+- [ ] Display multi-line comments
+- [ ] Add comment on lines
 - [ ] Add suggestions on lines
 - [ ] Show comments on a PR
 - [ ] Show comments on a commit in a PR
@@ -125,3 +127,9 @@ COOKIE_HEX_KEY=TODO       # 64-character hex string
 GITHUB_CLIENT_ID=TODO     # GitHub OAuth application client ID
 GITHUB_CLIENT_SECRET=TODO # GitHub OAuth application client secret
 ```
+
+## Monaco
+
+- A `IContentWidget` is tied to a line/column
+- A `IOverlayWidget` is tied to a position in the editor (e.g., the top right corner)
+- A `IViewZone` is tied to a line/column, but displayed in the text area
