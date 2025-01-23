@@ -1,4 +1,5 @@
 import * as monaco from "monaco-editor";
+import { CommentViewZone } from "~/monaco/comment-view-zone";
 import { Editor } from "~/monaco/types";
 import { scrollToLine } from "./monaco-utils";
 import { DiffFileProps, MonacoProps, SingleFileProps } from "./types";
@@ -38,13 +39,7 @@ const updateDiffEditor = (
   // Crude way to only add it once.
   if (props.modified.content.length > 0) {
     editor.getModifiedEditor().changeViewZones((accessor) => {
-      const domNode = document.createElement("div");
-      domNode.innerHTML = "Hello, world! This is a view zone.";
-      accessor.addZone({
-        afterLineNumber: 5,
-        heightInLines: 20,
-        domNode,
-      });
+      accessor.addZone(new CommentViewZone(10));
     });
   }
 

@@ -2,7 +2,7 @@ import { $api } from "~/api/api";
 import { selectSelectedNode } from "~/state/file-tree/selectors";
 import { useKeaSelector } from "~/state/store";
 import { RepoParams } from "~/utils/routes";
-import { Monaco } from "./monaco/monaco";
+import { Monaco } from "./monaco/monaco-editor";
 
 export interface DiffViewerProps extends RepoParams {
   originalRef: string | undefined;

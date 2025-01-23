@@ -1,11 +1,10 @@
 import "monaco-editor/min/vs/editor/editor.main.css";
 import React, { useEffect, useRef } from "react";
 import { InlineLoaderIcon } from "~/components/icons/inline-loader-icon";
-import { cleanupEditor } from "./cleaup-editor";
-import { createEditor } from "./create-editor";
 import { doesModeEqualEditor } from "./monaco-utils";
 import { Editor, MonacoProps } from "./types";
 import { updateEditor } from "./update-editor";
+import { useMonacoLifecycle } from "./use-monaco-lifecycle";
 
 const Loading: React.FC<{ filename: string | undefined; hasContentLoaded: boolean }> = ({
   filename,
@@ -19,45 +18,17 @@ const Loading: React.FC<{ filename: string | undefined; hasContentLoaded: boolea
 };
 
 export const Monaco: React.FC<MonacoProps> = (props) => {
-  const editor = useRef<Editor | null>(null);
-  const onResize = useRef(() => editor.current?.layout());
-  const monacoEl = useRef<HTMLDivElement | null>(null);
-  const mounted = useRef(false);
+  const editorRef = useRef<Editor | null>(null);
+  const monacoElRef = useRef<HTMLDivElement | null>(null);
 
-  // Main effect for editor initialization and updates.
+  useMonacoLifecycle(props, monacoElRef);
+
   useEffect(() => {
-    if (monacoEl.current === null) {
+    if (editorRef.current && doesModeEqualEditor(editorRef.current, props.mode)) {
+      updateEditor(editorRef.current, props);
       return;
     }
-
-    if (!mounted.current) {
-      mounted.current = true;
-      window.addEventListener("resize", onResize.current);
-    }
-
-    if (editor.current && doesModeEqualEditor(editor.current, props.mode)) {
-      updateEditor(editor.current, props);
-      return;
-    }
-
-    // Only cleanup the existing editor when switching modes.
-    if (editor.current) {
-      cleanupEditor(editor.current);
-    }
-
-    editor.current = createEditor(monacoEl.current, props);
   }, [props]);
-
-  // Cleanup effect that only runs on unmount.
-  useEffect(() => {
-    return () => {
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-      window.removeEventListener("resize", onResize.current);
-      cleanupEditor(editor.current);
-      editor.current = null;
-      mounted.current = false;
-    };
-  }, []);
 
   let filenameWrapper: React.ReactNode = null;
   if (props.mode === "single") {
@@ -86,7 +57,7 @@ export const Monaco: React.FC<MonacoProps> = (props) => {
     <div className="flex h-full w-full flex-col">
       <div className="px-4 py-1 text-sm">{filenameWrapper}</div>
 
-      <div ref={monacoEl} className="h-full w-full" />
+      <div ref={monacoElRef} className="h-full w-full" />
     </div>
   );
 };
