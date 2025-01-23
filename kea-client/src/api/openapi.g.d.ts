@@ -199,9 +199,9 @@ export interface components {
             created_at: string;
             /** Format: int64 */
             id: number;
-            left_position?: null | components["schemas"]["KeaPullRequestReviewCommentPosition"];
+            modified_position?: null | components["schemas"]["KeaPullRequestReviewCommentPosition"];
+            original_position?: null | components["schemas"]["KeaPullRequestReviewCommentPosition"];
             path: string;
-            right_position?: null | components["schemas"]["KeaPullRequestReviewCommentPosition"];
             /** Format: date-time */
             updated_at: string;
             user?: null | components["schemas"]["ScmUser"];

@@ -89,6 +89,6 @@ pub struct KeaPullRequestReviewComment {
     pub path: String,
     pub created_at: chrono::DateTime<chrono::Utc>,
     pub updated_at: chrono::DateTime<chrono::Utc>,
-    pub left_position: Option<KeaPullRequestReviewCommentPosition>,
-    pub right_position: Option<KeaPullRequestReviewCommentPosition>,
+    pub original_position: Option<KeaPullRequestReviewCommentPosition>,
+    pub modified_position: Option<KeaPullRequestReviewCommentPosition>,
 }
