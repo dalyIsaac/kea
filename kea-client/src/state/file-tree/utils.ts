@@ -7,16 +7,16 @@ import { EntryNode, ParentEntryNode } from "./types";
  * @returns The tree structure.
  */
 export const toTree = (data: DiffEntry[]): EntryNode[] => {
-  const sortedData = data.sort((a, b) => a.filename.localeCompare(b.filename));
+  const sortedData = data.sort((a, b) => a.current_filename.localeCompare(b.current_filename));
   const roots: EntryNode[] = [];
 
   for (const entry of sortedData) {
     let parents = roots;
-    const path = entry.filename.split("/");
+    const path = entry.current_filename.split("/");
 
     for (let idx = 1; idx <= path.length; idx += 1) {
       const prefix = path.slice(0, idx).join("/");
-      const prefixNode = parents.find((node) => node.entry.filename === prefix);
+      const prefixNode = parents.find((node) => node.filename === prefix);
 
       if (prefixNode && "children" in prefixNode) {
         parents = prefixNode.children;
@@ -24,9 +24,7 @@ export const toTree = (data: DiffEntry[]): EntryNode[] => {
       }
 
       const createdChild: EntryNode =
-        idx === path.length
-          ? { entry }
-          : { entry: { filename: prefix }, children: [], isExpanded: true };
+        idx === path.length ? { filename: prefix, entry } : { filename: prefix, children: [], isExpanded: true };
 
       parents.push(createdChild);
 
@@ -56,9 +54,9 @@ export const getNode = (path: string, tree: EntryNode[]): EntryNode | null => {
     let node: EntryNode | undefined;
 
     if (parentNode) {
-      node = parentNode.children.find((child) => child.entry.filename === part);
+      node = parentNode.children.find((child) => child.filename === part);
     } else {
-      node = tree.find((child) => child.entry.filename === part);
+      node = tree.find((child) => child.filename === part);
     }
 
     if (!node) {

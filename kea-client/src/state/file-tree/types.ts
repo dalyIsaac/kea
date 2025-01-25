@@ -1,12 +1,13 @@
 import { DiffEntry } from "~/api/types";
 
 export interface ParentEntryNode {
-  entry: { filename: string };
+  filename: string;
   children: EntryNode[];
   isExpanded: boolean;
 }
 
 export interface LeafEntryNode {
+  filename: string;
   entry: DiffEntry;
 }
 

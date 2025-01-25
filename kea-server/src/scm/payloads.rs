@@ -51,12 +51,12 @@ impl From<DiffEntryStatus> for KeaDiffEntryStatus {
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize, derive_new::new, utoipa::ToSchema)]
 pub struct KeaDiffEntry {
     pub sha: String,
-    pub filename: String,
     pub status: KeaDiffEntryStatus,
     pub additions: u64,
     pub deletions: u64,
     pub changes: u64,
-    pub previous_filename: Option<String>,
+    pub original_filename: Option<String>,
+    pub current_filename: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize, derive_new::new, utoipa::ToSchema)]

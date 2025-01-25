@@ -45,9 +45,9 @@ export const DiffTree: React.FC<{ data: DiffEntry[] | undefined }> = ({ data }) 
         <div role="tree" className="h-0 flex-1 overflow-y-auto px-1 py-0.5">
           {tree.map((node) =>
             isParentNode(node) ? (
-              <DiffTreeParentNode key={node.entry.filename} node={node} tabIndex={0} />
+              <DiffTreeParentNode key={node.filename} node={node} tabIndex={0} />
             ) : (
-              <DiffTreeLeafNode key={node.entry.filename} node={node} tabIndex={0} />
+              <DiffTreeLeafNode key={node.filename} node={node} tabIndex={0} />
             ),
           )}
         </div>

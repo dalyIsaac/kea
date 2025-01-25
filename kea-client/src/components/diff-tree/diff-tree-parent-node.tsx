@@ -2,10 +2,7 @@ import { ChevronDown, ChevronRight } from "lucide-react";
 import { useMemo } from "react";
 import { useDispatch } from "react-redux";
 import { cn } from "~/lib/utils";
-import {
-  createSelectFileTreeNode,
-  createSelectIsNodeCollapsedAndChildSelected,
-} from "~/state/file-tree/selectors";
+import { createSelectFileTreeNode, createSelectIsNodeCollapsedAndChildSelected } from "~/state/file-tree/selectors";
 import { fileTreeSlice } from "~/state/file-tree/slice";
 import { ParentEntryNode } from "~/state/file-tree/types";
 import { isParentNode } from "~/state/file-tree/utils";
@@ -20,15 +17,12 @@ interface DiffTreeParentNodeProps extends BaseProps {
 export const DiffTreeParentNode: React.FC<DiffTreeParentNodeProps> = ({ node, tabIndex }) => {
   const dispatch = useDispatch();
 
-  const selectFileTreeNode = useMemo(
-    () => createSelectFileTreeNode(node.entry.filename),
-    [node.entry.filename],
-  );
+  const selectFileTreeNode = useMemo(() => createSelectFileTreeNode(node.filename), [node.filename]);
   const entryNode = useKeaSelector(selectFileTreeNode) as ParentEntryNode;
 
   const selectIsNodeCollapsedAndChildSelected = useMemo(
-    () => createSelectIsNodeCollapsedAndChildSelected(node.entry.filename),
-    [node.entry.filename],
+    () => createSelectIsNodeCollapsedAndChildSelected(node.filename),
+    [node.filename],
   );
   const isCollapsedAndChildSelected = useKeaSelector(selectIsNodeCollapsedAndChildSelected);
 
@@ -38,14 +32,14 @@ export const DiffTreeParentNode: React.FC<DiffTreeParentNodeProps> = ({ node, ta
   const setIsExpanded = (expanded: boolean) => {
     dispatch(
       fileTreeSlice.actions.setIsExpanded({
-        path: node.entry.filename,
+        path: node.filename,
         isExpanded: expanded,
       }),
     );
   };
 
   const toggleExpand = () => {
-    dispatch(fileTreeSlice.actions.toggleExpand(node.entry.filename));
+    dispatch(fileTreeSlice.actions.toggleExpand(node.filename));
   };
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
@@ -87,9 +81,9 @@ export const DiffTreeParentNode: React.FC<DiffTreeParentNodeProps> = ({ node, ta
       >
         {node.children.map((child) =>
           isParentNode(child) ? (
-            <DiffTreeParentNode key={child.entry.filename} node={child} tabIndex={0} />
+            <DiffTreeParentNode key={child.filename} node={child} tabIndex={0} />
           ) : (
-            <DiffTreeLeafNode key={child.entry.filename} node={child} tabIndex={0} />
+            <DiffTreeLeafNode key={child.filename} node={child} tabIndex={0} />
           ),
         )}
       </div>

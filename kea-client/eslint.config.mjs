@@ -23,6 +23,7 @@ export default tseslint.config(
     rules: {
       curly: ["error", "all"],
       "no-console": "error",
+      "no-restricted-imports": ["error", { patterns: ["../*"] }],
     },
   },
 );

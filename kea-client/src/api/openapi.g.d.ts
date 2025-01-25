@@ -164,10 +164,10 @@ export interface components {
             additions: number;
             /** Format: int64 */
             changes: number;
+            current_filename: string;
             /** Format: int64 */
             deletions: number;
-            filename: string;
-            previous_filename?: string | null;
+            original_filename?: string | null;
             sha: string;
             status: components["schemas"]["KeaDiffEntryStatus"];
         };

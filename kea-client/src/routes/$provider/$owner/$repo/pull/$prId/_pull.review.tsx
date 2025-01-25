@@ -2,8 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { $api } from "~/api/api";
+import { DiffEntry } from "~/api/types";
 import { DiffTree } from "~/components/diff-tree/diff-tree";
-import { PullRequestDiffViewer } from "~/components/pull-request/pull-request-diff-viewer";
+import { ReviewEditor } from "~/components/review-editor/review-editor";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "~/shadcn/ui/resizable";
 import { fileTreeSlice } from "~/state/file-tree/slice";
 import { parseCompare, parseFile } from "~/utils/routes";
@@ -17,53 +18,57 @@ export const Route = createFileRoute("/$provider/$owner/$repo/pull/$prId/_pull/r
   },
 });
 
-function RouteComponent() {
-  const dispatch = useDispatch();
-  const navigate = Route.useNavigate();
-
-  const { file } = Route.useSearch();
-  const params = Route.useParams();
-  const { owner, repo, prId } = params;
-
-  const queryParams = {
-    owner,
-    repo,
-    pr_number: prId,
-  };
-
-  const filesQuery = $api.useQuery("get", "/github/{owner}/{repo}/pull/{pr_number}/files", {
-    params: {
-      path: queryParams,
-    },
-  });
-
+const useNavigateToFirstFile = (
+  selectedFilePath: string | undefined,
+  files: DiffEntry[] | undefined,
+  navigate: ReturnType<typeof Route.useNavigate>,
+) => {
   useEffect(() => {
-    if (!filesQuery.data || file) {
-      return;
-    }
-
-    const firstFile = filesQuery.data[0];
-    if (!firstFile) {
+    const firstFile = files?.[0];
+    if (!firstFile || selectedFilePath) {
       return;
     }
 
     navigate({
       search: { file: firstFile.sha },
     });
-  }, [file, filesQuery.data, navigate]);
+  }, [files, navigate, selectedFilePath]);
+};
+
+const useUpdateSelectedPath = (selectedFilePath: string | undefined) => {
+  const dispatch = useDispatch();
 
   useEffect(() => {
-    if (!file) {
+    if (!selectedFilePath) {
       return;
     }
 
-    const selectedFile = parseFile(file);
+    const selectedFile = parseFile(selectedFilePath);
     if (!selectedFile) {
       return;
     }
 
     dispatch(fileTreeSlice.actions.setSelectedPath(selectedFile));
-  }, [dispatch, file]);
+  }, [dispatch, selectedFilePath]);
+};
+
+function RouteComponent() {
+  const navigate = Route.useNavigate();
+
+  const { file: selectedFilePath } = Route.useSearch();
+  const params = Route.useParams();
+  const { owner, repo, prId } = params;
+
+  const queryParams = { params: { path: { owner, repo, pr_number: prId } } };
+
+  const filesQuery = $api.useQuery("get", "/github/{owner}/{repo}/pull/{pr_number}/files", queryParams);
+
+  const prQuery = $api.useQuery("get", "/github/{owner}/{repo}/pull/{pr_number}", queryParams);
+
+  const commentsQuery = $api.useQuery("get", "/github/{owner}/{repo}/pull/{pr_number}/comments", queryParams);
+
+  useNavigateToFirstFile(selectedFilePath, filesQuery.data, navigate);
+  useUpdateSelectedPath(selectedFilePath);
 
   return (
     <ResizablePanelGroup direction="horizontal">
@@ -74,7 +79,14 @@ function RouteComponent() {
       <ResizableHandle />
 
       <ResizablePanel>
-        <PullRequestDiffViewer params={queryParams} />
+        <ReviewEditor
+          owner={params.owner}
+          repo={params.repo}
+          originalRef={prQuery.data?.base.sha}
+          modifiedRef={prQuery.data?.head.sha}
+          comments={commentsQuery.data}
+          diffEntries={filesQuery.data}
+        />
       </ResizablePanel>
     </ResizablePanelGroup>
   );

@@ -6,9 +6,8 @@ import { components, operations } from "./openapi.g";
 export type PullRequestDetails = components["schemas"]["KeaPullRequestDetails"];
 export type Commit = components["schemas"]["KeaCommit"];
 export type DiffEntry = components["schemas"]["KeaDiffEntry"];
-export type PullRequestComment = components["schemas"]["KeaPullRequestReviewComment"];
-export type PullRequestCommentPosition =
-  components["schemas"]["KeaPullRequestReviewCommentPosition"];
+export type ReviewComment = components["schemas"]["KeaPullRequestReviewComment"];
+export type ReviewCommentPosition = components["schemas"]["KeaPullRequestReviewCommentPosition"];
 
 // Params
 export type GetPullRequestFilesParams = operations["get_pull_request_files"]["parameters"]["path"];

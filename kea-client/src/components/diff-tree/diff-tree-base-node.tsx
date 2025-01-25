@@ -6,8 +6,7 @@ export interface BaseProps {
   tabIndex?: number;
 }
 
-export interface DiffTreeBaseNodeProps<T extends ParentEntryNode | LeafEntryNode>
-  extends BaseProps {
+export interface DiffTreeBaseNodeProps<T extends ParentEntryNode | LeafEntryNode> extends BaseProps {
   node: T;
   ariaExpanded?: boolean;
   onClick?: () => void;
@@ -36,12 +35,8 @@ export const DiffTreeBaseNode = <T extends ParentEntryNode | LeafEntryNode>({
   const contentElement = (
     <>
       <span className="flex w-4 flex-shrink-0 items-center justify-center">{leftIcon}</span>
-      <span className="flex-1 truncate text-left text-gray-700">
-        {node.entry.filename.split("/").pop()}
-      </span>
-      <span className="ml-auto flex w-4 flex-shrink-0 items-center justify-center">
-        {rightIcon}
-      </span>
+      <span className="flex-1 truncate text-left text-gray-700">{node.filename.split("/").pop()}</span>
+      <span className="ml-auto flex w-4 flex-shrink-0 items-center justify-center">{rightIcon}</span>
     </>
   );
 

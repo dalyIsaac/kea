@@ -43,12 +43,12 @@ impl From<DiffEntry> for KeaDiffEntry {
     fn from(entry: DiffEntry) -> Self {
         KeaDiffEntry::new(
             entry.sha,
-            entry.filename,
             entry.status.into(),
             entry.additions,
             entry.deletions,
             entry.changes,
             entry.previous_filename,
+            entry.filename,
         )
     }
 }
