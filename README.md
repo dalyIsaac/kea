@@ -16,9 +16,10 @@
   - [x] Display file contents in Monaco
   - [x] Display file names in the tree
   - [x] Display file names in Monaco
-- [ ] Loading state for the file contents
-- [ ] Select the first file in the tree by default
-- [ ] Route to file based on URL
+- [x] Loading state for the file contents
+  - [ ] Fix loading state when switching between files
+- [x] Select the first file in the tree by default
+- [x] Route to file based on URL
 - [ ] Route to file and line based on URL
 - [x] Don't display loading icon for files which don't exist (e.g., added/removed files)
 - [x] Display loading icon for diff tree
@@ -29,6 +30,8 @@
 
 #### Review
 
+- [ ] "Original" should be the target branch at the time of the commit
+- [ ] Fix the direction for the arrows for the branch names
 - [ ] Display single-line comments
 - [ ] Display multi-line comments
 - [ ] Add comment on lines

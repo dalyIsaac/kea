@@ -3,6 +3,7 @@ import { DiffEntry, ReviewComment } from "~/api/types";
 import { InlineLoaderIcon } from "~/components/icons/inline-loader-icon";
 import { Editor } from "~/monaco";
 import "~/monaco/monaco-worker";
+import { useResizeMonaco } from "~/monaco/use-resize-monaco";
 import { selectSelectedNode } from "~/state/file-tree/selectors";
 import { useKeaSelector } from "~/state/store";
 import { getOriginalFilename } from "~/utils/git";
@@ -46,6 +47,7 @@ export const ReviewEditor: React.FC<DiffViewerProps> = ({
   );
   useFileQuery(owner, repo, modifiedRef, selectedNode?.entry.current_filename, !isDeleted, model?.modified?.textModel);
 
+  // When the model changes, apply it to the editor.
   React.useEffect(() => {
     setEditor((editor) => {
       if (!monacoElRef.current || !model) {
@@ -57,14 +59,12 @@ export const ReviewEditor: React.FC<DiffViewerProps> = ({
     });
   }, [model]);
 
+  // When the commands load, apply them to the editor.
   React.useEffect(() => {
-    const onResize = () => editor?.layout();
-    window.addEventListener("resize", onResize);
+    reviewStore?.loadComments(comments);
+  }, [comments, reviewStore]);
 
-    return () => {
-      window.removeEventListener("resize", onResize);
-    };
-  }, [editor]);
+  useResizeMonaco(editor);
 
   if (!model) {
     return null;

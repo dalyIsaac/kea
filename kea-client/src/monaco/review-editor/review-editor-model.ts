@@ -1,9 +1,7 @@
-import { DiffEntry } from "~/api/types";
+import { DiffEntry, ReviewComment } from "~/api/types";
 import { Editor, monaco } from "~/monaco";
-import { ReviewEditorCommentViewZone } from "./review-editor-comment-view-zone";
+import { ReviewEditorSideModel } from "./review-editor-side-model";
 import { ReviewEditorComment } from "./review-editor-types";
-
-export type Side = "original" | "modified";
 
 export class ReviewEditorModel {
   diffEntry: DiffEntry;
@@ -26,15 +24,29 @@ export class ReviewEditorModel {
 
   apply = (editor: Editor | null, element: HTMLDivElement): Editor => {
     if (this.original && this.modified) {
-      return ReviewEditorModel.#createDiffEditor(editor, element, this.original.textModel, this.modified.textModel);
+      const diffEditor = ReviewEditorModel.#createDiffEditor(
+        editor,
+        element,
+        this.original.textModel,
+        this.modified.textModel,
+      );
+
+      diffEditor.getOriginalEditor().changeViewZones(this.original.changeViewZones);
+      diffEditor.getModifiedEditor().changeViewZones(this.modified.changeViewZones);
+
+      return diffEditor;
     }
 
     if (this.original) {
-      return ReviewEditorModel.#createSingleEditor(editor, element, this.original.textModel);
+      const originalEditor = ReviewEditorModel.#createSingleEditor(editor, element, this.original.textModel);
+      originalEditor.changeViewZones(this.original.changeViewZones);
+      return originalEditor;
     }
 
     if (this.modified) {
-      return ReviewEditorModel.#createSingleEditor(editor, element, this.modified.textModel);
+      const singleEditor = ReviewEditorModel.#createSingleEditor(editor, element, this.modified.textModel);
+      singleEditor.changeViewZones(this.modified.changeViewZones);
+      return singleEditor;
     }
 
     throw new Error("At least one side must be present");
@@ -45,7 +57,7 @@ export class ReviewEditorModel {
     element: HTMLDivElement,
     originalModel: monaco.editor.ITextModel,
     modifiedModel: monaco.editor.ITextModel,
-  ): Editor => {
+  ): monaco.editor.IStandaloneDiffEditor => {
     let diffEditor: monaco.editor.IStandaloneDiffEditor;
 
     if (editor?.getEditorType() === monaco.editor.EditorType.IDiffEditor) {
@@ -71,7 +83,7 @@ export class ReviewEditorModel {
     editor: Editor | null,
     element: HTMLDivElement,
     textModel: monaco.editor.ITextModel,
-  ): Editor => {
+  ): monaco.editor.IStandaloneCodeEditor => {
     let singleEditor: monaco.editor.IStandaloneCodeEditor;
 
     if (editor?.getEditorType() === monaco.editor.EditorType.ICodeEditor) {
@@ -84,39 +96,31 @@ export class ReviewEditorModel {
     singleEditor.setModel(textModel);
     return singleEditor;
   };
-}
 
-export class ReviewEditorSideModel {
-  textModel: monaco.editor.ITextModel;
-  commentStore: ReviewEditorSideCommentModel;
+  addComment = (comment: ReviewComment): void => {
+    let side: ReviewEditorSideModel | null = null;
+    let editorComment: ReviewEditorComment;
 
-  constructor(filename: string) {
-    const url = monaco.Uri.file(filename);
-    this.textModel = monaco.editor.getModel(url) ?? monaco.editor.createModel("", "", url);
-    this.commentStore = new ReviewEditorSideCommentModel();
-  }
-}
-/**
- * Manages comments for a file, on a specific side of the editor.
- */
-class ReviewEditorSideCommentModel {
-  #viewZonesCache = new Map<number, ReviewEditorCommentViewZone>();
+    if (comment.original_position) {
+      side = this.original;
 
-  #commentsMap = new Map<number, ReviewEditorComment>();
+      const { original_position, ...rest } = comment;
+      editorComment = {
+        ...rest,
+        position: original_position,
+      };
+    } else if (comment.modified_position) {
+      side = this.modified;
 
-  addComment = (comment: ReviewEditorComment): void => {
-    this.#commentsMap.set(comment.id, comment);
-  };
-
-  updateViewZones = (accessor: monaco.editor.IViewZoneChangeAccessor): void => {
-    for (const comment of this.#commentsMap.values()) {
-      if (this.#viewZonesCache.has(comment.id)) {
-        continue;
-      }
-
-      const viewZone = new ReviewEditorCommentViewZone(comment);
-      this.#viewZonesCache.set(comment.id, viewZone);
-      accessor.addZone(viewZone);
+      const { modified_position, ...rest } = comment;
+      editorComment = {
+        ...rest,
+        position: modified_position,
+      };
+    } else {
+      return;
     }
+
+    side?.addComment(editorComment);
   };
 }

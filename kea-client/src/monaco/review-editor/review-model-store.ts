@@ -45,7 +45,16 @@ export class ReviewModelStore {
   };
 
   loadComments = (comments: ReviewComment[] | undefined): void => {
-    // TODO
+    if (!comments) {
+      return;
+    }
+
+    for (const comment of comments) {
+      const model = this.#modelMap.get(comment.path);
+      if (model) {
+        model.addComment(comment);
+      }
+    }
   };
 
   getModel = (path: string | undefined | null): ReviewEditorModel | undefined => {

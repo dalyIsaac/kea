@@ -197,21 +197,22 @@ export interface components {
             commit_id: string;
             /** Format: date-time */
             created_at: string;
+            end_position?: null | components["schemas"]["KeaPullRequestReviewCommentPosition"];
             /** Format: int64 */
             id: number;
-            modified_position?: null | components["schemas"]["KeaPullRequestReviewCommentPosition"];
-            original_position?: null | components["schemas"]["KeaPullRequestReviewCommentPosition"];
             path: string;
+            start_position?: null | components["schemas"]["KeaPullRequestReviewCommentPosition"];
             /** Format: date-time */
             updated_at: string;
             user?: null | components["schemas"]["ScmUser"];
         };
         KeaPullRequestReviewCommentPosition: {
             /** Format: int64 */
-            end_line: number;
-            /** Format: int64 */
-            start_line: number;
+            line: number;
+            side: components["schemas"]["KeaPullRequestReviewCommentSide"];
         };
+        /** @enum {string} */
+        KeaPullRequestReviewCommentSide: "Left" | "Right";
         MeClients: {
             github?: null | components["schemas"]["ScmUser"];
         };
