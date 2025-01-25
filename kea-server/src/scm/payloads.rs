@@ -74,9 +74,15 @@ pub struct KeaParentCommit {
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize, derive_new::new, utoipa::ToSchema)]
+pub enum KeaPullRequestReviewCommentSide {
+    Left,
+    Right,
+}
+
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize, derive_new::new, utoipa::ToSchema)]
 pub struct KeaPullRequestReviewCommentPosition {
-    pub start_line: u64,
-    pub end_line: u64,
+    pub line: u64,
+    pub side: KeaPullRequestReviewCommentSide,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -89,6 +95,6 @@ pub struct KeaPullRequestReviewComment {
     pub path: String,
     pub created_at: chrono::DateTime<chrono::Utc>,
     pub updated_at: chrono::DateTime<chrono::Utc>,
-    pub original_position: Option<KeaPullRequestReviewCommentPosition>,
-    pub modified_position: Option<KeaPullRequestReviewCommentPosition>,
+    pub start_position: Option<KeaPullRequestReviewCommentPosition>,
+    pub end_position: Option<KeaPullRequestReviewCommentPosition>,
 }

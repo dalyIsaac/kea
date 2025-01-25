@@ -7,7 +7,7 @@ use octocrab::models::{
 use crate::scm::{
     payloads::{
         KeaCommit, KeaDiffEntry, KeaParentCommit, KeaPullRequestReviewComment,
-        KeaPullRequestReviewCommentPosition,
+        KeaPullRequestReviewCommentPosition, KeaPullRequestReviewCommentSide,
     },
     scm_client::ScmUser,
 };
@@ -53,8 +53,64 @@ impl From<DiffEntry> for KeaDiffEntry {
     }
 }
 
+impl From<String> for KeaPullRequestReviewCommentSide {
+    fn from(side: String) -> Self {
+        match side.as_str() {
+            "LEFT" => KeaPullRequestReviewCommentSide::Left,
+            "RIGHT" => KeaPullRequestReviewCommentSide::Right,
+            _ => KeaPullRequestReviewCommentSide::Right,
+        }
+    }
+}
+
 impl From<pulls::Comment> for KeaPullRequestReviewComment {
     fn from(comment: pulls::Comment) -> Self {
+        // The line of the PR's final commit to which the commit applies. The first line of the range for a multi-line comment.
+        let start_line = comment.start_line;
+
+        // The line of the PR's final commit to which the commit applies. The last line of the range for a multi-line comment.
+        let line = comment.line;
+
+        // The line of the blob to which the comment applies. The first line of the range for a multi-line comment.
+        let original_start_line = comment.original_start_line;
+
+        // The line of the blob to which the comment applies. The last line of the range for a multi-line comment.
+        let original_line = comment.original_line;
+
+        // The side of the first line of the range for a multi-line comment.
+        let start_side = comment.start_side;
+
+        // The side of the diff to which the comment applies. The side of the last line of the range for a multi-line comment.
+        let end_side = comment.side;
+
+        println!(
+            "\n\nbody: {:?}",
+            &comment.body.chars().take(50).collect::<String>()
+        );
+        println!("start_line: {:?}", start_line);
+        println!("start_side: {:?}", start_side);
+        println!("end_line: {:?}", line);
+        println!("end_side: {:?}", end_side);
+        println!("original_start_line: {:?}", original_start_line);
+        println!("original_line: {:?}", original_line);
+        println!("diff hunk: {:?}", comment.diff_hunk);
+
+        let start_position = match (start_line, start_side) {
+            (Some(start_line), Some(start_side)) => Some(KeaPullRequestReviewCommentPosition::new(
+                start_line,
+                start_side.into(),
+            )),
+            _ => None,
+        };
+
+        let end_position = match (line, end_side) {
+            (Some(end_line), Some(end_side)) => Some(KeaPullRequestReviewCommentPosition::new(
+                end_line,
+                end_side.into(),
+            )),
+            _ => None,
+        };
+
         KeaPullRequestReviewComment::new(
             comment.id.0,
             comment.user.map(|user| user.into()),
@@ -63,21 +119,8 @@ impl From<pulls::Comment> for KeaPullRequestReviewComment {
             comment.path,
             comment.created_at,
             comment.updated_at,
-            match (comment.start_line, comment.line) {
-                (Some(start_line), Some(end_line)) => Some(
-                    KeaPullRequestReviewCommentPosition::new(start_line, end_line),
-                ),
-                _ => None,
-            },
-            match (comment.original_start_line, comment.original_line) {
-                (Some(original_start_line), Some(original_end_line)) => {
-                    Some(KeaPullRequestReviewCommentPosition::new(
-                        original_start_line,
-                        original_end_line,
-                    ))
-                }
-                _ => None,
-            },
+            start_position,
+            end_position,
         )
     }
 }
