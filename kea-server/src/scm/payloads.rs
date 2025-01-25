@@ -79,15 +79,9 @@ pub enum KeaPullRequestReviewCommentSide {
     Right,
 }
 
-#[derive(Debug, Clone, PartialEq, Deserialize, Serialize, derive_new::new, utoipa::ToSchema)]
-pub struct KeaPullRequestReviewCommentPosition {
-    pub line: u64,
-    pub side: KeaPullRequestReviewCommentSide,
-}
-
 #[allow(clippy::too_many_arguments)]
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize, derive_new::new, utoipa::ToSchema)]
-pub struct KeaPullRequestReviewComment {
+pub struct KeaPullRequestReviewTimelineComment {
     pub id: u64,
     pub user: Option<ScmUser>,
     pub body: String,
@@ -95,6 +89,25 @@ pub struct KeaPullRequestReviewComment {
     pub path: String,
     pub created_at: chrono::DateTime<chrono::Utc>,
     pub updated_at: chrono::DateTime<chrono::Utc>,
-    pub start_position: Option<KeaPullRequestReviewCommentPosition>,
-    pub end_position: Option<KeaPullRequestReviewCommentPosition>,
+
+    /// The line of the PR's final commit to which the commit applies. The first line of the range for a multi-line comment.
+    pub start_line: Option<u64>,
+
+    /// The line of the PR's final commit to which the commit applies. The last line of the range for a multi-line comment.
+    pub line: Option<u64>,
+
+    /// The line of the blob to which the comment applies. The first line of the range for a multi-line comment.
+    pub original_start_line: Option<u64>,
+
+    /// The line of the blob to which the comment applies. The last line of the range for a multi-line comment.
+    pub original_line: Option<u64>,
+
+    /// The side of the first line of the range for a multi-line comment.
+    pub start_side: Option<KeaPullRequestReviewCommentSide>,
+
+    /// The side of the diff to which the comment applies. The side of the last line of the range for a multi-line comment.
+    pub side: Option<KeaPullRequestReviewCommentSide>,
+
+    /// The hunk of the diff to which the comment applies.
+    pub diff_hunk: String,
 }
