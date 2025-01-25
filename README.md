@@ -86,6 +86,10 @@
 
 - [ ] Make suggestions by typing in the Monaco editor
 
+### Stage 8: Optimizations
+
+- [ ] Cache file contents in Redis for diff comments position calculations
+
 ## Notes
 
 - A backend is necessary - commit comments requires a hunk position, and hunks can only be provided for the entire commit.
@@ -137,3 +141,30 @@ GITHUB_CLIENT_SECRET=TODO # GitHub OAuth application client secret
 - A `IContentWidget` is tied to a line/column
 - A `IOverlayWidget` is tied to a position in the editor (e.g., the top right corner)
 - A `IViewZone` is tied to a line/column, but displayed in the text area
+
+## Diff Comments
+
+### Places where comments will be displayed
+
+1. Diff hunk in the timeline (use the hunk with the line numbers from the API)
+2. Monaco editor (use the algorithm to fetch positions)
+
+### Algorithm
+
+- We get back a list of comments
+- For each comment, consult the local file cache to get the relevant file
+- Locate the hunk in the file that the comment refers to
+- Calculate the line number in the hunk that the comment refers to
+
+Hunk format:
+
+```diff
+@@ -413,8 +418,16 @@ export class SuggestAddon extends Disposable implements ITerminalAddon, ISuggest
+         listInactiveFocusOutline: activeContrastBorder
+       }));
+       this._register(this._suggestWidget.onDidSelect(async e => this.acceptSelectedSuggestion(e)));
+-      this._register(this._suggestWidget.onDidHide(() => this._terminalSuggestWidgetVisibleContextKey.set(false)));
++      this._register(this._suggestWidget.onDidHide(() => this._terminalSuggestWidgetVisibleContextKey.reset()));
+       this._register(this._suggestWidget.onDidShow(() => this._terminalSuggestWidgetVisibleContextKey.set(true)));
++      this._register(this._suggestWidget.onDidBlurDetails((e) => {
+```
