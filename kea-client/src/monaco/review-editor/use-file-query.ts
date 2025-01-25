@@ -1,6 +1,6 @@
 import React from "react";
 import { $api } from "~/api/api";
-import { monaco } from "./types";
+import { monaco } from "~/monaco";
 
 export const useFileQuery = (
   owner: string,

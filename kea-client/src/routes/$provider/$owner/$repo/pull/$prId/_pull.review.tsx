@@ -4,7 +4,7 @@ import { useDispatch } from "react-redux";
 import { $api } from "~/api/api";
 import { DiffEntry } from "~/api/types";
 import { DiffTree } from "~/components/diff-tree/diff-tree";
-import { ReviewEditor } from "~/components/review-editor/review-editor";
+import { ReviewEditor } from "~/monaco/review-editor/review-editor";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "~/shadcn/ui/resizable";
 import { fileTreeSlice } from "~/state/file-tree/slice";
 import { parseCompare, parseFile } from "~/utils/routes";

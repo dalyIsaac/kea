@@ -1,6 +1,7 @@
 import { DiffEntry } from "~/api/types";
+import { Editor, monaco } from "~/monaco";
 import { ReviewEditorCommentViewZone } from "./review-editor-comment-view-zone";
-import { Editor, monaco, ReviewEditorComment } from "./types";
+import { ReviewEditorComment } from "./review-editor-types";
 
 export type Side = "original" | "modified";
 

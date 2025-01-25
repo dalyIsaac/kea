@@ -1,12 +1,13 @@
 import React from "react";
 import { DiffEntry, ReviewComment } from "~/api/types";
 import { InlineLoaderIcon } from "~/components/icons/inline-loader-icon";
+import { Editor } from "~/monaco";
+import "~/monaco/monaco-worker";
 import { selectSelectedNode } from "~/state/file-tree/selectors";
 import { useKeaSelector } from "~/state/store";
 import { getOriginalFilename } from "~/utils/git";
 import { RepoParams } from "~/utils/routes";
 import { ReviewModelStore } from "./review-model-store";
-import { Editor } from "./types";
 import { useFileQuery } from "./use-file-query";
 
 export interface DiffViewerProps extends RepoParams {

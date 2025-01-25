@@ -1,5 +1,5 @@
 import * as monaco from "monaco-editor";
-import { ReviewEditorComment } from "./types";
+import { ReviewEditorComment } from "./review-editor-types";
 
 export class ReviewEditorCommentViewZone implements monaco.editor.IViewZone {
   readonly model: ReviewEditorComment;
