@@ -147,12 +147,12 @@ GITHUB_CLIENT_SECRET=TODO # GitHub OAuth application client secret
 ### Places where comments will be displayed
 
 1. Diff hunk in the timeline (use the hunk with the line numbers from the API)
-2. Monaco editor (use the algorithm to fetch positions)
+2. Monaco editor
 
 ### Algorithm
 
 - We get back a list of comments
-- For each comment, consult the local file cache to get the relevant file
+- For each comment, get the relevant file
 - Locate the hunk in the file that the comment refers to
 - Calculate the line number in the hunk that the comment refers to
 
