@@ -48,12 +48,12 @@ export const parseCompare = (
   base?: string;
   head?: string;
 } => {
-  if (!compare) {
+  if (compare === undefined) {
     return {};
   }
 
   const [base, head] = compare.split("...");
-  if (!base || !head) {
+  if (base === undefined || head === undefined) {
     throw new Error(`Invalid comparison format`);
   }
 
@@ -70,7 +70,7 @@ export interface FileParams {
 }
 
 const parseFileLine = (line: string | undefined): number | undefined => {
-  const l = line ? parseInt(line, 10) : undefined;
+  const l = line !== undefined ? parseInt(line, 10) : undefined;
   if (l !== undefined && isNaN(l)) {
     throw new Error("Invalid line number");
   }
@@ -84,18 +84,18 @@ const parseFileLine = (line: string | undefined): number | undefined => {
  * @returns An object with the sha and line number.
  */
 export const parseFile = (file: string | undefined): FileParams | undefined => {
-  if (!file) {
+  if (file === undefined) {
     return undefined;
   }
 
   const [sha1, leftLine] = file.split("L");
   const [sha2, rightLine] = file.split("R");
 
-  if (!sha1 || !sha2) {
+  if (sha1 === undefined || sha2 === undefined) {
     throw new Error("Invalid file format");
   }
 
-  if (leftLine) {
+  if (leftLine !== undefined) {
     return {
       sha: sha1,
       leftLine: parseFileLine(leftLine),

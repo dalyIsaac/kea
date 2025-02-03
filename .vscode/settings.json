@@ -1,5 +1,5 @@
 {
-  "typescript.preferences.importModuleSpecifier": "project-relative",
+  "typescript.preferences.importModuleSpecifier": "shortest",
   "rust-analyzer.check.command": "clippy",
   "files.watcherExclude": {
     "**/routeTree.gen.ts": true
@@ -9,5 +9,7 @@
   },
   "files.readonlyInclude": {
     "**/routeTree.gen.ts": true
-  }
+  },
+  "eslint.useFlatConfig": true,
+  "eslint.lintTask.enable": true
 }

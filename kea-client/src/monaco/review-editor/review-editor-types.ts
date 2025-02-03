@@ -1,5 +1,8 @@
-import { ReviewComment, ReviewCommentPosition } from "~/api/types";
+import { ReviewComment } from "~/api/types";
 
-export type ReviewEditorComment = Omit<ReviewComment, "original_position" | "modified_position"> & {
-  position: ReviewCommentPosition;
-};
+export interface ReviewCommentWithPosition {
+  data: ReviewComment;
+  startLine: number;
+}
+
+export type GetStartLineFn = (comment: ReviewComment) => number | undefined;

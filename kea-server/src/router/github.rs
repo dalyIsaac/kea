@@ -1,6 +1,6 @@
 use crate::scm::github::error::KeaGitHubError;
-use crate::scm::payloads::{
-    KeaCommit, KeaDiffEntry, KeaPullRequestDetails, KeaPullRequestReviewTimelineComment,
+use crate::scm::models::{
+    KeaCommit, KeaDiffEntry, KeaPullRequestDetails, KeaPullRequestReviewComment,
 };
 use crate::scm::scm_client::{AuthResponse, ScmApiClient, ScmAuthClient};
 use crate::state::AppState;
@@ -148,15 +148,15 @@ pub async fn get_pull_request_files(
 #[axum::debug_handler]
 #[utoipa::path(
     get,
-    path = "/github/{owner}/{repo}/pull/{pr_number}/timeline/comments/review",
+    path = "/github/{owner}/{repo}/pull/{pr_number}/comments",
     params(
         ("owner" = String, Path, description = "Owner of the repository"),
         ("repo" = String, Path, description = "Repository name"),
         ("pr_number" = u64, Path, description = "Pull request number")
     ),
-    responses((status = OK, body = Vec<KeaPullRequestReviewTimelineComment>))
+    responses((status = OK, body = Vec<KeaPullRequestReviewComment>))
 )]
-pub async fn get_pull_request_timeline_review_comments(
+pub async fn get_pull_request_review_comments(
     State(state): State<AppState>,
     jar: PrivateCookieJar,
     Path((owner, repo, pr_number)): Path<(String, String, u64)>,
@@ -165,7 +165,7 @@ pub async fn get_pull_request_timeline_review_comments(
 
     match clients
         .github
-        .get_pull_request_timeline_review_comments(jar, &ctx, &owner, &repo, pr_number)
+        .get_pull_request_review_comments(jar, &ctx, &owner, &repo, pr_number)
         .await
     {
         Ok((new_jar, comments)) => Ok((new_jar, Json(comments))),

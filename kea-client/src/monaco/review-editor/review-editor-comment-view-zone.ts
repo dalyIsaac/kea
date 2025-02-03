@@ -1,14 +1,14 @@
 import * as monaco from "monaco-editor";
-import { ReviewEditorComment } from "./review-editor-types";
+import { ReviewCommentWithPosition } from "./review-editor-types";
 
 export class ReviewEditorCommentViewZone implements monaco.editor.IViewZone {
-  readonly model: ReviewEditorComment;
+  readonly model: ReviewCommentWithPosition;
 
   #domNode: HTMLElement = document.createElement("div");
 
-  constructor(comment: ReviewEditorComment) {
-    this.model = comment;
-    this.#domNode.textContent = comment.body;
+  constructor(model: ReviewCommentWithPosition) {
+    this.model = model;
+    this.#domNode.textContent = model.data.body;
   }
 
   get domNode() {
@@ -16,6 +16,6 @@ export class ReviewEditorCommentViewZone implements monaco.editor.IViewZone {
   }
 
   get afterLineNumber() {
-    return this.model.position.start_line;
+    return this.model.startLine;
   }
 }

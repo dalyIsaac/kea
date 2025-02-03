@@ -10,9 +10,7 @@ use serde::{de, Deserialize, Deserializer, Serialize};
 
 use crate::state::{AppContext, AppState};
 
-use super::payloads::{
-    KeaCommit, KeaDiffEntry, KeaPullRequestDetails, KeaPullRequestReviewTimelineComment,
-};
+use super::models::{KeaCommit, KeaDiffEntry, KeaPullRequestDetails, KeaPullRequestReviewComment};
 
 #[derive(Debug)]
 pub enum AuthResponse {
@@ -160,12 +158,12 @@ pub trait ScmApiClient<E> {
         pr_number: u64,
     ) -> Result<(PrivateCookieJar, Vec<KeaDiffEntry>), E>;
 
-    async fn get_pull_request_timeline_review_comments(
+    async fn get_pull_request_review_comments(
         &self,
         jar: PrivateCookieJar,
         ctx: &AppContext,
         owner: &str,
         repo: &str,
         pr_number: u64,
-    ) -> Result<(PrivateCookieJar, Vec<KeaPullRequestReviewTimelineComment>), E>;
+    ) -> Result<(PrivateCookieJar, Vec<KeaPullRequestReviewComment>), E>;
 }

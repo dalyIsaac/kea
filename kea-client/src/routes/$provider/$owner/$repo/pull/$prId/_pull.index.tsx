@@ -45,10 +45,10 @@ function PullRequestComponent() {
       <ResizablePanel defaultSize={20}>
         <PullRequestCommits
           commits={commitsQuery.data}
-          headSha={prQuery.data?.head?.sha}
-          baseSha={prQuery.data?.base?.sha}
-          selectedHead={head ?? prQuery.data?.head?.sha}
-          selectedBase={base ?? prQuery.data?.base?.sha}
+          headSha={prQuery.data?.head.sha}
+          baseSha={prQuery.data?.base.sha}
+          selectedHead={head ?? prQuery.data?.head.sha}
+          selectedBase={base ?? prQuery.data?.base.sha}
           params={params}
         />
       </ResizablePanel>

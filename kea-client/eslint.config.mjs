@@ -1,5 +1,3 @@
-// @ts-check
-
 import eslint from "@eslint/js";
 import hooksPlugin from "eslint-plugin-react-hooks";
 import tseslint from "typescript-eslint";
@@ -10,20 +8,28 @@ export default tseslint.config(
   tseslint.configs.stylistic,
   {
     plugins: {
-      // @ts-expect-error - eslint-plugin-react-hooks is not typed
       "react-hooks": hooksPlugin,
     },
-    // @ts-expect-error - eslint-plugin-react-hooks is not typed
     rules: hooksPlugin.configs.recommended.rules,
+    languageOptions: {
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
   },
   {
-    ignores: ["**/*.g.*"],
+    ignores: ["**/*.g.*", "src/shadcn/**/*"],
   },
   {
+    files: ["src/**/*"],
     rules: {
       curly: ["error", "all"],
       "no-console": "error",
-      "no-restricted-imports": ["error", { patterns: ["../*"] }],
+      "no-restricted-imports": ["error", { patterns: ["../*", ".."] }],
+      "@typescript-eslint/array-type": ["error", { default: "array-simple" }],
+      "@typescript-eslint/strict-boolean-expressions": "error",
+      "@typescript-eslint/no-unnecessary-condition": "error",
     },
   },
 );

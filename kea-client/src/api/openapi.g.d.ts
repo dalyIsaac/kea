@@ -75,7 +75,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_pull_request_comments"];
+        get: operations["get_pull_request_review_comments"];
         put?: never;
         post?: never;
         delete?: never;
@@ -181,8 +181,10 @@ export interface components {
             sha: string;
         };
         KeaPullRequestDetails: {
+            /** @description The base commit of the PR - the commit that the head commit is being merged into. */
             base: components["schemas"]["KeaPullRequestCommit"];
             body?: string | null;
+            /** @description The head commit of the PR - the commit that is being merged into the base branch. */
             head: components["schemas"]["KeaPullRequestCommit"];
             /** Format: int64 */
             id: number;
@@ -194,25 +196,45 @@ export interface components {
         };
         KeaPullRequestReviewComment: {
             body: string;
+            /** @description The SHA of the final commit to which the comment applies. */
             commit_id: string;
             /** Format: date-time */
             created_at: string;
-            end_position?: null | components["schemas"]["KeaPullRequestReviewCommentPosition"];
+            /** @description The hunk of the diff to which the comment applies. */
+            diff_hunk: string;
             /** Format: int64 */
             id: number;
+            /**
+             * Format: int64
+             * @description The line of the PR's final commit to which the commit applies. The last line of the range for a multi-line comment.
+             */
+            line?: number | null;
+            /** @description The SHA of the original commit to which the comment applies. */
+            original_commit_id: string;
+            /**
+             * Format: int64
+             * @description The line of the blob to which the comment applies. The last line of the range for a multi-line comment.
+             */
+            original_line?: number | null;
+            /**
+             * Format: int64
+             * @description The line of the blob to which the comment applies. The first line of the range for a multi-line comment.
+             */
+            original_start_line?: number | null;
             path: string;
-            start_position?: null | components["schemas"]["KeaPullRequestReviewCommentPosition"];
+            side?: null | components["schemas"]["KeaPullRequestReviewCommentSide"];
+            /**
+             * Format: int64
+             * @description The line of the PR's final commit to which the commit applies. The first line of the range for a multi-line comment.
+             */
+            start_line?: number | null;
+            start_side?: null | components["schemas"]["KeaPullRequestReviewCommentSide"];
             /** Format: date-time */
             updated_at: string;
             user?: null | components["schemas"]["ScmUser"];
         };
-        KeaPullRequestReviewCommentPosition: {
-            /** Format: int64 */
-            line: number;
-            side: components["schemas"]["KeaPullRequestReviewCommentSide"];
-        };
         /** @enum {string} */
-        KeaPullRequestReviewCommentSide: "Left" | "Right";
+        KeaPullRequestReviewCommentSide: "Original" | "Modified";
         MeClients: {
             github?: null | components["schemas"]["ScmUser"];
         };
@@ -325,7 +347,7 @@ export interface operations {
             };
         };
     };
-    get_pull_request_comments: {
+    get_pull_request_review_comments: {
         parameters: {
             query?: never;
             header?: never;

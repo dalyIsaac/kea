@@ -1,12 +1,13 @@
-import { DiffEntry, ReviewComment } from "~/api/types";
+import { DiffEntry } from "~/api/types";
 import { Editor, monaco } from "~/monaco";
+import { isCodeEditor, isDiffEditor } from "~/monaco/monaco-utils";
 import { ReviewEditorSideModel } from "./review-editor-side-model";
-import { ReviewEditorComment } from "./review-editor-types";
+import { ReviewCommentWithPosition } from "./review-editor-types";
 
 export class ReviewEditorModel {
   diffEntry: DiffEntry;
-  original: ReviewEditorSideModel | null = null;
-  modified: ReviewEditorSideModel | null = null;
+  original: ReviewEditorSideModel | undefined;
+  modified: ReviewEditorSideModel | undefined;
 
   constructor(diffEntry: DiffEntry) {
     this.diffEntry = diffEntry;
@@ -17,13 +18,13 @@ export class ReviewEditorModel {
     }
 
     if (diffEntry.status !== "Removed") {
-      const filename = diffEntry.current_filename ?? "";
+      const filename = diffEntry.current_filename;
       this.modified = new ReviewEditorSideModel(filename);
     }
   }
 
   apply = (editor: Editor | null, element: HTMLDivElement): Editor => {
-    if (this.original && this.modified) {
+    if (this.original !== undefined && this.modified !== undefined) {
       const diffEditor = ReviewEditorModel.#createDiffEditor(
         editor,
         element,
@@ -52,31 +53,64 @@ export class ReviewEditorModel {
     throw new Error("At least one side must be present");
   };
 
+  addComment = (comment: ReviewCommentWithPosition, editor: Editor): void => {
+    let hasAdded = false;
+    if (comment.data.side === "Original" && this.original !== undefined) {
+      this.original.addComment(comment);
+      hasAdded = true;
+    }
+
+    if (comment.data.side === "Modified" && this.modified !== undefined) {
+      this.modified.addComment(comment);
+      hasAdded = true;
+    }
+
+    if (!hasAdded) {
+      throw new Error("Side must be Original or Modified");
+    }
+
+    this.#applyComment(comment, editor);
+  };
+
+  #applyComment = (comment: ReviewCommentWithPosition, editor: Editor): void => {
+    if (isDiffEditor(editor) && this.original !== undefined && this.modified !== undefined) {
+      editor.getOriginalEditor().changeViewZones(this.original.changeViewZones);
+      editor.getModifiedEditor().changeViewZones(this.modified.changeViewZones);
+
+      return;
+    }
+
+    if (isCodeEditor(editor)) {
+      const callback = this.original?.changeViewZones ?? this.modified?.changeViewZones;
+
+      if (callback !== undefined) {
+        editor.changeViewZones(callback);
+      }
+      return;
+    }
+  };
+
   static #createDiffEditor = (
     editor: Editor | null,
     element: HTMLDivElement,
     originalModel: monaco.editor.ITextModel,
     modifiedModel: monaco.editor.ITextModel,
   ): monaco.editor.IStandaloneDiffEditor => {
-    let diffEditor: monaco.editor.IStandaloneDiffEditor;
-
-    if (editor?.getEditorType() === monaco.editor.EditorType.IDiffEditor) {
-      diffEditor = editor as monaco.editor.IStandaloneDiffEditor;
-    } else {
+    if (!isDiffEditor(editor)) {
       editor?.dispose();
-      diffEditor = monaco.editor.createDiffEditor(element, {
+      editor = monaco.editor.createDiffEditor(element, {
         automaticLayout: true,
         readOnly: true,
         renderOverviewRuler: false,
       });
     }
 
-    diffEditor.setModel({
+    editor.setModel({
       original: originalModel,
       modified: modifiedModel,
     });
 
-    return diffEditor;
+    return editor;
   };
 
   static #createSingleEditor = (
@@ -84,43 +118,12 @@ export class ReviewEditorModel {
     element: HTMLDivElement,
     textModel: monaco.editor.ITextModel,
   ): monaco.editor.IStandaloneCodeEditor => {
-    let singleEditor: monaco.editor.IStandaloneCodeEditor;
-
-    if (editor?.getEditorType() === monaco.editor.EditorType.ICodeEditor) {
-      singleEditor = editor as monaco.editor.IStandaloneCodeEditor;
-    } else {
+    if (!isCodeEditor(editor)) {
       editor?.dispose();
-      singleEditor = monaco.editor.create(element);
+      editor = monaco.editor.create(element);
     }
 
-    singleEditor.setModel(textModel);
-    return singleEditor;
-  };
-
-  addComment = (comment: ReviewComment): void => {
-    let side: ReviewEditorSideModel | null = null;
-    let editorComment: ReviewEditorComment;
-
-    if (comment.original_position) {
-      side = this.original;
-
-      const { original_position, ...rest } = comment;
-      editorComment = {
-        ...rest,
-        position: original_position,
-      };
-    } else if (comment.modified_position) {
-      side = this.modified;
-
-      const { modified_position, ...rest } = comment;
-      editorComment = {
-        ...rest,
-        position: modified_position,
-      };
-    } else {
-      return;
-    }
-
-    side?.addComment(editorComment);
+    editor.setModel(textModel);
+    return editor;
   };
 }

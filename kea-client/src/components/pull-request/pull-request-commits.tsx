@@ -50,7 +50,7 @@ export const PullRequestCommits: React.FC<{
   const onCompareClick = () => {
     const [firstSha, secondSha] = selectedCommits;
 
-    if (!firstSha || !secondSha || !commits) {
+    if (firstSha === undefined || secondSha === undefined || !commits) {
       return;
     }
 
@@ -61,8 +61,7 @@ export const PullRequestCommits: React.FC<{
       return;
     }
 
-    const [base, head] =
-      firstShaIndex < secondShaIndex ? [firstSha, secondSha] : [secondSha, firstSha];
+    const [base, head] = firstShaIndex < secondShaIndex ? [firstSha, secondSha] : [secondSha, firstSha];
 
     navigate({
       to: "/$provider/$owner/$repo/pull/$prId/review",

@@ -1,16 +1,16 @@
 {
   "compilerOptions": {
-    "baseUrl": "./",
+    "baseUrl": "./src",
     "paths": {
-      "~/api/*": ["./src/api/*"],
-      "~/components/*": ["./src/components/*"],
-      "~/lib/*": ["./src/lib/*"],
-      "~/monaco/*": ["./src/monaco/*"],
-      "~/routes/*": ["./src/routes/*"],
-      "~/shadcn/*": ["./src/shadcn/*"],
-      "~/state/*": ["./src/state/*"],
-      "~/utils/*": ["./src/utils/*"],
-      "~/*": ["./src/*"]
+      "~/api/*": ["./api/*"],
+      "~/components/*": ["./components/*"],
+      "~/lib/*": ["./lib/*"],
+      "~/monaco/*": ["./monaco/*"],
+      "~/routes/*": ["./routes/*"],
+      "~/shadcn/*": ["./shadcn/*"],
+      "~/state/*": ["./state/*"],
+      "~/utils/*": ["./utils/*"],
+      "~/*": ["./*"]
     },
 
     "strict": true,

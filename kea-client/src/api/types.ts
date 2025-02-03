@@ -7,9 +7,7 @@ export type PullRequestDetails = components["schemas"]["KeaPullRequestDetails"];
 export type Commit = components["schemas"]["KeaCommit"];
 export type DiffEntry = components["schemas"]["KeaDiffEntry"];
 export type ReviewComment = components["schemas"]["KeaPullRequestReviewComment"];
-export type ReviewCommentPosition = components["schemas"]["KeaPullRequestReviewCommentPosition"];
 
 // Params
 export type GetPullRequestFilesParams = operations["get_pull_request_files"]["parameters"]["path"];
-export type GetPullRequestDetailsParams =
-  operations["get_pull_request_details"]["parameters"]["path"];
+export type GetPullRequestDetailsParams = operations["get_pull_request_details"]["parameters"]["path"];

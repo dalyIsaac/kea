@@ -1,3 +1,3 @@
 pub mod github;
-pub mod payloads;
+pub mod models;
 pub mod scm_client;

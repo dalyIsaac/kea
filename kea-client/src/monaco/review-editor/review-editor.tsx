@@ -9,7 +9,7 @@ import { useKeaSelector } from "~/state/store";
 import { getOriginalFilename } from "~/utils/git";
 import { RepoParams } from "~/utils/routes";
 import { ReviewModelStore } from "./review-model-store";
-import { useFileQuery } from "./use-file-query";
+import { useSyncFileQuery } from "./use-sync-file-query";
 
 export interface DiffViewerProps extends RepoParams {
   originalRef: string | undefined;
@@ -31,13 +31,13 @@ export const ReviewEditor: React.FC<DiffViewerProps> = ({
   const isAdded = selectedNode?.entry.status === "Added";
   const isDeleted = selectedNode?.entry.status === "Removed";
 
-  const [editor, setEditor] = React.useState<Editor | null>(null);
+  const editorRef = React.useRef<Editor | null>(null);
   const monacoElRef = React.useRef<HTMLDivElement | null>(null);
 
   const reviewStore = ReviewModelStore.get(modifiedRef, diffEntries);
   const model = reviewStore?.getModel(selectedNode?.entry.current_filename);
 
-  useFileQuery(
+  useSyncFileQuery(
     owner,
     repo,
     originalRef,
@@ -45,26 +45,28 @@ export const ReviewEditor: React.FC<DiffViewerProps> = ({
     !isAdded,
     model?.original?.textModel,
   );
-  useFileQuery(owner, repo, modifiedRef, selectedNode?.entry.current_filename, !isDeleted, model?.modified?.textModel);
+  useSyncFileQuery(
+    owner,
+    repo,
+    modifiedRef,
+    selectedNode?.entry.current_filename,
+    !isDeleted,
+    model?.modified?.textModel,
+  );
 
   // When the model changes, apply it to the editor.
-  React.useEffect(() => {
-    setEditor((editor) => {
-      if (!monacoElRef.current || !model) {
-        editor?.dispose();
-        return null;
-      }
-
-      return model.apply(editor, monacoElRef.current);
-    });
-  }, [model]);
-
   // When the commands load, apply them to the editor.
   React.useEffect(() => {
-    reviewStore?.loadComments(comments);
-  }, [comments, reviewStore]);
+    if (!monacoElRef.current || !model) {
+      editorRef.current?.dispose();
+      return;
+    }
 
-  useResizeMonaco(editor);
+    editorRef.current = model.apply(editorRef.current, monacoElRef.current);
+    reviewStore?.loadComments(comments, editorRef.current);
+  }, [comments, model, reviewStore]);
+
+  useResizeMonaco(editorRef);
 
   if (!model) {
     return null;
@@ -74,14 +76,14 @@ export const ReviewEditor: React.FC<DiffViewerProps> = ({
   if (isAdded) {
     editorHeader = (
       <SingleReviewEditorHeader
-        filename={selectedNode?.entry.current_filename}
+        filename={selectedNode.entry.current_filename}
         hasContentLoaded={!!model.modified?.textModel}
       />
     );
   } else if (isDeleted) {
     editorHeader = (
       <SingleReviewEditorHeader
-        filename={getOriginalFilename(selectedNode?.entry)}
+        filename={getOriginalFilename(selectedNode.entry)}
         hasContentLoaded={!!model.original?.textModel}
       />
     );
@@ -136,7 +138,7 @@ const MultiReviewEditorHeader: React.FC<{ original: LoadingProps; modified: Load
 };
 
 const Loading: React.FC<LoadingProps> = ({ filename, hasContentLoaded }) => {
-  if (!filename || hasContentLoaded) {
+  if (filename === undefined || hasContentLoaded) {
     return null;
   }
 

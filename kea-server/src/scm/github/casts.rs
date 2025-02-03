@@ -5,9 +5,9 @@ use octocrab::models::{
 };
 
 use crate::scm::{
-    payloads::{
-        KeaCommit, KeaDiffEntry, KeaParentCommit, KeaPullRequestReviewCommentSide,
-        KeaPullRequestReviewTimelineComment,
+    models::{
+        KeaCommit, KeaDiffEntry, KeaParentCommit, KeaPullRequestReviewComment,
+        KeaPullRequestReviewCommentSide,
     },
     scm_client::ScmUser,
 };
@@ -56,24 +56,25 @@ impl From<DiffEntry> for KeaDiffEntry {
 fn to_side(side: Option<String>) -> Option<KeaPullRequestReviewCommentSide> {
     match side {
         Some(side) => match side.as_str() {
-            "LEFT" => Some(KeaPullRequestReviewCommentSide::Left),
-            "RIGHT" => Some(KeaPullRequestReviewCommentSide::Right),
+            "LEFT" => Some(KeaPullRequestReviewCommentSide::Original),
+            "RIGHT" => Some(KeaPullRequestReviewCommentSide::Modified),
             _ => None,
         },
         None => None,
     }
 }
 
-impl From<pulls::Comment> for KeaPullRequestReviewTimelineComment {
+impl From<pulls::Comment> for KeaPullRequestReviewComment {
     fn from(comment: pulls::Comment) -> Self {
-        KeaPullRequestReviewTimelineComment::new(
+        KeaPullRequestReviewComment::new(
             comment.id.0,
             comment.user.map(|user| user.into()),
             comment.body,
-            comment.commit_id,
             comment.path,
             comment.created_at,
             comment.updated_at,
+            comment.commit_id,
+            comment.original_commit_id,
             comment.start_line,
             comment.line,
             comment.original_start_line,

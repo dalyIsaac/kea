@@ -10,7 +10,7 @@
     "serve": "vite preview",
     "start": "vite",
     "format": "prettier --write .",
-    "lint": "npx eslint .",
+    "lint": "npx eslint src",
     "generate": "npx openapi-typescript http://localhost:3000/api-docs/openapi.json --output ./src/api/openapi.g.d.ts"
   },
   "devDependencies": {

@@ -3,10 +3,7 @@ import { GitPullRequest } from "lucide-react";
 import { ToggleGroup, ToggleGroupItem } from "~/shadcn/ui/toggle-group";
 import { PullRequestDetailsParams } from "~/utils/routes";
 
-const PullRequestToggleItem: React.FC<{ value: string; children: React.ReactNode }> = ({
-  value,
-  children,
-}) => (
+const PullRequestToggleItem: React.FC<{ value: string; children: React.ReactNode }> = ({ value, children }) => (
   <ToggleGroupItem
     value={value}
     className="h-fit rounded-sm border border-transparent [&:not([data-status=active])]:text-muted-foreground [&[data-status=active]]:border-border [&[data-status=active]]:bg-background [&[data-status=active]]:font-medium [&[data-status=active]]:shadow-sm"
@@ -52,7 +49,7 @@ const PullRequestNav: React.FC<PullRequestDetailsParams> = (params) => {
     <ToggleGroup
       type="single"
       className="m-1 h-fit rounded-md border bg-secondary/30 text-xs"
-      value={isReviewRoute ? reviewRoute : baseRoute}
+      value={isReviewRoute !== false ? reviewRoute : baseRoute}
     >
       <PullRequestToggleItem value={baseRoute}>
         <Link
@@ -85,17 +82,12 @@ interface PullRequestHeaderProps extends PullRequestDetailsParams {
   head?: string;
 }
 
-export const PullRequestHeader: React.FC<PullRequestHeaderProps> = ({
-  title,
-  base,
-  head,
-  ...params
-}) => {
+export const PullRequestHeader: React.FC<PullRequestHeaderProps> = ({ title, base, head, ...params }) => {
   return (
     <div className="flex justify-between gap-2">
       <div className="gap flex flex-col">
         <PullRequestTitle title={title} id={params.prId} />
-        {base && head && <PullRequestBranches base={base} head={head} />}
+        {base !== undefined && head !== undefined && <PullRequestBranches base={base} head={head} />}
       </div>
 
       <PullRequestNav {...params} />

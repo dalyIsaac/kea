@@ -25,7 +25,7 @@ const useNavigateToFirstFile = (
 ) => {
   useEffect(() => {
     const firstFile = files?.[0];
-    if (!firstFile || selectedFilePath) {
+    if (!firstFile || selectedFilePath !== undefined) {
       return;
     }
 
@@ -39,7 +39,7 @@ const useUpdateSelectedPath = (selectedFilePath: string | undefined) => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    if (!selectedFilePath) {
+    if (selectedFilePath === undefined) {
       return;
     }
 

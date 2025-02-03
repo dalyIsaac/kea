@@ -4,9 +4,9 @@ use kea_server::try_chain;
 
 use crate::{
     scm::{
-        payloads::{
+        models::{
             KeaCommit, KeaDiffEntry, KeaPullRequestCommit, KeaPullRequestDetails,
-            KeaPullRequestReviewTimelineComment,
+            KeaPullRequestReviewComment,
         },
         scm_client::ScmApiClient,
     },
@@ -136,15 +136,14 @@ impl ScmApiClient<Box<KeaGitHubError>> for GitHubClient {
         Ok((jar, files))
     }
 
-    async fn get_pull_request_timeline_review_comments(
+    async fn get_pull_request_review_comments(
         &self,
         jar: PrivateCookieJar,
         ctx: &AppContext,
         owner: &str,
         repo: &str,
         pr_number: u64,
-    ) -> Result<(PrivateCookieJar, Vec<KeaPullRequestReviewTimelineComment>), Box<KeaGitHubError>>
-    {
+    ) -> Result<(PrivateCookieJar, Vec<KeaPullRequestReviewComment>), Box<KeaGitHubError>> {
         let (jar, client) = self.get_client_with_token(jar, ctx).await?;
         let comments = client
             .pulls(owner, repo)

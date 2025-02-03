@@ -2,7 +2,16 @@ import React from "react";
 import { $api } from "~/api/api";
 import { monaco } from "~/monaco";
 
-export const useFileQuery = (
+/**
+ * Fetches a file from the GitHub API and updates the provided Monaco text model.
+ * @param owner The owner of the repository.
+ * @param repo The repository name.
+ * @param ref The Git ref to fetch the file from.
+ * @param path The path to the file.
+ * @param canProceed Whether the query can proceed.
+ * @param textModel The Monaco text model to update.
+ */
+export const useSyncFileQuery = (
   owner: string,
   repo: string,
   ref: string | undefined,
@@ -28,7 +37,7 @@ export const useFileQuery = (
       parseAs: "text",
     },
     {
-      enabled: !!ref && !!path && canProceed,
+      enabled: ref !== undefined && path !== undefined && canProceed,
       refetchOnMount: false,
       refetchOnReconnect: false,
       refetchOnWindowFocus: false,
@@ -36,7 +45,7 @@ export const useFileQuery = (
   );
 
   React.useEffect(() => {
-    if (textModel && result.data) {
+    if (textModel !== undefined && result.data !== undefined) {
       textModel.setValue(result.data);
       setHasLoaded(true);
     }
