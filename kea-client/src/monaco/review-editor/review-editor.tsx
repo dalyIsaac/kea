@@ -43,7 +43,9 @@ export const ReviewEditor: React.FC<DiffViewerProps> = ({
     originalRef,
     getOriginalFilename(selectedNode?.entry),
     !isAdded,
-    model?.original?.textModel,
+    editorRef.current,
+    model,
+    "original",
   );
   useSyncFileQuery(
     owner,
@@ -51,7 +53,9 @@ export const ReviewEditor: React.FC<DiffViewerProps> = ({
     modifiedRef,
     selectedNode?.entry.current_filename,
     !isDeleted,
-    model?.modified?.textModel,
+    editorRef.current,
+    model,
+    "modified",
   );
 
   // When the model changes, apply it to the editor.
@@ -90,7 +94,10 @@ export const ReviewEditor: React.FC<DiffViewerProps> = ({
   } else {
     editorHeader = (
       <MultiReviewEditorHeader
-        original={{ filename: getOriginalFilename(selectedNode?.entry), hasContentLoaded: !!model.original?.textModel }}
+        original={{
+          filename: getOriginalFilename(selectedNode?.entry),
+          hasContentLoaded: !!model.original?.textModel,
+        }}
         modified={{ filename: selectedNode?.entry.current_filename, hasContentLoaded: !!model.modified?.textModel }}
       />
     );

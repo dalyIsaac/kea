@@ -66,19 +66,20 @@ export class ReviewModelStore {
     }
 
     let startLine: number | undefined;
+    let endLine: number | undefined;
     if (comment.original_commit_id === this.#gitRef) {
-      startLine = ReviewModelStore.#getOriginalStartLine(comment);
+      [startLine, endLine] = getOriginalLines(comment);
     } else if (comment.commit_id === this.#gitRef) {
-      startLine = ReviewModelStore.#getStartLine(comment);
+      [startLine, endLine] = getLines(comment);
     } else {
       return;
     }
 
-    if (startLine === undefined) {
+    if (startLine === undefined || endLine === undefined) {
       return;
     }
 
-    model.addComment({ data: comment, startLine }, editor);
+    model.addComment({ data: comment, startLine, endLine }, editor);
   };
 
   getModel = (path: string | undefined): ReviewEditorModel | undefined => {
@@ -89,20 +90,22 @@ export class ReviewModelStore {
     const model = this.#modelMap.get(path);
     return model;
   };
-
-  static #getOriginalStartLine = (comment: ReviewComment): number | undefined => {
-    if (comment.original_start_line === undefined) {
-      return undefined;
-    }
-
-    return comment.original_start_line ?? undefined;
-  };
-
-  static #getStartLine = (comment: ReviewComment): number | undefined => {
-    if (comment.start_line === undefined) {
-      return undefined;
-    }
-
-    return comment.start_line ?? undefined;
-  };
 }
+
+type ReviewCommentPosition = [number | undefined, number | undefined] | [];
+
+const getOriginalLines = (comment: ReviewComment): ReviewCommentPosition => {
+  if (comment.original_line === undefined || comment.original_line === null) {
+    return [];
+  }
+
+  return [comment.original_start_line ?? comment.original_line, comment.original_line];
+};
+
+const getLines = (comment: ReviewComment): ReviewCommentPosition => {
+  if (comment.line === undefined || comment.line === null) {
+    return [];
+  }
+
+  return [comment.start_line ?? comment.line, comment.line];
+};

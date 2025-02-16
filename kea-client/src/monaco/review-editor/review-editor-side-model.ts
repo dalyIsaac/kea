@@ -4,8 +4,8 @@ import { ReviewCommentWithPosition } from "./review-editor-types";
 
 export class ReviewEditorSideModel {
   textModel: monaco.editor.ITextModel;
+  hasLoadedText = false;
   #comments = new Map<number, ReviewCommentWithPosition>();
-
   #viewZonesCache = new Map<number, ReviewEditorCommentViewZone>();
 
   constructor(filename: string) {
@@ -18,6 +18,10 @@ export class ReviewEditorSideModel {
   };
 
   changeViewZones = (accessor: monaco.editor.IViewZoneChangeAccessor): void => {
+    if (!this.hasLoadedText) {
+      return;
+    }
+
     for (const [id, model] of this.#comments.entries()) {
       if (this.#viewZonesCache.has(id)) {
         continue;

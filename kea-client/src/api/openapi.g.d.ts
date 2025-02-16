@@ -206,26 +206,30 @@ export interface components {
             id: number;
             /**
              * Format: int64
-             * @description The line of the PR's final commit to which the commit applies. The last line of the range for a multi-line comment.
+             * @description The line in the file to which this thread refers.
+             *     The last line of the range for a multi-line comment.
              */
             line?: number | null;
             /** @description The SHA of the original commit to which the comment applies. */
             original_commit_id: string;
             /**
              * Format: int64
-             * @description The line of the blob to which the comment applies. The last line of the range for a multi-line comment.
+             * @description The original line in the file to which this thread refers.
+             *     The last line of the range for a multi-line comment.
              */
             original_line?: number | null;
             /**
              * Format: int64
-             * @description The line of the blob to which the comment applies. The first line of the range for a multi-line comment.
+             * @description The start line number on the file to which the comment applied when it was first created.
+             *     The first line of the range for a multi-line comment.
              */
             original_start_line?: number | null;
             path: string;
             side?: null | components["schemas"]["KeaPullRequestReviewCommentSide"];
             /**
              * Format: int64
-             * @description The line of the PR's final commit to which the commit applies. The first line of the range for a multi-line comment.
+             * @description The start line number on the file to which the comment applies.
+             *     The first line of the range for a multi-line comment.
              */
             start_line?: number | null;
             start_side?: null | components["schemas"]["KeaPullRequestReviewCommentSide"];

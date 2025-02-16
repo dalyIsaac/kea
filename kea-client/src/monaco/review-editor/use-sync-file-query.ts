@@ -1,6 +1,7 @@
 import React from "react";
 import { $api } from "~/api/api";
-import { monaco } from "~/monaco";
+import { Editor } from "~/monaco";
+import { ReviewEditorModel } from "./review-editor-model";
 
 /**
  * Fetches a file from the GitHub API and updates the provided Monaco text model.
@@ -9,7 +10,7 @@ import { monaco } from "~/monaco";
  * @param ref The Git ref to fetch the file from.
  * @param path The path to the file.
  * @param canProceed Whether the query can proceed.
- * @param textModel The Monaco text model to update.
+ * @param sideModel The side model to update with the fetched file.
  */
 export const useSyncFileQuery = (
   owner: string,
@@ -17,7 +18,9 @@ export const useSyncFileQuery = (
   ref: string | undefined,
   path: string | undefined | null,
   canProceed: boolean,
-  textModel: monaco.editor.ITextModel | undefined,
+  editor: Editor | null,
+  reviewEditorModel: ReviewEditorModel | undefined,
+  side: "original" | "modified",
 ) => {
   // Unused state to force a re-render when the data is loaded
   const [, setHasLoaded] = React.useState(false);
@@ -45,9 +48,9 @@ export const useSyncFileQuery = (
   );
 
   React.useEffect(() => {
-    if (textModel !== undefined && result.data !== undefined) {
-      textModel.setValue(result.data);
+    if (editor !== null && reviewEditorModel && result.data !== undefined) {
+      reviewEditorModel.setText(editor, result.data, side);
       setHasLoaded(true);
     }
-  }, [result.data, setHasLoaded, textModel]);
+  }, [editor, result.data, reviewEditorModel, setHasLoaded, side]);
 };

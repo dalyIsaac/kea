@@ -16,6 +16,6 @@ export class ReviewEditorCommentViewZone implements monaco.editor.IViewZone {
   }
 
   get afterLineNumber() {
-    return this.model.startLine;
+    return this.model.endLine;
   }
 }

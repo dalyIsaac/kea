@@ -53,6 +53,24 @@ export class ReviewEditorModel {
     throw new Error("At least one side must be present");
   };
 
+  setText = (editor: Editor, text: string, side: "original" | "modified"): void => {
+    if (side === "original" && this.original !== undefined) {
+      this.original.textModel.setValue(text);
+      this.original.hasLoadedText = true;
+      this.applyComments(editor);
+      return;
+    }
+
+    if (side === "modified" && this.modified !== undefined) {
+      this.modified.textModel.setValue(text);
+      this.modified.hasLoadedText = true;
+      this.applyComments(editor);
+      return;
+    }
+
+    throw new Error("Side must be original or modified");
+  };
+
   addComment = (comment: ReviewCommentWithPosition, editor: Editor): void => {
     let hasAdded = false;
     if (comment.data.side === "Original" && this.original !== undefined) {
@@ -69,14 +87,13 @@ export class ReviewEditorModel {
       throw new Error("Side must be Original or Modified");
     }
 
-    this.#applyComment(comment, editor);
+    this.applyComments(editor);
   };
 
-  #applyComment = (comment: ReviewCommentWithPosition, editor: Editor): void => {
+  applyComments = (editor: Editor): void => {
     if (isDiffEditor(editor) && this.original !== undefined && this.modified !== undefined) {
       editor.getOriginalEditor().changeViewZones(this.original.changeViewZones);
       editor.getModifiedEditor().changeViewZones(this.modified.changeViewZones);
-
       return;
     }
 
