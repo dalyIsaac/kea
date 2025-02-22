@@ -1,6 +1,8 @@
 {
   "name": "kea",
   "displayName": "kea",
+  "publisher": "dalyisaac",
+  "repository": "https://github.com/dalyIsaac/kea",
   "description": "",
   "version": "0.0.1",
   "engines": {
