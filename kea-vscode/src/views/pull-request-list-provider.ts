@@ -1,3 +1,4 @@
+import { WorkspaceFolder } from "vscode";
 import { vscode } from "../aliases";
 
 export class PullRequestListProvider implements vscode.TreeDataProvider<PullRequestTreeItem> {
@@ -8,10 +9,17 @@ export class PullRequestListProvider implements vscode.TreeDataProvider<PullRequ
   getChildren = (
     element?: PullRequestTreeItem | undefined,
   ): vscode.ProviderResult<PullRequestTreeItem[]> => {
+    if (element === undefined) {
+      return vscode.workspace.workspaceFolders?.map(
+        (workspace) => new PullRequestTreeItem(workspace),
+      );
+    }
     return [];
   };
 }
 
 export class PullRequestTreeItem extends vscode.TreeItem {
-  // TODO
+  constructor(workspace: WorkspaceFolder) {
+    super(workspace.name, vscode.TreeItemCollapsibleState.Collapsed);
+  }
 }
