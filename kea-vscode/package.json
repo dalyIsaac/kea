@@ -32,7 +32,7 @@
     "views": {
       "kea": [
         {
-          "id": "keaView",
+          "id": "kea.pullRequestList",
           "name": "Kea",
           "icon": "media/icon.png"
         }
