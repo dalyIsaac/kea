@@ -9,7 +9,10 @@
       "name": "Run Extension",
       "type": "extensionHost",
       "request": "launch",
-      "args": ["--extensionDevelopmentPath=${workspaceFolder}/kea-vscode"],
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}/kea-vscode",
+        "--disable-extensions"
+      ],
       "outFiles": ["${workspaceFolder}/kea-vscode/dist/**/*.js"],
       "preLaunchTask": "${defaultBuildTask}"
     }
