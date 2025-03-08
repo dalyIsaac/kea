@@ -1,8 +1,8 @@
 import { AuthenticationSession } from "vscode";
-import { IProvider } from "./provider";
 import { vscode } from "../aliases";
+import { IAccount } from "./account";
 
-export class GitHubProvider implements IProvider {
+export class GitHubAccount implements IAccount {
   static #providerId = "github";
   session: AuthenticationSession;
 
@@ -10,13 +10,13 @@ export class GitHubProvider implements IProvider {
     this.session = session;
   }
 
-  static create = async (): Promise<GitHubProvider | undefined> => {
+  static create = async (): Promise<GitHubAccount | undefined> => {
     const session = await vscode.authentication.getSession(this.#providerId, [
       "user:email",
       "repo",
       "read:org",
     ]);
 
-    return session ? new GitHubProvider(session) : undefined;
+    return session ? new GitHubAccount(session) : undefined;
   };
 }

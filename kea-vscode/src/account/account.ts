@@ -1,5 +1,5 @@
 import { AuthenticationSession } from "vscode";
 
-export interface IProvider {
+export interface IAccount {
   session: AuthenticationSession;
 }
