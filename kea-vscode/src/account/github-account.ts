@@ -1,5 +1,5 @@
+import * as vscode from "vscode";
 import { AuthenticationSession } from "vscode";
-import { vscode } from "../types/aliases";
 import { IAccount } from "./account";
 
 export class GitHubAccount implements IAccount {

@@ -1,5 +1,5 @@
+import * as vscode from "vscode";
 import { Uri } from "vscode";
-import { vscode } from "./types/aliases";
 import { API, GitExtension, Repository } from "./types/git";
 
 const getApi = (): API | null => {

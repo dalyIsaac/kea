@@ -1,6 +1,6 @@
+import * as vscode from "vscode";
 import { WorkspaceFolder } from "vscode";
 import { getRepo } from "../git";
-import { vscode } from "../types/aliases";
 import { Repository } from "../types/git";
 
 export class PullRequestListProvider implements vscode.TreeDataProvider<PullRequestTreeItem> {
