@@ -1,8 +1,8 @@
 import * as vscode from "vscode";
 import { WorkspaceFolder } from "vscode";
-import { getRepo } from "../git";
-import { Logger } from "../logger";
 import { Repository } from "../types/git";
+import { getRepo } from "../utils/git";
+import { Logger } from "../utils/logger";
 
 export class PullRequestListProvider implements vscode.TreeDataProvider<PullRequestTreeItem> {
   getTreeItem = (element: PullRequestTreeItem): vscode.TreeItem | Thenable<vscode.TreeItem> => {

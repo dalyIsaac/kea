@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 
-import { Logger } from "./logger";
+import { Logger } from "./utils/logger";
 import { PullRequestListProvider } from "./views/pull-request-list-provider";
 
 export function activate(context: vscode.ExtensionContext) {

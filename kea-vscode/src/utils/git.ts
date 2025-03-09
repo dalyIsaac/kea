@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { Uri } from "vscode";
-import { API, GitExtension, Repository } from "./types/git";
+import { API, GitExtension, Repository } from "../types/git";
 
 export const getRepo = async (uri: Uri): Promise<Repository | Error> => {
   const api = await getGitApi();
