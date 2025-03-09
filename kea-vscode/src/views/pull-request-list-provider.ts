@@ -4,14 +4,16 @@ import { Repository } from "../types/git";
 import { getRepo } from "../utils/git";
 import { Logger } from "../utils/logger";
 
-export class PullRequestListProvider implements vscode.TreeDataProvider<PullRequestTreeItem> {
-  getTreeItem = (element: PullRequestTreeItem): vscode.TreeItem | Thenable<vscode.TreeItem> => {
+type PullRequestListItem = RepoTreeItem;
+
+export class PullRequestListProvider implements vscode.TreeDataProvider<PullRequestListItem> {
+  getTreeItem = (element: PullRequestListItem): vscode.TreeItem | Thenable<vscode.TreeItem> => {
     return element;
   };
 
   getChildren = (
-    element?: PullRequestTreeItem | undefined,
-  ): vscode.ProviderResult<PullRequestTreeItem[]> => {
+    element?: PullRequestListItem | undefined,
+  ): vscode.ProviderResult<PullRequestListItem[]> => {
     if (element === undefined) {
       Logger.info("Fetching root items for PullRequestListProvider");
       return this.#getRootChildren();
@@ -20,9 +22,9 @@ export class PullRequestListProvider implements vscode.TreeDataProvider<PullRequ
     return [];
   };
 
-  #getRootChildren = async (): Promise<PullRequestTreeItem[]> => {
+  #getRootChildren = async (): Promise<RepoTreeItem[]> => {
     const allItems = vscode.workspace.workspaceFolders?.map((workspace) =>
-      PullRequestTreeItem.create(workspace),
+      RepoTreeItem.create(workspace),
     );
     if (allItems === undefined) {
       Logger.error("No workspace folders found");
@@ -31,7 +33,7 @@ export class PullRequestListProvider implements vscode.TreeDataProvider<PullRequ
 
     const resolvedItems = await Promise.all(allItems);
 
-    const rootItems: PullRequestTreeItem[] = [];
+    const rootItems: RepoTreeItem[] = [];
     for (const item of resolvedItems) {
       if (item instanceof Error) {
         Logger.error(`Error creating PullRequestTreeItem: ${item.message}`);
@@ -45,19 +47,19 @@ export class PullRequestListProvider implements vscode.TreeDataProvider<PullRequ
   };
 }
 
-export class PullRequestTreeItem extends vscode.TreeItem {
-  #workspace: WorkspaceFolder;
-  #repo: Repository;
+class RepoTreeItem extends vscode.TreeItem {
+  workspace: WorkspaceFolder;
+  repo: Repository;
 
   private constructor(workspace: WorkspaceFolder, repo: Repository, repoUrl: string) {
     super(workspace.name, vscode.TreeItemCollapsibleState.None);
 
-    this.#workspace = workspace;
-    this.#repo = repo;
+    this.workspace = workspace;
+    this.repo = repo;
     this.description = repoUrl;
   }
 
-  static create = async (workspace: WorkspaceFolder): Promise<PullRequestTreeItem | Error> => {
+  static create = async (workspace: WorkspaceFolder): Promise<RepoTreeItem | Error> => {
     const repo = await getRepo(workspace.uri);
     if (repo instanceof Error) {
       return repo;
@@ -73,6 +75,6 @@ export class PullRequestTreeItem extends vscode.TreeItem {
       return new Error("No fetch or push URL found");
     }
 
-    return new PullRequestTreeItem(workspace, repo, repoUrl);
+    return new RepoTreeItem(workspace, repo, repoUrl);
   };
 }
