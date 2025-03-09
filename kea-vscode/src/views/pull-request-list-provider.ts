@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import { WorkspaceFolder } from "vscode";
 import { getRepo } from "../git";
+import { Logger } from "../logger";
 import { Repository } from "../types/git";
 
 export class PullRequestListProvider implements vscode.TreeDataProvider<PullRequestTreeItem> {
@@ -12,13 +13,35 @@ export class PullRequestListProvider implements vscode.TreeDataProvider<PullRequ
     element?: PullRequestTreeItem | undefined,
   ): vscode.ProviderResult<PullRequestTreeItem[]> => {
     if (element === undefined) {
-      // No element is selected, so we return the root items.
-      return vscode.workspace.workspaceFolders
-        ?.map((workspace) => PullRequestTreeItem.create(workspace))
-        .filter((item) => item !== null);
+      Logger.info("Fetching root items for PullRequestListProvider");
+      return this.#getRootChildren();
     }
 
     return [];
+  };
+
+  #getRootChildren = async (): Promise<PullRequestTreeItem[]> => {
+    const allItems = vscode.workspace.workspaceFolders?.map((workspace) =>
+      PullRequestTreeItem.create(workspace),
+    );
+    if (allItems === undefined) {
+      Logger.error("No workspace folders found");
+      return [];
+    }
+
+    const resolvedItems = await Promise.all(allItems);
+
+    const rootItems: PullRequestTreeItem[] = [];
+    for (const item of resolvedItems) {
+      if (item instanceof Error) {
+        Logger.error(`Error creating PullRequestTreeItem: ${item.message}`);
+        continue;
+      }
+
+      rootItems.push(item);
+    }
+
+    return rootItems;
   };
 }
 
@@ -26,18 +49,30 @@ export class PullRequestTreeItem extends vscode.TreeItem {
   #workspace: WorkspaceFolder;
   #repo: Repository;
 
-  private constructor(workspace: WorkspaceFolder, repo: Repository) {
+  private constructor(workspace: WorkspaceFolder, repo: Repository, repoUrl: string) {
     super(workspace.name, vscode.TreeItemCollapsibleState.None);
+
     this.#workspace = workspace;
     this.#repo = repo;
+    this.description = repoUrl;
   }
 
-  static create = (workspace: WorkspaceFolder): PullRequestTreeItem | null => {
-    const repo = getRepo(workspace.uri);
-    if (repo === null) {
-      return null;
+  static create = async (workspace: WorkspaceFolder): Promise<PullRequestTreeItem | Error> => {
+    const repo = await getRepo(workspace.uri);
+    if (repo instanceof Error) {
+      return repo;
     }
 
-    return new PullRequestTreeItem(workspace, repo);
+    const remote = repo.state.remotes[0];
+    if (remote === undefined) {
+      return new Error("No remotes found");
+    }
+
+    const repoUrl = remote.fetchUrl ?? remote.pushUrl;
+    if (repoUrl === undefined) {
+      return new Error("No fetch or push URL found");
+    }
+
+    return new PullRequestTreeItem(workspace, repo, repoUrl);
   };
 }

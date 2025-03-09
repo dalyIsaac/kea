@@ -18,17 +18,24 @@ export default [
 
     rules: {
       "@typescript-eslint/naming-convention": [
-        "warn",
+        "error",
         {
           selector: "import",
           format: ["camelCase", "PascalCase"],
         },
       ],
 
-      curly: "warn",
-      eqeqeq: "warn",
-      "no-throw-literal": "warn",
-      semi: "warn",
+      curly: "error",
+      eqeqeq: "error",
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "ThrowStatement",
+          message: "Throwing errors is not allowed",
+        },
+      ],
+      "prefer-const": "error",
+      semi: "error",
     },
   },
 ];

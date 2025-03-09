@@ -2,30 +2,35 @@ import * as vscode from "vscode";
 import { Uri } from "vscode";
 import { API, GitExtension, Repository } from "./types/git";
 
-const getApi = (): API | null => {
-  const gitExtension = vscode.extensions.getExtension<GitExtension>("vscode.git");
-  if (gitExtension === undefined) {
-    return null;
+export const getRepo = async (uri: Uri): Promise<Repository | Error> => {
+  const api = await getGitApi();
+  if (api instanceof Error) {
+    return api;
   }
 
-  try {
-    return gitExtension.exports.getAPI(1);
-  } catch (error) {
-    console.error("Failed to get Git API:", error);
-    return null;
-  }
-};
-
-export const getRepo = (uri: Uri): Repository | null => {
-  const api = getApi();
-  if (api === null) {
-    return null;
-  }
-
-  const repo = api.getRepository(uri);
+  // Open the repository if it is not already opened. This can occur if the Kea extension is
+  // activated before the Git extension.
+  const repo = api.getRepository(uri) ?? (await api.openRepository(uri));
   if (repo === null) {
-    return null;
+    return new Error(`No repository found for ${uri.toString()}`);
   }
 
   return repo;
+};
+
+const getGitApi = async (): Promise<API | Error> => {
+  const gitExtension = vscode.extensions.getExtension<GitExtension>("vscode.git");
+  if (gitExtension === undefined) {
+    return new Error("Git extension not found");
+  }
+
+  if (!gitExtension.isActive) {
+    try {
+      await gitExtension.activate();
+    } catch (error) {
+      return new Error(`Failed to activate Git extension: ${error}`);
+    }
+  }
+
+  return gitExtension.exports.getAPI(1);
 };
