@@ -7,8 +7,14 @@ import { PullRequestListProvider } from "./views/pull-request-list-provider";
 export function activate(context: vscode.ExtensionContext) {
   Logger.info("Kea extension activated");
 
-  vscode.window.registerTreeDataProvider("kea.pullRequestList", new PullRequestListProvider());
+  const pullRequestListProvider = new PullRequestListProvider();
+
+  vscode.window.registerTreeDataProvider("kea.pullRequestList", pullRequestListProvider);
   vscode.authentication.onDidChangeSessions(AppContext.onDidChangeSessionsListener);
+
+  vscode.commands.registerCommand("kea.refreshPullRequestList", () => {
+    pullRequestListProvider.refresh();
+  });
 }
 
 export function deactivate() {}

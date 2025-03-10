@@ -9,6 +9,11 @@ import { Repository } from "../types/git";
 type PullRequestListItem = RepoTreeItem;
 
 export class PullRequestListProvider implements vscode.TreeDataProvider<PullRequestListItem> {
+  #onDidChangeTreeData = new vscode.EventEmitter<void | PullRequestListItem | null | undefined>();
+
+  readonly onDidChangeTreeData: vscode.Event<void | PullRequestListItem | null | undefined> =
+    this.#onDidChangeTreeData.event;
+
   getTreeItem = (element: PullRequestListItem): vscode.TreeItem | Thenable<vscode.TreeItem> => {
     return element;
   };
@@ -46,6 +51,11 @@ export class PullRequestListProvider implements vscode.TreeDataProvider<PullRequ
     }
 
     return rootItems;
+  };
+
+  refresh = async (): Promise<void> => {
+    Logger.info("Refreshing PullRequestListProvider");
+    this.#onDidChangeTreeData.fire();
   };
 }
 
