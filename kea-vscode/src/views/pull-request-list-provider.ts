@@ -92,6 +92,13 @@ class RepoTreeItem extends vscode.TreeItem {
 
       if (gitHubAccount instanceof Error) {
         Logger.error(`Error creating GitHub account: ${gitHubAccount.message}`);
+      } else {
+        const userProfile = await gitHubAccount.getUserProfile();
+        if (userProfile instanceof Error) {
+          Logger.error(`Error fetching GitHub user profile: ${userProfile.message}`);
+        } else {
+          Logger.info(`GitHub user profile: ${userProfile.login} (${userProfile.name})`);
+        }
       }
     }
 
