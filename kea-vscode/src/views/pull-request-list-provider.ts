@@ -1,8 +1,10 @@
 import * as vscode from "vscode";
 import { WorkspaceFolder } from "vscode";
+import { GitHubAccount } from "../account/github-account";
+import { AppContext } from "../core/app-context";
+import { getRepo } from "../core/git";
+import { Logger } from "../core/logger";
 import { Repository } from "../types/git";
-import { getRepo } from "../utils/git";
-import { Logger } from "../utils/logger";
 
 type PullRequestListItem = RepoTreeItem;
 
@@ -73,6 +75,14 @@ class RepoTreeItem extends vscode.TreeItem {
     const repoUrl = remote.fetchUrl ?? remote.pushUrl;
     if (repoUrl === undefined) {
       return new Error("No fetch or push URL found");
+    }
+
+    if (GitHubAccount.isGitHubUrl(repoUrl)) {
+      const gitHubAccount = await AppContext.getGitHubAccount();
+
+      if (gitHubAccount instanceof Error) {
+        Logger.error(`Error creating GitHub account: ${gitHubAccount.message}`);
+      }
     }
 
     return new RepoTreeItem(workspace, repo, repoUrl);
