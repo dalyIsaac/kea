@@ -82,7 +82,7 @@
     "typescript": "^5.7.3"
   },
   "dependencies": {
-    "octokit": "^4.1.2",
+    "@octokit/rest": "^20.1.2",
     "prettier-plugin-organize-imports": "^4.1.0"
   }
 }

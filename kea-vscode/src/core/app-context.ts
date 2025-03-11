@@ -5,20 +5,18 @@ import { Logger } from "./logger";
 export const AppContext = new (class AppContext {
   #gitHubAccount: GitHubAccount | undefined;
 
-  getGitHubAccount(): Promise<GitHubAccount | Error> {
+  getGitHubAccount = async (): Promise<GitHubAccount | Error> => {
     if (this.#gitHubAccount) {
       return Promise.resolve(this.#gitHubAccount);
     }
 
-    return GitHubAccount.create().then((account) => {
-      if (account instanceof Error) {
-        return account;
-      }
-
-      this.#gitHubAccount = account;
+    const account = await GitHubAccount.create();
+    if (account instanceof Error) {
       return account;
-    });
-  }
+    }
+    this.#gitHubAccount = account;
+    return account;
+  };
 
   onDidChangeSessionsListener = async (e: AuthenticationSessionsChangeEvent): Promise<void> => {
     if (e.provider.id === GitHubAccount.providerId) {

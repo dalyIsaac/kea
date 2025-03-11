@@ -1,6 +1,8 @@
-import { Octokit } from "octokit";
+import { Octokit } from "@octokit/rest";
 import * as vscode from "vscode";
 import { AuthenticationSession } from "vscode";
+import { PullRequest } from "../types/pull-request";
+import { convertOctokitPullRequest } from "../types/utils";
 import { IAccount } from "./account";
 
 export interface GitHubUser {
@@ -22,7 +24,9 @@ export class GitHubAccount implements IAccount {
 
   private constructor(session: AuthenticationSession) {
     this.session = session;
-    this.#octokit = new Octokit({ auth: session.accessToken });
+    this.#octokit = new Octokit({
+      auth: session.accessToken,
+    });
   }
 
   static create = async (): Promise<GitHubAccount | Error> => {
@@ -48,25 +52,22 @@ export class GitHubAccount implements IAccount {
     return url.includes("github.com");
   };
 
-  getUserProfile = async (): Promise<GitHubUser | Error> => {
-    if (this.#user) {
-      return this.#user;
-    }
-
+  getPullRequestList = async (owner: string, repo: string): Promise<PullRequest[] | Error> => {
     try {
-      const { data } = await this.#octokit.rest.users.getAuthenticated();
+      const response = await this.#octokit.pulls.list({
+        owner,
+        repo,
+        state: "open",
+        sort: "updated",
+        direction: "desc",
+        per_page: 100,
+      });
 
-      this.#user = {
-        login: data.login,
-        id: data.id,
-        name: data.name,
-        avatarUrl: data.avatar_url,
-        email: data.email,
-      };
-
-      return this.#user;
+      return response.data.map(convertOctokitPullRequest);
     } catch (error) {
-      return new Error(`Failed to fetch GitHub user profile: ${error}`);
+      return new Error(
+        `Error fetching pull requests: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   };
 }

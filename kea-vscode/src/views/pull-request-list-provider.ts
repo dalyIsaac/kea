@@ -6,7 +6,7 @@ import { getRepo } from "../core/git";
 import { Logger } from "../core/logger";
 import { Repository } from "../types/git";
 
-type PullRequestListItem = RepoTreeItem;
+type PullRequestListItem = RepoTreeItem | PullRequestTreeItem;
 
 export class PullRequestListProvider implements vscode.TreeDataProvider<PullRequestListItem> {
   #onDidChangeTreeData = new vscode.EventEmitter<void | PullRequestListItem | null | undefined>();
@@ -24,6 +24,11 @@ export class PullRequestListProvider implements vscode.TreeDataProvider<PullRequ
     if (element === undefined) {
       Logger.info("Fetching root items for PullRequestListProvider");
       return this.#getRootChildren();
+    }
+
+    if (element instanceof RepoTreeItem) {
+      Logger.info(`Fetching pull requests for ${element.label}`);
+      return this.#getPullRequests(element);
     }
 
     return [];
@@ -53,6 +58,39 @@ export class PullRequestListProvider implements vscode.TreeDataProvider<PullRequ
     return rootItems;
   };
 
+  #getPullRequests = async (repoTreeItem: RepoTreeItem): Promise<PullRequestTreeItem[]> => {
+    const account = await AppContext.getGitHubAccount();
+    if (account instanceof Error) {
+      Logger.error(`Error creating GitHub account: ${account.message}`);
+      return [];
+    }
+
+    const pullRequests = await account.getPullRequestList(
+      repoTreeItem.owner,
+      repoTreeItem.repoName,
+    );
+    if (pullRequests instanceof Error) {
+      Logger.error(`Error fetching pull requests: ${pullRequests.message}`);
+      return [];
+    }
+
+    const pullRequestItems: PullRequestTreeItem[] = [];
+    for (const pullRequest of pullRequests) {
+      const pullRequestItem = new PullRequestTreeItem(
+        pullRequest.title,
+        vscode.TreeItemCollapsibleState.None,
+      );
+      pullRequestItem.command = {
+        command: "kea.openPullRequest",
+        title: "Open Pull Request",
+        arguments: [pullRequest],
+      };
+      pullRequestItems.push(pullRequestItem);
+    }
+
+    return pullRequestItems;
+  };
+
   refresh = async (): Promise<void> => {
     Logger.info("Refreshing PullRequestListProvider");
     this.#onDidChangeTreeData.fire();
@@ -62,12 +100,25 @@ export class PullRequestListProvider implements vscode.TreeDataProvider<PullRequ
 class RepoTreeItem extends vscode.TreeItem {
   workspace: WorkspaceFolder;
   repo: Repository;
+  remoteUrl: string;
+  owner: string;
+  repoName: string;
 
-  private constructor(workspace: WorkspaceFolder, repo: Repository, repoUrl: string) {
-    super(workspace.name, vscode.TreeItemCollapsibleState.None);
+  private constructor(
+    workspace: WorkspaceFolder,
+    repo: Repository,
+    repoUrl: string,
+    owner: string,
+    repoName: string,
+  ) {
+    super(workspace.name, vscode.TreeItemCollapsibleState.Collapsed);
 
     this.workspace = workspace;
     this.repo = repo;
+    this.remoteUrl = repoUrl;
+    this.owner = owner;
+    this.repoName = repoName;
+
     this.description = repoUrl;
   }
 
@@ -87,21 +138,27 @@ class RepoTreeItem extends vscode.TreeItem {
       return new Error("No fetch or push URL found");
     }
 
+    const [owner, repoName] = repoUrl.replace(".git", "").split("/").slice(-2);
+    if (owner === undefined || repoName === undefined) {
+      return new Error("Invalid repository URL");
+    }
+
     if (GitHubAccount.isGitHubUrl(repoUrl)) {
       const gitHubAccount = await AppContext.getGitHubAccount();
 
       if (gitHubAccount instanceof Error) {
         Logger.error(`Error creating GitHub account: ${gitHubAccount.message}`);
-      } else {
-        const userProfile = await gitHubAccount.getUserProfile();
-        if (userProfile instanceof Error) {
-          Logger.error(`Error fetching GitHub user profile: ${userProfile.message}`);
-        } else {
-          Logger.info(`GitHub user profile: ${userProfile.login} (${userProfile.name})`);
-        }
       }
     }
 
-    return new RepoTreeItem(workspace, repo, repoUrl);
+    return new RepoTreeItem(workspace, repo, repoUrl, owner, repoName);
   };
+}
+
+class PullRequestTreeItem extends vscode.TreeItem {
+  constructor(label: string, collapsibleState: vscode.TreeItemCollapsibleState) {
+    super(label, collapsibleState);
+  }
+
+  contextValue = "pullRequest";
 }
