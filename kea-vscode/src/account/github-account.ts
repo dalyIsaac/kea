@@ -5,14 +5,6 @@ import { PullRequest } from "../types/pull-request";
 import { convertOctokitPullRequest } from "../types/utils";
 import { IAccount } from "./account";
 
-export interface GitHubUser {
-  login: string;
-  id: number;
-  name: string | null;
-  avatarUrl: string;
-  email: string | null;
-}
-
 export class GitHubAccount implements IAccount {
   static providerId = "github";
   static #scopes = ["user:email", "repo", "read:org"];
@@ -20,7 +12,6 @@ export class GitHubAccount implements IAccount {
 
   session: AuthenticationSession;
   #octokit: Octokit;
-  #user: GitHubUser | null = null;
 
   private constructor(session: AuthenticationSession) {
     this.session = session;
