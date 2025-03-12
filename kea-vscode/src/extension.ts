@@ -2,18 +2,23 @@ import * as vscode from "vscode";
 
 import { AppContext } from "./core/app-context";
 import { Logger } from "./core/logger";
-import { PullRequestListProvider } from "./views/pull-request-list-provider";
+import { PullRequestListTreeProvider } from "./views/pull-request-list-tree-provider";
 
 export function activate(context: vscode.ExtensionContext) {
   Logger.info("Kea extension activated");
 
-  const pullRequestListProvider = new PullRequestListProvider();
+  // Tree providers.
+  const pullRequestListTreeProvider = new PullRequestListTreeProvider();
 
-  vscode.window.registerTreeDataProvider("kea.pullRequestList", pullRequestListProvider);
+  // Register tree providers.
+  vscode.window.registerTreeDataProvider("kea.pullRequestList", pullRequestListTreeProvider);
+  vscode.window.registerTreeDataProvider("kea.pullRequest", pullRequestListTreeProvider);
+
   vscode.authentication.onDidChangeSessions(AppContext.onDidChangeSessionsListener);
 
+  // Commands.
   vscode.commands.registerCommand("kea.refreshPullRequestList", () => {
-    pullRequestListProvider.refresh();
+    pullRequestListTreeProvider.refresh();
   });
 }
 

@@ -8,7 +8,7 @@ import { Repository } from "../types/git";
 
 type PullRequestListItem = RepoTreeItem | PullRequestTreeItem;
 
-export class PullRequestListProvider implements vscode.TreeDataProvider<PullRequestListItem> {
+export class PullRequestListTreeProvider implements vscode.TreeDataProvider<PullRequestListItem> {
   #onDidChangeTreeData = new vscode.EventEmitter<void | PullRequestListItem | null | undefined>();
 
   readonly onDidChangeTreeData: vscode.Event<void | PullRequestListItem | null | undefined> =

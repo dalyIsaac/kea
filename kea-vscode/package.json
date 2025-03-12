@@ -35,7 +35,12 @@
       "kea": [
         {
           "id": "kea.pullRequestList",
-          "name": "Pull Requests",
+          "name": "Pull Request List",
+          "icon": "media/icon.png"
+        },
+        {
+          "id": "kea.pullRequest",
+          "name": "Pull Request",
           "icon": "media/icon.png"
         }
       ]
