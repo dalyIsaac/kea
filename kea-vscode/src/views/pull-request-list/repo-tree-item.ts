@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { WorkspaceFolder } from "vscode";
-import { GitHubAccount } from "../../account/github-account";
+import { GitHubAccount } from "../../account/github/github-account";
 import { AppContext } from "../../core/app-context";
 import { getRepo } from "../../core/git";
 import { Logger } from "../../core/logger";

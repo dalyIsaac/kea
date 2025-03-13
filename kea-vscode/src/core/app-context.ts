@@ -1,5 +1,5 @@
 import { AuthenticationSessionsChangeEvent } from "vscode";
-import { GitHubAccount } from "../account/github-account";
+import { GitHubAccount } from "../account/github/github-account";
 import { Logger } from "./logger";
 
 export const AppContext = new (class AppContext {

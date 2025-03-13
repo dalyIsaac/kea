@@ -1,5 +1,5 @@
 import { AuthenticationSession } from "vscode";
-import { PullRequest } from "../types/pull-request";
+import { PullRequest } from "../types/kea";
 
 export interface IAccount {
   session: AuthenticationSession;

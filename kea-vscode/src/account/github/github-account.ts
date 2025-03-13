@@ -1,9 +1,9 @@
 import { Octokit } from "@octokit/rest";
 import * as vscode from "vscode";
 import { AuthenticationSession } from "vscode";
-import { PullRequest } from "../types/pull-request";
-import { convertOctokitPullRequest } from "../types/utils";
-import { IAccount } from "./account";
+import { PullRequest } from "../../types/kea";
+import { IAccount } from "../account";
+import { convertGitHubPullRequest } from "./github-utils";
 
 export class GitHubAccount implements IAccount {
   static providerId = "github";
@@ -21,11 +21,7 @@ export class GitHubAccount implements IAccount {
   }
 
   static create = async (): Promise<GitHubAccount | Error> => {
-    const session = await vscode.authentication.getSession(this.providerId, [
-      "user:email",
-      "repo",
-      "read:org",
-    ]);
+    const session = await vscode.authentication.getSession(this.providerId, ["user:email", "repo", "read:org"]);
 
     if (session === undefined) {
       if (!this.#hasRequestedUser) {
@@ -54,11 +50,9 @@ export class GitHubAccount implements IAccount {
         per_page: 100,
       });
 
-      return response.data.map(convertOctokitPullRequest);
+      return response.data.map(convertGitHubPullRequest);
     } catch (error) {
-      return new Error(
-        `Error fetching pull requests: ${error instanceof Error ? error.message : String(error)}`,
-      );
+      return new Error(`Error fetching pull requests: ${error instanceof Error ? error.message : String(error)}`);
     }
   };
 }
