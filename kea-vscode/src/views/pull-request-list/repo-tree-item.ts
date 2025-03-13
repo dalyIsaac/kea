@@ -7,13 +7,15 @@ import { Logger } from "../../core/logger";
 import { Repository } from "../../types/git";
 
 export class RepoTreeItem extends vscode.TreeItem {
+  // Overrides.
+  contextValue = "repository";
+
+  // Properties.
   workspace: WorkspaceFolder;
   repo: Repository;
   remoteUrl: string;
   owner: string;
   repoName: string;
-
-  contextValue = "repository";
 
   private constructor(workspace: WorkspaceFolder, repo: Repository, repoUrl: string, owner: string, repoName: string) {
     super(workspace.name, vscode.TreeItemCollapsibleState.Collapsed);

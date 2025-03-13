@@ -4,11 +4,13 @@ import * as vscode from "vscode";
  * Provides information about a file or directory in a commit.
  */
 export class CommitFileTreeItem extends vscode.TreeItem {
-  filePath: string;
-  isDirectory: boolean;
-
+  // Overrides.
   contextValue = "commitFile";
   iconPath = new vscode.ThemeIcon("file-code");
+
+  // Properties.
+  filePath: string;
+  isDirectory: boolean;
 
   constructor(filePath: string) {
     const isDirectory = filePath.endsWith("/");
