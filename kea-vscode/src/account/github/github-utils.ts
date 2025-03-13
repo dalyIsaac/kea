@@ -1,5 +1,5 @@
 import { RestEndpointMethodTypes } from "@octokit/rest";
-import { PullRequest } from "../../types/kea";
+import { PullRequest, PullRequestComment } from "../../types/kea";
 
 /**
  * Converts an Octokit Pull Request response to our internal PullRequest type
@@ -23,5 +23,28 @@ export const convertGitHubPullRequest = (pr: RestEndpointMethodTypes["pulls"]["l
   user: {
     login: pr.user?.login || "",
     avatarUrl: pr.user?.avatar_url || "",
+  },
+});
+
+/**
+ * Converts an Octokit Pull Request Comment response to our internal PullRequestComment type
+ */
+export const convertGitHubPullRequestComment = (
+  comment: RestEndpointMethodTypes["pulls"]["listReviewComments"]["response"]["data"][number],
+): PullRequestComment => ({
+  id: comment.id,
+  body: comment.body,
+  createdAt: new Date(comment.created_at),
+  updatedAt: new Date(comment.updated_at),
+  replyTo: comment.in_reply_to_id || null,
+  startLine: comment.start_line || 0,
+  originalStartLine: comment.original_start_line || 0,
+  startSide: comment.start_side as "LEFT" | "RIGHT",
+  line: comment.line || 0,
+  originalLine: comment.original_line || 0,
+  side: comment.side as "LEFT" | "RIGHT",
+  user: {
+    login: comment.user?.login || "",
+    avatarUrl: comment.user?.avatar_url || "",
   },
 });

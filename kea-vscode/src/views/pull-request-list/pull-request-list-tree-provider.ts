@@ -61,7 +61,7 @@ export class PullRequestListTreeProvider implements vscode.TreeDataProvider<Pull
       return [];
     }
 
-    const pullRequests = await account.getPullRequestList(repoTreeItem.owner, repoTreeItem.repoName);
+    const pullRequests = await account.getPullRequestList(repoTreeItem.repoId);
     if (pullRequests instanceof Error) {
       Logger.error(`Error fetching pull requests: ${pullRequests.message}`);
       return [];

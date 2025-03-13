@@ -5,6 +5,7 @@ import { AppContext } from "../../core/app-context";
 import { getRepo } from "../../core/git";
 import { Logger } from "../../core/logger";
 import { Repository } from "../../types/git";
+import { RepoId } from "../../types/kea";
 
 export class RepoTreeItem extends vscode.TreeItem {
   // Overrides.
@@ -14,17 +15,15 @@ export class RepoTreeItem extends vscode.TreeItem {
   workspace: WorkspaceFolder;
   repo: Repository;
   remoteUrl: string;
-  owner: string;
-  repoName: string;
+  repoId: RepoId;
 
-  private constructor(workspace: WorkspaceFolder, repo: Repository, repoUrl: string, owner: string, repoName: string) {
+  private constructor(workspace: WorkspaceFolder, repo: Repository, repoUrl: string, repoId: RepoId) {
     super(workspace.name, vscode.TreeItemCollapsibleState.Collapsed);
 
     this.workspace = workspace;
     this.repo = repo;
     this.remoteUrl = repoUrl;
-    this.owner = owner;
-    this.repoName = repoName;
+    this.repoId = repoId;
 
     this.description = repoUrl;
   }
@@ -58,6 +57,6 @@ export class RepoTreeItem extends vscode.TreeItem {
       }
     }
 
-    return new RepoTreeItem(workspace, repo, repoUrl, owner, repoName);
+    return new RepoTreeItem(workspace, repo, repoUrl, { owner, repo: repoName });
   };
 }

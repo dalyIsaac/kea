@@ -1,9 +1,9 @@
 import { Octokit } from "@octokit/rest";
 import * as vscode from "vscode";
 import { AuthenticationSession } from "vscode";
-import { PullRequest } from "../../types/kea";
+import { PullRequest, PullRequestComment, PullRequestId, RepoId } from "../../types/kea";
 import { IAccount } from "../account";
-import { convertGitHubPullRequest } from "./github-utils";
+import { convertGitHubPullRequest, convertGitHubPullRequestComment } from "./github-utils";
 
 export class GitHubAccount implements IAccount {
   static providerId = "github";
@@ -21,7 +21,7 @@ export class GitHubAccount implements IAccount {
   }
 
   static create = async (): Promise<GitHubAccount | Error> => {
-    const session = await vscode.authentication.getSession(this.providerId, ["user:email", "repo", "read:org"]);
+    const session = await vscode.authentication.getSession(this.providerId, this.#scopes);
 
     if (session === undefined) {
       if (!this.#hasRequestedUser) {
@@ -39,11 +39,11 @@ export class GitHubAccount implements IAccount {
     return url.includes("github.com");
   };
 
-  getPullRequestList = async (owner: string, repo: string): Promise<PullRequest[] | Error> => {
+  getPullRequestList = async (repoId: RepoId): Promise<PullRequest[] | Error> => {
     try {
       const response = await this.#octokit.pulls.list({
-        owner,
-        repo,
+        owner: repoId.owner,
+        repo: repoId.repo,
         state: "open",
         sort: "updated",
         direction: "desc",
@@ -53,6 +53,20 @@ export class GitHubAccount implements IAccount {
       return response.data.map(convertGitHubPullRequest);
     } catch (error) {
       return new Error(`Error fetching pull requests: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  };
+
+  getPullRequestComments = async (pullId: PullRequestId): Promise<PullRequestComment[] | Error> => {
+    try {
+      const response = await this.#octokit.pulls.listReviewComments({
+        owner: pullId.owner,
+        repo: pullId.repo,
+        pull_number: pullId.number,
+      });
+
+      return response.data.map(convertGitHubPullRequestComment);
+    } catch (error) {
+      return new Error(`Error fetching pull request comments: ${error instanceof Error ? error.message : String(error)}`);
     }
   };
 }
