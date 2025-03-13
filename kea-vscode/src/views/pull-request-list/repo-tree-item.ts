@@ -13,6 +13,8 @@ export class RepoTreeItem extends vscode.TreeItem {
   owner: string;
   repoName: string;
 
+  contextValue = "repository";
+
   private constructor(workspace: WorkspaceFolder, repo: Repository, repoUrl: string, owner: string, repoName: string) {
     super(workspace.name, vscode.TreeItemCollapsibleState.Collapsed);
 

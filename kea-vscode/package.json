@@ -51,6 +51,11 @@
           "command": "kea.refreshPullRequestList",
           "when": "view == kea.pullRequestList",
           "group": "navigation"
+        },
+        {
+          "command": "kea.refreshPullRequestList",
+          "when": "view == kea.pullRequest",
+          "group": "navigation"
         }
       ]
     }

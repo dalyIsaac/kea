@@ -6,6 +6,9 @@ import { RepoTreeItem } from "./repo-tree-item";
 
 type PullRequestListItem = RepoTreeItem | PullRequestTreeItem;
 
+/**
+ * Provides a list of pull requests for all the repositories in the workspace.
+ */
 export class PullRequestListTreeProvider implements vscode.TreeDataProvider<PullRequestListItem> {
   #onDidChangeTreeData = new vscode.EventEmitter<void | PullRequestListItem | null | undefined>();
 
@@ -78,7 +81,7 @@ export class PullRequestListTreeProvider implements vscode.TreeDataProvider<Pull
     return pullRequestItems;
   };
 
-  refresh = async (): Promise<void> => {
+  refresh = (): void => {
     Logger.info("Refreshing PullRequestListProvider");
     this.#onDidChangeTreeData.fire();
   };
