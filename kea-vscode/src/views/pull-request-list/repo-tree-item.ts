@@ -1,10 +1,10 @@
 import * as vscode from "vscode";
 import { WorkspaceFolder } from "vscode";
-import { GitHubAccount } from "../../../account/github-account";
-import { AppContext } from "../../../core/app-context";
-import { getRepo } from "../../../core/git";
-import { Logger } from "../../../core/logger";
-import { Repository } from "../../../types/git";
+import { GitHubAccount } from "../../account/github-account";
+import { AppContext } from "../../core/app-context";
+import { getRepo } from "../../core/git";
+import { Logger } from "../../core/logger";
+import { Repository } from "../../types/git";
 
 export class RepoTreeItem extends vscode.TreeItem {
   workspace: WorkspaceFolder;
@@ -13,13 +13,7 @@ export class RepoTreeItem extends vscode.TreeItem {
   owner: string;
   repoName: string;
 
-  private constructor(
-    workspace: WorkspaceFolder,
-    repo: Repository,
-    repoUrl: string,
-    owner: string,
-    repoName: string,
-  ) {
+  private constructor(workspace: WorkspaceFolder, repo: Repository, repoUrl: string, owner: string, repoName: string) {
     super(workspace.name, vscode.TreeItemCollapsibleState.Collapsed);
 
     this.workspace = workspace;

@@ -1,24 +1,21 @@
 import * as vscode from "vscode";
 import { AppContext } from "../../core/app-context";
 import { Logger } from "../../core/logger";
-import { PullRequestTreeItem } from "./tree-items/pull-request-tree-item";
-import { RepoTreeItem } from "./tree-items/repo-tree-item";
+import { PullRequestTreeItem } from "./pull-request-tree-item";
+import { RepoTreeItem } from "./repo-tree-item";
 
 type PullRequestListItem = RepoTreeItem | PullRequestTreeItem;
 
 export class PullRequestListTreeProvider implements vscode.TreeDataProvider<PullRequestListItem> {
   #onDidChangeTreeData = new vscode.EventEmitter<void | PullRequestListItem | null | undefined>();
 
-  readonly onDidChangeTreeData: vscode.Event<void | PullRequestListItem | null | undefined> =
-    this.#onDidChangeTreeData.event;
+  readonly onDidChangeTreeData: vscode.Event<void | PullRequestListItem | null | undefined> = this.#onDidChangeTreeData.event;
 
   getTreeItem = (element: PullRequestListItem): vscode.TreeItem | Thenable<vscode.TreeItem> => {
     return element;
   };
 
-  getChildren = (
-    element?: PullRequestListItem | undefined,
-  ): vscode.ProviderResult<PullRequestListItem[]> => {
+  getChildren = (element?: PullRequestListItem | undefined): vscode.ProviderResult<PullRequestListItem[]> => {
     if (element === undefined) {
       Logger.info("Fetching root items for PullRequestListProvider");
       return this.#getRootChildren();
@@ -33,9 +30,7 @@ export class PullRequestListTreeProvider implements vscode.TreeDataProvider<Pull
   };
 
   #getRootChildren = async (): Promise<RepoTreeItem[]> => {
-    const allItems = vscode.workspace.workspaceFolders?.map((workspace) =>
-      RepoTreeItem.create(workspace),
-    );
+    const allItems = vscode.workspace.workspaceFolders?.map((workspace) => RepoTreeItem.create(workspace));
     if (allItems === undefined) {
       Logger.error("No workspace folders found");
       return [];
@@ -63,10 +58,7 @@ export class PullRequestListTreeProvider implements vscode.TreeDataProvider<Pull
       return [];
     }
 
-    const pullRequests = await account.getPullRequestList(
-      repoTreeItem.owner,
-      repoTreeItem.repoName,
-    );
+    const pullRequests = await account.getPullRequestList(repoTreeItem.owner, repoTreeItem.repoName);
     if (pullRequests instanceof Error) {
       Logger.error(`Error fetching pull requests: ${pullRequests.message}`);
       return [];
@@ -74,10 +66,7 @@ export class PullRequestListTreeProvider implements vscode.TreeDataProvider<Pull
 
     const pullRequestItems: PullRequestTreeItem[] = [];
     for (const pullRequest of pullRequests) {
-      const pullRequestItem = new PullRequestTreeItem(
-        pullRequest.title,
-        vscode.TreeItemCollapsibleState.None,
-      );
+      const pullRequestItem = new PullRequestTreeItem(pullRequest.title, vscode.TreeItemCollapsibleState.None);
       pullRequestItem.command = {
         command: "kea.openPullRequest",
         title: "Open Pull Request",
