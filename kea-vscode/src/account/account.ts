@@ -1,7 +1,9 @@
 import { AuthenticationSession } from "vscode";
-import { PullRequest } from "../types/pull-request";
+import { IssueComment, IssueId, PullRequest, PullRequestComment, PullRequestId, RepoId } from "../types/kea";
 
 export interface IAccount {
   session: AuthenticationSession;
-  getPullRequestList: (owner: string, repo: string) => Promise<PullRequest[] | Error>;
+  getPullRequestList: (repoId: RepoId) => Promise<PullRequest[] | Error>;
+  getIssueComments: (issueId: IssueId) => Promise<IssueComment[] | Error>;
+  getPullRequestReviewComments: (pullId: PullRequestId) => Promise<PullRequestComment[] | Error>;
 }
