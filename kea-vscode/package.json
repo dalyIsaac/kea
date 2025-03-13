@@ -20,6 +20,12 @@
         "title": "Refresh Pull Request List",
         "category": "Kea",
         "icon": "$(refresh)"
+      },
+      {
+        "command": "kea.openPullRequest",
+        "title": "Open Pull Request",
+        "category": "Kea",
+        "icon": "$(link)"
       }
     ],
     "viewsContainers": {

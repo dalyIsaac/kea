@@ -5,7 +5,7 @@ import { Logger } from "./logger";
 export const AppContext = new (class AppContext {
   #gitHubAccount: GitHubAccount | undefined;
 
-  getGitHubAccount = async (): Promise<GitHubAccount | Error> => {
+  #getGitHubAccount = async (): Promise<GitHubAccount | Error> => {
     if (this.#gitHubAccount) {
       return Promise.resolve(this.#gitHubAccount);
     }
@@ -18,11 +18,16 @@ export const AppContext = new (class AppContext {
     return account;
   };
 
+  getAccount = async (accountName: string): Promise<GitHubAccount | Error> => {
+    // TODO: Create an account manager to handle multiple accounts.
+    return this.#getGitHubAccount();
+  };
+
   onDidChangeSessionsListener = async (e: AuthenticationSessionsChangeEvent): Promise<void> => {
     if (e.provider.id === GitHubAccount.providerId) {
       this.#gitHubAccount = undefined;
 
-      const account = await this.getGitHubAccount();
+      const account = await this.#getGitHubAccount();
 
       if (account instanceof Error) {
         Logger.error(`Error creating GitHub account: ${account.message}`);

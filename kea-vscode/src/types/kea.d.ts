@@ -3,9 +3,23 @@ export interface RepoId {
   repo: string;
 }
 
-export interface PullRequestId extends RepoId {
+export interface IssueId extends RepoId {
   number: number;
 }
+
+export interface IssueComment {
+  id: number;
+  body: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  replyTo: number | null;
+  user: {
+    login: string;
+    avatarUrl: string;
+  };
+}
+
+export type PullRequestId = IssueId;
 
 export interface PullRequest {
   id: number;
@@ -31,20 +45,11 @@ export interface PullRequest {
 
 export type Side = "LEFT" | "RIGHT" | "BOTH";
 
-export interface PullRequestComment {
-  id: number;
-  body: string;
-  createdAt: Date;
-  updatedAt: Date;
-  replyTo: number | null;
+export interface PullRequestComment extends IssueComment {
   startLine: number;
   originalStartLine: number;
   startSide: Side;
   line: number;
   originalLine: number;
   side: Side;
-  user: {
-    login: string;
-    avatarUrl: string;
-  };
 }

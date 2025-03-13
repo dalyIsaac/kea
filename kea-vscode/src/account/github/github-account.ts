@@ -1,9 +1,13 @@
 import { Octokit } from "@octokit/rest";
 import * as vscode from "vscode";
 import { AuthenticationSession } from "vscode";
-import { PullRequest, PullRequestComment, PullRequestId, RepoId } from "../../types/kea";
+import { IssueComment, IssueId, PullRequest, PullRequestComment, PullRequestId, RepoId } from "../../types/kea";
 import { IAccount } from "../account";
-import { convertGitHubPullRequest, convertGitHubPullRequestComment } from "./github-utils";
+import {
+  convertGitHubIssueComment,
+  convertGitHubPullRequest,
+  convertGitHubPullRequestComment as convertGitHubPullRequestReviewComment,
+} from "./github-utils";
 
 export class GitHubAccount implements IAccount {
   static providerId = "github";
@@ -56,7 +60,21 @@ export class GitHubAccount implements IAccount {
     }
   };
 
-  getPullRequestComments = async (pullId: PullRequestId): Promise<PullRequestComment[] | Error> => {
+  getIssueComments = async (issueId: IssueId): Promise<IssueComment[] | Error> => {
+    try {
+      const response = await this.#octokit.issues.listComments({
+        owner: issueId.owner,
+        repo: issueId.repo,
+        issue_number: issueId.number,
+      });
+
+      return response.data.map(convertGitHubIssueComment);
+    } catch (error) {
+      return new Error(`Error fetching issue comments: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  };
+
+  getPullRequestReviewComments = async (pullId: PullRequestId): Promise<PullRequestComment[] | Error> => {
     try {
       const response = await this.#octokit.pulls.listReviewComments({
         owner: pullId.owner,
@@ -64,7 +82,7 @@ export class GitHubAccount implements IAccount {
         pull_number: pullId.number,
       });
 
-      return response.data.map(convertGitHubPullRequestComment);
+      return response.data.map(convertGitHubPullRequestReviewComment);
     } catch (error) {
       return new Error(`Error fetching pull request comments: ${error instanceof Error ? error.message : String(error)}`);
     }

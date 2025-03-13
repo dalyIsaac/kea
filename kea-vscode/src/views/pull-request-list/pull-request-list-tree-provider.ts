@@ -55,7 +55,8 @@ export class PullRequestListTreeProvider implements vscode.TreeDataProvider<Pull
   };
 
   #getPullRequests = async (repoTreeItem: RepoTreeItem): Promise<PullRequestTreeItem[]> => {
-    const account = await AppContext.getGitHubAccount();
+    const accountName = "github";
+    const account = await AppContext.getAccount(accountName);
     if (account instanceof Error) {
       Logger.error(`Error creating GitHub account: ${account.message}`);
       return [];
@@ -67,18 +68,7 @@ export class PullRequestListTreeProvider implements vscode.TreeDataProvider<Pull
       return [];
     }
 
-    const pullRequestItems: PullRequestTreeItem[] = [];
-    for (const pullRequest of pullRequests) {
-      const pullRequestItem = new PullRequestTreeItem(pullRequest.title, vscode.TreeItemCollapsibleState.None);
-      pullRequestItem.command = {
-        command: "kea.openPullRequest",
-        title: "Open Pull Request",
-        arguments: [pullRequest],
-      };
-      pullRequestItems.push(pullRequestItem);
-    }
-
-    return pullRequestItems;
+    return pullRequests.map((pr) => new PullRequestTreeItem(accountName, pr));
   };
 
   refresh = (): void => {

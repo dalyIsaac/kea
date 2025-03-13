@@ -50,7 +50,7 @@ export class RepoTreeItem extends vscode.TreeItem {
     }
 
     if (GitHubAccount.isGitHubUrl(repoUrl)) {
-      const gitHubAccount = await AppContext.getGitHubAccount();
+      const gitHubAccount = await AppContext.getAccount("github");
 
       if (gitHubAccount instanceof Error) {
         Logger.error(`Error creating GitHub account: ${gitHubAccount.message}`);
