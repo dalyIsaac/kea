@@ -1,11 +1,12 @@
 import { Octokit } from "@octokit/rest";
 import * as vscode from "vscode";
 import { AuthenticationSession } from "vscode";
-import { IssueComment, IssueId, PullRequest, PullRequestComment, PullRequestId, RepoId } from "../../types/kea";
+import { IssueComment, IssueId, PullRequest, PullRequestComment, PullRequestFile, PullRequestId, RepoId } from "../../types/kea";
 import { IAccount } from "../account";
 import {
   convertGitHubIssueComment,
   convertGitHubPullRequest,
+  convertGitHubPullRequestFile,
   convertGitHubPullRequestComment as convertGitHubPullRequestReviewComment,
 } from "./github-utils";
 
@@ -85,6 +86,20 @@ export class GitHubAccount implements IAccount {
       return response.data.map(convertGitHubPullRequestReviewComment);
     } catch (error) {
       return new Error(`Error fetching pull request comments: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  };
+
+  getPullRequestFiles = async (pullId: PullRequestId): Promise<PullRequestFile[] | Error> => {
+    try {
+      const response = await this.#octokit.pulls.listFiles({
+        owner: pullId.owner,
+        repo: pullId.repo,
+        pull_number: pullId.number,
+      });
+
+      return response.data.map(convertGitHubPullRequestFile);
+    } catch (error) {
+      return new Error(`Error fetching pull request files: ${error instanceof Error ? error.message : String(error)}`);
     }
   };
 }

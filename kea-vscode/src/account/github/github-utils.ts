@@ -1,5 +1,5 @@
 import { RestEndpointMethodTypes } from "@octokit/rest";
-import { IssueComment, PullRequest, PullRequestComment } from "../../types/kea";
+import { IssueComment, PullRequest, PullRequestComment, PullRequestFile } from "../../types/kea";
 
 /**
  * Converts an Octokit Pull Request response to our internal PullRequest type
@@ -54,14 +54,32 @@ export const convertGitHubPullRequestComment = (
   createdAt: new Date(comment.created_at),
   updatedAt: new Date(comment.updated_at),
   replyTo: comment.in_reply_to_id ?? null,
-  startLine: comment.start_line ?? 0,
-  originalStartLine: comment.original_start_line ?? 0,
+  startLine: comment.start_line ?? null,
+  originalStartLine: comment.original_start_line ?? null,
   startSide: comment.start_side as "LEFT" | "RIGHT",
-  line: comment.line ?? 0,
-  originalLine: comment.original_line ?? 0,
+  line: comment.line ?? null,
+  originalLine: comment.original_line ?? null,
   side: comment.side as "LEFT" | "RIGHT",
   user: {
-    login: comment.user?.login ?? "",
-    avatarUrl: comment.user?.avatar_url ?? "",
+    login: comment.user?.login ?? null,
+    avatarUrl: comment.user?.avatar_url ?? null,
   },
+});
+
+/**
+ * Converts an Octokit Pull Request File response to our internal PullRequestFile type
+ */
+export const convertGitHubPullRequestFile = (
+  file: RestEndpointMethodTypes["pulls"]["listFiles"]["response"]["data"][number],
+): PullRequestFile => ({
+  filename: file.filename,
+  sha: file.sha,
+  status: file.status,
+  additions: file.additions,
+  deletions: file.deletions,
+  changes: file.changes,
+  blobUrl: file.blob_url,
+  rawUrl: file.raw_url,
+  contentsUrl: file.contents_url,
+  patch: file.patch ?? null,
 });

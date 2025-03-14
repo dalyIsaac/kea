@@ -6,6 +6,7 @@ import { PullRequest, PullRequestId } from "../../types/kea";
 import { ParentTreeItem } from "../parent-tree-item";
 import { CommentsRootTreeItem } from "./comments-root-tree-item";
 import { CommitsRootTreeItem } from "./commits-root-tree-item";
+import { FilesRootTreeItem } from "./files-root-tree-item";
 
 type PullRequestTreeItem = CommitsRootTreeItem;
 
@@ -62,7 +63,7 @@ export class PullRequestTreeProvider implements vscode.TreeDataProvider<PullRequ
     // TODO: Get all the comments for each file under each file
     // TODO: Get all the PR comments, under a top-level tree item "Comments"
 
-    return [new CommentsRootTreeItem(account, pullId), new CommitsRootTreeItem()];
+    return [new CommentsRootTreeItem(account, pullId), new FilesRootTreeItem(account, pullId), new CommitsRootTreeItem()];
   };
 
   refresh = (): void => {
