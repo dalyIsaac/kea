@@ -6,7 +6,7 @@ import { PullRequest, PullRequestId } from "./types/kea";
 import { PullRequestListTreeProvider } from "./views/pull-request-list/pull-request-list-tree-provider";
 import { PullRequestTreeProvider } from "./views/pull-request/pull-request-tree-provider";
 
-export function activate(context: vscode.ExtensionContext) {
+export function activate(_context: vscode.ExtensionContext) {
   Logger.info("Kea extension activated");
 
   // Tree providers.
