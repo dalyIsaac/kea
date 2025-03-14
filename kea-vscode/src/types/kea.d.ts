@@ -51,7 +51,7 @@ export interface PullRequestComment extends IssueComment {
   startSide: Side | null;
   line: number | null;
   originalLine: number | null;
-  side: Side;
+  side: Side | null;
 }
 
 export interface PullRequestFile {
