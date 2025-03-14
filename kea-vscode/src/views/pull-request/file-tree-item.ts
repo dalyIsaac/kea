@@ -16,7 +16,9 @@ export class FileTreeItem extends ParentTreeItem<CommentTreeItem> {
   #file: PullRequestFile;
 
   constructor(file: PullRequestFile) {
-    super(file.filename, vscode.TreeItemCollapsibleState.Collapsed);
+    const name = file.filename.split("/").pop() ?? file.filename;
+    // TODO: Only have a collapsed state if the file has comments.
+    super(name, vscode.TreeItemCollapsibleState.Collapsed);
     this.#file = file;
   }
 
