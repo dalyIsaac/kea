@@ -46,10 +46,23 @@ export interface PullRequest {
 export type Side = "LEFT" | "RIGHT" | "BOTH";
 
 export interface PullRequestComment extends IssueComment {
-  startLine: number;
-  originalStartLine: number;
-  startSide: Side;
-  line: number;
-  originalLine: number;
+  startLine: number | null;
+  originalStartLine: number | null;
+  startSide: Side | null;
+  line: number | null;
+  originalLine: number | null;
   side: Side;
+}
+
+export interface PullRequestFile {
+  filename: string;
+  sha: string;
+  status: string;
+  additions: number;
+  deletions: number;
+  changes: number;
+  patch: string | null;
+  blobUrl: string;
+  rawUrl: string;
+  contentsUrl: string;
 }
