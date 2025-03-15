@@ -31,3 +31,4 @@ target
 .vite
 .vscode-test
 kea-vscode/out
+coverage
