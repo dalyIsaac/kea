@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import { Uri } from "vscode";
 import { API, GitExtension, Repository } from "../types/git";
+import { WrappedError } from "./wrapped-error";
 
 export const getRepo = async (uri: Uri): Promise<Repository | Error> => {
   const api = await getGitApi();
@@ -28,7 +29,7 @@ const getGitApi = async (): Promise<API | Error> => {
     try {
       await gitExtension.activate();
     } catch (error) {
-      return new Error(`Failed to activate Git extension: ${error}`);
+      return new WrappedError("Failed to activate Git extension", error);
     }
   }
 

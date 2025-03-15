@@ -20,12 +20,18 @@ export function activate(_context: vscode.ExtensionContext) {
   vscode.authentication.onDidChangeSessions(AppContext.onDidChangeSessionsListener);
 
   // Commands.
-  vscode.commands.registerCommand("kea.refreshPullRequestList", () => pullRequestListTreeProvider.refresh());
+  vscode.commands.registerCommand("kea.refreshPullRequestList", () => {
+    pullRequestListTreeProvider.refresh();
+  });
   vscode.commands.registerCommand("kea.openPullRequest", async (args: [string, PullRequestId, PullRequest]) =>
     pullRequestTreeProvider.openPullRequest(...args),
   );
 
-  vscode.commands.registerCommand("kea.refreshPullRequest", () => pullRequestTreeProvider.refresh());
+  vscode.commands.registerCommand("kea.refreshPullRequest", () => {
+    pullRequestTreeProvider.refresh();
+  });
 }
 
-export function deactivate() {}
+export function deactivate() {
+  Logger.info("Kea extension deactivated");
+}

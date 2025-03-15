@@ -9,12 +9,10 @@ import { ReviewCommentTreeItem } from "./review-comment-tree-item";
  * Parent tree item for comments.
  */
 export class CommentsRootTreeItem extends ParentTreeItem<CommentTreeItem> {
-  // Overrides.
-  contextValue = "comment";
-  iconPath = new vscode.ThemeIcon("comment-discussion");
-  tooltip = "Comments";
+  override contextValue = "comment";
+  override iconPath = new vscode.ThemeIcon("comment-discussion");
+  override tooltip = "Comments";
 
-  // Properties.
   #account: IAccount;
   #pullId: PullRequestId;
 

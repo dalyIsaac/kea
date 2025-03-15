@@ -14,12 +14,31 @@ export default tseslint.config(
     },
   },
   {
+    ignores: ["eslint.config.mjs", "src/types/git.d.ts"],
+  },
+  {
+    files: ["**/*.ts"],
     rules: {
       "@typescript-eslint/naming-convention": [
         "error",
         {
           selector: "import",
           format: ["camelCase", "PascalCase"],
+        },
+      ],
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+        },
+      ],
+      "@typescript-eslint/no-invalid-void-type": "off",
+      "@typescript-eslint/array-type": [
+        "error",
+        {
+          default: "array-simple",
+          readonly: "generic",
         },
       ],
 

@@ -11,12 +11,10 @@ type FilesRootTreeItemChild = FileTreeItem | FolderTreeItem;
  * Parent tree item for files.
  */
 export class FilesRootTreeItem extends ParentTreeItem<FilesRootTreeItemChild> {
-  // Overrides.
-  contextValue = "file";
-  iconPath = new vscode.ThemeIcon("file-directory");
-  tooltip = "Files";
+  override contextValue = "file";
+  override iconPath = new vscode.ThemeIcon("file-directory");
+  override tooltip = "Files";
 
-  // Properties.
   #account: IAccount;
   #pullId: PullRequestId;
 

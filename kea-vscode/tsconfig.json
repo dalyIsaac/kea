@@ -14,10 +14,13 @@
     // Rules.
     "forceConsistentCasingInFileNames": true,
     "noImplicitReturns": true,
+    "noImplicitOverride": true,
+    "noImplicitAny": true,
     "noFallthroughCasesInSwitch": true,
     "noUnusedParameters": true,
     "exactOptionalPropertyTypes": true,
     "noUncheckedIndexedAccess": true
   },
+  "include": ["src/**/*"],
   "exclude": ["node_modules", ".vscode-test"]
 }
