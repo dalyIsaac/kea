@@ -16,9 +16,9 @@ export const convertGitHubPullRequest = (pr: RestEndpointMethodTypes["pulls"]["l
   mergedAt: pr.merged_at ? new Date(pr.merged_at) : null,
   isDraft: pr.draft ?? false,
   repository: {
-    name: pr.base?.repo?.name ?? "",
-    owner: pr.base?.repo?.owner?.login ?? "",
-    url: pr.base?.repo?.html_url ?? "",
+    name: pr.base.repo.name,
+    owner: pr.base.repo.owner.login,
+    url: pr.base.repo.html_url,
   },
   user: {
     login: pr.user?.login ?? "",
@@ -56,13 +56,13 @@ export const convertGitHubPullRequestComment = (
   replyTo: comment.in_reply_to_id ?? null,
   startLine: comment.start_line ?? null,
   originalStartLine: comment.original_start_line ?? null,
-  startSide: comment.start_side as "LEFT" | "RIGHT",
+  startSide: comment.start_side ?? null,
   line: comment.line ?? null,
   originalLine: comment.original_line ?? null,
-  side: comment.side as "LEFT" | "RIGHT",
+  side: comment.side ?? null,
   user: {
-    login: comment.user?.login ?? null,
-    avatarUrl: comment.user?.avatar_url ?? null,
+    login: comment.user.login,
+    avatarUrl: comment.user.avatar_url,
   },
 });
 

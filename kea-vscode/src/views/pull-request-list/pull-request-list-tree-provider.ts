@@ -18,14 +18,14 @@ export class PullRequestListTreeProvider implements vscode.TreeDataProvider<Pull
     return element;
   };
 
-  getChildren = (element?: PullRequestListItem | undefined): vscode.ProviderResult<PullRequestListItem[]> => {
+  getChildren = (element?: PullRequestListItem): vscode.ProviderResult<PullRequestListItem[]> => {
     if (element === undefined) {
       Logger.info("Fetching root items for PullRequestListProvider");
       return this.#getRootChildren();
     }
 
     if (element instanceof RepoTreeItem) {
-      Logger.info(`Fetching pull requests for ${element.label}`);
+      Logger.info("Fetching pull requests for", element.repoId);
       return this.#getPullRequests(element);
     }
 

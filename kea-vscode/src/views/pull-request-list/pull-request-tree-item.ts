@@ -2,8 +2,7 @@ import * as vscode from "vscode";
 import { PullRequest, PullRequestId } from "../../types/kea";
 
 export class PullRequestTreeItem extends vscode.TreeItem {
-  // Overrides.
-  contextValue = "pullRequest";
+  override contextValue = "pullRequest";
 
   constructor(accountName: string, pullRequest: PullRequest) {
     super(pullRequest.title, vscode.TreeItemCollapsibleState.None);

@@ -14,12 +14,10 @@ type PullRequestTreeItem = CommitsRootTreeItem;
  * Provides information about the current pull request.
  */
 export class PullRequestTreeProvider implements vscode.TreeDataProvider<PullRequestTreeItem> {
-  // Overrides.
   #onDidChangeTreeData = new vscode.EventEmitter<void | PullRequestTreeItem | null | undefined>();
 
   readonly onDidChangeTreeData: vscode.Event<void | PullRequestTreeItem | null | undefined> = this.#onDidChangeTreeData.event;
 
-  // Properties.
   #account: IAccount | undefined;
   #pullId: PullRequestId | undefined;
   #pullRequest: PullRequest | undefined;
@@ -29,7 +27,7 @@ export class PullRequestTreeProvider implements vscode.TreeDataProvider<PullRequ
     return element;
   };
 
-  getChildren = (element?: PullRequestTreeItem | undefined): vscode.ProviderResult<PullRequestTreeItem[]> => {
+  getChildren = (element?: PullRequestTreeItem): vscode.ProviderResult<PullRequestTreeItem[]> => {
     if (this.#pullId === undefined || this.#pullRequest === undefined) {
       Logger.error("Pull request is undefined");
       // TODO
@@ -48,16 +46,15 @@ export class PullRequestTreeProvider implements vscode.TreeDataProvider<PullRequ
     }
 
     if (element instanceof ParentTreeItem) {
-      Logger.info(`Fetching children for ${element.label}`);
+      Logger.info("Fetching children for", element.label);
       return element.getChildren();
     }
 
-    Logger.error(`Unknown element type: ${element}`);
+    Logger.error("Unknown element type: ", element);
     return [];
   };
 
-  // Methods.
-  static #getRootChildren = async (account: IAccount, pullId: PullRequestId): Promise<PullRequestTreeItem[]> => {
+  static #getRootChildren = (account: IAccount, pullId: PullRequestId): PullRequestTreeItem[] => {
     // TODO: Get the commits list, under a top-level tree item "Commits"
     // TODO: For each commit, get the changed files
     // TODO: Get all the comments for each file under each file
@@ -72,7 +69,7 @@ export class PullRequestTreeProvider implements vscode.TreeDataProvider<PullRequ
   };
 
   openPullRequest = async (accountName: string, pullId: PullRequestId, pullRequest: PullRequest): Promise<void> => {
-    Logger.info(`Opening pull request ${pullId} for account ${accountName}`);
+    Logger.info("Opening pull request", pullId, "for account", accountName);
 
     const account = await AppContext.getAccount(accountName);
     if (account instanceof Error) {

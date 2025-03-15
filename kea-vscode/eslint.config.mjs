@@ -1,27 +1,44 @@
-import typescriptEslint from "@typescript-eslint/eslint-plugin";
-import tsParser from "@typescript-eslint/parser";
+import eslint from "@eslint/js";
+import tseslint from "typescript-eslint";
 
-export default [
+export default tseslint.config(
+  eslint.configs.recommended,
+  tseslint.configs.strictTypeChecked,
+  tseslint.configs.stylisticTypeChecked,
   {
-    files: ["**/*.ts"],
+    languageOptions: {
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
   },
   {
-    plugins: {
-      "@typescript-eslint": typescriptEslint,
-    },
-
-    languageOptions: {
-      parser: tsParser,
-      ecmaVersion: 2022,
-      sourceType: "module",
-    },
-
+    ignores: ["eslint.config.mjs", "src/types/git.d.ts"],
+  },
+  {
+    files: ["**/*.ts"],
     rules: {
       "@typescript-eslint/naming-convention": [
         "error",
         {
           selector: "import",
           format: ["camelCase", "PascalCase"],
+        },
+      ],
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+        },
+      ],
+      "@typescript-eslint/no-invalid-void-type": "off",
+      "@typescript-eslint/array-type": [
+        "error",
+        {
+          default: "array-simple",
+          readonly: "generic",
         },
       ],
 
@@ -38,4 +55,4 @@ export default [
       semi: "error",
     },
   },
-];
+);

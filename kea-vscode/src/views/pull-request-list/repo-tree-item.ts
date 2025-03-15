@@ -8,10 +8,8 @@ import { Repository } from "../../types/git";
 import { RepoId } from "../../types/kea";
 
 export class RepoTreeItem extends vscode.TreeItem {
-  // Overrides.
-  contextValue = "repository";
+  override contextValue = "repository";
 
-  // Properties.
   workspace: WorkspaceFolder;
   repo: Repository;
   remoteUrl: string;

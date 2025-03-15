@@ -18,7 +18,7 @@ export const AppContext = new (class AppContext {
     return account;
   };
 
-  getAccount = async (accountName: string): Promise<GitHubAccount | Error> => {
+  getAccount = async (_accountName: string): Promise<GitHubAccount | Error> => {
     // TODO: Create an account manager to handle multiple accounts.
     return this.#getGitHubAccount();
   };
