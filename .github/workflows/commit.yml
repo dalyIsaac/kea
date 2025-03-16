@@ -68,3 +68,5 @@ jobs:
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5.3.1
+        with:
+          files: kea-vscode/coverage/lcov.info
