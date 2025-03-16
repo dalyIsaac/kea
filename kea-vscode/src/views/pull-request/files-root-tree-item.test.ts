@@ -1,6 +1,5 @@
 import * as assert from "assert";
-import sinon from "sinon";
-import { createAccountStub } from "../../test-utils";
+import { createAccountStub, createPullRequestFileStub } from "../../test-utils";
 import { PullRequestId } from "../../types/kea";
 import { FileTreeItem } from "./file-tree-item";
 import { FilesRootTreeItem } from "./files-root-tree-item";
@@ -12,7 +11,7 @@ suite("FilesRootTreeItem", () => {
   test("Returns an empty array when the API call fails", async () => {
     // Given
     const account = createAccountStub({
-      getPullRequestFiles: sinon.stub().returns(new Error("API call failed")),
+      getPullRequestFiles: (_id) => Promise.resolve(new Error("API call failed")),
     });
 
     // When
@@ -26,7 +25,7 @@ suite("FilesRootTreeItem", () => {
   test("Returns an empty array when there are no files", async () => {
     // Given
     const account = createAccountStub({
-      getPullRequestFiles: sinon.stub().returns([]),
+      getPullRequestFiles: (_id) => Promise.resolve([]),
     });
 
     // When
@@ -40,7 +39,7 @@ suite("FilesRootTreeItem", () => {
   test("Returns a single file when there is one file", async () => {
     // Given
     const account = createAccountStub({
-      getPullRequestFiles: sinon.stub().returns([{ filename: "README.md" }]),
+      getPullRequestFiles: (_id) => Promise.resolve([createPullRequestFileStub({ filename: "README.md" })]),
     });
 
     // When
@@ -57,13 +56,12 @@ suite("FilesRootTreeItem", () => {
   test("Returns a tree structure for files", async () => {
     // Given
     const account = createAccountStub({
-      getPullRequestFiles: sinon
-        .stub()
-        .returns([
-          { filename: "src/components/Button.tsx" },
-          { filename: "src/components/Modal.tsx" },
-          { filename: "src/utils/helpers.ts" },
-          { filename: "README.md" },
+      getPullRequestFiles: (_id) =>
+        Promise.resolve([
+          createPullRequestFileStub({ filename: "src/components/Button.tsx" }),
+          createPullRequestFileStub({ filename: "src/components/Modal.tsx" }),
+          createPullRequestFileStub({ filename: "src/utils/helpers.ts" }),
+          createPullRequestFileStub({ filename: "README.md" }),
         ]),
     });
 
@@ -80,7 +78,7 @@ suite("FilesRootTreeItem", () => {
 
     const src = children[1] as FolderTreeItem;
     assert.strictEqual(src.label, "src");
-    assert.ok(readme instanceof FileTreeItem);
+    assert.ok(src instanceof FolderTreeItem);
     assert.strictEqual(src.children.length, 2);
 
     const components = src.children[0] as FolderTreeItem;

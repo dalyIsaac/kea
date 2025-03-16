@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import { IAccount } from "../../account/account";
+import { Logger } from "../../core/logger";
 import { PullRequestId } from "../../types/kea";
 import { ParentTreeItem } from "../parent-tree-item";
 import { CommentTreeItem } from "./comment-tree-item";
@@ -23,22 +24,34 @@ export class CommentsRootTreeItem extends ParentTreeItem<CommentTreeItem> {
   }
 
   getChildren = async (): Promise<CommentTreeItem[]> => {
-    const reviewComments = await this.#account.getPullRequestReviewComments(this.#pullId);
+    const [reviewComments, issueComments] = await Promise.all([
+      this.#account.getPullRequestReviewComments(this.#pullId),
+      this.#account.getIssueComments(this.#pullId),
+    ]);
+
+    let hasFailed = false;
+
+    let reviewCommentItems: ReviewCommentTreeItem[] = [];
     if (reviewComments instanceof Error) {
-      vscode.window.showErrorMessage(`Error fetching review comments: ${reviewComments.message}`);
-      return [];
+      Logger.error("Error fetching pull request review comments", reviewComments);
+      hasFailed = true;
+    } else {
+      reviewCommentItems = reviewComments.map((comment) => new ReviewCommentTreeItem(comment));
     }
 
-    const reviewCommentItems = reviewComments.map((comment) => new ReviewCommentTreeItem(comment));
-
-    const issueComments = await this.#account.getIssueComments(this.#pullId);
     let issueCommentItems: CommentTreeItem[] = [];
     if (issueComments instanceof Error) {
-      vscode.window.showErrorMessage(`Error fetching issue comments: ${issueComments.message}`);
+      Logger.error("Error fetching issue comments", issueComments);
+      hasFailed = true;
     } else {
       issueCommentItems = issueComments.map((comment) => new CommentTreeItem(comment));
     }
 
-    return [...reviewCommentItems, ...issueCommentItems];
+    if (hasFailed) {
+      vscode.window.showErrorMessage(`Error fetching pull request comments`);
+    }
+
+    const allCommentItems = [...reviewCommentItems, ...issueCommentItems];
+    return allCommentItems.sort((a, b) => a.comment.createdAt.getTime() - b.comment.createdAt.getTime());
   };
 }

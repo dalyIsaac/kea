@@ -9,7 +9,10 @@ export class CommentTreeItem extends vscode.TreeItem {
   override iconPath = new vscode.ThemeIcon("comment");
   override tooltip = "Comment";
 
+  comment: IssueComment;
+
   constructor(comment: IssueComment) {
     super(comment.body ?? "<Empty comment>", vscode.TreeItemCollapsibleState.None);
+    this.comment = comment;
   }
 }

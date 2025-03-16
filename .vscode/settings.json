@@ -20,5 +20,9 @@
   "typescript.tsc.autoDetect": "off",
   "editor.tabSize": 2,
   "eslint.useFlatConfig": true,
-  "eslint.workingDirectories": ["kea-vscode"]
+  "eslint.workingDirectories": ["kea-vscode"],
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.patterns": {
+    "*.ts": "${capture}.test.ts"
+  }
 }
