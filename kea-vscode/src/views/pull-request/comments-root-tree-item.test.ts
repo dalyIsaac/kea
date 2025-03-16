@@ -84,13 +84,13 @@ suite("CommentsRootTreeItem", () => {
   test("Returns multiple comments", async () => {
     // Given
     const issueComments = [
-      createIssueCommentStub({ id: 1, body: "Test issue comment 1" }),
-      createIssueCommentStub({ id: 2, body: "Test issue comment 2" }),
+      createIssueCommentStub({ id: 1, body: "Test issue comment 1", createdAt: new Date("2023-01-01") }),
+      createIssueCommentStub({ id: 2, body: "Test issue comment 2", createdAt: new Date("2023-01-02") }),
     ];
 
     const reviewComments = [
-      createPullRequestCommentStub({ id: 3, body: "Test review comment 1" }),
-      createPullRequestCommentStub({ id: 4, body: "Test review comment 2" }),
+      createPullRequestCommentStub({ id: 3, body: "Test review comment 1", createdAt: new Date("2023-01-03") }),
+      createPullRequestCommentStub({ id: 4, body: "Test review comment 2", createdAt: new Date("2022-01-04") }),
     ];
 
     const account = createAccountStub({
@@ -105,15 +105,15 @@ suite("CommentsRootTreeItem", () => {
     // Then
     assert.strictEqual(children.length, 4);
     assert.ok(children[0] instanceof CommentTreeItem);
-    assert.equal(children[0].label, "Test review comment 1");
+    assert.equal(children[0].label, "Test review comment 2");
 
     assert.ok(children[1] instanceof CommentTreeItem);
-    assert.equal(children[1].label, "Test review comment 2");
+    assert.equal(children[1].label, "Test issue comment 1");
 
     assert.ok(children[2] instanceof CommentTreeItem);
-    assert.equal(children[2].label, "Test issue comment 1");
+    assert.equal(children[2].label, "Test issue comment 2");
 
     assert.ok(children[3] instanceof CommentTreeItem);
-    assert.equal(children[3].label, "Test issue comment 2");
+    assert.equal(children[3].label, "Test review comment 1");
   });
 });
