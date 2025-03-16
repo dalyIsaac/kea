@@ -49,31 +49,24 @@ export class FilesRootTreeItem extends ParentTreeItem<FilesRootTreeItemChild> {
     let parents = roots;
     const pathParts = file.filename.split("/");
 
-    // Traverse the path down to the file.
-    // We start at 1 because the first part is the root folder.
-    // We also need to create the parent folders as we go.
-    for (let idx = 1; idx <= pathParts.length; idx += 1) {
-      const currentPath = pathParts.slice(0, idx).join("/");
-      let currentNode = parents.find((node) => node.label === currentPath);
+    for (let idx = 0; idx < pathParts.length - 1; idx += 1) {
+      const folderName = pathParts[idx];
+      const folderPath = pathParts.slice(0, idx + 1).join("/");
 
-      if (currentNode instanceof FolderTreeItem) {
-        // Parent node already exists, so we just add the child to it.
-        parents = currentNode.children;
-        continue;
+      let folderNode = parents.find((node) => node instanceof FolderTreeItem && node.label === folderName);
+      if (folderNode === undefined) {
+        folderNode = new FolderTreeItem(folderPath);
+        parents.push(folderNode);
       }
 
-      currentNode = idx === pathParts.length ? new FileTreeItem(file) : new FolderTreeItem(currentPath);
+      parents = (folderNode as FolderTreeItem).children;
+    }
 
-      parents.push(currentNode);
+    const fileName = pathParts[pathParts.length - 1];
+    const fileNode = new FileTreeItem(file);
 
-      if (currentNode instanceof FolderTreeItem) {
-        parents = currentNode.children;
-      } else {
-        // If it's a file, we don't need to go deeper.
-        // Add the file to the parent.
-
-        break;
-      }
+    if (!parents.some((node) => node instanceof FileTreeItem && node.label === fileName)) {
+      parents.push(fileNode);
     }
 
     return roots;
