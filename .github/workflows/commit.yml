@@ -57,12 +57,12 @@ jobs:
         working-directory: kea-vscode
 
       - name: Run tests
-        run: xvfb-run -a npm run test -- --runInBand --detectOpenHandles --forceExit
+        run: xvfb-run -a npm run test:ci
         working-directory: kea-vscode
         if: runner.os == 'Linux'
 
       - name: Run tests
-        run: npm run test -- --runInBand --detectOpenHandles --forceExit
+        run: npm run test:ci
         working-directory: kea-vscode
         if: runner.os != 'Linux'
 
