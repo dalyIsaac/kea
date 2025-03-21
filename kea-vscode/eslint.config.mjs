@@ -14,7 +14,7 @@ export default tseslint.config(
     },
   },
   {
-    ignores: ["eslint.config.mjs", "src/types/git.d.ts"],
+    ignores: ["**/*.mjs", "**/*.js", "src/types/git.d.ts"],
   },
   {
     files: ["**/*.ts"],
@@ -53,6 +53,12 @@ export default tseslint.config(
       ],
       "prefer-const": "error",
       semi: "error",
+    },
+  },
+  {
+    files: ["**/*.test.ts"],
+    rules: {
+      "@typescript-eslint/no-non-null-assertion": "off",
     },
   },
 );

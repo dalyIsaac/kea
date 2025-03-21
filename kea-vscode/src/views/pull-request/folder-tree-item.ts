@@ -13,7 +13,8 @@ export class FolderTreeItem extends ParentTreeItem<FileTreeItem | FolderTreeItem
   children: Array<FileTreeItem | FolderTreeItem>;
 
   constructor(folderPath: string) {
-    super(folderPath, vscode.TreeItemCollapsibleState.Collapsed);
+    const label = folderPath.split("/").pop() ?? folderPath;
+    super(label, vscode.TreeItemCollapsibleState.Collapsed);
     this.children = [];
   }
 

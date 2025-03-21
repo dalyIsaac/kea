@@ -36,3 +36,37 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
         working-directory: kea-vscode
+
+  test:
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: latest
+          cache: "npm"
+          cache-dependency-path: kea-vscode/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: kea-vscode
+
+      - name: Run tests
+        run: xvfb-run -a npm run test:ci
+        working-directory: kea-vscode
+        if: runner.os == 'Linux'
+
+      - name: Run tests
+        run: npm run test:ci
+        working-directory: kea-vscode
+        if: runner.os != 'Linux'
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5.3.1
+        with:
+          files: kea-vscode/coverage/lcov.info

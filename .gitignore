@@ -29,3 +29,6 @@ target
 *.pem
 
 .vite
+.vscode-test
+kea-vscode/out
+coverage
