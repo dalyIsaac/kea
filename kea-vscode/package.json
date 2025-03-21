@@ -84,7 +84,7 @@
     "format": "prettier --write .",
     "test": "vscode-test",
     "test:ci": "npm run pretest && npm run coverage -- --runInBand --detectOpenHandles --forceExit",
-    "coverage": "npm run pretest && vscode-test --coverage",
+    "coverage": "npm run pretest && vscode-test --coverage --coverage-reporter=text --coverage-reporter=lcov",
     "coverage:serve": "npm run coverage && npx serve coverage/lcov-report",
     "typecheck": "tsc --noEmit"
   },
