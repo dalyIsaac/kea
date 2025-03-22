@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { IAccount } from "../../account/account";
+import { IKeaRepository } from "../../repository/kea-repository";
 import { PullRequestComment, PullRequestFile, PullRequestId } from "../../types/kea";
 import { ParentTreeItem } from "../parent-tree-item";
 import { FileTreeItem } from "./file-tree-item";
@@ -15,19 +15,19 @@ export class FilesRootTreeItem extends ParentTreeItem<FilesRootTreeItemChild> {
   override iconPath = new vscode.ThemeIcon("file-directory");
   override tooltip = "Files";
 
-  #account: IAccount;
+  #repository: IKeaRepository;
   #pullId: PullRequestId;
 
-  constructor(account: IAccount, id: PullRequestId) {
+  constructor(repository: IKeaRepository, id: PullRequestId) {
     super("Files", vscode.TreeItemCollapsibleState.Collapsed);
-    this.#account = account;
+    this.#repository = repository;
     this.#pullId = id;
   }
 
   getChildren = async (): Promise<FilesRootTreeItemChild[]> => {
     const [files, reviewComments] = await Promise.all([
-      this.#account.getPullRequestFiles(this.#pullId),
-      this.#account.getPullRequestReviewComments(this.#pullId),
+      this.#repository.getPullRequestFiles(this.#pullId),
+      this.#repository.getPullRequestReviewComments(this.#pullId),
     ]);
 
     if (files instanceof Error) {
@@ -77,7 +77,7 @@ export class FilesRootTreeItem extends ParentTreeItem<FilesRootTreeItemChild> {
 
     const comments = reviewComments.filter((comment) => comment.path === file.filename);
     const fileName = pathParts[pathParts.length - 1];
-    const fileNode = new FileTreeItem(this.#account.session.id, this.#pullId, file, comments);
+    const fileNode = new FileTreeItem(this.#repository.authSessionAccountId, this.#pullId, file, comments);
 
     if (!parents.some((node) => node instanceof FileTreeItem && node.label === fileName)) {
       parents.push(fileNode);

@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
-import { IAccount } from "../../account/account";
 import { Logger } from "../../core/logger";
 import { createCommentsRootDecorationUri } from "../../decorations/decoration-schemes";
+import { IKeaRepository } from "../../repository/kea-repository";
 import { PullRequestId } from "../../types/kea";
 import { ParentTreeItem } from "../parent-tree-item";
 import { CommentTreeItem } from "./comment-tree-item";
@@ -16,24 +16,24 @@ export class CommentsRootTreeItem extends ParentTreeItem<CommentTreeItem> {
   override tooltip = "Comments";
   override resourceUri: vscode.Uri;
 
-  #account: IAccount;
+  #repository: IKeaRepository;
   #pullId: PullRequestId;
 
-  constructor(account: IAccount, id: PullRequestId) {
+  constructor(repository: IKeaRepository, id: PullRequestId) {
     super("Comments", vscode.TreeItemCollapsibleState.Collapsed);
-    this.#account = account;
+    this.#repository = repository;
     this.#pullId = id;
 
     this.resourceUri = createCommentsRootDecorationUri({
-      sessionId: this.#account.session.id,
+      sessionId: this.#repository.authSessionAccountId,
       repoId: this.#pullId,
     });
   }
 
   getChildren = async (): Promise<CommentTreeItem[]> => {
     const [reviewComments, issueComments] = await Promise.all([
-      this.#account.getPullRequestReviewComments(this.#pullId),
-      this.#account.getIssueComments(this.#pullId),
+      this.#repository.getPullRequestReviewComments(this.#pullId),
+      this.#repository.getIssueComments(this.#pullId),
     ]);
 
     let hasFailed = false;

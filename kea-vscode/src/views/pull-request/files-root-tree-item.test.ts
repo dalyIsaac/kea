@@ -1,5 +1,5 @@
 import * as assert from "assert";
-import { createAccountStub, createPullRequestCommentStub, createPullRequestFileStub } from "../../test-utils";
+import { createPullRequestCommentStub, createPullRequestFileStub, createRepositoryStub } from "../../test-utils";
 import { PullRequestId } from "../../types/kea";
 import { FileTreeItem } from "./file-tree-item";
 import { FilesRootTreeItem } from "./files-root-tree-item";
@@ -11,12 +11,12 @@ suite("FilesRootTreeItem", () => {
 
   test("Returns an empty array when the files API call fails", async () => {
     // Given
-    const account = createAccountStub({
+    const repository = createRepositoryStub({
       getPullRequestFiles: (_id) => Promise.resolve(new Error("API call failed")),
     });
 
     // When
-    const filesRootTreeItem = new FilesRootTreeItem(account, pullId);
+    const filesRootTreeItem = new FilesRootTreeItem(repository, pullId);
     const children = await filesRootTreeItem.getChildren();
 
     // Then
@@ -25,13 +25,13 @@ suite("FilesRootTreeItem", () => {
 
   test("Continues to return an empty array when the review comments API call fails", async () => {
     // Given
-    const account = createAccountStub({
+    const repository = createRepositoryStub({
       getPullRequestFiles: (_id) => Promise.resolve([createPullRequestFileStub({ filename: "README.md" })]),
       getPullRequestReviewComments: (_id) => Promise.resolve(new Error("API call failed")),
     });
 
     // When
-    const filesRootTreeItem = new FilesRootTreeItem(account, pullId);
+    const filesRootTreeItem = new FilesRootTreeItem(repository, pullId);
     const children = await filesRootTreeItem.getChildren();
 
     // Then
@@ -40,12 +40,12 @@ suite("FilesRootTreeItem", () => {
 
   test("Returns an empty array when there are no files", async () => {
     // Given
-    const account = createAccountStub({
+    const repository = createRepositoryStub({
       getPullRequestFiles: (_id) => Promise.resolve([]),
     });
 
     // When
-    const filesRootTreeItem = new FilesRootTreeItem(account, pullId);
+    const filesRootTreeItem = new FilesRootTreeItem(repository, pullId);
     const children = await filesRootTreeItem.getChildren();
 
     // Then
@@ -54,13 +54,13 @@ suite("FilesRootTreeItem", () => {
 
   test("Returns a single file when there is one file", async () => {
     // Given
-    const account = createAccountStub({
+    const repository = createRepositoryStub({
       getPullRequestFiles: (_id) => Promise.resolve([createPullRequestFileStub({ filename: "README.md" })]),
       getPullRequestReviewComments: (_id) => Promise.resolve([]),
     });
 
     // When
-    const filesRootTreeItem = new FilesRootTreeItem(account, pullId);
+    const filesRootTreeItem = new FilesRootTreeItem(repository, pullId);
     const children = await filesRootTreeItem.getChildren();
 
     // Then
@@ -72,7 +72,7 @@ suite("FilesRootTreeItem", () => {
 
   test("Returns a tree structure for files", async () => {
     // Given
-    const account = createAccountStub({
+    const repository = createRepositoryStub({
       getPullRequestFiles: (_id) =>
         Promise.resolve([
           createPullRequestFileStub({ filename: "src/components/Button.tsx" }),
@@ -84,7 +84,7 @@ suite("FilesRootTreeItem", () => {
     });
 
     // When
-    const filesRootTreeItem = new FilesRootTreeItem(account, pullId);
+    const filesRootTreeItem = new FilesRootTreeItem(repository, pullId);
     const children = await filesRootTreeItem.getChildren();
 
     // Then
@@ -124,7 +124,7 @@ suite("FilesRootTreeItem", () => {
 
   test("Returns a single file with multiple review comments", async () => {
     // Given
-    const account = createAccountStub({
+    const repository = createRepositoryStub({
       getPullRequestFiles: (_id) => Promise.resolve([createPullRequestFileStub({ filename: "README.md" })]),
       getPullRequestReviewComments: (_id) =>
         Promise.resolve([
@@ -135,7 +135,7 @@ suite("FilesRootTreeItem", () => {
     });
 
     // When
-    const filesRootTreeItem = new FilesRootTreeItem(account, pullId);
+    const filesRootTreeItem = new FilesRootTreeItem(repository, pullId);
     const children = await filesRootTreeItem.getChildren();
 
     // Then

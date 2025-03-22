@@ -1,5 +1,6 @@
 import sinon from "sinon";
 import { IAccount } from "./account/account";
+import { IKeaRepository } from "./repository/kea-repository";
 import { IssueComment, PullRequestComment, PullRequestFile } from "./types/kea";
 
 export const createAccountStub = (props: Partial<IAccount> = {}): IAccount => ({
@@ -17,6 +18,23 @@ export const createAccountStub = (props: Partial<IAccount> = {}): IAccount => ({
     scopes: ["repo"],
     id: "sessionId",
   },
+  tryCreateRepoForAccount: sinon.stub(),
+  ...props,
+});
+
+export const createRepositoryStub = (props: Partial<IKeaRepository> = {}): IKeaRepository => ({
+  authSessionAccountId: "accountId",
+  remoteUrl: "remoteUrl",
+  repoId: {
+    owner: "owner",
+    repo: "repo",
+  },
+  getPullRequestList: sinon.stub(),
+  getIssueComments: sinon.stub(),
+  getPullRequestReviewComments: sinon.stub(),
+  getPullRequestFiles: sinon.stub(),
+  onDidChangeIssueComments: sinon.stub(),
+  onDidChangePullRequestReviewComments: sinon.stub(),
   ...props,
 });
 

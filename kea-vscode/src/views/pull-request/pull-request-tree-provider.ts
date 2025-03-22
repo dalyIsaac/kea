@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
-import { IAccount } from "../../account/account";
-import { IAccountManager } from "../../account/account-manager";
 import { Logger } from "../../core/logger";
+import { IKeaRepository } from "../../repository/kea-repository";
+import { IRepositoryManager } from "../../repository/repository-manager";
 import { PullRequest, PullRequestId } from "../../types/kea";
 import { ParentTreeItem } from "../parent-tree-item";
 import { CommentsRootTreeItem } from "./comments-root-tree-item";
@@ -14,16 +14,17 @@ type PullRequestTreeItem = CommitsRootTreeItem;
  * Provides information about the current pull request.
  */
 export class PullRequestTreeProvider implements vscode.TreeDataProvider<PullRequestTreeItem> {
-  #accountManager: IAccountManager;
-  #account: IAccount | undefined;
+  #repositoryManager: IRepositoryManager;
+
+  #repository: IKeaRepository | undefined;
   #pullId: PullRequestId | undefined;
   #pullRequest: PullRequest | undefined;
 
   #onDidChangeTreeData = new vscode.EventEmitter<void | PullRequestTreeItem | null | undefined>();
   readonly onDidChangeTreeData: vscode.Event<void | PullRequestTreeItem | null | undefined> = this.#onDidChangeTreeData.event;
 
-  constructor(accountManager: IAccountManager) {
-    this.#accountManager = accountManager;
+  constructor(repositoryManager: IRepositoryManager) {
+    this.#repositoryManager = repositoryManager;
   }
 
   getTreeItem = (element: PullRequestTreeItem): vscode.TreeItem | Thenable<vscode.TreeItem> => {
@@ -33,19 +34,17 @@ export class PullRequestTreeProvider implements vscode.TreeDataProvider<PullRequ
   getChildren = (element?: PullRequestTreeItem): vscode.ProviderResult<PullRequestTreeItem[]> => {
     if (this.#pullId === undefined || this.#pullRequest === undefined) {
       Logger.error("Pull request is undefined");
-      // TODO
       return [];
     }
 
-    if (this.#account === undefined) {
-      Logger.error("Account is undefined");
-      // TODO
+    if (this.#repository === undefined) {
+      Logger.error("Repository is undefined");
       return [];
     }
 
     if (element === undefined) {
       Logger.info("Fetching root items for PullRequestProvider");
-      return PullRequestTreeProvider.#getRootChildren(this.#account, this.#pullId);
+      return PullRequestTreeProvider.#getRootChildren(this.#repository, this.#pullId);
     }
 
     if (element instanceof ParentTreeItem) {
@@ -57,9 +56,9 @@ export class PullRequestTreeProvider implements vscode.TreeDataProvider<PullRequ
     return [];
   };
 
-  static #getRootChildren = (account: IAccount, pullId: PullRequestId): PullRequestTreeItem[] => [
-    new CommentsRootTreeItem(account, pullId),
-    new FilesRootTreeItem(account, pullId),
+  static #getRootChildren = (repository: IKeaRepository, pullId: PullRequestId): PullRequestTreeItem[] => [
+    new CommentsRootTreeItem(repository, pullId),
+    new FilesRootTreeItem(repository, pullId),
     new CommitsRootTreeItem(),
   ];
 
@@ -68,16 +67,16 @@ export class PullRequestTreeProvider implements vscode.TreeDataProvider<PullRequ
     this.#onDidChangeTreeData.fire();
   };
 
-  openPullRequest = async (sessionId: string, pullId: PullRequestId, pullRequest: PullRequest): Promise<void> => {
+  openPullRequest = (authSessionAccountId: string, pullId: PullRequestId, pullRequest: PullRequest): void => {
     Logger.info("Opening pull request", pullId);
 
-    const account = await this.#accountManager.getAccountBySessionId(sessionId);
-    if (account instanceof Error) {
-      Logger.error(`Error getting account: ${account.message}`);
+    const repository = this.#repositoryManager.getRepoById(authSessionAccountId, pullId);
+    if (repository instanceof Error) {
+      Logger.error("Error getting repository", repository);
       return;
     }
 
-    this.#account = account;
+    this.#repository = repository;
     this.#pullId = pullId;
     this.#pullRequest = pullRequest;
     this.refresh();

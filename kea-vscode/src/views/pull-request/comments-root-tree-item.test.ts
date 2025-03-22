@@ -1,5 +1,5 @@
 import * as assert from "assert";
-import { createAccountStub, createIssueCommentStub, createPullRequestCommentStub } from "../../test-utils";
+import { createIssueCommentStub, createPullRequestCommentStub, createRepositoryStub } from "../../test-utils";
 import { IssueComment, PullRequestComment, PullRequestId } from "../../types/kea";
 import { CommentTreeItem } from "./comment-tree-item";
 import { CommentsRootTreeItem } from "./comments-root-tree-item";
@@ -10,13 +10,13 @@ suite("CommentsRootTreeItem", () => {
 
   test("Returns an empty array when both API calls fail", async () => {
     // Given
-    const account = createAccountStub({
+    const repository = createRepositoryStub({
       getIssueComments: (_id) => Promise.resolve(new Error("Issue comments API call failed")),
       getPullRequestReviewComments: (_id) => Promise.resolve(new Error("Review comments API call failed")),
     });
 
     // When
-    const commentsRootTreeItem = new CommentsRootTreeItem(account, pullId);
+    const commentsRootTreeItem = new CommentsRootTreeItem(repository, pullId);
     const children = await commentsRootTreeItem.getChildren();
 
     // Then
@@ -25,13 +25,13 @@ suite("CommentsRootTreeItem", () => {
 
   test("Returns an empty array when both API calls return empty arrays", async () => {
     // Given
-    const account = createAccountStub({
+    const repository = createRepositoryStub({
       getIssueComments: (_id) => Promise.resolve<IssueComment[]>([]),
       getPullRequestReviewComments: (_id) => Promise.resolve<PullRequestComment[]>([]),
     });
 
     // When
-    const commentsRootTreeItem = new CommentsRootTreeItem(account, pullId);
+    const commentsRootTreeItem = new CommentsRootTreeItem(repository, pullId);
     const children = await commentsRootTreeItem.getChildren();
 
     // Then
@@ -45,13 +45,13 @@ suite("CommentsRootTreeItem", () => {
       createIssueCommentStub({ id: 2, body: "Test issue comment 2" }),
     ];
 
-    const account = createAccountStub({
+    const repository = createRepositoryStub({
       getIssueComments: (_id) => Promise.resolve<IssueComment[]>(issueComments),
       getPullRequestReviewComments: (_id) => Promise.resolve(new Error("Review comments API call failed")),
     });
 
     // When
-    const commentsRootTreeItem = new CommentsRootTreeItem(account, pullId);
+    const commentsRootTreeItem = new CommentsRootTreeItem(repository, pullId);
     const children = await commentsRootTreeItem.getChildren();
 
     // Then
@@ -67,13 +67,13 @@ suite("CommentsRootTreeItem", () => {
       createPullRequestCommentStub({ id: 2, body: "Test review comment 2" }),
     ];
 
-    const account = createAccountStub({
+    const repository = createRepositoryStub({
       getIssueComments: (_id) => Promise.resolve(new Error("Issue comments API call failed")),
       getPullRequestReviewComments: (_id) => Promise.resolve<PullRequestComment[]>(reviewComments),
     });
 
     // When
-    const commentsRootTreeItem = new CommentsRootTreeItem(account, pullId);
+    const commentsRootTreeItem = new CommentsRootTreeItem(repository, pullId);
     const children = await commentsRootTreeItem.getChildren();
 
     // Then
@@ -94,13 +94,13 @@ suite("CommentsRootTreeItem", () => {
       createPullRequestCommentStub({ id: 4, body: "Test review comment 2", createdAt: new Date("2022-01-04") }),
     ];
 
-    const account = createAccountStub({
+    const repository = createRepositoryStub({
       getIssueComments: (_id) => Promise.resolve<IssueComment[]>(issueComments),
       getPullRequestReviewComments: (_id) => Promise.resolve<PullRequestComment[]>(reviewComments),
     });
 
     // When
-    const commentsRootTreeItem = new CommentsRootTreeItem(account, pullId);
+    const commentsRootTreeItem = new CommentsRootTreeItem(repository, pullId);
     const children = await commentsRootTreeItem.getChildren();
 
     // Then
