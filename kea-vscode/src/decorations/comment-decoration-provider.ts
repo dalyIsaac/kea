@@ -15,7 +15,7 @@ export class CommentDecorationProvider extends TreeDecorationProvider {
       return null;
     }
 
-    const { fileStatus } = payload.payload;
+    const { fileStatus, commentCount } = payload.payload;
 
     let color: vscode.ThemeColor | undefined;
     let statusChar: string | undefined;
@@ -51,8 +51,18 @@ export class CommentDecorationProvider extends TreeDecorationProvider {
         break;
     }
 
+    // There is a two-character limit for the badge, enforced by vscode.
+    let badge: string;
+    if (commentCount > 9) {
+      badge = "9+";
+    } else if (commentCount > 0) {
+      badge = `${commentCount}`;
+    } else {
+      badge = statusChar;
+    }
+
     return {
-      badge: statusChar,
+      badge,
       color,
     };
   };

@@ -24,6 +24,7 @@ export class FileTreeItem extends ParentTreeItem<ReviewCommentTreeItem> {
       filePath: file.filename,
       repoId,
       fileStatus: file.status,
+      commentCount: comments.length,
     });
 
     this.#comments = comments;

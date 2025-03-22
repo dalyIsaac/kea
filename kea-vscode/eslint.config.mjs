@@ -41,6 +41,12 @@ export default tseslint.config(
           readonly: "generic",
         },
       ],
+      "@typescript-eslint/restrict-template-expressions": [
+        "error",
+        {
+          allowNumber: true,
+        },
+      ],
 
       curly: "error",
       eqeqeq: "error",

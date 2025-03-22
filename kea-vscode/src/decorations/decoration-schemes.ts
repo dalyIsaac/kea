@@ -11,6 +11,7 @@ interface PullRequestFileDecorationPayload {
   repoId: RepoId;
   filePath: string;
   fileStatus: FileStatus;
+  commentCount: number;
 }
 
 export const createCommentDecorationUri = (payload: PullRequestFileDecorationPayload): vscode.Uri =>
