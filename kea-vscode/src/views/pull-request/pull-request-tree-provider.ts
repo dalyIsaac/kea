@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { IAccount } from "../../account/account";
-import { AppContext } from "../../core/app-context";
+import { IAccountManager } from "../../account/account-manager";
 import { Logger } from "../../core/logger";
 import { PullRequest, PullRequestId } from "../../types/kea";
 import { ParentTreeItem } from "../parent-tree-item";
@@ -14,15 +14,18 @@ type PullRequestTreeItem = CommitsRootTreeItem;
  * Provides information about the current pull request.
  */
 export class PullRequestTreeProvider implements vscode.TreeDataProvider<PullRequestTreeItem> {
-  #onDidChangeTreeData = new vscode.EventEmitter<void | PullRequestTreeItem | null | undefined>();
-
-  readonly onDidChangeTreeData: vscode.Event<void | PullRequestTreeItem | null | undefined> = this.#onDidChangeTreeData.event;
-
+  #accountManager: IAccountManager;
   #account: IAccount | undefined;
   #pullId: PullRequestId | undefined;
   #pullRequest: PullRequest | undefined;
 
-  // Overridden methods.
+  #onDidChangeTreeData = new vscode.EventEmitter<void | PullRequestTreeItem | null | undefined>();
+  readonly onDidChangeTreeData: vscode.Event<void | PullRequestTreeItem | null | undefined> = this.#onDidChangeTreeData.event;
+
+  constructor(accountManager: IAccountManager) {
+    this.#accountManager = accountManager;
+  }
+
   getTreeItem = (element: PullRequestTreeItem): vscode.TreeItem | Thenable<vscode.TreeItem> => {
     return element;
   };
@@ -68,10 +71,10 @@ export class PullRequestTreeProvider implements vscode.TreeDataProvider<PullRequ
     this.#onDidChangeTreeData.fire();
   };
 
-  openPullRequest = async (accountName: string, pullId: PullRequestId, pullRequest: PullRequest): Promise<void> => {
-    Logger.info("Opening pull request", pullId, "for account", accountName);
+  openPullRequest = async (sessionId: string, pullId: PullRequestId, pullRequest: PullRequest): Promise<void> => {
+    Logger.info("Opening pull request", pullId);
 
-    const account = await AppContext.getAccount(accountName);
+    const account = await this.#accountManager.getAccountBySessionId(sessionId);
     if (account instanceof Error) {
       Logger.error(`Error getting account: ${account.message}`);
       return;

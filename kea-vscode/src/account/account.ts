@@ -3,6 +3,7 @@ import { IssueComment, IssueId, PullRequest, PullRequestComment, PullRequestFile
 
 export interface IAccount {
   session: AuthenticationSession;
+  isRepoForAccount: (repoUrl: string) => boolean;
   getPullRequestList: (repoId: RepoId) => Promise<PullRequest[] | Error>;
   getIssueComments: (issueId: IssueId) => Promise<IssueComment[] | Error>;
   getPullRequestReviewComments: (pullId: PullRequestId) => Promise<PullRequestComment[] | Error>;

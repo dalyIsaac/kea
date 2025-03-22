@@ -7,6 +7,7 @@ export const createAccountStub = (props: Partial<IAccount> = {}): IAccount => ({
   getPullRequestFiles: sinon.stub(),
   getPullRequestList: sinon.stub(),
   getPullRequestReviewComments: sinon.stub(),
+  isRepoForAccount: sinon.stub(),
   session: {
     accessToken: "accessToken",
     account: {

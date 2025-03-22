@@ -40,9 +40,7 @@ export class GitHubAccount implements IAccount {
     return new GitHubAccount(session);
   };
 
-  static isGitHubUrl = (url: string): boolean => {
-    return url.includes("github.com");
-  };
+  isRepoForAccount = (repoUrl: string): boolean => repoUrl.includes("github.com");
 
   getPullRequestList = async (repoId: RepoId): Promise<PullRequest[] | Error> => {
     try {
