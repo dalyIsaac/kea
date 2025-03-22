@@ -57,14 +57,11 @@ export class PullRequestTreeProvider implements vscode.TreeDataProvider<PullRequ
     return [];
   };
 
-  static #getRootChildren = (account: IAccount, pullId: PullRequestId): PullRequestTreeItem[] => {
-    // TODO: Get the commits list, under a top-level tree item "Commits"
-    // TODO: For each commit, get the changed files
-    // TODO: Get all the comments for each file under each file
-    // TODO: Get all the PR comments, under a top-level tree item "Comments"
-
-    return [new CommentsRootTreeItem(account, pullId), new FilesRootTreeItem(account, pullId), new CommitsRootTreeItem()];
-  };
+  static #getRootChildren = (account: IAccount, pullId: PullRequestId): PullRequestTreeItem[] => [
+    new CommentsRootTreeItem(account, pullId),
+    new FilesRootTreeItem(account, pullId),
+    new CommitsRootTreeItem(),
+  ];
 
   refresh = (): void => {
     Logger.info("Refreshing PullRequestProvider");

@@ -37,24 +37,24 @@ export class FilesRootTreeItem extends ParentTreeItem<FilesRootTreeItemChild> {
 
     if (reviewComments instanceof Error) {
       vscode.window.showErrorMessage(`Error fetching pull request review comments: ${reviewComments.message}`);
-      return FilesRootTreeItem.#toTree(files, []);
+      return this.#toTree(files, []);
     }
 
-    return FilesRootTreeItem.#toTree(files, reviewComments);
+    return this.#toTree(files, reviewComments);
   };
 
-  static #toTree = (files: PullRequestFile[], reviewComments: PullRequestComment[]): FilesRootTreeItemChild[] => {
+  #toTree = (files: PullRequestFile[], reviewComments: PullRequestComment[]): FilesRootTreeItemChild[] => {
     const sortedFiles = files.sort((a, b) => a.filename.localeCompare(b.filename));
     let roots: FilesRootTreeItemChild[] = [];
 
     for (const entry of sortedFiles) {
-      roots = FilesRootTreeItem.#fileToTree(roots, entry, reviewComments);
+      roots = this.#fileToTree(roots, entry, reviewComments);
     }
 
     return roots;
   };
 
-  static #fileToTree = (
+  #fileToTree = (
     roots: FilesRootTreeItemChild[],
     file: PullRequestFile,
     reviewComments: PullRequestComment[],
@@ -77,7 +77,7 @@ export class FilesRootTreeItem extends ParentTreeItem<FilesRootTreeItemChild> {
 
     const comments = reviewComments.filter((comment) => comment.path === file.filename);
     const fileName = pathParts[pathParts.length - 1];
-    const fileNode = new FileTreeItem(comments, file);
+    const fileNode = new FileTreeItem(this.#account.session.id, this.#pullId, file, comments);
 
     if (!parents.some((node) => node instanceof FileTreeItem && node.label === fileName)) {
       parents.push(fileNode);
