@@ -22,6 +22,12 @@
         "icon": "$(refresh)"
       },
       {
+        "command": "kea.refreshPullRequest",
+        "title": "Refresh Pull Request",
+        "category": "Kea",
+        "icon": "$(refresh)"
+      },
+      {
         "command": "kea.openPullRequest",
         "title": "Open Pull Request",
         "category": "Kea",
