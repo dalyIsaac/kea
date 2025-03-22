@@ -1,15 +1,17 @@
 import * as vscode from "vscode";
 import { IssueComment, IssueId, PullRequest, PullRequestComment, PullRequestFile, PullRequestId, RepoId } from "../types/kea";
 
-export interface IRepository {
+// TODO: make disposable
+export interface IKeaRepository {
   /**
    * The AuthenticationSessionAccountInformation id.
    */
-  accountId: string;
+  authSessionAccountId: string;
 
   repoId: RepoId;
+  remoteUrl: string;
 
-  getPullRequestList: (repoId: RepoId) => Promise<PullRequest[] | Error>;
+  getPullRequestList: () => Promise<PullRequest[] | Error>;
   getIssueComments: (issueId: IssueId) => Promise<IssueComment[] | Error>;
   getPullRequestReviewComments: (pullId: PullRequestId) => Promise<PullRequestComment[] | Error>;
   getPullRequestFiles: (pullId: PullRequestId) => Promise<PullRequestFile[] | Error>;

@@ -1,34 +1,31 @@
 import * as vscode from "vscode";
 import { WorkspaceFolder } from "vscode";
-import { IAccount } from "../../account/account";
 import { IAccountManager } from "../../account/account-manager";
 import { getRepo } from "../../core/git";
 import { Logger } from "../../core/logger";
-import { Repository } from "../../types/git";
-import { RepoId } from "../../types/kea";
+import { IKeaRepository } from "../../repository/kea-repository";
+import { IRepositoryManager } from "../../repository/repository-manager";
 
 export class RepoTreeItem extends vscode.TreeItem {
   override contextValue = "repository";
 
-  account: IAccount;
+  repository: IKeaRepository;
   workspace: WorkspaceFolder;
-  repo: Repository;
-  remoteUrl: string;
-  repoId: RepoId;
 
-  private constructor(account: IAccount, workspace: WorkspaceFolder, repo: Repository, repoUrl: string, repoId: RepoId) {
+  private constructor(repository: IKeaRepository, workspace: WorkspaceFolder) {
     super(workspace.name, vscode.TreeItemCollapsibleState.Collapsed);
 
-    this.account = account;
+    this.repository = repository;
     this.workspace = workspace;
-    this.repo = repo;
-    this.remoteUrl = repoUrl;
-    this.repoId = repoId;
 
-    this.description = repoUrl;
+    this.description = repository.remoteUrl;
   }
 
-  static create = async (accountManager: IAccountManager, workspace: WorkspaceFolder): Promise<RepoTreeItem | Error> => {
+  static create = async (
+    accountManager: IAccountManager,
+    repositoryManager: IRepositoryManager,
+    workspace: WorkspaceFolder,
+  ): Promise<RepoTreeItem | Error> => {
     const repo = await getRepo(workspace.uri);
     if (repo instanceof Error) {
       return repo;
@@ -44,20 +41,20 @@ export class RepoTreeItem extends vscode.TreeItem {
       return new Error("No fetch or push URL found");
     }
 
-    const [owner, repoName] = repoUrl.replace(".git", "").split("/").slice(-2);
-    if (owner === undefined || repoName === undefined) {
-      return new Error("Invalid repository URL");
-    }
-
     for (const account of await accountManager.getAllAccounts()) {
       if (account instanceof Error) {
         Logger.error(`Error creating GitHub account: ${account.message}`);
         return account;
       }
 
-      if (account.isRepoForAccount(repoUrl)) {
-        return new RepoTreeItem(account, workspace, repo, repoUrl, { owner, repo: repoName });
+      const repo = account.tryCreateRepoForAccount(repoUrl);
+      if (repo instanceof Error) {
+        Logger.error(`Error creating repository for account`, repo);
+        continue;
       }
+
+      repositoryManager.addRepo(repo);
+      return new RepoTreeItem(repo, workspace);
     }
 
     return new Error("No account found for repository");

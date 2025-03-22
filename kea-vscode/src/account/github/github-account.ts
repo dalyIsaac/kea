@@ -1,13 +1,15 @@
 import { Octokit } from "@octokit/rest";
 import * as vscode from "vscode";
 import { AuthenticationSession } from "vscode";
+import { GitHubRepository } from "../../repository/github/github-repository";
+import { IKeaRepository } from "../../repository/kea-repository";
 import { IssueComment, IssueId, PullRequest, PullRequestComment, PullRequestFile, PullRequestId, RepoId } from "../../types/kea";
 import { IAccount } from "../account";
 import {
   convertGitHubIssueComment,
   convertGitHubPullRequest,
   convertGitHubPullRequestFile,
-  convertGitHubPullRequestComment as convertGitHubPullRequestReviewComment,
+  convertGitHubPullRequestReviewComment,
 } from "./github-utils";
 
 export class GitHubAccount implements IAccount {
@@ -41,6 +43,19 @@ export class GitHubAccount implements IAccount {
   };
 
   isRepoForAccount = (repoUrl: string): boolean => repoUrl.includes("github.com");
+
+  tryCreateRepoForAccount = (repoUrl: string): IKeaRepository | Error => {
+    if (!this.isRepoForAccount(repoUrl)) {
+      return new Error("Not a GitHub repository URL");
+    }
+
+    const [owner, repoName] = repoUrl.replace(".git", "").split("/").slice(-2);
+    if (owner === undefined || repoName === undefined) {
+      return new Error("Expected to find owner and repo name in URL");
+    }
+
+    return new GitHubRepository(this.session.account.id, repoUrl, { owner, repo: repoName }, this.#octokit);
+  };
 
   getPullRequestList = async (repoId: RepoId): Promise<PullRequest[] | Error> => {
     try {

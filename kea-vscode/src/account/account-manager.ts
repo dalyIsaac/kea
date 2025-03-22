@@ -1,16 +1,17 @@
 import { AuthenticationSessionsChangeEvent } from "vscode";
+import { IAccount } from "./account";
 import { GitHubAccount } from "./github/github-account";
 
 export interface IAccountManager {
-  getAllAccounts: () => Promise<Array<GitHubAccount | Error>>;
-  getAccountBySessionId: (sessionId: string) => Promise<GitHubAccount | Error>;
+  getAllAccounts: () => Promise<Array<IAccount | Error>>;
+  getAccountBySessionId: (sessionId: string) => Promise<IAccount | Error>;
   onDidChangeSessionsListener: (e: AuthenticationSessionsChangeEvent) => Promise<void>;
 }
 
 export class AccountManager implements IAccountManager {
-  #gitHubAccount: GitHubAccount | undefined;
+  #gitHubAccount: IAccount | undefined;
 
-  #getGitHubAccount = async (): Promise<GitHubAccount | Error> => {
+  #getGitHubAccount = async (): Promise<IAccount | Error> => {
     if (this.#gitHubAccount) {
       return Promise.resolve(this.#gitHubAccount);
     }
@@ -23,7 +24,7 @@ export class AccountManager implements IAccountManager {
     return account;
   };
 
-  getAllAccounts = async (): Promise<Array<GitHubAccount | Error>> => {
+  getAllAccounts = async (): Promise<Array<IAccount | Error>> => {
     const account = await this.#getGitHubAccount();
     if (account instanceof Error) {
       return [account];
@@ -32,7 +33,7 @@ export class AccountManager implements IAccountManager {
     return [account];
   };
 
-  getAccountBySessionId = async (sessionId: string): Promise<GitHubAccount | Error> => {
+  getAccountBySessionId = async (sessionId: string): Promise<IAccount | Error> => {
     const account = await this.#getGitHubAccount();
     if (account instanceof Error) {
       return account;

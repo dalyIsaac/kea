@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import { IAccountManager } from "../../account/account-manager";
 import { Logger } from "../../core/logger";
+import { IRepositoryManager } from "../../repository/repository-manager";
 import { PullRequestTreeItem } from "./pull-request-tree-item";
 import { RepoTreeItem } from "./repo-tree-item";
 
@@ -11,12 +12,14 @@ type PullRequestListItem = RepoTreeItem | PullRequestTreeItem;
  */
 export class PullRequestListTreeProvider implements vscode.TreeDataProvider<PullRequestListItem> {
   #accountManager: IAccountManager;
+  #repositoryManager: IRepositoryManager;
 
   #onDidChangeTreeData = new vscode.EventEmitter<void | PullRequestListItem | null | undefined>();
   readonly onDidChangeTreeData: vscode.Event<void | PullRequestListItem | null | undefined> = this.#onDidChangeTreeData.event;
 
-  constructor(accountManager: IAccountManager) {
+  constructor(accountManager: IAccountManager, repositoryManager: IRepositoryManager) {
     this.#accountManager = accountManager;
+    this.#repositoryManager = repositoryManager;
   }
 
   getTreeItem = (element: PullRequestListItem): vscode.TreeItem | Thenable<vscode.TreeItem> => {
@@ -30,7 +33,7 @@ export class PullRequestListTreeProvider implements vscode.TreeDataProvider<Pull
     }
 
     if (element instanceof RepoTreeItem) {
-      Logger.info("Fetching pull requests for", element.repoId);
+      Logger.info("Fetching pull requests for", element.repository.repoId);
       return this.#getPullRequests(element);
     }
 
@@ -38,7 +41,9 @@ export class PullRequestListTreeProvider implements vscode.TreeDataProvider<Pull
   };
 
   #getRootChildren = async (): Promise<RepoTreeItem[]> => {
-    const allItems = vscode.workspace.workspaceFolders?.map((workspace) => RepoTreeItem.create(this.#accountManager, workspace));
+    const allItems = vscode.workspace.workspaceFolders?.map((workspace) =>
+      RepoTreeItem.create(this.#accountManager, this.#repositoryManager, workspace),
+    );
     if (allItems === undefined) {
       Logger.error("No workspace folders found");
       return [];
@@ -60,14 +65,14 @@ export class PullRequestListTreeProvider implements vscode.TreeDataProvider<Pull
   };
 
   #getPullRequests = async (repoTreeItem: RepoTreeItem): Promise<PullRequestTreeItem[]> => {
-    const pullRequests = await repoTreeItem.account.getPullRequestList(repoTreeItem.repoId);
+    const pullRequests = await repoTreeItem.repository.getPullRequestList();
 
     if (pullRequests instanceof Error) {
       Logger.error(`Error fetching pull requests: ${pullRequests.message}`);
       return [];
     }
 
-    return pullRequests.map((pr) => new PullRequestTreeItem(repoTreeItem.account.session.id, pr));
+    return pullRequests.map((pr) => new PullRequestTreeItem(repoTreeItem.repository.authSessionAccountId, pr));
   };
 
   refresh = (): void => {

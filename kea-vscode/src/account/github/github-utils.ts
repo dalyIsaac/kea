@@ -46,7 +46,7 @@ export const convertGitHubIssueComment = (
 /**
  * Converts an Octokit Pull Request Review Comment response to our internal PullRequestComment type
  */
-export const convertGitHubPullRequestComment = (
+export const convertGitHubPullRequestReviewComment = (
   comment: RestEndpointMethodTypes["pulls"]["listReviewComments"]["response"]["data"][number],
 ): PullRequestComment => ({
   id: comment.id,

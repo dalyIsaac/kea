@@ -24,7 +24,7 @@ export function activate(_context: vscode.ExtensionContext) {
   vscode.window.registerFileDecorationProvider(commentsRootDecorationProvider);
 
   // Tree providers.
-  const pullRequestListTreeProvider = new PullRequestListTreeProvider(accountManager);
+  const pullRequestListTreeProvider = new PullRequestListTreeProvider(accountManager, repositoryManager);
   const pullRequestTreeProvider = new PullRequestTreeProvider(accountManager);
 
   // Register tree providers.
