@@ -4,7 +4,7 @@ import { PullRequest, PullRequestId } from "../../types/kea";
 export class PullRequestTreeItem extends vscode.TreeItem {
   override contextValue = "pullRequest";
 
-  constructor(accountName: string, pullRequest: PullRequest) {
+  constructor(sessionId: string, pullRequest: PullRequest) {
     super(pullRequest.title, vscode.TreeItemCollapsibleState.None);
 
     const pullId: PullRequestId = {
@@ -16,7 +16,7 @@ export class PullRequestTreeItem extends vscode.TreeItem {
     this.command = {
       command: "kea.openPullRequest",
       title: "Open Pull Request",
-      arguments: [[accountName, pullId, pullRequest]],
+      arguments: [[sessionId, pullId, pullRequest]],
     };
   }
 }
