@@ -22,7 +22,7 @@ export const createAccountStub = (props: Partial<IAccount> = {}): IAccount => ({
 
 export const createPullRequestFileStub = (props: Partial<PullRequestFile> = {}): PullRequestFile => ({
   filename: "filename",
-  status: "status",
+  status: "unchanged",
   sha: "sha",
   additions: 0,
   deletions: 0,

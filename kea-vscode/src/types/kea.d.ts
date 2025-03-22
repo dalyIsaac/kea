@@ -58,7 +58,7 @@ export interface PullRequestComment extends IssueComment {
 export interface PullRequestFile {
   filename: string;
   sha: string;
-  status: string;
+  status: "added" | "removed" | "modified" | "renamed" | "copied" | "changed" | "unchanged";
   additions: number;
   deletions: number;
   changes: number;

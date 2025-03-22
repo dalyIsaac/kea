@@ -1,19 +1,25 @@
 import * as assert from "assert";
 import { createPullRequestCommentStub, createPullRequestFileStub } from "../../test-utils";
-import { PullRequestComment } from "../../types/kea";
+import { PullRequestComment, RepoId } from "../../types/kea";
 import { FileTreeItem } from "./file-tree-item";
 import { ReviewCommentTreeItem } from "./review-comment-tree-item";
 
 suite("FileTreeItem", () => {
+  const sessionId = "1234";
+  const repoId: RepoId = {
+    owner: "owner",
+    repo: "repo",
+  };
+
   test("FileTreeItem should be created with the name being the last part of the filename", () => {
     // Given
-    const comments: PullRequestComment[] = [];
     const file = createPullRequestFileStub({
       filename: "src/views/pull-request/file-tree-item.ts",
     });
+    const comments: PullRequestComment[] = [];
 
     // When
-    const fileTreeItem = new FileTreeItem(comments, file);
+    const fileTreeItem = new FileTreeItem(sessionId, repoId, file, comments);
 
     // Then
     assert.strictEqual(fileTreeItem.label, "file-tree-item.ts");
@@ -22,17 +28,17 @@ suite("FileTreeItem", () => {
 
   test("FileTreeItem should contain multiple comments, sorted by createdAt", () => {
     // Given
+    const file = createPullRequestFileStub({
+      filename: "src/views/pull-request/file-tree-item.ts",
+    });
     const comments: PullRequestComment[] = [
       createPullRequestCommentStub({ createdAt: new Date("2023-01-01") }),
       createPullRequestCommentStub({ createdAt: new Date("2023-01-02") }),
       createPullRequestCommentStub({ createdAt: new Date("2023-01-03") }),
     ];
-    const file = createPullRequestFileStub({
-      filename: "src/views/pull-request/file-tree-item.ts",
-    });
 
     // When
-    const fileTreeItem = new FileTreeItem(comments, file);
+    const fileTreeItem = new FileTreeItem(sessionId, repoId, file, comments);
 
     // Then
     const children = fileTreeItem.getChildren();
