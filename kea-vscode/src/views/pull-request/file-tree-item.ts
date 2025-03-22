@@ -14,7 +14,8 @@ export class FileTreeItem extends ParentTreeItem<ReviewCommentTreeItem> {
   #comments: PullRequestComment[];
 
   constructor(comments: PullRequestComment[], file: PullRequestFile) {
-    const name = file.filename.split("/").pop() ?? file.filename;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const name = file.filename.split("/").pop()!;
     super(name, comments.length > 0 ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None);
     this.#comments = comments;
   }
