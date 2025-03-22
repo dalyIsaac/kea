@@ -4,7 +4,7 @@ import { DECORATION_SCHEMES, parseDecorationPayload } from "./decoration-schemes
 import { TreeDecorationProvider } from "./tree-decoration-provider";
 
 export class CommentDecorationProvider extends TreeDecorationProvider {
-  override provideFileDecoration = (uri: vscode.Uri, token: vscode.CancellationToken): vscode.ProviderResult<vscode.FileDecoration> => {
+  override provideFileDecoration = (uri: vscode.Uri, _token: vscode.CancellationToken): vscode.ProviderResult<vscode.FileDecoration> => {
     const payload = parseDecorationPayload(uri);
     if (payload instanceof Error) {
       Logger.error("Failed to parse decoration payload", payload);
@@ -15,12 +15,45 @@ export class CommentDecorationProvider extends TreeDecorationProvider {
       return null;
     }
 
-    const { repoId, filePath } = payload.payload;
+    const { fileStatus } = payload.payload;
 
-    // TODO: Add the count of comments
+    let color: vscode.ThemeColor | undefined;
+    let statusChar: string | undefined;
+
+    switch (fileStatus) {
+      case "added":
+        color = new vscode.ThemeColor("gitDecoration.addedResourceForeground");
+        statusChar = "A";
+        break;
+      case "modified":
+        color = new vscode.ThemeColor("gitDecoration.modifiedResourceForeground");
+        statusChar = "M";
+        break;
+      case "removed":
+        color = new vscode.ThemeColor("gitDecoration.deletedResourceForeground");
+        statusChar = "D";
+        break;
+      case "renamed":
+        color = new vscode.ThemeColor("gitDecoration.renamedResourceForeground");
+        statusChar = "R";
+        break;
+      case "copied":
+        color = new vscode.ThemeColor("gitDecoration.copiedResourceForeground");
+        statusChar = "C";
+        break;
+      case "changed":
+        color = new vscode.ThemeColor("gitDecoration.changedResourceForeground");
+        statusChar = "C";
+        break;
+      case "unchanged":
+        color = new vscode.ThemeColor("gitDecoration.untrackedResourceForeground");
+        statusChar = "U";
+        break;
+    }
+
     return {
-      badge: "DA",
-      color: new vscode.ThemeColor("gitDecoration.addedResourceForeground"),
+      badge: statusChar,
+      color,
     };
   };
 }

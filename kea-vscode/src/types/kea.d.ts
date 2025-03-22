@@ -55,10 +55,12 @@ export interface PullRequestComment extends IssueComment {
   side: Side | null;
 }
 
+export type FileStatus = "added" | "removed" | "modified" | "renamed" | "copied" | "changed" | "unchanged";
+
 export interface PullRequestFile {
   filename: string;
   sha: string;
-  status: "added" | "removed" | "modified" | "renamed" | "copied" | "changed" | "unchanged";
+  status: FileStatus;
   additions: number;
   deletions: number;
   changes: number;

@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { WrappedError } from "../core/wrapped-error";
-import { RepoId } from "../types/kea";
+import { FileStatus, RepoId } from "../types/kea";
 
 export const DECORATION_SCHEMES = {
   files: "kea-files",
@@ -10,6 +10,7 @@ interface PullRequestFileDecorationPayload {
   sessionId: string;
   repoId: RepoId;
   filePath: string;
+  fileStatus: FileStatus;
 }
 
 export const createCommentDecorationUri = (payload: PullRequestFileDecorationPayload): vscode.Uri =>
