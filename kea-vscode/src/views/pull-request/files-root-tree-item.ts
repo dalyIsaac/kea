@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { IAccount } from "../../account/account";
-import { PullRequestFile, PullRequestId } from "../../types/kea";
+import { PullRequestComment, PullRequestFile, PullRequestId } from "../../types/kea";
 import { ParentTreeItem } from "../parent-tree-item";
 import { FileTreeItem } from "./file-tree-item";
 import { FolderTreeItem } from "./folder-tree-item";
@@ -25,27 +25,40 @@ export class FilesRootTreeItem extends ParentTreeItem<FilesRootTreeItemChild> {
   }
 
   getChildren = async (): Promise<FilesRootTreeItemChild[]> => {
-    const files = await this.#account.getPullRequestFiles(this.#pullId);
+    const [files, reviewComments] = await Promise.all([
+      this.#account.getPullRequestFiles(this.#pullId),
+      this.#account.getPullRequestReviewComments(this.#pullId),
+    ]);
+
     if (files instanceof Error) {
       vscode.window.showErrorMessage(`Error fetching pull request files: ${files.message}`);
       return [];
     }
 
-    return FilesRootTreeItem.#toTree(files);
+    if (reviewComments instanceof Error) {
+      vscode.window.showErrorMessage(`Error fetching pull request review comments: ${reviewComments.message}`);
+      return FilesRootTreeItem.#toTree(files, []);
+    }
+
+    return FilesRootTreeItem.#toTree(files, reviewComments);
   };
 
-  static #toTree = (files: PullRequestFile[]): FilesRootTreeItemChild[] => {
+  static #toTree = (files: PullRequestFile[], reviewComments: PullRequestComment[]): FilesRootTreeItemChild[] => {
     const sortedFiles = files.sort((a, b) => a.filename.localeCompare(b.filename));
     let roots: FilesRootTreeItemChild[] = [];
 
     for (const entry of sortedFiles) {
-      roots = FilesRootTreeItem.#fileToTree(roots, entry);
+      roots = FilesRootTreeItem.#fileToTree(roots, entry, reviewComments);
     }
 
     return roots;
   };
 
-  static #fileToTree = (roots: FilesRootTreeItemChild[], file: PullRequestFile): FilesRootTreeItemChild[] => {
+  static #fileToTree = (
+    roots: FilesRootTreeItemChild[],
+    file: PullRequestFile,
+    reviewComments: PullRequestComment[],
+  ): FilesRootTreeItemChild[] => {
     let parents = roots;
     const pathParts = file.filename.split("/");
 
@@ -62,8 +75,9 @@ export class FilesRootTreeItem extends ParentTreeItem<FilesRootTreeItemChild> {
       parents = (folderNode as FolderTreeItem).children;
     }
 
+    const comments = reviewComments.filter((comment) => comment.path === file.filename);
     const fileName = pathParts[pathParts.length - 1];
-    const fileNode = new FileTreeItem(file);
+    const fileNode = new FileTreeItem(comments, file);
 
     if (!parents.some((node) => node instanceof FileTreeItem && node.label === fileName)) {
       parents.push(fileNode);

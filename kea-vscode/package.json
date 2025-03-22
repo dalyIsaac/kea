@@ -59,7 +59,7 @@
           "group": "navigation"
         },
         {
-          "command": "kea.refreshPullRequestList",
+          "command": "kea.refreshPullRequest",
           "when": "view == kea.pullRequest",
           "group": "navigation"
         }
