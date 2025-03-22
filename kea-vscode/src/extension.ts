@@ -2,7 +2,8 @@ import * as vscode from "vscode";
 
 import { AccountManager } from "./account/account-manager";
 import { Logger } from "./core/logger";
-import { CommentDecorationProvider } from "./decorations/comment-decoration-provider";
+import { CommentsRootDecorationProvider } from "./decorations/comments-root-decoration-provider";
+import { FileCommentDecorationProvider } from "./decorations/file-comment-decoration-provider";
 import { PullRequest, PullRequestId } from "./types/kea";
 import { PullRequestListTreeProvider } from "./views/pull-request-list/pull-request-list-tree-provider";
 import { PullRequestTreeProvider } from "./views/pull-request/pull-request-tree-provider";
@@ -13,10 +14,12 @@ export function activate(_context: vscode.ExtensionContext) {
   const accountManager = new AccountManager();
 
   // Tree decorations.
-  const commentDecorationProvider = new CommentDecorationProvider();
+  const fileCommentDecorationProvider = new FileCommentDecorationProvider();
+  const commentsRootDecorationProvider = new CommentsRootDecorationProvider();
 
   // Register tree decorations.
-  vscode.window.registerFileDecorationProvider(commentDecorationProvider);
+  vscode.window.registerFileDecorationProvider(fileCommentDecorationProvider);
+  vscode.window.registerFileDecorationProvider(commentsRootDecorationProvider);
 
   // Tree providers.
   const pullRequestListTreeProvider = new PullRequestListTreeProvider(accountManager);

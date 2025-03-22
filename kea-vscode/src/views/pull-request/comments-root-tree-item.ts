@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import { IAccount } from "../../account/account";
 import { Logger } from "../../core/logger";
+import { createCommentsRootDecorationUri } from "../../decorations/decoration-schemes";
 import { PullRequestId } from "../../types/kea";
 import { ParentTreeItem } from "../parent-tree-item";
 import { CommentTreeItem } from "./comment-tree-item";
@@ -13,6 +14,7 @@ export class CommentsRootTreeItem extends ParentTreeItem<CommentTreeItem> {
   override contextValue = "comment";
   override iconPath = new vscode.ThemeIcon("comment-discussion");
   override tooltip = "Comments";
+  override resourceUri: vscode.Uri;
 
   #account: IAccount;
   #pullId: PullRequestId;
@@ -21,6 +23,11 @@ export class CommentsRootTreeItem extends ParentTreeItem<CommentTreeItem> {
     super("Comments", vscode.TreeItemCollapsibleState.Collapsed);
     this.#account = account;
     this.#pullId = id;
+
+    this.resourceUri = createCommentsRootDecorationUri({
+      sessionId: this.#account.session.id,
+      repoId: this.#pullId,
+    });
   }
 
   getChildren = async (): Promise<CommentTreeItem[]> => {
