@@ -40,6 +40,7 @@ suite("FilesRootTreeItem", () => {
     // Given
     const account = createAccountStub({
       getPullRequestFiles: (_id) => Promise.resolve([createPullRequestFileStub({ filename: "README.md" })]),
+      getPullRequestReviewComments: (_id) => Promise.resolve([]),
     });
 
     // When
@@ -63,6 +64,7 @@ suite("FilesRootTreeItem", () => {
           createPullRequestFileStub({ filename: "src/utils/helpers.ts" }),
           createPullRequestFileStub({ filename: "README.md" }),
         ]),
+      getPullRequestReviewComments: (_id) => Promise.resolve([]),
     });
 
     // When
