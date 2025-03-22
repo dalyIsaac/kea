@@ -46,6 +46,7 @@ export interface PullRequest {
 export type Side = "LEFT" | "RIGHT" | "BOTH";
 
 export interface PullRequestComment extends IssueComment {
+  path: string;
   startLine: number | null;
   originalStartLine: number | null;
   startSide: Side | null;

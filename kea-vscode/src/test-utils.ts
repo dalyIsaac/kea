@@ -49,6 +49,7 @@ export const createIssueCommentStub = (props: Partial<IssueComment> = {}): Issue
 
 export const createPullRequestCommentStub = (props: Partial<PullRequestComment> = {}): PullRequestComment => ({
   ...createIssueCommentStub(props),
+  path: "path",
   startLine: null,
   originalStartLine: null,
   startSide: null,

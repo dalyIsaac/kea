@@ -54,6 +54,7 @@ export const convertGitHubPullRequestComment = (
   createdAt: new Date(comment.created_at),
   updatedAt: new Date(comment.updated_at),
   replyTo: comment.in_reply_to_id ?? null,
+  path: comment.path,
   startLine: comment.start_line ?? null,
   originalStartLine: comment.original_start_line ?? null,
   startSide: comment.start_side ?? null,

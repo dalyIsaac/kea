@@ -3,6 +3,7 @@ import { createAccountStub, createIssueCommentStub, createPullRequestCommentStub
 import { IssueComment, PullRequestComment, PullRequestId } from "../../types/kea";
 import { CommentTreeItem } from "./comment-tree-item";
 import { CommentsRootTreeItem } from "./comments-root-tree-item";
+import { ReviewCommentTreeItem } from "./review-comment-tree-item";
 
 suite("CommentsRootTreeItem", () => {
   const pullId: PullRequestId = { owner: "owner", repo: "repo", number: 1 };
@@ -77,7 +78,7 @@ suite("CommentsRootTreeItem", () => {
 
     // Then
     assert.strictEqual(children.length, 2);
-    assert.ok(children[0] instanceof CommentTreeItem);
+    assert.ok(children[0] instanceof ReviewCommentTreeItem);
     assert.equal(children[0].label, "Test review comment 1");
   });
 
@@ -104,7 +105,7 @@ suite("CommentsRootTreeItem", () => {
 
     // Then
     assert.strictEqual(children.length, 4);
-    assert.ok(children[0] instanceof CommentTreeItem);
+    assert.ok(children[0] instanceof ReviewCommentTreeItem);
     assert.equal(children[0].label, "Test review comment 2");
 
     assert.ok(children[1] instanceof CommentTreeItem);
@@ -113,7 +114,7 @@ suite("CommentsRootTreeItem", () => {
     assert.ok(children[2] instanceof CommentTreeItem);
     assert.equal(children[2].label, "Test issue comment 2");
 
-    assert.ok(children[3] instanceof CommentTreeItem);
+    assert.ok(children[3] instanceof ReviewCommentTreeItem);
     assert.equal(children[3].label, "Test review comment 1");
   });
 });

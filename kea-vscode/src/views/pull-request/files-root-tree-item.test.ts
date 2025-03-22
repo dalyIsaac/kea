@@ -1,14 +1,15 @@
 import * as assert from "assert";
-import { createAccountStub, createPullRequestFileStub } from "../../test-utils";
+import { createAccountStub, createPullRequestCommentStub, createPullRequestFileStub } from "../../test-utils";
 import { PullRequestId } from "../../types/kea";
 import { FileTreeItem } from "./file-tree-item";
 import { FilesRootTreeItem } from "./files-root-tree-item";
 import { FolderTreeItem } from "./folder-tree-item";
+import { ReviewCommentTreeItem } from "./review-comment-tree-item";
 
 suite("FilesRootTreeItem", () => {
   const pullId: PullRequestId = { owner: "owner", repo: "repo", number: 1 };
 
-  test("Returns an empty array when the API call fails", async () => {
+  test("Returns an empty array when the files API call fails", async () => {
     // Given
     const account = createAccountStub({
       getPullRequestFiles: (_id) => Promise.resolve(new Error("API call failed")),
@@ -20,6 +21,21 @@ suite("FilesRootTreeItem", () => {
 
     // Then
     assert.strictEqual(children.length, 0);
+  });
+
+  test("Continues to return an empty array when the review comments API call fails", async () => {
+    // Given
+    const account = createAccountStub({
+      getPullRequestFiles: (_id) => Promise.resolve([createPullRequestFileStub({ filename: "README.md" })]),
+      getPullRequestReviewComments: (_id) => Promise.resolve(new Error("API call failed")),
+    });
+
+    // When
+    const filesRootTreeItem = new FilesRootTreeItem(account, pullId);
+    const children = await filesRootTreeItem.getChildren();
+
+    // Then
+    assert.strictEqual(children.length, 1);
   });
 
   test("Returns an empty array when there are no files", async () => {
@@ -40,6 +56,7 @@ suite("FilesRootTreeItem", () => {
     // Given
     const account = createAccountStub({
       getPullRequestFiles: (_id) => Promise.resolve([createPullRequestFileStub({ filename: "README.md" })]),
+      getPullRequestReviewComments: (_id) => Promise.resolve([]),
     });
 
     // When
@@ -63,6 +80,7 @@ suite("FilesRootTreeItem", () => {
           createPullRequestFileStub({ filename: "src/utils/helpers.ts" }),
           createPullRequestFileStub({ filename: "README.md" }),
         ]),
+      getPullRequestReviewComments: (_id) => Promise.resolve([]),
     });
 
     // When
@@ -102,5 +120,33 @@ suite("FilesRootTreeItem", () => {
     const helpers = utils.children[0]!;
     assert.strictEqual(helpers.label, "helpers.ts");
     assert.ok(helpers instanceof FileTreeItem);
+  });
+
+  test("Returns a single file with multiple review comments", async () => {
+    // Given
+    const account = createAccountStub({
+      getPullRequestFiles: (_id) => Promise.resolve([createPullRequestFileStub({ filename: "README.md" })]),
+      getPullRequestReviewComments: (_id) =>
+        Promise.resolve([
+          createPullRequestCommentStub({ body: "Comment 1", path: "README.md" }),
+          createPullRequestCommentStub({ body: "Comment 2", path: "README.md" }),
+          createPullRequestCommentStub({ body: "Comment 3", path: "not-readme.md" }),
+        ]),
+    });
+
+    // When
+    const filesRootTreeItem = new FilesRootTreeItem(account, pullId);
+    const children = await filesRootTreeItem.getChildren();
+
+    // Then
+    assert.strictEqual(children.length, 1);
+    const readme = children[0]!;
+    assert.strictEqual(readme.label, "README.md");
+    assert.ok(readme instanceof FileTreeItem);
+
+    const reviewComments = readme.getChildren();
+    assert.strictEqual(reviewComments.length, 2);
+    assert.ok(reviewComments[0] instanceof ReviewCommentTreeItem);
+    assert.ok(reviewComments[1] instanceof ReviewCommentTreeItem);
   });
 });
