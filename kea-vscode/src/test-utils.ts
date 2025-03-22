@@ -4,10 +4,6 @@ import { IKeaRepository } from "./repository/kea-repository";
 import { IssueComment, PullRequestComment, PullRequestFile } from "./types/kea";
 
 export const createAccountStub = (props: Partial<IAccount> = {}): IAccount => ({
-  getIssueComments: sinon.stub(),
-  getPullRequestFiles: sinon.stub(),
-  getPullRequestList: sinon.stub(),
-  getPullRequestReviewComments: sinon.stub(),
   isRepoForAccount: sinon.stub(),
   session: {
     accessToken: "accessToken",
