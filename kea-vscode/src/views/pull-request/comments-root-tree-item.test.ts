@@ -1,6 +1,6 @@
 import * as assert from "assert";
 import * as vscode from "vscode";
-import { IssueCommentsPayload } from "../../repository/kea-repository";
+import { IssueCommentsPayload, PullRequestReviewCommentsPayload } from "../../repository/kea-repository";
 import { createIssueCommentStub, createPullRequestCommentStub, createRepositoryStub, stubEvents } from "../../test-utils";
 import { IssueComment, PullRequestComment, PullRequestId } from "../../types/kea";
 import { CommentTreeItem } from "./comment-tree-item";
@@ -130,7 +130,7 @@ suite("CommentsRootTreeItem", () => {
     eventFirers.onDidChangeIssueComments(payload);
 
     // Then
-    assert.strictEqual(commentsRootTreeItem.collapsibleState, vscode.TreeItemCollapsibleState.Collapsed);
+    assert.strictEqual(commentsRootTreeItem.collapsibleState, vscode.TreeItemCollapsibleState.None);
   });
 
   test("Collapsible state is updated when the issue comments are empty", () => {
@@ -171,5 +171,32 @@ suite("CommentsRootTreeItem", () => {
 
     // Then
     assert.strictEqual(commentsRootTreeItem.collapsibleState, vscode.TreeItemCollapsibleState.Expanded);
+  });
+
+  test("Doesn't do anything for a different pull request", () => {
+    // Given
+    const payload: IssueCommentsPayload = { issueId: { owner: "owner", repo: "repo", number: 99 }, comments: [createIssueCommentStub()] };
+    const { stub: repository, eventFirers } = stubEvents(createRepositoryStub(), ["onDidChangeIssueComments"] as const);
+    const commentsRootTreeItem = new CommentsRootTreeItem(repository, pullId);
+    commentsRootTreeItem.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+
+    // When
+    eventFirers.onDidChangeIssueComments(payload);
+
+    // Then
+    assert.strictEqual(commentsRootTreeItem.collapsibleState, vscode.TreeItemCollapsibleState.Expanded);
+  });
+
+  test("Collapsible state is updated when review comments are not empty", () => {
+    // Given
+    const payload: PullRequestReviewCommentsPayload = { pullId, comments: [createPullRequestCommentStub()] };
+    const { stub: repository, eventFirers } = stubEvents(createRepositoryStub(), ["onDidChangePullRequestReviewComments"] as const);
+    const commentsRootTreeItem = new CommentsRootTreeItem(repository, pullId);
+
+    // When
+    eventFirers.onDidChangePullRequestReviewComments(payload);
+
+    // Then
+    assert.strictEqual(commentsRootTreeItem.collapsibleState, vscode.TreeItemCollapsibleState.Collapsed);
   });
 });

@@ -21,7 +21,7 @@ export class CommentsRootTreeItem extends ParentTreeItem<CommentTreeItem> {
   #pullId: PullRequestId;
 
   constructor(repository: IKeaRepository, id: PullRequestId) {
-    super("Comments", vscode.TreeItemCollapsibleState.Collapsed);
+    super("Comments", vscode.TreeItemCollapsibleState.None);
     this.#repository = repository;
     this.#pullId = id;
 
@@ -86,7 +86,15 @@ export class CommentsRootTreeItem extends ParentTreeItem<CommentTreeItem> {
     }
 
     const length = payload.comments.length;
-    this.collapsibleState =
-      length > 0 ? (this.collapsibleState ?? vscode.TreeItemCollapsibleState.Collapsed) : vscode.TreeItemCollapsibleState.None;
+    if (length === 0) {
+      this.collapsibleState = vscode.TreeItemCollapsibleState.None;
+      return;
+    }
+
+    if (this.collapsibleState === vscode.TreeItemCollapsibleState.None || this.collapsibleState === undefined) {
+      this.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+    } else {
+      this.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+    }
   };
 }
