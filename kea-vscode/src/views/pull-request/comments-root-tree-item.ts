@@ -1,7 +1,8 @@
 import * as vscode from "vscode";
 import { Logger } from "../../core/logger";
 import { createCommentsRootDecorationUri } from "../../decorations/decoration-schemes";
-import { IKeaRepository } from "../../repository/kea-repository";
+import { IKeaRepository, IssueCommentsPayload, PullRequestReviewCommentsPayload } from "../../repository/kea-repository";
+import { isSamePullRequest } from "../../type-utils";
 import { PullRequestId } from "../../types/kea";
 import { ParentTreeItem } from "../parent-tree-item";
 import { CommentTreeItem } from "./comment-tree-item";
@@ -28,6 +29,10 @@ export class CommentsRootTreeItem extends ParentTreeItem<CommentTreeItem> {
       sessionId: this.#repository.authSessionAccountId,
       pullId: this.#pullId,
     });
+
+    // TODO: Make disposable
+    this.#repository.onDidChangeIssueComments(this.#onDidChangeIssueComments);
+    this.#repository.onDidChangePullRequestReviewComments(this.#onDidChangePullRequestReviewComments);
   }
 
   getChildren = async (): Promise<CommentTreeItem[]> => {
@@ -60,5 +65,28 @@ export class CommentsRootTreeItem extends ParentTreeItem<CommentTreeItem> {
 
     const allCommentItems = [...reviewCommentItems, ...issueCommentItems];
     return allCommentItems.sort((a, b) => a.comment.createdAt.getTime() - b.comment.createdAt.getTime());
+  };
+
+  #onDidChangeIssueComments = (payload: IssueCommentsPayload): void => {
+    this.#updateCollapsibleState(payload.issueId, payload);
+  };
+
+  #onDidChangePullRequestReviewComments = (payload: PullRequestReviewCommentsPayload): void => {
+    this.#updateCollapsibleState(payload.pullId, payload);
+  };
+
+  #updateCollapsibleState = (pullId: PullRequestId, payload: IssueCommentsPayload | PullRequestReviewCommentsPayload): void => {
+    if (payload.comments instanceof Error) {
+      Logger.error("Error fetching comments", payload);
+      return;
+    }
+
+    if (!isSamePullRequest(this.#pullId, pullId)) {
+      return;
+    }
+
+    const length = payload.comments.length;
+    this.collapsibleState =
+      length > 0 ? (this.collapsibleState ?? vscode.TreeItemCollapsibleState.Collapsed) : vscode.TreeItemCollapsibleState.None;
   };
 }
