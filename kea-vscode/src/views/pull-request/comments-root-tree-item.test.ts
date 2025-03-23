@@ -1,5 +1,7 @@
 import * as assert from "assert";
-import { createIssueCommentStub, createPullRequestCommentStub, createRepositoryStub } from "../../test-utils";
+import * as vscode from "vscode";
+import { IssueCommentsPayload } from "../../repository/kea-repository";
+import { createIssueCommentStub, createPullRequestCommentStub, createRepositoryStub, stubEvents } from "../../test-utils";
 import { IssueComment, PullRequestComment, PullRequestId } from "../../types/kea";
 import { CommentTreeItem } from "./comment-tree-item";
 import { CommentsRootTreeItem } from "./comments-root-tree-item";
@@ -116,5 +118,58 @@ suite("CommentsRootTreeItem", () => {
 
     assert.ok(children[3] instanceof ReviewCommentTreeItem);
     assert.equal(children[3].label, "Test review comment 1");
+  });
+
+  test("Collapsible state is not updated when the issue comments errors", () => {
+    // Given
+    const payload: IssueCommentsPayload = { issueId: pullId, comments: new Error("Something went wrong") };
+    const { stub: repository, eventFirers } = stubEvents(createRepositoryStub(), ["onDidChangeIssueComments"] as const);
+    const commentsRootTreeItem = new CommentsRootTreeItem(repository, pullId);
+
+    // When
+    eventFirers.onDidChangeIssueComments(payload);
+
+    // Then
+    assert.strictEqual(commentsRootTreeItem.collapsibleState, vscode.TreeItemCollapsibleState.Collapsed);
+  });
+
+  test("Collapsible state is updated when the issue comments are empty", () => {
+    // Given
+    const payload: IssueCommentsPayload = { issueId: pullId, comments: [] };
+    const { stub: repository, eventFirers } = stubEvents(createRepositoryStub(), ["onDidChangeIssueComments"] as const);
+    const commentsRootTreeItem = new CommentsRootTreeItem(repository, pullId);
+
+    // When
+    eventFirers.onDidChangeIssueComments(payload);
+
+    // Then
+    assert.strictEqual(commentsRootTreeItem.collapsibleState, vscode.TreeItemCollapsibleState.None);
+  });
+
+  test("Collapsible state is updated when the issue comments are not empty", () => {
+    // Given
+    const payload: IssueCommentsPayload = { issueId: pullId, comments: [createIssueCommentStub()] };
+    const { stub: repository, eventFirers } = stubEvents(createRepositoryStub(), ["onDidChangeIssueComments"] as const);
+    const commentsRootTreeItem = new CommentsRootTreeItem(repository, pullId);
+
+    // When
+    eventFirers.onDidChangeIssueComments(payload);
+
+    // Then
+    assert.strictEqual(commentsRootTreeItem.collapsibleState, vscode.TreeItemCollapsibleState.Collapsed);
+  });
+
+  test("Previously set collapsible state is not overridden when the issue comments are not empty", () => {
+    // Given
+    const payload: IssueCommentsPayload = { issueId: pullId, comments: [createIssueCommentStub()] };
+    const { stub: repository, eventFirers } = stubEvents(createRepositoryStub(), ["onDidChangeIssueComments"] as const);
+    const commentsRootTreeItem = new CommentsRootTreeItem(repository, pullId);
+    commentsRootTreeItem.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+
+    // When
+    eventFirers.onDidChangeIssueComments(payload);
+
+    // Then
+    assert.strictEqual(commentsRootTreeItem.collapsibleState, vscode.TreeItemCollapsibleState.Expanded);
   });
 });

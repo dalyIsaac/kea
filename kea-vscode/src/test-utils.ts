@@ -1,7 +1,44 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import sinon from "sinon";
 import { IAccount } from "./account/account";
 import { IKeaRepository } from "./repository/kea-repository";
 import { IssueComment, PullRequestComment, PullRequestFile } from "./types/kea";
+
+export const stubEvents = <TObject extends object, TProperties extends Array<keyof TObject>>(
+  stub: TObject,
+  eventNames: TProperties,
+): { stub: TObject; eventFirers: Record<TProperties[number], (payload: any) => void> } => {
+  type EventFirers = Record<TProperties[number], (payload: any) => void>;
+  const eventFirers = {} as EventFirers;
+  const stubCopy = { ...stub };
+
+  for (const prop of eventNames) {
+    const eventName = prop;
+    const listeners: any[] = [];
+
+    // @ts-expect-error Not worth the effort typing.
+    stubCopy[eventName] = (callback: any) => {
+      listeners.push(callback);
+      return {
+        dispose: () => {
+          const index = listeners.indexOf(callback);
+          if (index !== -1) {
+            listeners.splice(index, 1);
+          }
+        },
+      };
+    };
+
+    eventFirers[eventName] = (payload) => {
+      for (const listener of listeners) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+        listener(payload);
+      }
+    };
+  }
+
+  return { stub: stubCopy, eventFirers };
+};
 
 export const createAccountStub = (props: Partial<IAccount> = {}): IAccount => ({
   isRepoForAccount: sinon.stub(),
