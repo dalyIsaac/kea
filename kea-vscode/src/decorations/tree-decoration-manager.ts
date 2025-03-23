@@ -1,17 +1,11 @@
 import * as vscode from "vscode";
-import { IKeaRepository } from "../repository/kea-repository";
-import { IRepositoryManager } from "../repository/repository-manager";
+import { IKeaRepository, IssueCommentsPayload } from "../repository/kea-repository";
 import { BaseTreeDecorationProvider } from "./base-tree-decoration-provider";
 import { createCommentsRootDecorationUri } from "./decoration-schemes";
 
 export class TreeDecorationManager {
-  #repositoryManager: IRepositoryManager;
   #repositoryListeners: vscode.Disposable[] = [];
   #providers: BaseTreeDecorationProvider[] = [];
-
-  constructor(repositoryManager: IRepositoryManager) {
-    this.#repositoryManager = repositoryManager;
-  }
 
   registerProviders = (...providers: BaseTreeDecorationProvider[]): void => {
     this.#providers.push(...providers);
@@ -28,20 +22,25 @@ export class TreeDecorationManager {
 
     for (const repository of repositories) {
       const listener = repository.onDidChangeIssueComments((payload) => {
-        if (payload.comments instanceof Error) {
-          return;
-        }
-
-        for (const provider of this.#providers) {
-          provider.refresh(
-            createCommentsRootDecorationUri({
-              pullId: payload.issueId,
-              sessionId: repository.authSessionAccountId,
-            }),
-          );
-        }
+        this.#onDidChangeIssueComments(repository, payload);
       });
+
       this.#repositoryListeners.push(listener);
+    }
+  };
+
+  #onDidChangeIssueComments = (repository: IKeaRepository, payload: IssueCommentsPayload): void => {
+    if (payload.comments instanceof Error) {
+      return;
+    }
+
+    for (const provider of this.#providers) {
+      const uri = createCommentsRootDecorationUri({
+        pullId: payload.issueId,
+        sessionId: repository.authSessionAccountId,
+      });
+
+      provider.refresh(uri);
     }
   };
 }

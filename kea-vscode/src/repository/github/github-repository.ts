@@ -6,29 +6,20 @@ import {
   convertGitHubPullRequestFile,
   convertGitHubPullRequestReviewComment,
 } from "../../account/github/github-utils";
-import { TreeDecorationManager } from "../../decorations/tree-decoration-manager";
 import { IssueComment, IssueId, PullRequest, PullRequestComment, PullRequestFile, PullRequestId, RepoId } from "../../types/kea";
-import { IKeaRepository } from "../kea-repository";
+import { IKeaRepository, IssueCommentsPayload, PullRequestReviewCommentsPayload } from "../kea-repository";
 
 export class GitHubRepository implements IKeaRepository {
   authSessionAccountId: string;
   remoteUrl: string;
   repoId: RepoId;
   #octokit: Octokit;
-  #treeDecoratorManager: TreeDecorationManager;
 
-  constructor(
-    authSessionAccountId: string,
-    remoteUrl: string,
-    repoId: RepoId,
-    octokit: Octokit,
-    treeDecorationManager: TreeDecorationManager,
-  ) {
+  constructor(authSessionAccountId: string, remoteUrl: string, repoId: RepoId, octokit: Octokit) {
     this.authSessionAccountId = authSessionAccountId;
     this.remoteUrl = remoteUrl;
     this.repoId = repoId;
     this.#octokit = octokit;
-    this.#treeDecoratorManager = treeDecorationManager;
   }
 
   getPullRequestList = async (): Promise<PullRequest[] | Error> => {
@@ -62,7 +53,7 @@ export class GitHubRepository implements IKeaRepository {
       result = new Error(`Error fetching issue comments: ${error instanceof Error ? error.message : String(error)}`);
     }
 
-    this.#onDidChangeIssueComments.fire(result);
+    this.#onDidChangeIssueComments.fire({ issueId, comments: result });
     return result;
   };
 
@@ -80,7 +71,7 @@ export class GitHubRepository implements IKeaRepository {
       result = new Error(`Error fetching pull request comments: ${error instanceof Error ? error.message : String(error)}`);
     }
 
-    this.#onDidChangePullRequestReviewComments.fire(result);
+    this.#onDidChangePullRequestReviewComments.fire({ pullId, comments: result });
     return result;
   };
 
@@ -98,11 +89,10 @@ export class GitHubRepository implements IKeaRepository {
     }
   };
 
-  #onDidChangeIssueComments: vscode.EventEmitter<IssueComment[] | Error> = new vscode.EventEmitter<IssueComment[] | Error>();
+  #onDidChangeIssueComments: vscode.EventEmitter<IssueCommentsPayload> = new vscode.EventEmitter<IssueCommentsPayload>();
   onDidChangeIssueComments = this.#onDidChangeIssueComments.event;
 
-  #onDidChangePullRequestReviewComments: vscode.EventEmitter<PullRequestComment[] | Error> = new vscode.EventEmitter<
-    PullRequestComment[] | Error
-  >();
+  #onDidChangePullRequestReviewComments: vscode.EventEmitter<PullRequestReviewCommentsPayload> =
+    new vscode.EventEmitter<PullRequestReviewCommentsPayload>();
   onDidChangePullRequestReviewComments = this.#onDidChangePullRequestReviewComments.event;
 }

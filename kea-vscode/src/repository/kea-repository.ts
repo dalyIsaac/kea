@@ -1,6 +1,16 @@
 import * as vscode from "vscode";
 import { IssueComment, IssueId, PullRequest, PullRequestComment, PullRequestFile, PullRequestId, RepoId } from "../types/kea";
 
+export interface IssueCommentsPayload {
+  issueId: IssueId;
+  comments: IssueComment[] | Error;
+}
+
+export interface PullRequestReviewCommentsPayload {
+  pullId: PullRequestId;
+  comments: PullRequestComment[] | Error;
+}
+
 // TODO: make disposable
 export interface IKeaRepository {
   /**
@@ -16,6 +26,6 @@ export interface IKeaRepository {
   getPullRequestReviewComments: (pullId: PullRequestId) => Promise<PullRequestComment[] | Error>;
   getPullRequestFiles: (pullId: PullRequestId) => Promise<PullRequestFile[] | Error>;
 
-  onDidChangeIssueComments: vscode.Event<{ issueId: IssueId; comments: IssueComment[] | Error }>;
-  onDidChangePullRequestReviewComments: vscode.Event<{ pullId: PullRequestId; comments: PullRequestComment[] | Error }>;
+  onDidChangeIssueComments: vscode.Event<IssueCommentsPayload>;
+  onDidChangePullRequestReviewComments: vscode.Event<PullRequestReviewCommentsPayload>;
 }

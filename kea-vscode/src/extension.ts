@@ -17,7 +17,7 @@ export function activate(_context: vscode.ExtensionContext) {
   const repositoryManager = new RepositoryManager();
 
   // Tree decorations.
-  const treeDecorationManager = new TreeDecorationManager(repositoryManager);
+  const treeDecorationManager = new TreeDecorationManager();
   treeDecorationManager.registerProviders(new FileCommentDecorationProvider(), new CommentsRootDecorationProvider(repositoryManager));
 
   // Tree providers.
