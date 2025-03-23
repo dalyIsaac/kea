@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { WrappedError } from "../core/wrapped-error";
-import { FileStatus, RepoId } from "../types/kea";
+import { FileStatus, PullRequestId, RepoId } from "../types/kea";
 
 export const DECORATION_SCHEMES = {
   files: "kea-files" as const,
@@ -23,8 +23,7 @@ export const createCommentDecorationUri = (payload: PullRequestFileDecorationPay
 
 interface PullRequestCommentsRootDecorationPayload {
   sessionId: string;
-  repoId: RepoId;
-  commentCount?: number;
+  pullId: PullRequestId;
 }
 
 export const createCommentsRootDecorationUri = (payload: PullRequestCommentsRootDecorationPayload): vscode.Uri =>
@@ -33,12 +32,12 @@ export const createCommentsRootDecorationUri = (payload: PullRequestCommentsRoot
     query: JSON.stringify(payload),
   });
 
-type ParsedDecorationPayload =
+type ParsedDecorationData =
   | { type: typeof DECORATION_SCHEMES.files; payload: PullRequestFileDecorationPayload }
   | { type: typeof DECORATION_SCHEMES.commentsRoot; payload: PullRequestCommentsRootDecorationPayload };
 
-export const parseDecorationPayload = (uri: vscode.Uri): ParsedDecorationPayload | Error => {
-  let payload: ParsedDecorationPayload["payload"];
+export const parseDecorationPayload = (uri: vscode.Uri): ParsedDecorationData | Error => {
+  let payload: ParsedDecorationData["payload"];
   try {
     payload = JSON.parse(uri.query) as typeof payload;
   } catch (error) {

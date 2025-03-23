@@ -1,10 +1,12 @@
 import { Octokit } from "@octokit/rest";
+import * as vscode from "vscode";
 import {
   convertGitHubIssueComment,
   convertGitHubPullRequest,
   convertGitHubPullRequestFile,
   convertGitHubPullRequestReviewComment,
 } from "../../account/github/github-utils";
+import { TreeDecorationManager } from "../../decorations/tree-decoration-manager";
 import { IssueComment, IssueId, PullRequest, PullRequestComment, PullRequestFile, PullRequestId, RepoId } from "../../types/kea";
 import { IKeaRepository } from "../kea-repository";
 
@@ -13,12 +15,20 @@ export class GitHubRepository implements IKeaRepository {
   remoteUrl: string;
   repoId: RepoId;
   #octokit: Octokit;
+  #treeDecoratorManager: TreeDecorationManager;
 
-  constructor(authSessionAccountId: string, remoteUrl: string, repoId: RepoId, octokit: Octokit) {
+  constructor(
+    authSessionAccountId: string,
+    remoteUrl: string,
+    repoId: RepoId,
+    octokit: Octokit,
+    treeDecorationManager: TreeDecorationManager,
+  ) {
     this.authSessionAccountId = authSessionAccountId;
     this.remoteUrl = remoteUrl;
     this.repoId = repoId;
     this.#octokit = octokit;
+    this.#treeDecoratorManager = treeDecorationManager;
   }
 
   getPullRequestList = async (): Promise<PullRequest[] | Error> => {
@@ -39,6 +49,7 @@ export class GitHubRepository implements IKeaRepository {
   };
 
   getIssueComments = async (issueId: IssueId): Promise<IssueComment[] | Error> => {
+    let result: IssueComment[] | Error;
     try {
       const response = await this.#octokit.issues.listComments({
         owner: issueId.owner,
@@ -46,13 +57,17 @@ export class GitHubRepository implements IKeaRepository {
         issue_number: issueId.number,
       });
 
-      return response.data.map(convertGitHubIssueComment);
+      result = response.data.map(convertGitHubIssueComment);
     } catch (error) {
-      return new Error(`Error fetching issue comments: ${error instanceof Error ? error.message : String(error)}`);
+      result = new Error(`Error fetching issue comments: ${error instanceof Error ? error.message : String(error)}`);
     }
+
+    this.#onDidChangeIssueComments.fire(result);
+    return result;
   };
 
   getPullRequestReviewComments = async (pullId: PullRequestId): Promise<PullRequestComment[] | Error> => {
+    let result: PullRequestComment[] | Error;
     try {
       const response = await this.#octokit.pulls.listReviewComments({
         owner: pullId.owner,
@@ -60,10 +75,13 @@ export class GitHubRepository implements IKeaRepository {
         pull_number: pullId.number,
       });
 
-      return response.data.map(convertGitHubPullRequestReviewComment);
+      result = response.data.map(convertGitHubPullRequestReviewComment);
     } catch (error) {
-      return new Error(`Error fetching pull request comments: ${error instanceof Error ? error.message : String(error)}`);
+      result = new Error(`Error fetching pull request comments: ${error instanceof Error ? error.message : String(error)}`);
     }
+
+    this.#onDidChangePullRequestReviewComments.fire(result);
+    return result;
   };
 
   getPullRequestFiles = async (pullId: PullRequestId): Promise<PullRequestFile[] | Error> => {
@@ -79,4 +97,12 @@ export class GitHubRepository implements IKeaRepository {
       return new Error(`Error fetching pull request files: ${error instanceof Error ? error.message : String(error)}`);
     }
   };
+
+  #onDidChangeIssueComments: vscode.EventEmitter<IssueComment[] | Error> = new vscode.EventEmitter<IssueComment[] | Error>();
+  onDidChangeIssueComments = this.#onDidChangeIssueComments.event;
+
+  #onDidChangePullRequestReviewComments: vscode.EventEmitter<PullRequestComment[] | Error> = new vscode.EventEmitter<
+    PullRequestComment[] | Error
+  >();
+  onDidChangePullRequestReviewComments = this.#onDidChangePullRequestReviewComments.event;
 }

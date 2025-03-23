@@ -53,7 +53,7 @@ export class RepoTreeItem extends vscode.TreeItem {
         continue;
       }
 
-      repositoryManager.addRepo(repo);
+      repositoryManager.addRepository(repo);
       return new RepoTreeItem(repo, workspace);
     }
 

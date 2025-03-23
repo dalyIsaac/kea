@@ -26,7 +26,7 @@ export class CommentsRootTreeItem extends ParentTreeItem<CommentTreeItem> {
 
     this.resourceUri = createCommentsRootDecorationUri({
       sessionId: this.#repository.authSessionAccountId,
-      repoId: this.#pullId,
+      pullId: this.#pullId,
     });
   }
 
