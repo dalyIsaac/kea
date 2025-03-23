@@ -22,7 +22,7 @@ export const createCommentDecorationUri = (payload: PullRequestFileDecorationPay
   });
 
 interface PullRequestCommentsRootDecorationPayload {
-  sessionId: string;
+  authSessionAccountId: string;
   pullId: PullRequestId;
 }
 

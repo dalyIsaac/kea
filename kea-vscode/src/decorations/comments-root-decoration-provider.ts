@@ -28,10 +28,10 @@ export class CommentsRootDecorationProvider extends BaseTreeDecorationProvider {
     }
 
     const {
-      payload: { sessionId, pullId },
+      payload: { authSessionAccountId, pullId },
     } = data;
 
-    const repository = this.#repositoryManager.getRepositoryById(sessionId, pullId);
+    const repository = this.#repositoryManager.getRepositoryById(authSessionAccountId, pullId);
     if (repository instanceof Error) {
       Logger.error("Failed to get repository", repository);
       return null;
