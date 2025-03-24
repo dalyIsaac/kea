@@ -2,7 +2,7 @@
 import sinon from "sinon";
 import { IAccount } from "./account/account";
 import { IKeaRepository } from "./repository/kea-repository";
-import { IssueComment, PullRequestComment, PullRequestFile } from "./types/kea";
+import { IssueComment, PullRequest, PullRequestComment, PullRequestFile } from "./types/kea";
 
 export const stubEvents = <TObject extends object, TProperties extends Array<keyof TObject>>(
   stub: TObject,
@@ -68,6 +68,29 @@ export const createRepositoryStub = (props: Partial<IKeaRepository> = {}): IKeaR
   getPullRequestFiles: sinon.stub(),
   onDidChangeIssueComments: sinon.stub(),
   onDidChangePullRequestReviewComments: sinon.stub(),
+  ...props,
+});
+
+export const createPullRequestStub = (props: Partial<PullRequest> = {}): PullRequest => ({
+  id: 1,
+  number: 1,
+  title: "title",
+  state: "open",
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  closedAt: null,
+  mergedAt: null,
+  isDraft: false,
+  repository: {
+    name: "name",
+    owner: "owner",
+    url: "url",
+  },
+  url: "url",
+  user: {
+    login: "login",
+    avatarUrl: "avatarUrl",
+  },
   ...props,
 });
 

@@ -8,7 +8,7 @@ import { CommentsRootTreeItem } from "./comments-root-tree-item";
 import { CommitsRootTreeItem } from "./commits-root-tree-item";
 import { FilesRootTreeItem } from "./files-root-tree-item";
 
-type PullRequestTreeItem = CommitsRootTreeItem;
+export type PullRequestTreeItem = CommentsRootTreeItem | FilesRootTreeItem | CommitsRootTreeItem;
 
 /**
  * Provides information about the current pull request.
@@ -16,10 +16,7 @@ type PullRequestTreeItem = CommitsRootTreeItem;
 export class PullRequestTreeProvider implements vscode.TreeDataProvider<PullRequestTreeItem> {
   #repositoryManager: IRepositoryManager;
 
-  #repository: IKeaRepository | undefined;
-  #pullId: PullRequestId | undefined;
-  #pullRequest: PullRequest | undefined;
-
+  #pullInfo: { repository: IKeaRepository; pullId: PullRequestId; pullRequest: PullRequest } | undefined;
   #onDidChangeTreeData = new vscode.EventEmitter<void | PullRequestTreeItem | null | undefined>();
   readonly onDidChangeTreeData: vscode.Event<void | PullRequestTreeItem | null | undefined> = this.#onDidChangeTreeData.event;
 
@@ -32,19 +29,18 @@ export class PullRequestTreeProvider implements vscode.TreeDataProvider<PullRequ
   };
 
   getChildren = (element?: PullRequestTreeItem): vscode.ProviderResult<PullRequestTreeItem[]> => {
-    if (this.#pullId === undefined || this.#pullRequest === undefined) {
-      Logger.error("Pull request is undefined");
-      return [];
-    }
-
-    if (this.#repository === undefined) {
-      Logger.error("Repository is undefined");
+    if (this.#pullInfo === undefined) {
+      Logger.info("Pull request is not open");
       return [];
     }
 
     if (element === undefined) {
       Logger.info("Fetching root items for PullRequestProvider");
-      return PullRequestTreeProvider.#getRootChildren(this.#repository, this.#pullId);
+      return [
+        new CommentsRootTreeItem(this.#pullInfo.repository, this.#pullInfo.pullId),
+        new FilesRootTreeItem(this.#pullInfo.repository, this.#pullInfo.pullId),
+        new CommitsRootTreeItem(),
+      ];
     }
 
     if (element instanceof ParentTreeItem) {
@@ -55,12 +51,6 @@ export class PullRequestTreeProvider implements vscode.TreeDataProvider<PullRequ
     Logger.error("Unknown element type: ", element);
     return [];
   };
-
-  static #getRootChildren = (repository: IKeaRepository, pullId: PullRequestId): PullRequestTreeItem[] => [
-    new CommentsRootTreeItem(repository, pullId),
-    new FilesRootTreeItem(repository, pullId),
-    new CommitsRootTreeItem(),
-  ];
 
   refresh = (): void => {
     Logger.info("Refreshing PullRequestProvider");
@@ -73,12 +63,11 @@ export class PullRequestTreeProvider implements vscode.TreeDataProvider<PullRequ
     const repository = this.#repositoryManager.getRepositoryById(authSessionAccountId, pullId);
     if (repository instanceof Error) {
       Logger.error("Error getting repository", repository);
+      this.#pullInfo = undefined;
       return;
     }
 
-    this.#repository = repository;
-    this.#pullId = pullId;
-    this.#pullRequest = pullRequest;
+    this.#pullInfo = { repository, pullId, pullRequest };
     this.refresh();
   };
 }
