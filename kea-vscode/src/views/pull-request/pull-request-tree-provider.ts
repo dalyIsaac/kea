@@ -57,17 +57,18 @@ export class PullRequestTreeProvider implements vscode.TreeDataProvider<PullRequ
     this.#onDidChangeTreeData.fire();
   };
 
-  openPullRequest = (authSessionAccountId: string, pullId: PullRequestId, pullRequest: PullRequest): void => {
+  openPullRequest = (authSessionAccountId: string, pullId: PullRequestId, pullRequest: PullRequest): boolean => {
     Logger.info("Opening pull request", pullId);
 
     const repository = this.#repositoryManager.getRepositoryById(authSessionAccountId, pullId);
     if (repository instanceof Error) {
       Logger.error("Error getting repository", repository);
       this.#pullInfo = undefined;
-      return;
+      return false;
     }
 
     this.#pullInfo = { repository, pullId, pullRequest };
     this.refresh();
+    return true;
   };
 }

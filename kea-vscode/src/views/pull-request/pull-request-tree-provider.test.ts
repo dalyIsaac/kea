@@ -122,4 +122,26 @@ suite("PullRequestTreeProvider", () => {
     // Then
     assert.strictEqual(eventFired, true);
   });
+
+  test("openPullRequest updates the pull request info", () => {
+    // Given
+    const { provider, repository, pullId, pullRequest } = createGetChildrenStubs();
+
+    // When
+    const result = provider.openPullRequest(repository.authSessionAccountId, pullId, pullRequest);
+
+    // Then
+    assert.strictEqual(result, true);
+  });
+
+  test("openPullRequest fails when the repository is not found", () => {
+    // Given
+    const { provider, pullId, pullRequest } = createGetChildrenStubs();
+
+    // When
+    const result = provider.openPullRequest("invalid-account-id", pullId, pullRequest);
+
+    // Then
+    assert.strictEqual(result, false);
+  });
 });
