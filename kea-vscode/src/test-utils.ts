@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import sinon from "sinon";
+import * as vscode from "vscode";
 import { IAccount } from "./account/account";
+import { IAccountManager } from "./account/account-manager";
 import { IKeaRepository } from "./repository/kea-repository";
 import { IssueComment, PullRequest, PullRequestComment, PullRequestFile } from "./types/kea";
 
@@ -130,5 +132,19 @@ export const createPullRequestCommentStub = (props: Partial<PullRequestComment> 
   line: null,
   originalLine: null,
   side: null,
+  ...props,
+});
+
+export const createAccountManagerStub = (props: Partial<IAccountManager> = {}): IAccountManager => ({
+  getAccountBySessionId: sinon.stub(),
+  getAllAccounts: sinon.stub(),
+  onDidChangeSessionsListener: sinon.stub(),
+  ...props,
+});
+
+export const createWorkspaceFolderStub = (props: Partial<vscode.WorkspaceFolder> = {}): vscode.WorkspaceFolder => ({
+  uri: vscode.Uri.parse("file:///workspace"),
+  name: "workspace",
+  index: 0,
   ...props,
 });
