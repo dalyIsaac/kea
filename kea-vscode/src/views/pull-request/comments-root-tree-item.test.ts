@@ -1,5 +1,7 @@
 import * as assert from "assert";
-import { createAccountStub, createIssueCommentStub, createPullRequestCommentStub } from "../../test-utils";
+import * as vscode from "vscode";
+import { IssueCommentsPayload, PullRequestReviewCommentsPayload } from "../../repository/kea-repository";
+import { createIssueCommentStub, createPullRequestCommentStub, createRepositoryStub, stubEvents } from "../../test-utils";
 import { IssueComment, PullRequestComment, PullRequestId } from "../../types/kea";
 import { CommentTreeItem } from "./comment-tree-item";
 import { CommentsRootTreeItem } from "./comments-root-tree-item";
@@ -10,13 +12,13 @@ suite("CommentsRootTreeItem", () => {
 
   test("Returns an empty array when both API calls fail", async () => {
     // Given
-    const account = createAccountStub({
+    const repository = createRepositoryStub({
       getIssueComments: (_id) => Promise.resolve(new Error("Issue comments API call failed")),
       getPullRequestReviewComments: (_id) => Promise.resolve(new Error("Review comments API call failed")),
     });
 
     // When
-    const commentsRootTreeItem = new CommentsRootTreeItem(account, pullId);
+    const commentsRootTreeItem = new CommentsRootTreeItem(repository, pullId);
     const children = await commentsRootTreeItem.getChildren();
 
     // Then
@@ -25,13 +27,13 @@ suite("CommentsRootTreeItem", () => {
 
   test("Returns an empty array when both API calls return empty arrays", async () => {
     // Given
-    const account = createAccountStub({
+    const repository = createRepositoryStub({
       getIssueComments: (_id) => Promise.resolve<IssueComment[]>([]),
       getPullRequestReviewComments: (_id) => Promise.resolve<PullRequestComment[]>([]),
     });
 
     // When
-    const commentsRootTreeItem = new CommentsRootTreeItem(account, pullId);
+    const commentsRootTreeItem = new CommentsRootTreeItem(repository, pullId);
     const children = await commentsRootTreeItem.getChildren();
 
     // Then
@@ -45,13 +47,13 @@ suite("CommentsRootTreeItem", () => {
       createIssueCommentStub({ id: 2, body: "Test issue comment 2" }),
     ];
 
-    const account = createAccountStub({
+    const repository = createRepositoryStub({
       getIssueComments: (_id) => Promise.resolve<IssueComment[]>(issueComments),
       getPullRequestReviewComments: (_id) => Promise.resolve(new Error("Review comments API call failed")),
     });
 
     // When
-    const commentsRootTreeItem = new CommentsRootTreeItem(account, pullId);
+    const commentsRootTreeItem = new CommentsRootTreeItem(repository, pullId);
     const children = await commentsRootTreeItem.getChildren();
 
     // Then
@@ -67,13 +69,13 @@ suite("CommentsRootTreeItem", () => {
       createPullRequestCommentStub({ id: 2, body: "Test review comment 2" }),
     ];
 
-    const account = createAccountStub({
+    const repository = createRepositoryStub({
       getIssueComments: (_id) => Promise.resolve(new Error("Issue comments API call failed")),
       getPullRequestReviewComments: (_id) => Promise.resolve<PullRequestComment[]>(reviewComments),
     });
 
     // When
-    const commentsRootTreeItem = new CommentsRootTreeItem(account, pullId);
+    const commentsRootTreeItem = new CommentsRootTreeItem(repository, pullId);
     const children = await commentsRootTreeItem.getChildren();
 
     // Then
@@ -94,13 +96,13 @@ suite("CommentsRootTreeItem", () => {
       createPullRequestCommentStub({ id: 4, body: "Test review comment 2", createdAt: new Date("2022-01-04") }),
     ];
 
-    const account = createAccountStub({
+    const repository = createRepositoryStub({
       getIssueComments: (_id) => Promise.resolve<IssueComment[]>(issueComments),
       getPullRequestReviewComments: (_id) => Promise.resolve<PullRequestComment[]>(reviewComments),
     });
 
     // When
-    const commentsRootTreeItem = new CommentsRootTreeItem(account, pullId);
+    const commentsRootTreeItem = new CommentsRootTreeItem(repository, pullId);
     const children = await commentsRootTreeItem.getChildren();
 
     // Then
@@ -116,5 +118,85 @@ suite("CommentsRootTreeItem", () => {
 
     assert.ok(children[3] instanceof ReviewCommentTreeItem);
     assert.equal(children[3].label, "Test review comment 1");
+  });
+
+  test("Collapsible state is not updated when the issue comments errors", () => {
+    // Given
+    const payload: IssueCommentsPayload = { issueId: pullId, comments: new Error("Something went wrong") };
+    const { stub: repository, eventFirers } = stubEvents(createRepositoryStub(), ["onDidChangeIssueComments"] as const);
+    const commentsRootTreeItem = new CommentsRootTreeItem(repository, pullId);
+
+    // When
+    eventFirers.onDidChangeIssueComments(payload);
+
+    // Then
+    assert.strictEqual(commentsRootTreeItem.collapsibleState, vscode.TreeItemCollapsibleState.None);
+  });
+
+  test("Collapsible state is updated when the issue comments are empty", () => {
+    // Given
+    const payload: IssueCommentsPayload = { issueId: pullId, comments: [] };
+    const { stub: repository, eventFirers } = stubEvents(createRepositoryStub(), ["onDidChangeIssueComments"] as const);
+    const commentsRootTreeItem = new CommentsRootTreeItem(repository, pullId);
+
+    // When
+    eventFirers.onDidChangeIssueComments(payload);
+
+    // Then
+    assert.strictEqual(commentsRootTreeItem.collapsibleState, vscode.TreeItemCollapsibleState.None);
+  });
+
+  test("Collapsible state is updated when the issue comments are not empty", () => {
+    // Given
+    const payload: IssueCommentsPayload = { issueId: pullId, comments: [createIssueCommentStub()] };
+    const { stub: repository, eventFirers } = stubEvents(createRepositoryStub(), ["onDidChangeIssueComments"] as const);
+    const commentsRootTreeItem = new CommentsRootTreeItem(repository, pullId);
+
+    // When
+    eventFirers.onDidChangeIssueComments(payload);
+
+    // Then
+    assert.strictEqual(commentsRootTreeItem.collapsibleState, vscode.TreeItemCollapsibleState.Collapsed);
+  });
+
+  test("Previously set collapsible state is not overridden when the issue comments are not empty", () => {
+    // Given
+    const payload: IssueCommentsPayload = { issueId: pullId, comments: [createIssueCommentStub()] };
+    const { stub: repository, eventFirers } = stubEvents(createRepositoryStub(), ["onDidChangeIssueComments"] as const);
+    const commentsRootTreeItem = new CommentsRootTreeItem(repository, pullId);
+    commentsRootTreeItem.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+
+    // When
+    eventFirers.onDidChangeIssueComments(payload);
+
+    // Then
+    assert.strictEqual(commentsRootTreeItem.collapsibleState, vscode.TreeItemCollapsibleState.Expanded);
+  });
+
+  test("Doesn't do anything for a different pull request", () => {
+    // Given
+    const payload: IssueCommentsPayload = { issueId: { owner: "owner", repo: "repo", number: 99 }, comments: [createIssueCommentStub()] };
+    const { stub: repository, eventFirers } = stubEvents(createRepositoryStub(), ["onDidChangeIssueComments"] as const);
+    const commentsRootTreeItem = new CommentsRootTreeItem(repository, pullId);
+    commentsRootTreeItem.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+
+    // When
+    eventFirers.onDidChangeIssueComments(payload);
+
+    // Then
+    assert.strictEqual(commentsRootTreeItem.collapsibleState, vscode.TreeItemCollapsibleState.Expanded);
+  });
+
+  test("Collapsible state is updated when review comments are not empty", () => {
+    // Given
+    const payload: PullRequestReviewCommentsPayload = { pullId, comments: [createPullRequestCommentStub()] };
+    const { stub: repository, eventFirers } = stubEvents(createRepositoryStub(), ["onDidChangePullRequestReviewComments"] as const);
+    const commentsRootTreeItem = new CommentsRootTreeItem(repository, pullId);
+
+    // When
+    eventFirers.onDidChangePullRequestReviewComments(payload);
+
+    // Then
+    assert.strictEqual(commentsRootTreeItem.collapsibleState, vscode.TreeItemCollapsibleState.Collapsed);
   });
 });

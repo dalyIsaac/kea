@@ -1,29 +1,27 @@
 import * as vscode from "vscode";
-import { IAccount } from "../../account/account";
-import { IAccountManager } from "../../account/account-manager";
 import { Logger } from "../../core/logger";
+import { IKeaRepository } from "../../repository/kea-repository";
+import { IRepositoryManager } from "../../repository/repository-manager";
 import { PullRequest, PullRequestId } from "../../types/kea";
 import { ParentTreeItem } from "../parent-tree-item";
 import { CommentsRootTreeItem } from "./comments-root-tree-item";
 import { CommitsRootTreeItem } from "./commits-root-tree-item";
 import { FilesRootTreeItem } from "./files-root-tree-item";
 
-type PullRequestTreeItem = CommitsRootTreeItem;
+export type PullRequestTreeItem = CommentsRootTreeItem | FilesRootTreeItem | CommitsRootTreeItem;
 
 /**
  * Provides information about the current pull request.
  */
 export class PullRequestTreeProvider implements vscode.TreeDataProvider<PullRequestTreeItem> {
-  #accountManager: IAccountManager;
-  #account: IAccount | undefined;
-  #pullId: PullRequestId | undefined;
-  #pullRequest: PullRequest | undefined;
+  #repositoryManager: IRepositoryManager;
 
+  #pullInfo: { repository: IKeaRepository; pullId: PullRequestId; pullRequest: PullRequest } | undefined;
   #onDidChangeTreeData = new vscode.EventEmitter<void | PullRequestTreeItem | null | undefined>();
   readonly onDidChangeTreeData: vscode.Event<void | PullRequestTreeItem | null | undefined> = this.#onDidChangeTreeData.event;
 
-  constructor(accountManager: IAccountManager) {
-    this.#accountManager = accountManager;
+  constructor(repositoryManager: IRepositoryManager) {
+    this.#repositoryManager = repositoryManager;
   }
 
   getTreeItem = (element: PullRequestTreeItem): vscode.TreeItem | Thenable<vscode.TreeItem> => {
@@ -31,21 +29,18 @@ export class PullRequestTreeProvider implements vscode.TreeDataProvider<PullRequ
   };
 
   getChildren = (element?: PullRequestTreeItem): vscode.ProviderResult<PullRequestTreeItem[]> => {
-    if (this.#pullId === undefined || this.#pullRequest === undefined) {
-      Logger.error("Pull request is undefined");
-      // TODO
-      return [];
-    }
-
-    if (this.#account === undefined) {
-      Logger.error("Account is undefined");
-      // TODO
+    if (this.#pullInfo === undefined) {
+      Logger.info("Pull request is not open");
       return [];
     }
 
     if (element === undefined) {
       Logger.info("Fetching root items for PullRequestProvider");
-      return PullRequestTreeProvider.#getRootChildren(this.#account, this.#pullId);
+      return [
+        new CommentsRootTreeItem(this.#pullInfo.repository, this.#pullInfo.pullId),
+        new FilesRootTreeItem(this.#pullInfo.repository, this.#pullInfo.pullId),
+        new CommitsRootTreeItem(),
+      ];
     }
 
     if (element instanceof ParentTreeItem) {
@@ -57,32 +52,23 @@ export class PullRequestTreeProvider implements vscode.TreeDataProvider<PullRequ
     return [];
   };
 
-  static #getRootChildren = (account: IAccount, pullId: PullRequestId): PullRequestTreeItem[] => {
-    // TODO: Get the commits list, under a top-level tree item "Commits"
-    // TODO: For each commit, get the changed files
-    // TODO: Get all the comments for each file under each file
-    // TODO: Get all the PR comments, under a top-level tree item "Comments"
-
-    return [new CommentsRootTreeItem(account, pullId), new FilesRootTreeItem(account, pullId), new CommitsRootTreeItem()];
-  };
-
   refresh = (): void => {
     Logger.info("Refreshing PullRequestProvider");
     this.#onDidChangeTreeData.fire();
   };
 
-  openPullRequest = async (sessionId: string, pullId: PullRequestId, pullRequest: PullRequest): Promise<void> => {
+  openPullRequest = (authSessionAccountId: string, pullId: PullRequestId, pullRequest: PullRequest): boolean => {
     Logger.info("Opening pull request", pullId);
 
-    const account = await this.#accountManager.getAccountBySessionId(sessionId);
-    if (account instanceof Error) {
-      Logger.error(`Error getting account: ${account.message}`);
-      return;
+    const repository = this.#repositoryManager.getRepositoryById(authSessionAccountId, pullId);
+    if (repository instanceof Error) {
+      Logger.error("Error getting repository", repository);
+      this.#pullInfo = undefined;
+      return false;
     }
 
-    this.#account = account;
-    this.#pullId = pullId;
-    this.#pullRequest = pullRequest;
+    this.#pullInfo = { repository, pullId, pullRequest };
     this.refresh();
+    return true;
   };
 }

@@ -1,14 +1,9 @@
 import { Octokit } from "@octokit/rest";
 import * as vscode from "vscode";
 import { AuthenticationSession } from "vscode";
-import { IssueComment, IssueId, PullRequest, PullRequestComment, PullRequestFile, PullRequestId, RepoId } from "../../types/kea";
+import { GitHubRepository } from "../../repository/github/github-repository";
+import { IKeaRepository } from "../../repository/kea-repository";
 import { IAccount } from "../account";
-import {
-  convertGitHubIssueComment,
-  convertGitHubPullRequest,
-  convertGitHubPullRequestFile,
-  convertGitHubPullRequestComment as convertGitHubPullRequestReviewComment,
-} from "./github-utils";
 
 export class GitHubAccount implements IAccount {
   static providerId = "github";
@@ -42,62 +37,16 @@ export class GitHubAccount implements IAccount {
 
   isRepoForAccount = (repoUrl: string): boolean => repoUrl.includes("github.com");
 
-  getPullRequestList = async (repoId: RepoId): Promise<PullRequest[] | Error> => {
-    try {
-      const response = await this.#octokit.pulls.list({
-        owner: repoId.owner,
-        repo: repoId.repo,
-        state: "open",
-        sort: "updated",
-        direction: "desc",
-        per_page: 100,
-      });
-
-      return response.data.map(convertGitHubPullRequest);
-    } catch (error) {
-      return new Error(`Error fetching pull requests: ${error instanceof Error ? error.message : String(error)}`);
+  tryCreateRepoForAccount = (repoUrl: string): IKeaRepository | Error => {
+    if (!this.isRepoForAccount(repoUrl)) {
+      return new Error("Not a GitHub repository URL");
     }
-  };
 
-  getIssueComments = async (issueId: IssueId): Promise<IssueComment[] | Error> => {
-    try {
-      const response = await this.#octokit.issues.listComments({
-        owner: issueId.owner,
-        repo: issueId.repo,
-        issue_number: issueId.number,
-      });
-
-      return response.data.map(convertGitHubIssueComment);
-    } catch (error) {
-      return new Error(`Error fetching issue comments: ${error instanceof Error ? error.message : String(error)}`);
+    const [owner, repoName] = repoUrl.replace(".git", "").split("/").slice(-2);
+    if (owner === undefined || repoName === undefined) {
+      return new Error("Expected to find owner and repo name in URL");
     }
-  };
 
-  getPullRequestReviewComments = async (pullId: PullRequestId): Promise<PullRequestComment[] | Error> => {
-    try {
-      const response = await this.#octokit.pulls.listReviewComments({
-        owner: pullId.owner,
-        repo: pullId.repo,
-        pull_number: pullId.number,
-      });
-
-      return response.data.map(convertGitHubPullRequestReviewComment);
-    } catch (error) {
-      return new Error(`Error fetching pull request comments: ${error instanceof Error ? error.message : String(error)}`);
-    }
-  };
-
-  getPullRequestFiles = async (pullId: PullRequestId): Promise<PullRequestFile[] | Error> => {
-    try {
-      const response = await this.#octokit.pulls.listFiles({
-        owner: pullId.owner,
-        repo: pullId.repo,
-        pull_number: pullId.number,
-      });
-
-      return response.data.map(convertGitHubPullRequestFile);
-    } catch (error) {
-      return new Error(`Error fetching pull request files: ${error instanceof Error ? error.message : String(error)}`);
-    }
+    return new GitHubRepository(this.session.account.id, repoUrl, { owner, repo: repoName }, this.#octokit);
   };
 }

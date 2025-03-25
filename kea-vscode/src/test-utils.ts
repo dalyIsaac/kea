@@ -1,12 +1,48 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import sinon from "sinon";
+import * as vscode from "vscode";
 import { IAccount } from "./account/account";
-import { IssueComment, PullRequestComment, PullRequestFile } from "./types/kea";
+import { IAccountManager } from "./account/account-manager";
+import { IKeaRepository } from "./repository/kea-repository";
+import { IssueComment, PullRequest, PullRequestComment, PullRequestFile } from "./types/kea";
+
+export const stubEvents = <TObject extends object, TProperties extends Array<keyof TObject>>(
+  stub: TObject,
+  eventNames: TProperties,
+): { stub: TObject; eventFirers: Record<TProperties[number], (payload: any) => void> } => {
+  type EventFirers = Record<TProperties[number], (payload: any) => void>;
+  const eventFirers = {} as EventFirers;
+  const stubCopy = { ...stub };
+
+  for (const prop of eventNames) {
+    const eventName = prop;
+    const listeners: any[] = [];
+
+    // @ts-expect-error Not worth the effort typing.
+    stubCopy[eventName] = (callback: any) => {
+      listeners.push(callback);
+      return {
+        dispose: () => {
+          const index = listeners.indexOf(callback);
+          if (index !== -1) {
+            listeners.splice(index, 1);
+          }
+        },
+      };
+    };
+
+    eventFirers[eventName] = (payload) => {
+      for (const listener of listeners) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+        listener(payload);
+      }
+    };
+  }
+
+  return { stub: stubCopy, eventFirers };
+};
 
 export const createAccountStub = (props: Partial<IAccount> = {}): IAccount => ({
-  getIssueComments: sinon.stub(),
-  getPullRequestFiles: sinon.stub(),
-  getPullRequestList: sinon.stub(),
-  getPullRequestReviewComments: sinon.stub(),
   isRepoForAccount: sinon.stub(),
   session: {
     accessToken: "accessToken",
@@ -17,12 +53,52 @@ export const createAccountStub = (props: Partial<IAccount> = {}): IAccount => ({
     scopes: ["repo"],
     id: "sessionId",
   },
+  tryCreateRepoForAccount: sinon.stub(),
+  ...props,
+});
+
+export const createRepositoryStub = (props: Partial<IKeaRepository> = {}): IKeaRepository => ({
+  authSessionAccountId: "accountId",
+  remoteUrl: "remoteUrl",
+  repoId: {
+    owner: "owner",
+    repo: "repo",
+  },
+  getPullRequestList: sinon.stub(),
+  getIssueComments: sinon.stub(),
+  getPullRequestReviewComments: sinon.stub(),
+  getPullRequestFiles: sinon.stub(),
+  onDidChangeIssueComments: sinon.stub(),
+  onDidChangePullRequestReviewComments: sinon.stub(),
+  ...props,
+});
+
+export const createPullRequestStub = (props: Partial<PullRequest> = {}): PullRequest => ({
+  id: 1,
+  number: 1,
+  title: "title",
+  state: "open",
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  closedAt: null,
+  mergedAt: null,
+  isDraft: false,
+  repository: {
+    name: "name",
+    owner: "owner",
+    url: "url",
+  },
+  url: "url",
+  user: {
+    login: "login",
+    avatarUrl: "avatarUrl",
+  },
   ...props,
 });
 
 export const createPullRequestFileStub = (props: Partial<PullRequestFile> = {}): PullRequestFile => ({
   filename: "filename",
-  status: "status",
+  status: "unchanged",
   sha: "sha",
   additions: 0,
   deletions: 0,
@@ -56,5 +132,19 @@ export const createPullRequestCommentStub = (props: Partial<PullRequestComment> 
   line: null,
   originalLine: null,
   side: null,
+  ...props,
+});
+
+export const createAccountManagerStub = (props: Partial<IAccountManager> = {}): IAccountManager => ({
+  getAccountBySessionId: sinon.stub(),
+  getAllAccounts: sinon.stub(),
+  onDidChangeSessionsListener: sinon.stub(),
+  ...props,
+});
+
+export const createWorkspaceFolderStub = (props: Partial<vscode.WorkspaceFolder> = {}): vscode.WorkspaceFolder => ({
+  uri: vscode.Uri.parse("file:///workspace"),
+  name: "workspace",
+  index: 0,
   ...props,
 });
