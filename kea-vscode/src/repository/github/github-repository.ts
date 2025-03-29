@@ -8,6 +8,7 @@ import {
   convertGitHubPullRequestReviewComment,
 } from "../../account/github/github-utils";
 import { ICache } from "../../core/cache";
+import { Logger } from "../../core/logger";
 import { IssueComment, IssueId, PullRequest, PullRequestComment, PullRequestFile, PullRequestId, RepoId } from "../../types/kea";
 import { IKeaRepository, IssueCommentsPayload, PullRequestReviewCommentsPayload } from "../kea-repository";
 
@@ -30,24 +31,26 @@ export class GitHubRepository implements IKeaRepository {
     route: keyof Endpoints | R,
     options?: R extends keyof Endpoints ? Endpoints[R]["parameters"] & RequestParameters : RequestParameters,
     forceRequest?: boolean,
-  ): Promise<R extends keyof Endpoints ? Endpoints[R]["response"] : OctokitResponse<unknown>> => {
+  ): Promise<R extends keyof Endpoints ? Endpoints[R]["response"]["data"] : OctokitResponse<unknown>> => {
     type RequestResult = R extends keyof Endpoints ? Endpoints[R]["response"] : OctokitResponse<unknown>;
 
     const cacheKey = this.#cache.generateKey(route, options);
+    const cachedResult = this.#cache.get(cacheKey);
 
     if (forceRequest !== true) {
-      const cachedResult = this.#cache.get(cacheKey);
       if (cachedResult !== undefined && cachedResult !== null) {
         return cachedResult as RequestResult;
       }
     }
 
+    Logger.info(`Fetching ${route} with options:`, options);
     const fetchedResult = await this.#octokit.request(route, options);
-    const headers = {
+
+    const resultHeaders = {
       etag: fetchedResult.headers.etag,
       lastModified: fetchedResult.headers["last-modified"],
     };
-    this.#cache.set(cacheKey, fetchedResult.data, headers);
+    this.#cache.set(cacheKey, fetchedResult.data, resultHeaders);
     return fetchedResult.data as RequestResult;
   };
 
@@ -66,7 +69,7 @@ export class GitHubRepository implements IKeaRepository {
         forceRequest,
       );
 
-      return response.data.map(convertGitHubPullRequest);
+      return response.map(convertGitHubPullRequest);
     } catch (error) {
       return new Error(`Error fetching pull requests: ${error instanceof Error ? error.message : String(error)}`);
     }
@@ -85,7 +88,7 @@ export class GitHubRepository implements IKeaRepository {
         forceRequest,
       );
 
-      result = response.data.map(convertGitHubIssueComment);
+      result = response.map(convertGitHubIssueComment);
     } catch (error) {
       result = new Error(`Error fetching issue comments: ${error instanceof Error ? error.message : String(error)}`);
     }
@@ -107,7 +110,7 @@ export class GitHubRepository implements IKeaRepository {
         forceRequest,
       );
 
-      result = response.data.map(convertGitHubPullRequestReviewComment);
+      result = response.map(convertGitHubPullRequestReviewComment);
     } catch (error) {
       result = new Error(`Error fetching pull request comments: ${error instanceof Error ? error.message : String(error)}`);
     }
@@ -128,7 +131,7 @@ export class GitHubRepository implements IKeaRepository {
         forceRequest,
       );
 
-      return response.data.map(convertGitHubPullRequestFile);
+      return response.map(convertGitHubPullRequestFile);
     } catch (error) {
       return new Error(`Error fetching pull request files: ${error instanceof Error ? error.message : String(error)}`);
     }
