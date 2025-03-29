@@ -43,8 +43,19 @@ export class GitHubRepository implements IKeaRepository {
       }
     }
 
-    Logger.info(`Fetching ${route} with options:`, options);
-    const fetchedResult = await this.#octokit.request(route, options);
+    const previousHeaders = this.#cache.getHeaders(cacheKey);
+    const requestOptions = {
+      ...options,
+      headers: {
+        ...options?.headers,
+        ...(previousHeaders?.etag ? { "If-None-Match": previousHeaders.etag } : {}),
+        ...(previousHeaders?.lastModified ? { "If-Modified-Since": previousHeaders.lastModified } : {}),
+      },
+    } as typeof options;
+
+    Logger.info(`Fetching ${route} with options:`, requestOptions);
+
+    const fetchedResult = await this.#octokit.request(route, requestOptions);
 
     const resultHeaders = {
       etag: fetchedResult.headers.etag,
