@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { IAccountManager } from "../../account/account-manager";
-import { Cache } from "../../core/cache";
+import { ICache } from "../../core/cache";
 import { Logger } from "../../core/logger";
 import { IRepositoryManager } from "../../repository/repository-manager";
 import { PullRequestTreeItem } from "./pull-request-tree-item";
@@ -14,12 +14,12 @@ type PullRequestListItem = RepoTreeItem | PullRequestTreeItem;
 export class PullRequestListTreeProvider implements vscode.TreeDataProvider<PullRequestListItem> {
   #accountManager: IAccountManager;
   #repositoryManager: IRepositoryManager;
-  #cache: Cache;
+  #cache: ICache;
 
   #onDidChangeTreeData = new vscode.EventEmitter<void | PullRequestListItem | null | undefined>();
   readonly onDidChangeTreeData: vscode.Event<void | PullRequestListItem | null | undefined> = this.#onDidChangeTreeData.event;
 
-  constructor(accountManager: IAccountManager, repositoryManager: IRepositoryManager, cache: Cache) {
+  constructor(accountManager: IAccountManager, repositoryManager: IRepositoryManager, cache: ICache) {
     this.#accountManager = accountManager;
     this.#repositoryManager = repositoryManager;
     this.#cache = cache;

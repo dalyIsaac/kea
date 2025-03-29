@@ -1,7 +1,7 @@
 import { Octokit } from "@octokit/rest";
 import * as vscode from "vscode";
 import { AuthenticationSession } from "vscode";
-import { Cache } from "../../core/cache";
+import { ICache } from "../../core/cache";
 import { GitHubRepository } from "../../repository/github/github-repository";
 import { IKeaRepository } from "../../repository/kea-repository";
 import { IAccount } from "../account";
@@ -38,7 +38,7 @@ export class GitHubAccount implements IAccount {
 
   isRepoForAccount = (repoUrl: string): boolean => repoUrl.includes("github.com");
 
-  tryCreateRepoForAccount = (repoUrl: string, cache: Cache): IKeaRepository | Error => {
+  tryCreateRepoForAccount = (repoUrl: string, cache: ICache): IKeaRepository | Error => {
     if (!this.isRepoForAccount(repoUrl)) {
       return new Error("Not a GitHub repository URL");
     }

@@ -7,7 +7,7 @@ import {
   convertGitHubPullRequestFile,
   convertGitHubPullRequestReviewComment,
 } from "../../account/github/github-utils";
-import { Cache } from "../../core/cache";
+import { ICache } from "../../core/cache";
 import { IssueComment, IssueId, PullRequest, PullRequestComment, PullRequestFile, PullRequestId, RepoId } from "../../types/kea";
 import { IKeaRepository, IssueCommentsPayload, PullRequestReviewCommentsPayload } from "../kea-repository";
 
@@ -16,9 +16,9 @@ export class GitHubRepository implements IKeaRepository {
   remoteUrl: string;
   repoId: RepoId;
   #octokit: Octokit;
-  #cache: Cache;
+  #cache: ICache;
 
-  constructor(authSessionAccountId: string, remoteUrl: string, repoId: RepoId, octokit: Octokit, cache: Cache) {
+  constructor(authSessionAccountId: string, remoteUrl: string, repoId: RepoId, octokit: Octokit, cache: ICache) {
     this.authSessionAccountId = authSessionAccountId;
     this.remoteUrl = remoteUrl;
     this.repoId = repoId;

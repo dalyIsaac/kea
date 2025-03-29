@@ -12,7 +12,14 @@ interface CacheEntry<T> {
 
 type Params = Record<string, unknown> | undefined;
 
-export class Cache {
+export interface ICache {
+  generateKey: (route: string, params?: Params) => string;
+  get: (key: string) => unknown;
+  getHeaders: (key: string) => CacheResponseHeaders | undefined;
+  set: (key: string, data: unknown, headers: CacheResponseHeaders) => void;
+}
+
+export class Cache implements ICache {
   #cache: LRUCache<string, CacheEntry<unknown>>;
 
   constructor() {

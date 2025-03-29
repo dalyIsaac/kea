@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import { WorkspaceFolder } from "vscode";
 import { IAccountManager } from "../../account/account-manager";
-import { Cache } from "../../core/cache";
+import { ICache } from "../../core/cache";
 import { getRepo } from "../../core/git";
 import { Logger } from "../../core/logger";
 import { IKeaRepository } from "../../repository/kea-repository";
@@ -26,7 +26,7 @@ export class RepoTreeItem extends vscode.TreeItem {
     accountManager: IAccountManager,
     repositoryManager: IRepositoryManager,
     workspace: WorkspaceFolder,
-    cache: Cache,
+    cache: ICache,
   ): Promise<RepoTreeItem | Error> => {
     const repo = await getRepo(workspace.uri);
     if (repo instanceof Error) {
