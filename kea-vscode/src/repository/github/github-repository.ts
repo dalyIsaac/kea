@@ -1,4 +1,5 @@
 import { Octokit } from "@octokit/rest";
+import { Endpoints, OctokitResponse, RequestParameters, Route } from "@octokit/types";
 import * as vscode from "vscode";
 import {
   convertGitHubIssueComment,
@@ -25,12 +26,20 @@ export class GitHubRepository implements IKeaRepository {
     this.#cache = cache;
   }
 
-  // @ts-expect-error We're not fully implementing the request method.
-  #query: Octokit["request"] = async (route, options) => {
+  #request = async <R extends Route>(
+    route: keyof Endpoints | R,
+    options?: R extends keyof Endpoints ? Endpoints[R]["parameters"] & RequestParameters : RequestParameters,
+    forceRequest?: boolean,
+  ): Promise<R extends keyof Endpoints ? Endpoints[R]["response"] : OctokitResponse<unknown>> => {
+    type RequestResult = R extends keyof Endpoints ? Endpoints[R]["response"] : OctokitResponse<unknown>;
+
     const cacheKey = this.#cache.generateKey(route, options);
-    const cachedResult = this.#cache.get(cacheKey);
-    if (cachedResult !== undefined) {
-      return cachedResult;
+
+    if (forceRequest !== true) {
+      const cachedResult = this.#cache.get(cacheKey);
+      if (cachedResult !== undefined && cachedResult !== null) {
+        return cachedResult as RequestResult;
+      }
     }
 
     const fetchedResult = await this.#octokit.request(route, options);
@@ -39,19 +48,23 @@ export class GitHubRepository implements IKeaRepository {
       lastModified: fetchedResult.headers["last-modified"],
     };
     this.#cache.set(cacheKey, fetchedResult.data, headers);
-    return fetchedResult.data;
+    return fetchedResult.data as RequestResult;
   };
 
-  getPullRequestList = async (): Promise<PullRequest[] | Error> => {
+  getPullRequestList = async (forceRequest?: boolean): Promise<PullRequest[] | Error> => {
     try {
-      const response = await this.#query("GET /repos/{owner}/{repo}/pulls", {
-        owner: this.repoId.owner,
-        repo: this.repoId.repo,
-        state: "open",
-        sort: "updated",
-        direction: "desc",
-        per_page: 100,
-      });
+      const response = await this.#request(
+        "GET /repos/{owner}/{repo}/pulls",
+        {
+          owner: this.repoId.owner,
+          repo: this.repoId.repo,
+          state: "open",
+          sort: "updated",
+          direction: "desc",
+          per_page: 100,
+        },
+        forceRequest,
+      );
 
       return response.data.map(convertGitHubPullRequest);
     } catch (error) {
@@ -59,14 +72,18 @@ export class GitHubRepository implements IKeaRepository {
     }
   };
 
-  getIssueComments = async (issueId: IssueId): Promise<IssueComment[] | Error> => {
+  getIssueComments = async (issueId: IssueId, forceRequest?: boolean): Promise<IssueComment[] | Error> => {
     let result: IssueComment[] | Error;
     try {
-      const response = await this.#query("GET /repos/{owner}/{repo}/issues/{issue_number}/comments", {
-        owner: issueId.owner,
-        repo: issueId.repo,
-        issue_number: issueId.number,
-      });
+      const response = await this.#request(
+        "GET /repos/{owner}/{repo}/issues/{issue_number}/comments",
+        {
+          owner: issueId.owner,
+          repo: issueId.repo,
+          issue_number: issueId.number,
+        },
+        forceRequest,
+      );
 
       result = response.data.map(convertGitHubIssueComment);
     } catch (error) {
@@ -77,14 +94,18 @@ export class GitHubRepository implements IKeaRepository {
     return result;
   };
 
-  getPullRequestReviewComments = async (pullId: PullRequestId): Promise<PullRequestComment[] | Error> => {
+  getPullRequestReviewComments = async (pullId: PullRequestId, forceRequest?: boolean): Promise<PullRequestComment[] | Error> => {
     let result: PullRequestComment[] | Error;
     try {
-      const response = await this.#query("GET /repos/{owner}/{repo}/pulls/{pull_number}/comments", {
-        owner: pullId.owner,
-        repo: pullId.repo,
-        pull_number: pullId.number,
-      });
+      const response = await this.#request(
+        "GET /repos/{owner}/{repo}/pulls/{pull_number}/comments",
+        {
+          owner: pullId.owner,
+          repo: pullId.repo,
+          pull_number: pullId.number,
+        },
+        forceRequest,
+      );
 
       result = response.data.map(convertGitHubPullRequestReviewComment);
     } catch (error) {
@@ -95,13 +116,17 @@ export class GitHubRepository implements IKeaRepository {
     return result;
   };
 
-  getPullRequestFiles = async (pullId: PullRequestId): Promise<PullRequestFile[] | Error> => {
+  getPullRequestFiles = async (pullId: PullRequestId, forceRequest?: boolean): Promise<PullRequestFile[] | Error> => {
     try {
-      const response = await this.#query("GET /repos/{owner}/{repo}/pulls/{pull_number}/files", {
-        owner: pullId.owner,
-        repo: pullId.repo,
-        pull_number: pullId.number,
-      });
+      const response = await this.#request(
+        "GET /repos/{owner}/{repo}/pulls/{pull_number}/files",
+        {
+          owner: pullId.owner,
+          repo: pullId.repo,
+          pull_number: pullId.number,
+        },
+        forceRequest,
+      );
 
       return response.data.map(convertGitHubPullRequestFile);
     } catch (error) {

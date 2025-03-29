@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import { IAccountManager } from "../../account/account-manager";
+import { Cache } from "../../core/cache";
 import { Logger } from "../../core/logger";
 import { IRepositoryManager } from "../../repository/repository-manager";
 import { PullRequestTreeItem } from "./pull-request-tree-item";
@@ -13,13 +14,15 @@ type PullRequestListItem = RepoTreeItem | PullRequestTreeItem;
 export class PullRequestListTreeProvider implements vscode.TreeDataProvider<PullRequestListItem> {
   #accountManager: IAccountManager;
   #repositoryManager: IRepositoryManager;
+  #cache: Cache;
 
   #onDidChangeTreeData = new vscode.EventEmitter<void | PullRequestListItem | null | undefined>();
   readonly onDidChangeTreeData: vscode.Event<void | PullRequestListItem | null | undefined> = this.#onDidChangeTreeData.event;
 
-  constructor(accountManager: IAccountManager, repositoryManager: IRepositoryManager) {
+  constructor(accountManager: IAccountManager, repositoryManager: IRepositoryManager, cache: Cache) {
     this.#accountManager = accountManager;
     this.#repositoryManager = repositoryManager;
+    this.#cache = cache;
   }
 
   getTreeItem = (element: PullRequestListItem): vscode.TreeItem | Thenable<vscode.TreeItem> => {
@@ -42,7 +45,7 @@ export class PullRequestListTreeProvider implements vscode.TreeDataProvider<Pull
 
   #getRootChildren = async (): Promise<RepoTreeItem[]> => {
     const allItems = vscode.workspace.workspaceFolders?.map((workspace) =>
-      RepoTreeItem.create(this.#accountManager, this.#repositoryManager, workspace),
+      RepoTreeItem.create(this.#accountManager, this.#repositoryManager, workspace, this.#cache),
     );
     if (allItems === undefined) {
       Logger.error("No workspace folders found");

@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 
 import { AccountManager } from "./account/account-manager";
+import { Cache } from "./core/cache";
 import { Logger } from "./core/logger";
 import { CommentsRootDecorationProvider } from "./decorations/comments-root-decoration-provider";
 import { FileCommentDecorationProvider } from "./decorations/file-comment-decoration-provider";
@@ -13,6 +14,8 @@ import { PullRequestTreeProvider } from "./views/pull-request/pull-request-tree-
 export function activate(_context: vscode.ExtensionContext) {
   Logger.info("Kea extension activated");
 
+  const cache = new Cache();
+
   const accountManager = new AccountManager();
   const repositoryManager = new RepositoryManager();
 
@@ -21,7 +24,7 @@ export function activate(_context: vscode.ExtensionContext) {
   treeDecorationManager.registerProviders(new FileCommentDecorationProvider(), new CommentsRootDecorationProvider(repositoryManager));
 
   // Tree providers.
-  const pullRequestListTreeProvider = new PullRequestListTreeProvider(accountManager, repositoryManager);
+  const pullRequestListTreeProvider = new PullRequestListTreeProvider(accountManager, repositoryManager, cache);
   const pullRequestTreeProvider = new PullRequestTreeProvider(repositoryManager);
 
   // Register tree providers.
