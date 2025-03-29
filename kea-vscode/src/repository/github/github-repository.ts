@@ -6,6 +6,7 @@ import {
   convertGitHubPullRequestFile,
   convertGitHubPullRequestReviewComment,
 } from "../../account/github/github-utils";
+import { Cache } from "../../core/cache";
 import { IssueComment, IssueId, PullRequest, PullRequestComment, PullRequestFile, PullRequestId, RepoId } from "../../types/kea";
 import { IKeaRepository, IssueCommentsPayload, PullRequestReviewCommentsPayload } from "../kea-repository";
 
@@ -14,17 +15,36 @@ export class GitHubRepository implements IKeaRepository {
   remoteUrl: string;
   repoId: RepoId;
   #octokit: Octokit;
+  #cache: Cache;
 
-  constructor(authSessionAccountId: string, remoteUrl: string, repoId: RepoId, octokit: Octokit) {
+  constructor(authSessionAccountId: string, remoteUrl: string, repoId: RepoId, octokit: Octokit, cache: Cache) {
     this.authSessionAccountId = authSessionAccountId;
     this.remoteUrl = remoteUrl;
     this.repoId = repoId;
     this.#octokit = octokit;
+    this.#cache = cache;
   }
+
+  // @ts-expect-error We're not fully implementing the request method.
+  #query: Octokit["request"] = async (route, options) => {
+    const cacheKey = this.#cache.generateKey(route, options);
+    const cachedResult = this.#cache.get(cacheKey);
+    if (cachedResult !== undefined) {
+      return cachedResult;
+    }
+
+    const fetchedResult = await this.#octokit.request(route, options);
+    const headers = {
+      etag: fetchedResult.headers.etag,
+      lastModified: fetchedResult.headers["last-modified"],
+    };
+    this.#cache.set(cacheKey, fetchedResult.data, headers);
+    return fetchedResult.data;
+  };
 
   getPullRequestList = async (): Promise<PullRequest[] | Error> => {
     try {
-      const response = await this.#octokit.pulls.list({
+      const response = await this.#query("GET /repos/{owner}/{repo}/pulls", {
         owner: this.repoId.owner,
         repo: this.repoId.repo,
         state: "open",
@@ -42,7 +62,7 @@ export class GitHubRepository implements IKeaRepository {
   getIssueComments = async (issueId: IssueId): Promise<IssueComment[] | Error> => {
     let result: IssueComment[] | Error;
     try {
-      const response = await this.#octokit.issues.listComments({
+      const response = await this.#query("GET /repos/{owner}/{repo}/issues/{issue_number}/comments", {
         owner: issueId.owner,
         repo: issueId.repo,
         issue_number: issueId.number,
@@ -60,7 +80,7 @@ export class GitHubRepository implements IKeaRepository {
   getPullRequestReviewComments = async (pullId: PullRequestId): Promise<PullRequestComment[] | Error> => {
     let result: PullRequestComment[] | Error;
     try {
-      const response = await this.#octokit.pulls.listReviewComments({
+      const response = await this.#query("GET /repos/{owner}/{repo}/pulls/{pull_number}/comments", {
         owner: pullId.owner,
         repo: pullId.repo,
         pull_number: pullId.number,
@@ -77,7 +97,7 @@ export class GitHubRepository implements IKeaRepository {
 
   getPullRequestFiles = async (pullId: PullRequestId): Promise<PullRequestFile[] | Error> => {
     try {
-      const response = await this.#octokit.pulls.listFiles({
+      const response = await this.#query("GET /repos/{owner}/{repo}/pulls/{pull_number}/files", {
         owner: pullId.owner,
         repo: pullId.repo,
         pull_number: pullId.number,
