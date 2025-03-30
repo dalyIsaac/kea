@@ -61,6 +61,7 @@ export const createRepositoryStub = (props: Partial<IKeaRepository> = {}): IKeaR
     repo: "repo",
   },
   getPullRequestList: sinon.stub(),
+  getPullRequest: sinon.stub(),
   getIssueComments: sinon.stub(),
   getPullRequestReviewComments: sinon.stub(),
   getPullRequestFiles: sinon.stub(),

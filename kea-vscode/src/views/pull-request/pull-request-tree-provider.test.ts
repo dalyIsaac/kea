@@ -9,16 +9,18 @@ import { CommitsRootTreeItem } from "./commits-root-tree-item";
 import { FilesRootTreeItem } from "./files-root-tree-item";
 import { PullRequestTreeItem, PullRequestTreeProvider } from "./pull-request-tree-provider";
 
-const createGetChildrenStubs = () => {
+const createGetChildrenStubs = async () => {
   const repoId: RepoId = { owner: "owner", repo: "repo" };
-  const repository = createRepositoryStub({ repoId });
+  const pullId: PullRequestId = { ...repoId, number: 1 };
+
+  const pullRequest = createPullRequestStub({ number: pullId.number });
+  const repository = createRepositoryStub({ repoId, getPullRequest: () => Promise.resolve(pullRequest) });
+
   const repositoryManager = new RepositoryManager();
   repositoryManager.addRepository(repository);
 
   const provider = new PullRequestTreeProvider(repositoryManager);
-  const pullId: PullRequestId = { ...repoId, number: 1 };
-  const pullRequest = createPullRequestStub();
-  provider.openPullRequest(repository.account.accountKey, pullId, pullRequest);
+  await provider.openPullRequest(repository.account.accountKey, pullId);
 
   return {
     repoId,
@@ -26,7 +28,6 @@ const createGetChildrenStubs = () => {
     repositoryManager,
     provider,
     pullId,
-    pullRequest,
   };
 };
 
@@ -56,9 +57,9 @@ suite("PullRequestTreeProvider", () => {
     assert.deepStrictEqual(children, []);
   });
 
-  test("getChildren returns the root children when the pull request is open", () => {
+  test("getChildren returns the root children when the pull request is open", async () => {
     // Given
-    const { provider } = createGetChildrenStubs();
+    const { provider } = await createGetChildrenStubs();
 
     // When
     const result = provider.getChildren();
@@ -77,9 +78,9 @@ suite("PullRequestTreeProvider", () => {
     }
   }
 
-  test("getChildren returns the children of the given element", () => {
+  test("getChildren returns the children of the given element", async () => {
     // Given
-    const { provider } = createGetChildrenStubs();
+    const { provider } = await createGetChildrenStubs();
 
     const element = new SuccessTestTreeItem("Parent", vscode.TreeItemCollapsibleState.Collapsed) as PullRequestTreeItem;
 
@@ -93,9 +94,9 @@ suite("PullRequestTreeProvider", () => {
     assert.strictEqual(children[0].label, "Child 1");
   });
 
-  test("getChildren fails for a non-parent tree item", () => {
+  test("getChildren fails for a non-parent tree item", async () => {
     // Given
-    const { provider } = createGetChildrenStubs();
+    const { provider } = await createGetChildrenStubs();
 
     const element = new CommitsRootTreeItem() as PullRequestTreeItem;
 
@@ -123,23 +124,23 @@ suite("PullRequestTreeProvider", () => {
     assert.strictEqual(eventFired, true);
   });
 
-  test("openPullRequest updates the pull request info", () => {
+  test("openPullRequest updates the pull request info", async () => {
     // Given
-    const { provider, repository, pullId, pullRequest } = createGetChildrenStubs();
+    const { provider, repository, pullId } = await createGetChildrenStubs();
 
     // When
-    const result = provider.openPullRequest(repository.account.accountKey, pullId, pullRequest);
+    const result = await provider.openPullRequest(repository.account.accountKey, pullId);
 
     // Then
     assert.strictEqual(result, true);
   });
 
-  test("openPullRequest fails when the repository is not found", () => {
+  test("openPullRequest fails when the repository is not found", async () => {
     // Given
-    const { provider, pullId, pullRequest } = createGetChildrenStubs();
+    const { provider, pullId } = await createGetChildrenStubs();
 
     // When
-    const result = provider.openPullRequest({ providerId: "invalid-provider-id", accountId: "invalid-account-id" }, pullId, pullRequest);
+    const result = await provider.openPullRequest({ providerId: "invalid-provider-id", accountId: "invalid-account-id" }, pullId);
 
     // Then
     assert.strictEqual(result, false);
