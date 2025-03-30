@@ -37,7 +37,7 @@ export class TreeDecorationManager {
     for (const provider of this.#providers) {
       const uri = createCommentsRootDecorationUri({
         pullId: payload.issueId,
-        authSessionAccountId: repository.authSessionAccountId,
+        accountKey: repository.account.accountKey,
       });
 
       provider.refresh(uri);

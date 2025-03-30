@@ -1,6 +1,6 @@
 import * as assert from "assert";
 import { RepositoryManager } from "../../repository/repository-manager";
-import { createAccountManagerStub, createPullRequestStub, createRepositoryStub } from "../../test-utils";
+import { createAccountManagerStub, createCacheStub, createPullRequestStub, createRepositoryStub } from "../../test-utils";
 import { PullRequestListTreeProvider } from "./pull-request-list-tree-provider";
 import { PullRequestTreeItem } from "./pull-request-tree-item";
 
@@ -11,9 +11,10 @@ suite("PullRequestListTreeProvider", () => {
     const repositoryManager = new RepositoryManager();
     const repository = createRepositoryStub();
     const pullRequest = createPullRequestStub();
+    const cache = createCacheStub();
 
-    const provider = new PullRequestListTreeProvider(accountManager, repositoryManager);
-    const item = new PullRequestTreeItem(repository.authSessionAccountId, pullRequest);
+    const provider = new PullRequestListTreeProvider(accountManager, repositoryManager, cache);
+    const item = new PullRequestTreeItem(repository.account.accountKey, pullRequest);
 
     // When
     const treeItem = provider.getTreeItem(item);

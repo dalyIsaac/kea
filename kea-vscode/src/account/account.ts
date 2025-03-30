@@ -1,8 +1,13 @@
-import { AuthenticationSession } from "vscode";
+import { ICache } from "../core/cache";
 import { IKeaRepository } from "../repository/kea-repository";
 
+export interface IAccountKey {
+  providerId: string;
+  accountId: string;
+}
+
 export interface IAccount {
-  session: AuthenticationSession;
+  accountKey: IAccountKey;
   isRepoForAccount: (repoUrl: string) => boolean;
-  tryCreateRepoForAccount: (repoUrl: string) => IKeaRepository | Error;
+  tryCreateRepoForAccount: (repoUrl: string, cache: ICache) => IKeaRepository | Error;
 }

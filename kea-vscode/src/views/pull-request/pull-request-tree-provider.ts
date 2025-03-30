@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { IAccountKey } from "../../account/account";
 import { Logger } from "../../core/logger";
 import { IKeaRepository } from "../../repository/kea-repository";
 import { IRepositoryManager } from "../../repository/repository-manager";
@@ -14,6 +15,7 @@ export type PullRequestTreeItem = CommentsRootTreeItem | FilesRootTreeItem | Com
  * Provides information about the current pull request.
  */
 export class PullRequestTreeProvider implements vscode.TreeDataProvider<PullRequestTreeItem> {
+  #forceRefresh = false;
   #repositoryManager: IRepositoryManager;
 
   #pullInfo: { repository: IKeaRepository; pullId: PullRequestId; pullRequest: PullRequest } | undefined;
@@ -54,21 +56,30 @@ export class PullRequestTreeProvider implements vscode.TreeDataProvider<PullRequ
 
   refresh = (): void => {
     Logger.info("Refreshing PullRequestProvider");
+    this.#forceRefresh = true;
     this.#onDidChangeTreeData.fire();
   };
 
-  openPullRequest = (authSessionAccountId: string, pullId: PullRequestId, pullRequest: PullRequest): boolean => {
+  openPullRequest = async (accountKey: IAccountKey, pullId: PullRequestId): Promise<boolean> => {
     Logger.info("Opening pull request", pullId);
 
-    const repository = this.#repositoryManager.getRepositoryById(authSessionAccountId, pullId);
+    const repository = this.#repositoryManager.getRepositoryById(accountKey, pullId);
     if (repository instanceof Error) {
       Logger.error("Error getting repository", repository);
       this.#pullInfo = undefined;
       return false;
     }
 
+    const pullRequest = await repository.getPullRequest(pullId, this.#forceRefresh);
+    if (pullRequest instanceof Error) {
+      Logger.error("Error getting pull request", pullRequest);
+      this.#pullInfo = undefined;
+      return false;
+    }
+
     this.#pullInfo = { repository, pullId, pullRequest };
-    this.refresh();
+    this.#forceRefresh = false;
+    this.#onDidChangeTreeData.fire();
     return true;
   };
 }

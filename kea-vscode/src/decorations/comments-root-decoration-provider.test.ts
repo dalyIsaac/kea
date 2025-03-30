@@ -1,7 +1,7 @@
 import * as assert from "assert";
 import * as vscode from "vscode";
 import { RepositoryManager } from "../repository/repository-manager";
-import { createIssueCommentStub, createPullRequestCommentStub, createRepositoryStub } from "../test-utils";
+import { createAccountStub, createIssueCommentStub, createPullRequestCommentStub, createRepositoryStub } from "../test-utils";
 import { IssueComment, PullRequestComment, RepoId } from "../types/kea";
 import { CommentsRootDecorationProvider } from "./comments-root-decoration-provider";
 import { createCommentsRootDecorationUri } from "./decoration-schemes";
@@ -39,7 +39,10 @@ suite("CommentsRootDecorationProvider", () => {
     const provider = new CommentsRootDecorationProvider(repositoryManager);
     const uri = vscode.Uri.from({
       scheme: "kea-comments-root",
-      query: JSON.stringify({ sessionId: "invalid", pullId: { owner: "owner", repo: "repo", number: 1 } }),
+      query: JSON.stringify({
+        accountKey: { accountId: "invalid", providerId: "invalid" },
+        pullId: { owner: "owner", repo: "repo", number: 1 },
+      }),
     });
 
     // When
@@ -116,9 +119,9 @@ suite("CommentsRootDecorationProvider", () => {
     test(`Returns correct decoration when ${description}`, async () => {
       // Given
       const repoId: RepoId = { owner: "owner", repo: "repo" };
-      const authSessionAccountId = "sessionId";
+      const accountKey = { providerId: "github", accountId: "accountId" };
       const repository = createRepositoryStub({
-        authSessionAccountId,
+        account: createAccountStub({ accountKey }),
         repoId,
         getPullRequestReviewComments: () => Promise.resolve(reviewComments),
         getIssueComments: () => Promise.resolve(issueComments),
@@ -127,7 +130,7 @@ suite("CommentsRootDecorationProvider", () => {
       repositoryManager.addRepository(repository);
 
       const provider = new CommentsRootDecorationProvider(repositoryManager);
-      const uri = createCommentsRootDecorationUri({ authSessionAccountId, pullId: { ...repoId, number: 1 } });
+      const uri = createCommentsRootDecorationUri({ accountKey, pullId: { ...repoId, number: 1 } });
 
       // When
       const decoration = await provider.provideFileDecoration(uri, new vscode.CancellationTokenSource().token);

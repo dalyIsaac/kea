@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { IAccountKey } from "../account/account";
 import { WrappedError } from "../core/wrapped-error";
 import { FileStatus, PullRequestId, RepoId } from "../types/kea";
 
@@ -7,8 +8,9 @@ export const DECORATION_SCHEMES = {
   commentsRoot: "kea-comments-root" as const,
 } satisfies Record<string, string>;
 
+// TODO: Manually construct.
 interface PullRequestFileDecorationPayload {
-  sessionId: string;
+  accountKey: IAccountKey;
   repoId: RepoId;
   filePath: string;
   fileStatus: FileStatus;
@@ -22,7 +24,7 @@ export const createCommentDecorationUri = (payload: PullRequestFileDecorationPay
   });
 
 interface PullRequestCommentsRootDecorationPayload {
-  authSessionAccountId: string;
+  accountKey: IAccountKey;
   pullId: PullRequestId;
 }
 

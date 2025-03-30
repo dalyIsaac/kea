@@ -3,6 +3,7 @@ import sinon from "sinon";
 import * as vscode from "vscode";
 import { IAccount } from "./account/account";
 import { IAccountManager } from "./account/account-manager";
+import { ICache } from "./core/cache";
 import { IKeaRepository } from "./repository/kea-repository";
 import { IssueComment, PullRequest, PullRequestComment, PullRequestFile } from "./types/kea";
 
@@ -43,28 +44,24 @@ export const stubEvents = <TObject extends object, TProperties extends Array<key
 };
 
 export const createAccountStub = (props: Partial<IAccount> = {}): IAccount => ({
-  isRepoForAccount: sinon.stub(),
-  session: {
-    accessToken: "accessToken",
-    account: {
-      id: "accountId",
-      label: "accountLabel",
-    },
-    scopes: ["repo"],
-    id: "sessionId",
+  accountKey: {
+    providerId: "providerId",
+    accountId: "accountId",
   },
+  isRepoForAccount: sinon.stub(),
   tryCreateRepoForAccount: sinon.stub(),
   ...props,
 });
 
 export const createRepositoryStub = (props: Partial<IKeaRepository> = {}): IKeaRepository => ({
-  authSessionAccountId: "accountId",
+  account: createAccountStub(),
   remoteUrl: "remoteUrl",
   repoId: {
     owner: "owner",
     repo: "repo",
   },
   getPullRequestList: sinon.stub(),
+  getPullRequest: sinon.stub(),
   getIssueComments: sinon.stub(),
   getPullRequestReviewComments: sinon.stub(),
   getPullRequestFiles: sinon.stub(),
@@ -136,9 +133,8 @@ export const createPullRequestCommentStub = (props: Partial<PullRequestComment> 
 });
 
 export const createAccountManagerStub = (props: Partial<IAccountManager> = {}): IAccountManager => ({
-  getAccountBySessionId: sinon.stub(),
+  getAccountByProviderId: sinon.stub(),
   getAllAccounts: sinon.stub(),
-  onDidChangeSessionsListener: sinon.stub(),
   ...props,
 });
 
@@ -146,5 +142,13 @@ export const createWorkspaceFolderStub = (props: Partial<vscode.WorkspaceFolder>
   uri: vscode.Uri.parse("file:///workspace"),
   name: "workspace",
   index: 0,
+  ...props,
+});
+
+export const createCacheStub = (props: Partial<ICache> = {}): ICache => ({
+  get: sinon.stub(),
+  set: sinon.stub(),
+  getHeaders: sinon.stub(),
+  generateKey: sinon.stub(),
   ...props,
 });

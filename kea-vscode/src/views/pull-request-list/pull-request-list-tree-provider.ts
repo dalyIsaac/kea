@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import { IAccountManager } from "../../account/account-manager";
+import { ICache } from "../../core/cache";
 import { Logger } from "../../core/logger";
 import { IRepositoryManager } from "../../repository/repository-manager";
 import { PullRequestTreeItem } from "./pull-request-tree-item";
@@ -11,15 +12,19 @@ type PullRequestListItem = RepoTreeItem | PullRequestTreeItem;
  * Provides a list of pull requests for all the repositories in the workspace.
  */
 export class PullRequestListTreeProvider implements vscode.TreeDataProvider<PullRequestListItem> {
+  #forceRefresh = false;
+
   #accountManager: IAccountManager;
   #repositoryManager: IRepositoryManager;
+  #cache: ICache;
 
   #onDidChangeTreeData = new vscode.EventEmitter<void | PullRequestListItem | null | undefined>();
   readonly onDidChangeTreeData: vscode.Event<void | PullRequestListItem | null | undefined> = this.#onDidChangeTreeData.event;
 
-  constructor(accountManager: IAccountManager, repositoryManager: IRepositoryManager) {
+  constructor(accountManager: IAccountManager, repositoryManager: IRepositoryManager, cache: ICache) {
     this.#accountManager = accountManager;
     this.#repositoryManager = repositoryManager;
+    this.#cache = cache;
   }
 
   getTreeItem = (element: PullRequestListItem): vscode.TreeItem | Thenable<vscode.TreeItem> => {
@@ -42,7 +47,7 @@ export class PullRequestListTreeProvider implements vscode.TreeDataProvider<Pull
 
   #getRootChildren = async (): Promise<RepoTreeItem[]> => {
     const allItems = vscode.workspace.workspaceFolders?.map((workspace) =>
-      RepoTreeItem.create(this.#accountManager, this.#repositoryManager, workspace),
+      RepoTreeItem.create(this.#accountManager, this.#repositoryManager, workspace, this.#cache),
     );
     if (allItems === undefined) {
       Logger.error("No workspace folders found");
@@ -65,18 +70,20 @@ export class PullRequestListTreeProvider implements vscode.TreeDataProvider<Pull
   };
 
   #getPullRequests = async (repoTreeItem: RepoTreeItem): Promise<PullRequestTreeItem[]> => {
-    const pullRequests = await repoTreeItem.repository.getPullRequestList();
+    const pullRequests = await repoTreeItem.repository.getPullRequestList(this.#forceRefresh);
+    this.#forceRefresh = false;
 
     if (pullRequests instanceof Error) {
       Logger.error(`Error fetching pull requests: ${pullRequests.message}`);
       return [];
     }
 
-    return pullRequests.map((pr) => new PullRequestTreeItem(repoTreeItem.repository.authSessionAccountId, pr));
+    return pullRequests.map((pr) => new PullRequestTreeItem(repoTreeItem.repository.account.accountKey, pr));
   };
 
   refresh = (): void => {
     Logger.info("Refreshing PullRequestListProvider");
+    this.#forceRefresh = true;
     this.#onDidChangeTreeData.fire();
   };
 }
