@@ -15,6 +15,7 @@ export type PullRequestTreeItem = CommentsRootTreeItem | FilesRootTreeItem | Com
  * Provides information about the current pull request.
  */
 export class PullRequestTreeProvider implements vscode.TreeDataProvider<PullRequestTreeItem> {
+  #forceRefresh = false;
   #repositoryManager: IRepositoryManager;
 
   #pullInfo: { repository: IKeaRepository; pullId: PullRequestId; pullRequest: PullRequest } | undefined;
@@ -55,6 +56,7 @@ export class PullRequestTreeProvider implements vscode.TreeDataProvider<PullRequ
 
   refresh = (): void => {
     Logger.info("Refreshing PullRequestProvider");
+    this.#forceRefresh = true;
     this.#onDidChangeTreeData.fire();
   };
 
@@ -68,7 +70,7 @@ export class PullRequestTreeProvider implements vscode.TreeDataProvider<PullRequ
       return false;
     }
 
-    const pullRequest = await repository.getPullRequest(pullId);
+    const pullRequest = await repository.getPullRequest(pullId, this.#forceRefresh);
     if (pullRequest instanceof Error) {
       Logger.error("Error getting pull request", pullRequest);
       this.#pullInfo = undefined;
@@ -76,7 +78,8 @@ export class PullRequestTreeProvider implements vscode.TreeDataProvider<PullRequ
     }
 
     this.#pullInfo = { repository, pullId, pullRequest };
-    this.refresh();
+    this.#forceRefresh = false;
+    this.#onDidChangeTreeData.fire();
     return true;
   };
 }

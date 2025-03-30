@@ -12,6 +12,8 @@ type PullRequestListItem = RepoTreeItem | PullRequestTreeItem;
  * Provides a list of pull requests for all the repositories in the workspace.
  */
 export class PullRequestListTreeProvider implements vscode.TreeDataProvider<PullRequestListItem> {
+  #forceRefresh = false;
+
   #accountManager: IAccountManager;
   #repositoryManager: IRepositoryManager;
   #cache: ICache;
@@ -68,7 +70,8 @@ export class PullRequestListTreeProvider implements vscode.TreeDataProvider<Pull
   };
 
   #getPullRequests = async (repoTreeItem: RepoTreeItem): Promise<PullRequestTreeItem[]> => {
-    const pullRequests = await repoTreeItem.repository.getPullRequestList();
+    const pullRequests = await repoTreeItem.repository.getPullRequestList(this.#forceRefresh);
+    this.#forceRefresh = false;
 
     if (pullRequests instanceof Error) {
       Logger.error(`Error fetching pull requests: ${pullRequests.message}`);
@@ -80,6 +83,7 @@ export class PullRequestListTreeProvider implements vscode.TreeDataProvider<Pull
 
   refresh = (): void => {
     Logger.info("Refreshing PullRequestListProvider");
+    this.#forceRefresh = true;
     this.#onDidChangeTreeData.fire();
   };
 }
