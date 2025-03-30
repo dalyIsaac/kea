@@ -14,7 +14,11 @@ const createGetChildrenStubs = async () => {
   const pullId: PullRequestId = { ...repoId, number: 1 };
 
   const pullRequest = createPullRequestStub({ number: pullId.number });
-  const repository = createRepositoryStub({ repoId, getPullRequest: () => Promise.resolve(pullRequest) });
+  const repository = createRepositoryStub({
+    repoId,
+    getPullRequest: (id) =>
+      id.number === pullId.number ? Promise.resolve(pullRequest) : Promise.resolve(new Error("Pull request not found")),
+  });
 
   const repositoryManager = new RepositoryManager();
   repositoryManager.addRepository(repository);
@@ -141,6 +145,19 @@ suite("PullRequestTreeProvider", () => {
 
     // When
     const result = await provider.openPullRequest({ providerId: "invalid-provider-id", accountId: "invalid-account-id" }, pullId);
+
+    // Then
+    assert.strictEqual(result, false);
+  });
+
+  test("openPullRequest fails when the pull request is not found", async () => {
+    // Given
+    const { provider, repository } = await createGetChildrenStubs();
+
+    const invalidPullId: PullRequestId = { ...repository.repoId, number: 9999 };
+
+    // When
+    const result = await provider.openPullRequest(repository.account.accountKey, invalidPullId);
 
     // Then
     assert.strictEqual(result, false);
