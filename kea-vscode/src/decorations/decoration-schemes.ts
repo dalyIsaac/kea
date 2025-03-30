@@ -17,38 +17,22 @@ interface PullRequestFileDecorationPayload {
   commentCount: number;
 }
 
-export const createCommentDecorationUri = (payload: PullRequestFileDecorationPayload): vscode.Uri => {
-  const prunedPayload: PullRequestFileDecorationPayload = {
-    ...payload,
-    accountKey: {
-      ...payload.accountKey,
-    },
-  };
-
-  return vscode.Uri.from({
+export const createCommentDecorationUri = (payload: PullRequestFileDecorationPayload): vscode.Uri =>
+  vscode.Uri.from({
     scheme: DECORATION_SCHEMES.files,
-    query: JSON.stringify(prunedPayload),
+    query: JSON.stringify(payload),
   });
-};
 
 interface PullRequestCommentsRootDecorationPayload {
   accountKey: IAccountKey;
   pullId: PullRequestId;
 }
 
-export const createCommentsRootDecorationUri = (payload: PullRequestCommentsRootDecorationPayload): vscode.Uri => {
-  const prunedPayload: PullRequestCommentsRootDecorationPayload = {
-    ...payload,
-    accountKey: {
-      ...payload.accountKey,
-    },
-  };
-
-  return vscode.Uri.from({
+export const createCommentsRootDecorationUri = (payload: PullRequestCommentsRootDecorationPayload): vscode.Uri =>
+  vscode.Uri.from({
     scheme: DECORATION_SCHEMES.commentsRoot,
-    query: JSON.stringify(prunedPayload),
+    query: JSON.stringify(payload),
   });
-};
 
 type ParsedDecorationData =
   | { type: typeof DECORATION_SCHEMES.files; payload: PullRequestFileDecorationPayload }

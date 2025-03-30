@@ -3,7 +3,7 @@ import * as vscode from "vscode";
 import { ICache } from "../../core/cache";
 import { GitHubRepository } from "../../repository/github/github-repository";
 import { IKeaRepository } from "../../repository/kea-repository";
-import { IAccount } from "../account";
+import { IAccount, IAccountKey } from "../account";
 
 export const GITHUB_PROVIDER_ID = "github";
 
@@ -11,15 +11,17 @@ export class GitHubAccount implements IAccount {
   static #scopes = ["user:email", "repo", "read:org"];
   static #hasRequestedUser = false;
 
-  providerId = GITHUB_PROVIDER_ID;
-  accountId: string;
+  accountKey: IAccountKey;
 
   private constructor(accountId: string) {
-    this.accountId = accountId;
+    this.accountKey = {
+      providerId: GITHUB_PROVIDER_ID,
+      accountId,
+    };
   }
 
   getOctokit = async (): Promise<Octokit | Error> => {
-    const session = await vscode.authentication.getSession(this.providerId, GitHubAccount.#scopes);
+    const session = await vscode.authentication.getSession(this.accountKey.providerId, GitHubAccount.#scopes);
     if (session === undefined) {
       return new Error("No GitHub session found");
     }

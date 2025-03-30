@@ -6,7 +6,8 @@ export interface IAccountKey {
   accountId: string;
 }
 
-export interface IAccount extends IAccountKey {
+export interface IAccount {
+  accountKey: IAccountKey;
   isRepoForAccount: (repoUrl: string) => boolean;
   tryCreateRepoForAccount: (repoUrl: string, cache: ICache) => IKeaRepository | Error;
 }

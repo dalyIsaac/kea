@@ -11,17 +11,23 @@ export class RepositoryManager implements IRepositoryManager {
   #repos = new Map<string, IKeaRepository>();
 
   addRepository = (repository: IKeaRepository): void => {
-    this.#repos.set(repoIdToString(repository), repository);
+    this.#repos.set(
+      repoIdToString({
+        accountKey: repository.account.accountKey,
+        repoId: repository.repoId,
+      }),
+      repository,
+    );
   };
 
   getRepositoryById = (accountKey: IAccountKey, repoId: RepoId): IKeaRepository | Error =>
-    this.#repos.get(repoIdToString({ account: accountKey, repoId })) ?? new Error(`Repository not found: ${repoId.owner}/${repoId.repo}`);
+    this.#repos.get(repoIdToString({ accountKey, repoId })) ?? new Error(`Repository not found: ${repoId.owner}/${repoId.repo}`);
 }
 
 interface RepoKey {
-  account: IAccountKey;
+  accountKey: IAccountKey;
   repoId: RepoId;
 }
 
 const repoIdToString = (repo: RepoKey): string =>
-  `${repo.account.providerId}/${repo.account.accountId}/${repo.repoId.owner}/${repo.repoId.repo}`;
+  `${repo.accountKey.providerId}/${repo.accountKey.accountId}/${repo.repoId.owner}/${repo.repoId.repo}`;
