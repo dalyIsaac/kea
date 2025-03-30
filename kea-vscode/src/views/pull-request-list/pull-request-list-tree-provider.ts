@@ -75,7 +75,7 @@ export class PullRequestListTreeProvider implements vscode.TreeDataProvider<Pull
       return [];
     }
 
-    return pullRequests.map((pr) => new PullRequestTreeItem(repoTreeItem.repository.authSessionAccountId, pr));
+    return pullRequests.map((pr) => new PullRequestTreeItem(repoTreeItem.repository.account, pr));
   };
 
   refresh = (): void => {

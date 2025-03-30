@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { IAccountKey } from "../../account/account";
 import { createCommentDecorationUri } from "../../decorations/decoration-schemes";
 import { PullRequestComment, PullRequestFile, RepoId } from "../../types/kea";
 import { ParentTreeItem } from "../parent-tree-item";
@@ -15,12 +16,12 @@ export class FileTreeItem extends ParentTreeItem<ReviewCommentTreeItem> {
 
   #comments: PullRequestComment[];
 
-  constructor(sessionId: string, repoId: RepoId, file: PullRequestFile, comments: PullRequestComment[]) {
+  constructor(accountKey: IAccountKey, repoId: RepoId, file: PullRequestFile, comments: PullRequestComment[]) {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const name = file.filename.split("/").pop()!;
     super(name, comments.length > 0 ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None);
     this.resourceUri = createCommentDecorationUri({
-      sessionId,
+      accountKey,
       filePath: file.filename,
       repoId,
       fileStatus: file.status,

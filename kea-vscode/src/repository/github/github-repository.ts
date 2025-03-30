@@ -1,6 +1,6 @@
-import { Octokit } from "@octokit/rest";
-import { Endpoints, OctokitResponse, RequestParameters, Route } from "@octokit/types";
+import { Endpoints, RequestParameters, Route } from "@octokit/types";
 import * as vscode from "vscode";
+import { GitHubAccount } from "../../account/github/github-account";
 import {
   convertGitHubIssueComment,
   convertGitHubPullRequest,
@@ -13,26 +13,32 @@ import { IssueComment, IssueId, PullRequest, PullRequestComment, PullRequestFile
 import { IKeaRepository, IssueCommentsPayload, PullRequestReviewCommentsPayload } from "../kea-repository";
 
 export class GitHubRepository implements IKeaRepository {
-  authSessionAccountId: string;
+  account: GitHubAccount;
   remoteUrl: string;
   repoId: RepoId;
-  #octokit: Octokit;
   #cache: ICache;
 
-  constructor(authSessionAccountId: string, remoteUrl: string, repoId: RepoId, octokit: Octokit, cache: ICache) {
-    this.authSessionAccountId = authSessionAccountId;
+  constructor(remoteUrl: string, repoId: RepoId, account: GitHubAccount, cache: ICache) {
     this.remoteUrl = remoteUrl;
     this.repoId = repoId;
-    this.#octokit = octokit;
+    this.account = account;
     this.#cache = cache;
   }
 
+  /**
+   * Returns the octokit instance for this repository.
+   * @param route The route to request.
+   * @param options The options to pass to the request.
+   * @param forceRequest If true, the request will be made even if the result is cached.
+   * @throws Error if the octokit instance cannot be created, or if the request fails.
+   * @returns The response data from the request.
+   */
   #request = async <R extends Route>(
     route: keyof Endpoints | R,
-    options?: R extends keyof Endpoints ? Endpoints[R]["parameters"] & RequestParameters : RequestParameters,
+    options?: R extends keyof Endpoints ? Endpoints[R]["parameters"] & RequestParameters : never,
     forceRequest?: boolean,
-  ): Promise<R extends keyof Endpoints ? Endpoints[R]["response"]["data"] : OctokitResponse<unknown>> => {
-    type RequestResult = R extends keyof Endpoints ? Endpoints[R]["response"] : OctokitResponse<unknown>;
+  ): Promise<R extends keyof Endpoints ? Endpoints[R]["response"]["data"] : never> => {
+    type RequestResult = R extends keyof Endpoints ? Endpoints[R]["response"] : never;
 
     const cacheKey = this.#cache.generateKey(route, options);
     const cachedResult = this.#cache.get(cacheKey);
@@ -41,6 +47,13 @@ export class GitHubRepository implements IKeaRepository {
       if (cachedResult !== undefined && cachedResult !== null) {
         return cachedResult as RequestResult;
       }
+    }
+
+    const octokit = await this.account.getOctokit();
+    if (octokit instanceof Error) {
+      // We throw the error so that the caller can handle it.
+      // eslint-disable-next-line no-restricted-syntax
+      throw octokit;
     }
 
     const previousHeaders = this.#cache.getHeaders(cacheKey);
@@ -55,7 +68,7 @@ export class GitHubRepository implements IKeaRepository {
 
     Logger.info(`Fetching ${route} with options:`, requestOptions);
 
-    const fetchedResult = await this.#octokit.request(route, requestOptions);
+    const fetchedResult = await octokit.request(route, requestOptions);
 
     const resultHeaders = {
       etag: fetchedResult.headers.etag,

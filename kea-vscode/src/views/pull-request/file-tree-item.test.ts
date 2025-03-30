@@ -5,7 +5,7 @@ import { FileTreeItem } from "./file-tree-item";
 import { ReviewCommentTreeItem } from "./review-comment-tree-item";
 
 suite("FileTreeItem", () => {
-  const sessionId = "1234";
+  const accountId = "1234";
   const repoId: RepoId = {
     owner: "owner",
     repo: "repo",
@@ -19,7 +19,7 @@ suite("FileTreeItem", () => {
     const comments: PullRequestComment[] = [];
 
     // When
-    const fileTreeItem = new FileTreeItem(sessionId, repoId, file, comments);
+    const fileTreeItem = new FileTreeItem(accountId, repoId, file, comments);
 
     // Then
     assert.strictEqual(fileTreeItem.label, "file-tree-item.ts");
@@ -38,7 +38,7 @@ suite("FileTreeItem", () => {
     ];
 
     // When
-    const fileTreeItem = new FileTreeItem(sessionId, repoId, file, comments);
+    const fileTreeItem = new FileTreeItem(accountId, repoId, file, comments);
 
     // Then
     const children = fileTreeItem.getChildren();

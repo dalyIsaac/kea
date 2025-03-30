@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { IAccountKey } from "../account/account";
 import { WrappedError } from "../core/wrapped-error";
 import { FileStatus, PullRequestId, RepoId } from "../types/kea";
 
@@ -7,30 +8,47 @@ export const DECORATION_SCHEMES = {
   commentsRoot: "kea-comments-root" as const,
 } satisfies Record<string, string>;
 
+// TODO: Manually construct.
 interface PullRequestFileDecorationPayload {
-  sessionId: string;
+  accountKey: IAccountKey;
   repoId: RepoId;
   filePath: string;
   fileStatus: FileStatus;
   commentCount: number;
 }
 
-export const createCommentDecorationUri = (payload: PullRequestFileDecorationPayload): vscode.Uri =>
-  vscode.Uri.from({
+export const createCommentDecorationUri = (payload: PullRequestFileDecorationPayload): vscode.Uri => {
+  const prunedPayload: PullRequestFileDecorationPayload = {
+    ...payload,
+    accountKey: {
+      ...payload.accountKey,
+    },
+  };
+
+  return vscode.Uri.from({
     scheme: DECORATION_SCHEMES.files,
-    query: JSON.stringify(payload),
+    query: JSON.stringify(prunedPayload),
   });
+};
 
 interface PullRequestCommentsRootDecorationPayload {
-  authSessionAccountId: string;
+  accountKey: IAccountKey;
   pullId: PullRequestId;
 }
 
-export const createCommentsRootDecorationUri = (payload: PullRequestCommentsRootDecorationPayload): vscode.Uri =>
-  vscode.Uri.from({
+export const createCommentsRootDecorationUri = (payload: PullRequestCommentsRootDecorationPayload): vscode.Uri => {
+  const prunedPayload: PullRequestCommentsRootDecorationPayload = {
+    ...payload,
+    accountKey: {
+      ...payload.accountKey,
+    },
+  };
+
+  return vscode.Uri.from({
     scheme: DECORATION_SCHEMES.commentsRoot,
-    query: JSON.stringify(payload),
+    query: JSON.stringify(prunedPayload),
   });
+};
 
 type ParsedDecorationData =
   | { type: typeof DECORATION_SCHEMES.files; payload: PullRequestFileDecorationPayload }

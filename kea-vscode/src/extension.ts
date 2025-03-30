@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 
+import { IAccountKey } from "./account/account";
 import { AccountManager } from "./account/account-manager";
 import { Cache } from "./core/cache";
 import { Logger } from "./core/logger";
@@ -31,26 +32,21 @@ export function activate(_context: vscode.ExtensionContext) {
   vscode.window.registerTreeDataProvider("kea.pullRequestList", pullRequestListTreeProvider);
   vscode.window.registerTreeDataProvider("kea.pullRequest", pullRequestTreeProvider);
 
-  vscode.authentication.onDidChangeSessions(accountManager.onDidChangeSessionsListener);
-
   // Commands.
   vscode.commands.registerCommand("kea.refreshPullRequestList", () => {
     pullRequestListTreeProvider.refresh();
   });
-  vscode.commands.registerCommand(
-    "kea.openPullRequest",
-    ([authSessionAccountId, pullId, pullRequest]: [string, PullRequestId, PullRequest]) => {
-      pullRequestTreeProvider.openPullRequest(authSessionAccountId, pullId, pullRequest);
+  vscode.commands.registerCommand("kea.openPullRequest", ([accountKey, pullId, pullRequest]: [IAccountKey, PullRequestId, PullRequest]) => {
+    pullRequestTreeProvider.openPullRequest(accountKey, pullId, pullRequest);
 
-      const repository = repositoryManager.getRepositoryById(authSessionAccountId, pullId);
-      if (repository instanceof Error) {
-        Logger.error("Error getting repository", repository);
-        return;
-      }
+    const repository = repositoryManager.getRepositoryById(accountKey, pullId);
+    if (repository instanceof Error) {
+      Logger.error("Error getting repository", repository);
+      return;
+    }
 
-      treeDecorationManager.updateListeners(repository);
-    },
-  );
+    treeDecorationManager.updateListeners(repository);
+  });
 
   vscode.commands.registerCommand("kea.refreshPullRequest", () => {
     pullRequestTreeProvider.refresh();

@@ -45,21 +45,12 @@ export const stubEvents = <TObject extends object, TProperties extends Array<key
 
 export const createAccountStub = (props: Partial<IAccount> = {}): IAccount => ({
   isRepoForAccount: sinon.stub(),
-  session: {
-    accessToken: "accessToken",
-    account: {
-      id: "accountId",
-      label: "accountLabel",
-    },
-    scopes: ["repo"],
-    id: "sessionId",
-  },
   tryCreateRepoForAccount: sinon.stub(),
   ...props,
 });
 
 export const createRepositoryStub = (props: Partial<IKeaRepository> = {}): IKeaRepository => ({
-  authSessionAccountId: "accountId",
+  accountId: "accountId",
   remoteUrl: "remoteUrl",
   repoId: {
     owner: "owner",
@@ -137,9 +128,8 @@ export const createPullRequestCommentStub = (props: Partial<PullRequestComment> 
 });
 
 export const createAccountManagerStub = (props: Partial<IAccountManager> = {}): IAccountManager => ({
-  getAccountBySessionId: sinon.stub(),
+  getAccountByProviderId: sinon.stub(),
   getAllAccounts: sinon.stub(),
-  onDidChangeSessionsListener: sinon.stub(),
   ...props,
 });
 

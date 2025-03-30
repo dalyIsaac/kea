@@ -1,28 +1,38 @@
 import { Octokit } from "@octokit/rest";
 import * as vscode from "vscode";
-import { AuthenticationSession } from "vscode";
 import { ICache } from "../../core/cache";
 import { GitHubRepository } from "../../repository/github/github-repository";
 import { IKeaRepository } from "../../repository/kea-repository";
 import { IAccount } from "../account";
 
+export const GITHUB_PROVIDER_ID = "github";
+
 export class GitHubAccount implements IAccount {
-  static providerId = "github";
   static #scopes = ["user:email", "repo", "read:org"];
   static #hasRequestedUser = false;
 
-  session: AuthenticationSession;
-  #octokit: Octokit;
+  providerId = GITHUB_PROVIDER_ID;
+  accountId: string;
 
-  private constructor(session: AuthenticationSession) {
-    this.session = session;
-    this.#octokit = new Octokit({
-      auth: session.accessToken,
-    });
+  private constructor(accountId: string) {
+    this.accountId = accountId;
   }
 
+  getOctokit = async (): Promise<Octokit | Error> => {
+    const session = await vscode.authentication.getSession(this.providerId, GitHubAccount.#scopes);
+    if (session === undefined) {
+      return new Error("No GitHub session found");
+    }
+
+    return new Octokit({
+      auth: session.accessToken,
+      userAgent: "Kea",
+      baseUrl: "https://api.github.com",
+    });
+  };
+
   static create = async (): Promise<GitHubAccount | Error> => {
-    const session = await vscode.authentication.getSession(this.providerId, this.#scopes);
+    const session = await vscode.authentication.getSession(GITHUB_PROVIDER_ID, this.#scopes);
 
     if (session === undefined) {
       if (!this.#hasRequestedUser) {
@@ -33,7 +43,7 @@ export class GitHubAccount implements IAccount {
       return new Error("No GitHub session found");
     }
 
-    return new GitHubAccount(session);
+    return new GitHubAccount(session.account.id);
   };
 
   isRepoForAccount = (repoUrl: string): boolean => repoUrl.includes("github.com");
@@ -48,6 +58,6 @@ export class GitHubAccount implements IAccount {
       return new Error("Expected to find owner and repo name in URL");
     }
 
-    return new GitHubRepository(this.session.account.id, repoUrl, { owner, repo: repoName }, this.#octokit, cache);
+    return new GitHubRepository(repoUrl, { owner, repo: repoName }, this, cache);
   };
 }

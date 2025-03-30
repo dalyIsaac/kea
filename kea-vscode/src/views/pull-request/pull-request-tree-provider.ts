@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { IAccountKey } from "../../account/account";
 import { Logger } from "../../core/logger";
 import { IKeaRepository } from "../../repository/kea-repository";
 import { IRepositoryManager } from "../../repository/repository-manager";
@@ -57,10 +58,10 @@ export class PullRequestTreeProvider implements vscode.TreeDataProvider<PullRequ
     this.#onDidChangeTreeData.fire();
   };
 
-  openPullRequest = (authSessionAccountId: string, pullId: PullRequestId, pullRequest: PullRequest): boolean => {
+  openPullRequest = (accountKey: IAccountKey, pullId: PullRequestId, pullRequest: PullRequest): boolean => {
     Logger.info("Opening pull request", pullId);
 
-    const repository = this.#repositoryManager.getRepositoryById(authSessionAccountId, pullId);
+    const repository = this.#repositoryManager.getRepositoryById(accountKey, pullId);
     if (repository instanceof Error) {
       Logger.error("Error getting repository", repository);
       this.#pullInfo = undefined;

@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { IAccount } from "../account/account";
 import { IssueComment, IssueId, PullRequest, PullRequestComment, PullRequestFile, PullRequestId, RepoId } from "../types/kea";
 
 export interface IssueCommentsPayload {
@@ -13,11 +14,7 @@ export interface PullRequestReviewCommentsPayload {
 
 // TODO: make disposable
 export interface IKeaRepository {
-  /**
-   * The AuthenticationSessionAccountInformation id.
-   */
-  authSessionAccountId: string;
-
+  account: IAccount;
   repoId: RepoId;
   remoteUrl: string;
 

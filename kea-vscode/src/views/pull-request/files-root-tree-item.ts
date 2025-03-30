@@ -77,7 +77,7 @@ export class FilesRootTreeItem extends ParentTreeItem<FilesRootTreeItemChild> {
 
     const comments = reviewComments.filter((comment) => comment.path === file.filename);
     const fileName = pathParts[pathParts.length - 1];
-    const fileNode = new FileTreeItem(this.#repository.authSessionAccountId, this.#pullId, file, comments);
+    const fileNode = new FileTreeItem(this.#repository.account, this.#pullId, file, comments);
 
     if (!parents.some((node) => node instanceof FileTreeItem && node.label === fileName)) {
       parents.push(fileNode);
