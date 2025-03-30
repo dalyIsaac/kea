@@ -14,7 +14,7 @@ suite("PullRequestListTreeProvider", () => {
     const cache = createCacheStub();
 
     const provider = new PullRequestListTreeProvider(accountManager, repositoryManager, cache);
-    const item = new PullRequestTreeItem(repository.authSessionAccountId, pullRequest);
+    const item = new PullRequestTreeItem(repository.account.accountKey, pullRequest);
 
     // When
     const treeItem = provider.getTreeItem(item);

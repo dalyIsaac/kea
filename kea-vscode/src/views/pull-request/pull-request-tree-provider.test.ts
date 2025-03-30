@@ -18,7 +18,7 @@ const createGetChildrenStubs = () => {
   const provider = new PullRequestTreeProvider(repositoryManager);
   const pullId: PullRequestId = { ...repoId, number: 1 };
   const pullRequest = createPullRequestStub();
-  provider.openPullRequest(repository.authSessionAccountId, pullId, pullRequest);
+  provider.openPullRequest(repository.account.accountKey, pullId, pullRequest);
 
   return {
     repoId,
@@ -128,7 +128,7 @@ suite("PullRequestTreeProvider", () => {
     const { provider, repository, pullId, pullRequest } = createGetChildrenStubs();
 
     // When
-    const result = provider.openPullRequest(repository.authSessionAccountId, pullId, pullRequest);
+    const result = provider.openPullRequest(repository.account.accountKey, pullId, pullRequest);
 
     // Then
     assert.strictEqual(result, true);
@@ -139,7 +139,7 @@ suite("PullRequestTreeProvider", () => {
     const { provider, pullId, pullRequest } = createGetChildrenStubs();
 
     // When
-    const result = provider.openPullRequest("invalid-account-id", pullId, pullRequest);
+    const result = provider.openPullRequest({ providerId: "invalid-provider-id", accountId: "invalid-account-id" }, pullId, pullRequest);
 
     // Then
     assert.strictEqual(result, false);

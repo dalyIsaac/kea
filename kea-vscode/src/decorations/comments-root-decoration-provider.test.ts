@@ -39,7 +39,10 @@ suite("CommentsRootDecorationProvider", () => {
     const provider = new CommentsRootDecorationProvider(repositoryManager);
     const uri = vscode.Uri.from({
       scheme: "kea-comments-root",
-      query: JSON.stringify({ accountId: "invalid", pullId: { owner: "owner", repo: "repo", number: 1 } }),
+      query: JSON.stringify({
+        accountKey: { accountId: "invalid", providerId: "invalid" },
+        pullId: { owner: "owner", repo: "repo", number: 1 },
+      }),
     });
 
     // When
@@ -116,9 +119,9 @@ suite("CommentsRootDecorationProvider", () => {
     test(`Returns correct decoration when ${description}`, async () => {
       // Given
       const repoId: RepoId = { owner: "owner", repo: "repo" };
-      const accountId = "accountId";
+      const accountKey = { providerId: "github", accountId: "accountId" };
       const repository = createRepositoryStub({
-        account: createAccountStub({ accountId }),
+        account: createAccountStub({ accountKey }),
         repoId,
         getPullRequestReviewComments: () => Promise.resolve(reviewComments),
         getIssueComments: () => Promise.resolve(issueComments),
@@ -127,7 +130,7 @@ suite("CommentsRootDecorationProvider", () => {
       repositoryManager.addRepository(repository);
 
       const provider = new CommentsRootDecorationProvider(repositoryManager);
-      const uri = createCommentsRootDecorationUri({ accountId, pullId: { ...repoId, number: 1 } });
+      const uri = createCommentsRootDecorationUri({ accountKey, pullId: { ...repoId, number: 1 } });
 
       // When
       const decoration = await provider.provideFileDecoration(uri, new vscode.CancellationTokenSource().token);

@@ -44,13 +44,17 @@ export const stubEvents = <TObject extends object, TProperties extends Array<key
 };
 
 export const createAccountStub = (props: Partial<IAccount> = {}): IAccount => ({
+  accountKey: {
+    providerId: "providerId",
+    accountId: "accountId",
+  },
   isRepoForAccount: sinon.stub(),
   tryCreateRepoForAccount: sinon.stub(),
   ...props,
 });
 
 export const createRepositoryStub = (props: Partial<IKeaRepository> = {}): IKeaRepository => ({
-  accountId: "accountId",
+  account: createAccountStub(),
   remoteUrl: "remoteUrl",
   repoId: {
     owner: "owner",
