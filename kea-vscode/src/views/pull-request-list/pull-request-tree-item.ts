@@ -17,7 +17,7 @@ export class PullRequestTreeItem extends vscode.TreeItem {
     this.command = {
       command: "kea.openPullRequest",
       title: "Open Pull Request",
-      arguments: [[accountKey, pullId, pullRequest]],
+      arguments: [[accountKey, pullId]],
     };
   }
 }

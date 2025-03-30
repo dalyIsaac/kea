@@ -19,6 +19,7 @@ export interface IKeaRepository {
   remoteUrl: string;
 
   getPullRequestList: (forceRequest?: boolean) => Promise<PullRequest[] | Error>;
+  getPullRequest: (pullId: PullRequestId, forceRequest?: boolean) => Promise<PullRequest | Error>;
   getIssueComments: (issueId: IssueId, forceRequest?: boolean) => Promise<IssueComment[] | Error>;
   getPullRequestReviewComments: (pullId: PullRequestId, forceRequest?: boolean) => Promise<PullRequestComment[] | Error>;
   getPullRequestFiles: (pullId: PullRequestId, forceRequest?: boolean) => Promise<PullRequestFile[] | Error>;

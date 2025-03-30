@@ -5,6 +5,7 @@ import {
   convertGitHubIssueComment,
   convertGitHubPullRequest,
   convertGitHubPullRequestFile,
+  convertGitHubPullRequestListItem,
   convertGitHubPullRequestReviewComment,
 } from "../../account/github/github-utils";
 import { ICache } from "../../core/cache";
@@ -93,9 +94,27 @@ export class GitHubRepository implements IKeaRepository {
         forceRequest,
       );
 
-      return response.map(convertGitHubPullRequest);
+      return response.map(convertGitHubPullRequestListItem);
     } catch (error) {
       return new Error(`Error fetching pull requests: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  };
+
+  getPullRequest = async (pullId: PullRequestId, forceRequest?: boolean): Promise<PullRequest | Error> => {
+    try {
+      const response = await this.#request(
+        "GET /repos/{owner}/{repo}/pulls/{pull_number}",
+        {
+          owner: pullId.owner,
+          repo: pullId.repo,
+          pull_number: pullId.number,
+        },
+        forceRequest,
+      );
+
+      return convertGitHubPullRequest(response);
+    } catch (error) {
+      return new Error(`Error fetching pull request: ${error instanceof Error ? error.message : String(error)}`);
     }
   };
 

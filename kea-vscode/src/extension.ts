@@ -8,7 +8,7 @@ import { CommentsRootDecorationProvider } from "./decorations/comments-root-deco
 import { FileCommentDecorationProvider } from "./decorations/file-comment-decoration-provider";
 import { TreeDecorationManager } from "./decorations/tree-decoration-manager";
 import { RepositoryManager } from "./repository/repository-manager";
-import { PullRequest, PullRequestId } from "./types/kea";
+import { PullRequestId } from "./types/kea";
 import { PullRequestListTreeProvider } from "./views/pull-request-list/pull-request-list-tree-provider";
 import { PullRequestTreeProvider } from "./views/pull-request/pull-request-tree-provider";
 
@@ -36,8 +36,8 @@ export function activate(_context: vscode.ExtensionContext) {
   vscode.commands.registerCommand("kea.refreshPullRequestList", () => {
     pullRequestListTreeProvider.refresh();
   });
-  vscode.commands.registerCommand("kea.openPullRequest", ([accountKey, pullId, pullRequest]: [IAccountKey, PullRequestId, PullRequest]) => {
-    pullRequestTreeProvider.openPullRequest(accountKey, pullId, pullRequest);
+  vscode.commands.registerCommand("kea.openPullRequest", async ([accountKey, pullId]: [IAccountKey, PullRequestId]) => {
+    await pullRequestTreeProvider.openPullRequest(accountKey, pullId);
 
     const repository = repositoryManager.getRepositoryById(accountKey, pullId);
     if (repository instanceof Error) {
