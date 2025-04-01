@@ -4,7 +4,7 @@ import { RepositoryManager } from "../../repository/repository-manager";
 import { createPullRequestStub, createRepositoryStub } from "../../test-utils";
 import { PullRequestId, RepoId } from "../../types/kea";
 import { ParentTreeItem } from "../parent-tree-item";
-import { CommentsRootTreeItem } from "./comments-root-tree-item";
+import { CommentsRootTreeNode } from "./comments-root-tree-node";
 import { CommitsRootTreeItem } from "./commits-root-tree-item";
 import { FilesRootTreeItem } from "./files-root-tree-item";
 import { PullRequestTreeItem, PullRequestTreeProvider } from "./pull-request-tree-provider";
@@ -71,7 +71,7 @@ suite("PullRequestTreeProvider", () => {
     // Then
     const children = result as PullRequestTreeItem[];
     assert.strictEqual(children.length, 3);
-    assert.ok(children[0] instanceof CommentsRootTreeItem);
+    assert.ok(children[0] instanceof CommentsRootTreeNode);
     assert.ok(children[1] instanceof FilesRootTreeItem);
     assert.ok(children[2] instanceof CommitsRootTreeItem);
   });

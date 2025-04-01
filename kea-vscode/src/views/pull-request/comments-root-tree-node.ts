@@ -4,28 +4,26 @@ import { createCommentsRootDecorationUri } from "../../decorations/decoration-sc
 import { IKeaRepository, IssueCommentsPayload, PullRequestReviewCommentsPayload } from "../../repository/kea-repository";
 import { isSamePullRequest } from "../../type-utils";
 import { PullRequestId } from "../../types/kea";
-import { ParentTreeItem } from "../parent-tree-item";
-import { CommentTreeItem } from "./comment-tree-item";
-import { ReviewCommentTreeItem } from "./review-comment-tree-item";
+import { CollapsibleState, getCollapsibleState, IParentTreeNode } from "../tree-node";
+import { CommentTreeNode } from "./comment-tree-node";
+import { ReviewCommentTreeNode } from "./review-comment-tree-node";
 
 /**
- * Parent tree item for comments.
+ * Parent tree node for comments.
  */
-export class CommentsRootTreeItem extends ParentTreeItem<CommentTreeItem> {
-  override contextValue = "comment";
-  override iconPath = new vscode.ThemeIcon("comment-discussion");
-  override tooltip = "Comments";
-  override resourceUri: vscode.Uri;
-
+export class CommentsRootTreeNode implements IParentTreeNode<CommentTreeNode | ReviewCommentTreeNode> {
+  #label = "Comments";
+  #resourceUri: vscode.Uri;
   #repository: IKeaRepository;
   #pullId: PullRequestId;
 
+  collapsibleState: CollapsibleState = "none";
+
   constructor(repository: IKeaRepository, id: PullRequestId) {
-    super("Comments", vscode.TreeItemCollapsibleState.None);
     this.#repository = repository;
     this.#pullId = id;
 
-    this.resourceUri = createCommentsRootDecorationUri({
+    this.#resourceUri = createCommentsRootDecorationUri({
       accountKey: this.#repository.account.accountKey,
       pullId: this.#pullId,
     });
@@ -35,7 +33,14 @@ export class CommentsRootTreeItem extends ParentTreeItem<CommentTreeItem> {
     this.#repository.onDidChangePullRequestReviewComments(this.#onDidChangePullRequestReviewComments);
   }
 
-  getChildren = async (): Promise<CommentTreeItem[]> => {
+  getTreeItem = (): vscode.TreeItem => {
+    const treeItem = new vscode.TreeItem(this.#label, getCollapsibleState(this.collapsibleState));
+    treeItem.resourceUri = this.#resourceUri;
+    treeItem.contextValue = "commentsRoot";
+    return treeItem;
+  };
+
+  getChildren = async (): Promise<Array<CommentTreeNode | ReviewCommentTreeNode>> => {
     const [reviewComments, issueComments] = await Promise.all([
       this.#repository.getPullRequestReviewComments(this.#pullId),
       this.#repository.getIssueComments(this.#pullId),
@@ -43,28 +48,28 @@ export class CommentsRootTreeItem extends ParentTreeItem<CommentTreeItem> {
 
     let hasFailed = false;
 
-    let reviewCommentItems: ReviewCommentTreeItem[] = [];
+    let reviewCommentNodes: ReviewCommentTreeNode[] = [];
     if (reviewComments instanceof Error) {
       Logger.error("Error fetching pull request review comments", reviewComments);
       hasFailed = true;
     } else {
-      reviewCommentItems = reviewComments.map((comment) => new ReviewCommentTreeItem(comment));
+      reviewCommentNodes = reviewComments.map((comment) => new ReviewCommentTreeNode(comment));
     }
 
-    let issueCommentItems: CommentTreeItem[] = [];
+    let issueCommentNodes: CommentTreeNode[] = [];
     if (issueComments instanceof Error) {
       Logger.error("Error fetching issue comments", issueComments);
       hasFailed = true;
     } else {
-      issueCommentItems = issueComments.map((comment) => new CommentTreeItem(comment));
+      issueCommentNodes = issueComments.map((comment) => new CommentTreeNode(comment));
     }
 
     if (hasFailed) {
       vscode.window.showErrorMessage(`Error fetching pull request comments`);
     }
 
-    const allCommentItems = [...reviewCommentItems, ...issueCommentItems];
-    return allCommentItems.sort((a, b) => a.comment.createdAt.getTime() - b.comment.createdAt.getTime());
+    const allCommentNodes = [...reviewCommentNodes, ...issueCommentNodes];
+    return allCommentNodes.sort((a, b) => a.comment.createdAt.getTime() - b.comment.createdAt.getTime());
   };
 
   #onDidChangeIssueComments = (payload: IssueCommentsPayload): void => {
@@ -87,14 +92,14 @@ export class CommentsRootTreeItem extends ParentTreeItem<CommentTreeItem> {
 
     const length = payload.comments.length;
     if (length === 0) {
-      this.collapsibleState = vscode.TreeItemCollapsibleState.None;
+      this.collapsibleState = "none";
       return;
     }
 
-    if (this.collapsibleState === vscode.TreeItemCollapsibleState.None || this.collapsibleState === undefined) {
-      this.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+    if (this.collapsibleState === "none") {
+      this.collapsibleState = "collapsed";
     } else {
-      this.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+      this.collapsibleState = "expanded";
     }
   };
 }

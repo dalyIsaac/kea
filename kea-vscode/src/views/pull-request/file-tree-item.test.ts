@@ -3,7 +3,7 @@ import { IAccountKey } from "../../account/account";
 import { createPullRequestCommentStub, createPullRequestFileStub } from "../../test-utils";
 import { PullRequestComment, RepoId } from "../../types/kea";
 import { FileTreeItem } from "./file-tree-item";
-import { ReviewCommentTreeItem } from "./review-comment-tree-item";
+import { ReviewCommentTreeNode } from "./review-comment-tree-node";
 
 suite("FileTreeItem", () => {
   const accountKey: IAccountKey = {
@@ -50,12 +50,12 @@ suite("FileTreeItem", () => {
     assert.strictEqual(fileTreeItem.getChildren().length, 3);
 
     assert.strictEqual(children[0]!.comment.createdAt.toISOString(), "2023-01-01T00:00:00.000Z");
-    assert.ok(children[0] instanceof ReviewCommentTreeItem);
+    assert.ok(children[0] instanceof ReviewCommentTreeNode);
 
     assert.strictEqual(children[1]!.comment.createdAt.toISOString(), "2023-01-02T00:00:00.000Z");
-    assert.ok(children[1] instanceof ReviewCommentTreeItem);
+    assert.ok(children[1] instanceof ReviewCommentTreeNode);
 
     assert.strictEqual(children[2]!.comment.createdAt.toISOString(), "2023-01-03T00:00:00.000Z");
-    assert.ok(children[2] instanceof ReviewCommentTreeItem);
+    assert.ok(children[2] instanceof ReviewCommentTreeNode);
   });
 });

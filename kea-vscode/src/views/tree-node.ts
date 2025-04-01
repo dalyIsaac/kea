@@ -4,11 +4,6 @@ export type CollapsibleState = "none" | "collapsed" | "expanded";
 
 export interface ITreeNode {
   /**
-   * The collapsible state of the tree item. This maps to the {@link vscode.TreeItemCollapsibleState} enum.
-   */
-  collapsibleState: CollapsibleState;
-
-  /**
    * Gets the tree item to render for this node.
    * @returns The tree item to render.
    */

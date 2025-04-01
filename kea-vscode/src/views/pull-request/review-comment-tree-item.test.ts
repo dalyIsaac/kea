@@ -1,6 +1,6 @@
 import * as assert from "assert";
 import { createPullRequestCommentStub } from "../../test-utils";
-import { ReviewCommentTreeItem } from "./review-comment-tree-item";
+import { ReviewCommentTreeNode } from "./review-comment-tree-node";
 
 suite("ReviewCommentTreeItem", () => {
   test("ReviewCommentTreeItem should be created with a comment", () => {
@@ -8,7 +8,7 @@ suite("ReviewCommentTreeItem", () => {
     const comment = createPullRequestCommentStub();
 
     // When
-    const reviewCommentTreeItem = new ReviewCommentTreeItem(comment);
+    const reviewCommentTreeItem = new ReviewCommentTreeNode(comment);
 
     // Then
     assert.strictEqual(reviewCommentTreeItem.comment, comment);
@@ -21,7 +21,7 @@ suite("ReviewCommentTreeItem", () => {
     const comment = createPullRequestCommentStub({ body: null });
 
     // When
-    const reviewCommentTreeItem = new ReviewCommentTreeItem(comment);
+    const reviewCommentTreeItem = new ReviewCommentTreeNode(comment);
 
     // Then
     assert.strictEqual(reviewCommentTreeItem.comment, comment);

@@ -3,12 +3,12 @@ import { IAccountKey } from "../../account/account";
 import { createCommentDecorationUri } from "../../decorations/decoration-schemes";
 import { PullRequestComment, PullRequestFile, RepoId } from "../../types/kea";
 import { ParentTreeItem } from "../parent-tree-item";
-import { ReviewCommentTreeItem } from "./review-comment-tree-item";
+import { ReviewCommentTreeNode } from "./review-comment-tree-node";
 
 /**
  * Tree item representing a file.
  */
-export class FileTreeItem extends ParentTreeItem<ReviewCommentTreeItem> {
+export class FileTreeItem extends ParentTreeItem<ReviewCommentTreeNode> {
   override contextValue = "file";
   override iconPath = new vscode.ThemeIcon("file");
   override tooltip = "File";
@@ -31,8 +31,8 @@ export class FileTreeItem extends ParentTreeItem<ReviewCommentTreeItem> {
     this.#comments = comments;
   }
 
-  getChildren = (): ReviewCommentTreeItem[] => {
-    const commentItems = this.#comments.map((comment) => new ReviewCommentTreeItem(comment));
+  getChildren = (): ReviewCommentTreeNode[] => {
+    const commentItems = this.#comments.map((comment) => new ReviewCommentTreeNode(comment));
     return commentItems.sort((a, b) => a.comment.createdAt.getTime() - b.comment.createdAt.getTime());
   };
 }

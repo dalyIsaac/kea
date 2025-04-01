@@ -3,9 +3,9 @@ import * as vscode from "vscode";
 import { IssueCommentsPayload, PullRequestReviewCommentsPayload } from "../../repository/kea-repository";
 import { createIssueCommentStub, createPullRequestCommentStub, createRepositoryStub, stubEvents } from "../../test-utils";
 import { IssueComment, PullRequestComment, PullRequestId } from "../../types/kea";
-import { CommentTreeItem } from "./comment-tree-item";
-import { CommentsRootTreeItem } from "./comments-root-tree-item";
-import { ReviewCommentTreeItem } from "./review-comment-tree-item";
+import { CommentTreeNode } from "./comment-tree-node";
+import { CommentsRootTreeNode } from "./comments-root-tree-node";
+import { ReviewCommentTreeNode } from "./review-comment-tree-node";
 
 suite("CommentsRootTreeItem", () => {
   const pullId: PullRequestId = { owner: "owner", repo: "repo", number: 1 };
@@ -18,7 +18,7 @@ suite("CommentsRootTreeItem", () => {
     });
 
     // When
-    const commentsRootTreeItem = new CommentsRootTreeItem(repository, pullId);
+    const commentsRootTreeItem = new CommentsRootTreeNode(repository, pullId);
     const children = await commentsRootTreeItem.getChildren();
 
     // Then
@@ -33,7 +33,7 @@ suite("CommentsRootTreeItem", () => {
     });
 
     // When
-    const commentsRootTreeItem = new CommentsRootTreeItem(repository, pullId);
+    const commentsRootTreeItem = new CommentsRootTreeNode(repository, pullId);
     const children = await commentsRootTreeItem.getChildren();
 
     // Then
@@ -53,12 +53,12 @@ suite("CommentsRootTreeItem", () => {
     });
 
     // When
-    const commentsRootTreeItem = new CommentsRootTreeItem(repository, pullId);
+    const commentsRootTreeItem = new CommentsRootTreeNode(repository, pullId);
     const children = await commentsRootTreeItem.getChildren();
 
     // Then
     assert.strictEqual(children.length, 2);
-    assert.ok(children[0] instanceof CommentTreeItem);
+    assert.ok(children[0] instanceof CommentTreeNode);
     assert.equal(children[0].label, "Test issue comment 1");
   });
 
@@ -75,12 +75,12 @@ suite("CommentsRootTreeItem", () => {
     });
 
     // When
-    const commentsRootTreeItem = new CommentsRootTreeItem(repository, pullId);
+    const commentsRootTreeItem = new CommentsRootTreeNode(repository, pullId);
     const children = await commentsRootTreeItem.getChildren();
 
     // Then
     assert.strictEqual(children.length, 2);
-    assert.ok(children[0] instanceof ReviewCommentTreeItem);
+    assert.ok(children[0] instanceof ReviewCommentTreeNode);
     assert.equal(children[0].label, "Test review comment 1");
   });
 
@@ -102,21 +102,21 @@ suite("CommentsRootTreeItem", () => {
     });
 
     // When
-    const commentsRootTreeItem = new CommentsRootTreeItem(repository, pullId);
+    const commentsRootTreeItem = new CommentsRootTreeNode(repository, pullId);
     const children = await commentsRootTreeItem.getChildren();
 
     // Then
     assert.strictEqual(children.length, 4);
-    assert.ok(children[0] instanceof ReviewCommentTreeItem);
+    assert.ok(children[0] instanceof ReviewCommentTreeNode);
     assert.equal(children[0].label, "Test review comment 2");
 
-    assert.ok(children[1] instanceof CommentTreeItem);
+    assert.ok(children[1] instanceof CommentTreeNode);
     assert.equal(children[1].label, "Test issue comment 1");
 
-    assert.ok(children[2] instanceof CommentTreeItem);
+    assert.ok(children[2] instanceof CommentTreeNode);
     assert.equal(children[2].label, "Test issue comment 2");
 
-    assert.ok(children[3] instanceof ReviewCommentTreeItem);
+    assert.ok(children[3] instanceof ReviewCommentTreeNode);
     assert.equal(children[3].label, "Test review comment 1");
   });
 
@@ -124,7 +124,7 @@ suite("CommentsRootTreeItem", () => {
     // Given
     const payload: IssueCommentsPayload = { issueId: pullId, comments: new Error("Something went wrong") };
     const { stub: repository, eventFirers } = stubEvents(createRepositoryStub(), ["onDidChangeIssueComments"] as const);
-    const commentsRootTreeItem = new CommentsRootTreeItem(repository, pullId);
+    const commentsRootTreeItem = new CommentsRootTreeNode(repository, pullId);
 
     // When
     eventFirers.onDidChangeIssueComments(payload);
@@ -137,7 +137,7 @@ suite("CommentsRootTreeItem", () => {
     // Given
     const payload: IssueCommentsPayload = { issueId: pullId, comments: [] };
     const { stub: repository, eventFirers } = stubEvents(createRepositoryStub(), ["onDidChangeIssueComments"] as const);
-    const commentsRootTreeItem = new CommentsRootTreeItem(repository, pullId);
+    const commentsRootTreeItem = new CommentsRootTreeNode(repository, pullId);
 
     // When
     eventFirers.onDidChangeIssueComments(payload);
@@ -150,7 +150,7 @@ suite("CommentsRootTreeItem", () => {
     // Given
     const payload: IssueCommentsPayload = { issueId: pullId, comments: [createIssueCommentStub()] };
     const { stub: repository, eventFirers } = stubEvents(createRepositoryStub(), ["onDidChangeIssueComments"] as const);
-    const commentsRootTreeItem = new CommentsRootTreeItem(repository, pullId);
+    const commentsRootTreeItem = new CommentsRootTreeNode(repository, pullId);
 
     // When
     eventFirers.onDidChangeIssueComments(payload);
@@ -163,7 +163,7 @@ suite("CommentsRootTreeItem", () => {
     // Given
     const payload: IssueCommentsPayload = { issueId: pullId, comments: [createIssueCommentStub()] };
     const { stub: repository, eventFirers } = stubEvents(createRepositoryStub(), ["onDidChangeIssueComments"] as const);
-    const commentsRootTreeItem = new CommentsRootTreeItem(repository, pullId);
+    const commentsRootTreeItem = new CommentsRootTreeNode(repository, pullId);
     commentsRootTreeItem.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
 
     // When
@@ -177,7 +177,7 @@ suite("CommentsRootTreeItem", () => {
     // Given
     const payload: IssueCommentsPayload = { issueId: { owner: "owner", repo: "repo", number: 99 }, comments: [createIssueCommentStub()] };
     const { stub: repository, eventFirers } = stubEvents(createRepositoryStub(), ["onDidChangeIssueComments"] as const);
-    const commentsRootTreeItem = new CommentsRootTreeItem(repository, pullId);
+    const commentsRootTreeItem = new CommentsRootTreeNode(repository, pullId);
     commentsRootTreeItem.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
 
     // When
@@ -191,7 +191,7 @@ suite("CommentsRootTreeItem", () => {
     // Given
     const payload: PullRequestReviewCommentsPayload = { pullId, comments: [createPullRequestCommentStub()] };
     const { stub: repository, eventFirers } = stubEvents(createRepositoryStub(), ["onDidChangePullRequestReviewComments"] as const);
-    const commentsRootTreeItem = new CommentsRootTreeItem(repository, pullId);
+    const commentsRootTreeItem = new CommentsRootTreeNode(repository, pullId);
 
     // When
     eventFirers.onDidChangePullRequestReviewComments(payload);

@@ -4,7 +4,7 @@ import { PullRequestId } from "../../types/kea";
 import { FileTreeItem } from "./file-tree-item";
 import { FilesRootTreeItem } from "./files-root-tree-item";
 import { FolderTreeItem } from "./folder-tree-item";
-import { ReviewCommentTreeItem } from "./review-comment-tree-item";
+import { ReviewCommentTreeNode } from "./review-comment-tree-node";
 
 suite("FilesRootTreeItem", () => {
   const pullId: PullRequestId = { owner: "owner", repo: "repo", number: 1 };
@@ -146,7 +146,7 @@ suite("FilesRootTreeItem", () => {
 
     const reviewComments = readme.getChildren();
     assert.strictEqual(reviewComments.length, 2);
-    assert.ok(reviewComments[0] instanceof ReviewCommentTreeItem);
-    assert.ok(reviewComments[1] instanceof ReviewCommentTreeItem);
+    assert.ok(reviewComments[0] instanceof ReviewCommentTreeNode);
+    assert.ok(reviewComments[1] instanceof ReviewCommentTreeNode);
   });
 });
