@@ -1,33 +1,33 @@
 import * as vscode from "vscode";
-import { WorkspaceFolder } from "vscode";
 import { IAccountManager } from "../../account/account-manager";
 import { ICache } from "../../core/cache";
 import { getRepo } from "../../core/git";
 import { Logger } from "../../core/logger";
 import { IKeaRepository } from "../../repository/kea-repository";
 import { IRepositoryManager } from "../../repository/repository-manager";
+import { CollapsibleState, getCollapsibleState, IParentTreeNode } from "../tree-node";
+import { PullRequestTreeNode } from "./pull-request-tree-node";
 
-export class RepoTreeItem extends vscode.TreeItem {
-  override contextValue = "repository";
+export class RepoTreeNode implements IParentTreeNode<PullRequestTreeNode> {
+  static #contextValue = "repository";
+  collapsibleState: CollapsibleState;
 
   repository: IKeaRepository;
-  workspace: WorkspaceFolder;
+  workspace: vscode.WorkspaceFolder;
 
-  private constructor(repository: IKeaRepository, workspace: WorkspaceFolder) {
-    super(workspace.name, vscode.TreeItemCollapsibleState.Collapsed);
-
+  private constructor(repository: IKeaRepository, workspace: vscode.WorkspaceFolder) {
     this.repository = repository;
     this.workspace = workspace;
 
-    this.description = repository.remoteUrl;
+    this.collapsibleState = "collapsed";
   }
 
   static create = async (
     accountManager: IAccountManager,
     repositoryManager: IRepositoryManager,
-    workspace: WorkspaceFolder,
+    workspace: vscode.WorkspaceFolder,
     cache: ICache,
-  ): Promise<RepoTreeItem | Error> => {
+  ): Promise<RepoTreeNode | Error> => {
     const repo = await getRepo(workspace.uri);
     if (repo instanceof Error) {
       return repo;
@@ -56,9 +56,26 @@ export class RepoTreeItem extends vscode.TreeItem {
       }
 
       repositoryManager.addRepository(repo);
-      return new RepoTreeItem(repo, workspace);
+      return new RepoTreeNode(repo, workspace);
     }
 
     return new Error("No account found for repository");
+  };
+
+  getTreeItem = (): vscode.TreeItem => {
+    const treeItem = new vscode.TreeItem(this.workspace.name, getCollapsibleState(this.collapsibleState));
+    treeItem.contextValue = RepoTreeNode.#contextValue;
+    treeItem.description = this.repository.remoteUrl;
+    return treeItem;
+  };
+
+  getChildren = async (): Promise<PullRequestTreeNode[]> => {
+    const pullRequests = await this.repository.getPullRequestList();
+    if (pullRequests instanceof Error) {
+      Logger.error(`Error fetching pull requests: ${pullRequests.message}`);
+      return [];
+    }
+
+    return pullRequests.map((pr) => new PullRequestTreeNode(this.repository.account.accountKey, pr));
   };
 }

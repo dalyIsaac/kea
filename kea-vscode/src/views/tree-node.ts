@@ -1,21 +1,12 @@
 import * as vscode from "vscode";
 
-export interface ITreeNode {
-  /**
-   * The context value of the tree item - see {@link vscode.TreeItem.contextValue}.
-   */
-  contextValue: string;
+export type CollapsibleState = "none" | "collapsed" | "expanded";
 
+export interface ITreeNode {
   /**
    * The collapsible state of the tree item. This maps to the {@link vscode.TreeItemCollapsibleState} enum.
    */
-  collapsibleState: "none" | "collapsed" | "expanded";
-
-  /**
-   * The description of the tree item. This is shown in the tree view.
-   * This maps to the {@link vscode.TreeItem.description} property.
-   */
-  description: string;
+  collapsibleState: CollapsibleState;
 
   /**
    * Gets the tree item to render for this node.
@@ -29,5 +20,19 @@ export interface IParentTreeNode<T extends ITreeNode> extends ITreeNode {
    * Get the child tree items of this node.
    * This is used to populate the tree view with child items.
    */
-  getChildren: () => Promise<T[]> | T[];
+  getChildren: () => T[] | Thenable<T[]>;
 }
+
+export const getCollapsibleState = (state: "none" | "collapsed" | "expanded"): vscode.TreeItemCollapsibleState => {
+  switch (state) {
+    case "none":
+      return vscode.TreeItemCollapsibleState.None;
+    case "collapsed":
+      return vscode.TreeItemCollapsibleState.Collapsed;
+    case "expanded":
+      return vscode.TreeItemCollapsibleState.Expanded;
+  }
+};
+
+export const isParentTreeNode = <T extends ITreeNode>(node: ITreeNode): node is IParentTreeNode<T> =>
+  "getChildren" in node && typeof node.getChildren === "function";
