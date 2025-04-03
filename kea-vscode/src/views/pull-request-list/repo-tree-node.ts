@@ -6,9 +6,9 @@ import { Logger } from "../../core/logger";
 import { IKeaRepository } from "../../repository/kea-repository";
 import { IRepositoryManager } from "../../repository/repository-manager";
 import { CollapsibleState, getCollapsibleState, IParentTreeNode } from "../tree-node";
-import { PullRequestTreeNode } from "./pull-request-tree-node";
+import { PullRequestListNode } from "./pull-request-list-node";
 
-export class RepoTreeNode implements IParentTreeNode<PullRequestTreeNode> {
+export class RepoTreeNode implements IParentTreeNode<PullRequestListNode> {
   static #contextValue = "repository";
   collapsibleState: CollapsibleState;
 
@@ -69,13 +69,13 @@ export class RepoTreeNode implements IParentTreeNode<PullRequestTreeNode> {
     return treeItem;
   };
 
-  getChildren = async (): Promise<PullRequestTreeNode[]> => {
+  getChildren = async (): Promise<PullRequestListNode[]> => {
     const pullRequests = await this.repository.getPullRequestList();
     if (pullRequests instanceof Error) {
       Logger.error(`Error fetching pull requests: ${pullRequests.message}`);
       return [];
     }
 
-    return pullRequests.map((pr) => new PullRequestTreeNode(this.repository.account.accountKey, pr));
+    return pullRequests.map((pr) => new PullRequestListNode(this.repository.account.accountKey, pr));
   };
 }

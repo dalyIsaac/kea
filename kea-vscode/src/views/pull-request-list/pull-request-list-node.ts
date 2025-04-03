@@ -3,7 +3,7 @@ import { IAccountKey } from "../../account/account";
 import { PullRequest, PullRequestId } from "../../types/kea";
 import { CollapsibleState, ITreeNode } from "../tree-node";
 
-export class PullRequestTreeNode implements ITreeNode {
+export class PullRequestListNode implements ITreeNode {
   collapsibleState: CollapsibleState;
 
   accountKey: IAccountKey;

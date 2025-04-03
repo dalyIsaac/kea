@@ -1,12 +1,12 @@
 import * as assert from "assert";
 import { createPullRequestCommentStub, createPullRequestFileStub, createRepositoryStub } from "../../test-utils";
 import { PullRequestId } from "../../types/kea";
-import { FileTreeItem } from "./file-tree-node";
-import { FilesRootTreeItem } from "./files-root-tree-node";
-import { FolderTreeItem } from "./folder-tree-node";
+import { FileTreeNode } from "./file-tree-node";
+import { FilesRootTreeNode } from "./files-root-tree-node";
+import { FolderTreeNode } from "./folder-tree-node";
 import { ReviewCommentTreeNode } from "./review-comment-tree-node";
 
-suite("FilesRootTreeItem", () => {
+suite("FilesRootTreeNode", () => {
   const pullId: PullRequestId = { owner: "owner", repo: "repo", number: 1 };
 
   test("Returns an empty array when the files API call fails", async () => {
@@ -16,8 +16,8 @@ suite("FilesRootTreeItem", () => {
     });
 
     // When
-    const filesRootTreeItem = new FilesRootTreeItem(repository, pullId);
-    const children = await filesRootTreeItem.getChildren();
+    const filesRootTreeNode = new FilesRootTreeNode(repository, pullId);
+    const children = await filesRootTreeNode.getChildren();
 
     // Then
     assert.strictEqual(children.length, 0);
@@ -31,8 +31,8 @@ suite("FilesRootTreeItem", () => {
     });
 
     // When
-    const filesRootTreeItem = new FilesRootTreeItem(repository, pullId);
-    const children = await filesRootTreeItem.getChildren();
+    const filesRootTreeNode = new FilesRootTreeNode(repository, pullId);
+    const children = await filesRootTreeNode.getChildren();
 
     // Then
     assert.strictEqual(children.length, 1);
@@ -45,8 +45,8 @@ suite("FilesRootTreeItem", () => {
     });
 
     // When
-    const filesRootTreeItem = new FilesRootTreeItem(repository, pullId);
-    const children = await filesRootTreeItem.getChildren();
+    const filesRootTreeNode = new FilesRootTreeNode(repository, pullId);
+    const children = await filesRootTreeNode.getChildren();
 
     // Then
     assert.strictEqual(children.length, 0);
@@ -60,14 +60,16 @@ suite("FilesRootTreeItem", () => {
     });
 
     // When
-    const filesRootTreeItem = new FilesRootTreeItem(repository, pullId);
-    const children = await filesRootTreeItem.getChildren();
+    const filesRootTreeNode = new FilesRootTreeNode(repository, pullId);
+    const children = await filesRootTreeNode.getChildren();
 
     // Then
     assert.strictEqual(children.length, 1);
+
     const readme = children[0]!;
-    assert.strictEqual(readme.label, "README.md");
-    assert.ok(readme instanceof FileTreeItem);
+    const readmeTreeItem = readme.getTreeItem();
+    assert.strictEqual(readmeTreeItem.label, "README.md");
+    assert.ok(readme instanceof FileTreeNode);
   });
 
   test("Returns a tree structure for files", async () => {
@@ -84,42 +86,49 @@ suite("FilesRootTreeItem", () => {
     });
 
     // When
-    const filesRootTreeItem = new FilesRootTreeItem(repository, pullId);
-    const children = await filesRootTreeItem.getChildren();
+    const filesRootTreeNode = new FilesRootTreeNode(repository, pullId);
+    const children = await filesRootTreeNode.getChildren();
 
     // Then
     assert.strictEqual(children.length, 2);
 
     const readme = children[0]!;
-    assert.strictEqual(readme.label, "README.md");
-    assert.ok(readme instanceof FileTreeItem);
+    const readmeTreeItem = readme.getTreeItem();
+    assert.strictEqual(readmeTreeItem.label, "README.md");
+    assert.ok(readme instanceof FileTreeNode);
 
-    const src = children[1] as FolderTreeItem;
-    assert.strictEqual(src.label, "src");
-    assert.ok(src instanceof FolderTreeItem);
+    const src = children[1] as FolderTreeNode;
+    const srcTreeItem = src.getTreeItem();
+    assert.strictEqual(srcTreeItem.label, "src");
+    assert.ok(src instanceof FolderTreeNode);
     assert.strictEqual(src.children.length, 2);
 
-    const components = src.children[0] as FolderTreeItem;
-    assert.strictEqual(components.label, "components");
-    assert.ok(components instanceof FolderTreeItem);
+    const components = src.children[0] as FolderTreeNode;
+    const componentsTreeItem = components.getTreeItem();
+    assert.strictEqual(componentsTreeItem.label, "components");
+    assert.ok(components instanceof FolderTreeNode);
     assert.strictEqual(components.children.length, 2);
 
     const button = components.children[0]!;
-    assert.strictEqual(button.label, "Button.tsx");
-    assert.ok(button instanceof FileTreeItem);
+    const buttonTreeItem = button.getTreeItem();
+    assert.strictEqual(buttonTreeItem.label, "Button.tsx");
+    assert.ok(button instanceof FileTreeNode);
 
     const modal = components.children[1]!;
-    assert.strictEqual(modal.label, "Modal.tsx");
-    assert.ok(modal instanceof FileTreeItem);
+    const modalTreeItem = modal.getTreeItem();
+    assert.strictEqual(modalTreeItem.label, "Modal.tsx");
+    assert.ok(modal instanceof FileTreeNode);
 
-    const utils = src.children[1] as FolderTreeItem;
-    assert.strictEqual(utils.label, "utils");
-    assert.ok(utils instanceof FolderTreeItem);
+    const utils = src.children[1] as FolderTreeNode;
+    const utilsTreeItem = utils.getTreeItem();
+    assert.strictEqual(utilsTreeItem.label, "utils");
+    assert.ok(utils instanceof FolderTreeNode);
     assert.strictEqual(utils.children.length, 1);
 
     const helpers = utils.children[0]!;
-    assert.strictEqual(helpers.label, "helpers.ts");
-    assert.ok(helpers instanceof FileTreeItem);
+    const helpersTreeItem = helpers.getTreeItem();
+    assert.strictEqual(helpersTreeItem.label, "helpers.ts");
+    assert.ok(helpers instanceof FileTreeNode);
   });
 
   test("Returns a single file with multiple review comments", async () => {
@@ -135,14 +144,15 @@ suite("FilesRootTreeItem", () => {
     });
 
     // When
-    const filesRootTreeItem = new FilesRootTreeItem(repository, pullId);
-    const children = await filesRootTreeItem.getChildren();
+    const filesRootTreeNode = new FilesRootTreeNode(repository, pullId);
+    const children = await filesRootTreeNode.getChildren();
 
     // Then
     assert.strictEqual(children.length, 1);
     const readme = children[0]!;
-    assert.strictEqual(readme.label, "README.md");
-    assert.ok(readme instanceof FileTreeItem);
+    const readmeTreeItem = readme.getTreeItem();
+    assert.strictEqual(readmeTreeItem.label, "README.md");
+    assert.ok(readme instanceof FileTreeNode);
 
     const reviewComments = readme.getChildren();
     assert.strictEqual(reviewComments.length, 2);

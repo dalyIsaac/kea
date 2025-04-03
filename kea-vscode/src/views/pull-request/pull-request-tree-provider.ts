@@ -7,7 +7,7 @@ import { TreeNodeProvider } from "../pull-request-list/tree-node-provider";
 import { CommentsRootTreeNode } from "./comments-root-tree-node";
 import { FilesRootTreeNode } from "./files-root-tree-node";
 
-type PullRequestTreeNode = CommentsRootTreeNode | FilesRootTreeNode;
+export type PullRequestTreeNode = CommentsRootTreeNode | FilesRootTreeNode;
 
 /**
  * Provides information about the current pull request.
