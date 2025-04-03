@@ -5,8 +5,8 @@ import { createPullRequestStub, createRepositoryStub } from "../../test-utils";
 import { PullRequestId, RepoId } from "../../types/kea";
 import { ParentTreeItem } from "../parent-tree-item";
 import { CommentsRootTreeNode } from "./comments-root-tree-node";
-import { CommitsRootTreeItem } from "./commits-root-tree-item";
-import { FilesRootTreeItem } from "./files-root-tree-item";
+import { CommitsRootTreeNode } from "./commits-root-tree-node";
+import { FilesRootTreeItem } from "./files-root-tree-node";
 import { PullRequestTreeItem, PullRequestTreeProvider } from "./pull-request-tree-provider";
 
 const createGetChildrenStubs = async () => {
@@ -40,7 +40,7 @@ suite("PullRequestTreeProvider", () => {
     // Given
     const repositoryManager = new RepositoryManager();
     const provider = new PullRequestTreeProvider(repositoryManager);
-    const item = new CommitsRootTreeItem();
+    const item = new CommitsRootTreeNode();
 
     // When
     const treeItem = provider.getTreeItem(item);
@@ -73,7 +73,7 @@ suite("PullRequestTreeProvider", () => {
     assert.strictEqual(children.length, 3);
     assert.ok(children[0] instanceof CommentsRootTreeNode);
     assert.ok(children[1] instanceof FilesRootTreeItem);
-    assert.ok(children[2] instanceof CommitsRootTreeItem);
+    assert.ok(children[2] instanceof CommitsRootTreeNode);
   });
 
   class SuccessTestTreeItem extends ParentTreeItem<SuccessTestTreeItem> {
@@ -102,7 +102,7 @@ suite("PullRequestTreeProvider", () => {
     // Given
     const { provider } = await createGetChildrenStubs();
 
-    const element = new CommitsRootTreeItem() as PullRequestTreeItem;
+    const element = new CommitsRootTreeNode() as PullRequestTreeItem;
 
     // When
     const result = provider.getChildren(element);

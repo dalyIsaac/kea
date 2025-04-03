@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { IAccountKey } from "../../account/account";
-import { PullRequest } from "../../types/kea";
+import { PullRequest, PullRequestId } from "../../types/kea";
 import { CollapsibleState, ITreeNode } from "../tree-node";
 
 export class PullRequestTreeNode implements ITreeNode {
@@ -20,10 +20,16 @@ export class PullRequestTreeNode implements ITreeNode {
     const treeItem = new vscode.TreeItem(this.pullRequest.title, vscode.TreeItemCollapsibleState.None);
     treeItem.contextValue = "pullRequest";
 
+    const pullId: PullRequestId = {
+      owner: this.pullRequest.repository.owner,
+      repo: this.pullRequest.repository.name,
+      number: this.pullRequest.number,
+    };
+
     treeItem.command = {
       command: "kea.openPullRequest",
       title: "Open Pull Request",
-      arguments: [[this.accountKey, this.pullRequest]],
+      arguments: [[this.accountKey, pullId]],
     };
 
     return treeItem;

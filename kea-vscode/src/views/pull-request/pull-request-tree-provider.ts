@@ -5,8 +5,9 @@ import { IRepositoryManager } from "../../repository/repository-manager";
 import { PullRequest, PullRequestId } from "../../types/kea";
 import { TreeNodeProvider } from "../pull-request-list/tree-node-provider";
 import { CommentsRootTreeNode } from "./comments-root-tree-node";
+import { FilesRootTreeNode } from "./files-root-tree-node";
 
-type PullRequestTreeNode = CommentsRootTreeNode | FilesRootTreeNode | CommitsRootTreeNode;
+type PullRequestTreeNode = CommentsRootTreeNode | FilesRootTreeNode;
 
 /**
  * Provides information about the current pull request.
@@ -16,30 +17,29 @@ export class PullRequestTreeProvider extends TreeNodeProvider<PullRequestTreeNod
   #pullInfo: { repository: IKeaRepository; pullId: PullRequestId; pullRequest: PullRequest } | undefined;
   #commentsRootTreeNode?: CommentsRootTreeNode;
   #filesRootTreeNode?: FilesRootTreeNode;
-  #commitsRootTreeNode?: CommitsRootTreeNode;
 
   constructor(repositoryManager: IRepositoryManager) {
+    super();
     this.#repositoryManager = repositoryManager;
   }
 
-  override _getRootChildren = async (): Promise<PullRequestTreeNode[]> => {
+  override _getRootChildren = (): Promise<PullRequestTreeNode[]> => {
     if (this.#pullInfo === undefined) {
       Logger.error("Pull request is not open");
-      return [];
+      return Promise.resolve([]);
     }
 
     const { repository, pullId } = this.#pullInfo;
 
     this.#commentsRootTreeNode ??= new CommentsRootTreeNode(repository, pullId);
     this.#filesRootTreeNode ??= new FilesRootTreeNode(repository, pullId);
-    this.#commitsRootTreeNode ??= new CommitsRootTreeNode(repository, pullId);
 
-    return [this.#commentsRootTreeNode, this.#filesRootTreeNode, this.#commitsRootTreeNode];
+    return Promise.resolve([this.#commentsRootTreeNode, this.#filesRootTreeNode]);
   };
 
   refresh = (): void => {
     Logger.info("Refreshing PullRequestProvider");
-    this.#onDidChangeTreeData.fire();
+    this._onDidChangeTreeData.fire();
   };
 
   openPullRequest = async (accountKey: IAccountKey, pullId: PullRequestId): Promise<boolean> => {
@@ -52,7 +52,7 @@ export class PullRequestTreeProvider extends TreeNodeProvider<PullRequestTreeNod
       return false;
     }
 
-    const pullRequest = await repository.getPullRequest(pullId, this.#forceRefresh);
+    const pullRequest = await repository.getPullRequest(pullId);
     if (pullRequest instanceof Error) {
       Logger.error("Error getting pull request", pullRequest);
       this.#pullInfo = undefined;

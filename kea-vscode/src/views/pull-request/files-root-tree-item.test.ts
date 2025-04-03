@@ -1,9 +1,9 @@
 import * as assert from "assert";
 import { createPullRequestCommentStub, createPullRequestFileStub, createRepositoryStub } from "../../test-utils";
 import { PullRequestId } from "../../types/kea";
-import { FileTreeItem } from "./file-tree-item";
-import { FilesRootTreeItem } from "./files-root-tree-item";
-import { FolderTreeItem } from "./folder-tree-item";
+import { FileTreeItem } from "./file-tree-node";
+import { FilesRootTreeItem } from "./files-root-tree-node";
+import { FolderTreeItem } from "./folder-tree-node";
 import { ReviewCommentTreeNode } from "./review-comment-tree-node";
 
 suite("FilesRootTreeItem", () => {
