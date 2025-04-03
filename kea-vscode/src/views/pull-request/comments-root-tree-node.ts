@@ -4,7 +4,8 @@ import { createCommentsRootDecorationUri } from "../../decorations/decoration-sc
 import { IKeaRepository, IssueCommentsPayload, PullRequestReviewCommentsPayload } from "../../repository/kea-repository";
 import { isSamePullRequest } from "../../type-utils";
 import { PullRequestId } from "../../types/kea";
-import { CollapsibleState, getCollapsibleState, IParentTreeNode } from "../tree-node";
+import { ITreeNodeProvider } from "../pull-request-list/tree-node-provider";
+import { CollapsibleState, getCollapsibleState, IParentTreeNode, ITreeNode } from "../tree-node";
 import { CommentTreeNode } from "./comment-tree-node";
 import { ReviewCommentTreeNode } from "./review-comment-tree-node";
 
@@ -16,12 +17,14 @@ export class CommentsRootTreeNode implements IParentTreeNode<CommentTreeNode | R
   #resourceUri: vscode.Uri;
   #repository: IKeaRepository;
   #pullId: PullRequestId;
+  #provider: ITreeNodeProvider<ITreeNode>;
 
   collapsibleState: CollapsibleState = "none";
 
-  constructor(repository: IKeaRepository, id: PullRequestId) {
+  constructor(repository: IKeaRepository, id: PullRequestId, provider: ITreeNodeProvider<ITreeNode>) {
     this.#repository = repository;
     this.#pullId = id;
+    this.#provider = provider;
 
     this.#resourceUri = createCommentsRootDecorationUri({
       accountKey: this.#repository.account.accountKey,
@@ -37,6 +40,7 @@ export class CommentsRootTreeNode implements IParentTreeNode<CommentTreeNode | R
     const treeItem = new vscode.TreeItem(this.#label, getCollapsibleState(this.collapsibleState));
     treeItem.resourceUri = this.#resourceUri;
     treeItem.contextValue = "commentsRoot";
+    treeItem.iconPath = new vscode.ThemeIcon("comment-discussion");
     return treeItem;
   };
 
@@ -98,6 +102,7 @@ export class CommentsRootTreeNode implements IParentTreeNode<CommentTreeNode | R
 
     if (this.collapsibleState === "none") {
       this.collapsibleState = "collapsed";
+      this.#provider.refresh();
     } else {
       this.collapsibleState = "expanded";
     }

@@ -47,9 +47,4 @@ export class PullRequestListTreeProvider extends TreeNodeProvider<PullRequestLis
 
     return rootItems;
   };
-
-  refresh = (): void => {
-    Logger.info("Refreshing PullRequestListProvider");
-    this._onDidChangeTreeData.fire();
-  };
 }

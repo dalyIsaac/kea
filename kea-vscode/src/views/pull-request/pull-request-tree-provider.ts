@@ -31,15 +31,10 @@ export class PullRequestTreeProvider extends TreeNodeProvider<PullRequestTreeNod
 
     const { repository, pullId } = this.#pullInfo;
 
-    this.#commentsRootTreeNode ??= new CommentsRootTreeNode(repository, pullId);
+    this.#commentsRootTreeNode ??= new CommentsRootTreeNode(repository, pullId, this);
     this.#filesRootTreeNode ??= new FilesRootTreeNode(repository, pullId);
 
     return Promise.resolve([this.#commentsRootTreeNode, this.#filesRootTreeNode]);
-  };
-
-  refresh = (): void => {
-    Logger.info("Refreshing PullRequestProvider");
-    this._onDidChangeTreeData.fire();
   };
 
   openPullRequest = async (accountKey: IAccountKey, pullId: PullRequestId): Promise<boolean> => {

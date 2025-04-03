@@ -6,6 +6,8 @@ import { IAccountManager } from "./account/account-manager";
 import { ICache } from "./core/cache";
 import { IKeaRepository } from "./repository/kea-repository";
 import { IssueComment, PullRequest, PullRequestComment, PullRequestFile } from "./types/kea";
+import { ITreeNodeProvider } from "./views/pull-request-list/tree-node-provider";
+import { ITreeNode } from "./views/tree-node";
 
 export const stubEvents = <TObject extends object, TProperties extends Array<keyof TObject>>(
   stub: TObject,
@@ -150,5 +152,13 @@ export const createCacheStub = (props: Partial<ICache> = {}): ICache => ({
   set: sinon.stub(),
   getHeaders: sinon.stub(),
   generateKey: sinon.stub(),
+  ...props,
+});
+
+export const createTreeNodeProviderStub = (props: Partial<ITreeNodeProvider<ITreeNode>> = {}): ITreeNodeProvider<ITreeNode> => ({
+  getChildren: sinon.stub(),
+  getTreeItem: sinon.stub(),
+  refresh: sinon.stub(),
+  onDidChangeTreeData: sinon.stub(),
   ...props,
 });
