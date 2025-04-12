@@ -51,4 +51,47 @@ export class ApiCache {
   set = (user: string, cacheUser: UserCache): void => {
     this.#cache.set(user, cacheUser);
   };
+
+  invalidate = (...[user, repo, endpoint, method]: Partial<CacheKey>): void => {
+    if (user === undefined) {
+      return;
+    }
+
+    const userCache = this.#cache.get(user);
+    if (userCache === undefined) {
+      return;
+    }
+
+    if (repo === undefined) {
+      this.#cache.delete(user);
+      return;
+    }
+
+    const repoCache = userCache.value.get(repo);
+    if (repoCache === undefined) {
+      return;
+    }
+
+    if (endpoint === undefined) {
+      userCache.value.delete(repo);
+      return;
+    }
+
+    const endpointCache = repoCache.value.get(endpoint);
+    if (endpointCache === undefined) {
+      return;
+    }
+
+    if (method === undefined) {
+      repoCache.value.delete(endpoint);
+      return;
+    }
+
+    const methodCache = endpointCache.value.get(method);
+    if (methodCache === undefined) {
+      return;
+    }
+
+    methodCache.value.delete(method);
+  };
 }

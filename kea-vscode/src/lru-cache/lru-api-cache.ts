@@ -103,4 +103,8 @@ export class LruApiCache implements ILruApiCache {
     userCache.value.delete(user);
     this.#size -= 1;
   };
+
+  invalidate = (...key: Partial<CacheKey>): void => {
+    this.#cache.invalidate(...key);
+  };
 }
