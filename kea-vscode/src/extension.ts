@@ -28,7 +28,7 @@ export function activate(_context: vscode.ExtensionContext) {
 
   // Tree providers.
   const pullRequestListTreeProvider = new PullRequestListTreeProvider(accountManager, repositoryManager, cache);
-  const pullRequestTreeProvider = new PullRequestTreeProvider(repositoryManager);
+  const pullRequestTreeProvider = new PullRequestTreeProvider(repositoryManager, cache);
 
   // Register tree providers.
   vscode.window.registerTreeDataProvider("kea.pullRequestList", pullRequestListTreeProvider);

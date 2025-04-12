@@ -47,4 +47,8 @@ export class PullRequestListTreeProvider extends TreeNodeProvider<PullRequestLis
 
     return rootItems;
   };
+
+  override _invalidateCache = (): void => {
+    this.#cache.clear();
+  };
 }

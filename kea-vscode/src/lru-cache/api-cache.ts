@@ -53,6 +53,7 @@ export class ApiCache {
   };
 
   invalidate = (...[user, repo, endpoint, method]: Partial<CacheKey>): void => {
+    // Wiping the entire cache if the key is empty is an invalid operation - use the `clear` method instead.
     if (user === undefined) {
       return;
     }
@@ -61,7 +62,6 @@ export class ApiCache {
     if (userCache === undefined) {
       return;
     }
-
     if (repo === undefined) {
       this.#cache.delete(user);
       return;
@@ -71,7 +71,6 @@ export class ApiCache {
     if (repoCache === undefined) {
       return;
     }
-
     if (endpoint === undefined) {
       userCache.value.delete(repo);
       return;
@@ -81,7 +80,6 @@ export class ApiCache {
     if (endpointCache === undefined) {
       return;
     }
-
     if (method === undefined) {
       repoCache.value.delete(endpoint);
       return;
@@ -93,5 +91,9 @@ export class ApiCache {
     }
 
     methodCache.value.delete(method);
+  };
+
+  clear = (): void => {
+    this.#cache.clear();
   };
 }

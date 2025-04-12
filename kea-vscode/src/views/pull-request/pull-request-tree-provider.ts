@@ -1,5 +1,6 @@
 import { IAccountKey } from "../../account/account";
 import { Logger } from "../../core/logger";
+import { LruApiCache } from "../../lru-cache/lru-api-cache";
 import { IKeaRepository } from "../../repository/kea-repository";
 import { IRepositoryManager } from "../../repository/repository-manager";
 import { PullRequest, PullRequestId } from "../../types/kea";
@@ -14,13 +15,15 @@ export type PullRequestTreeNode = CommentsRootTreeNode | FilesRootTreeNode;
  */
 export class PullRequestTreeProvider extends TreeNodeProvider<PullRequestTreeNode> {
   #repositoryManager: IRepositoryManager;
+  #cache: LruApiCache;
   #pullInfo: { repository: IKeaRepository; pullId: PullRequestId; pullRequest: PullRequest } | undefined;
   #commentsRootTreeNode?: CommentsRootTreeNode;
   #filesRootTreeNode?: FilesRootTreeNode;
 
-  constructor(repositoryManager: IRepositoryManager) {
+  constructor(repositoryManager: IRepositoryManager, cache: LruApiCache) {
     super();
     this.#repositoryManager = repositoryManager;
+    this.#cache = cache;
   }
 
   override _getRootChildren = (): Promise<PullRequestTreeNode[]> => {
@@ -57,5 +60,15 @@ export class PullRequestTreeProvider extends TreeNodeProvider<PullRequestTreeNod
     this.#pullInfo = { repository, pullId, pullRequest };
     this._onDidChangeTreeData.fire();
     return true;
+  };
+
+  override _invalidateCache = (): void => {
+    if (this.#pullInfo === undefined) {
+      Logger.error("Pull request is not open, cannot invalidate cache");
+      return;
+    }
+
+    const { owner, repo } = this.#pullInfo.repository.repoId;
+    this.#cache.invalidate(owner, repo);
   };
 }

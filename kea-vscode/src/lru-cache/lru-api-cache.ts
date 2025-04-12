@@ -5,6 +5,8 @@ import { ILinkedListNode, LinkedList } from "./lru-linked-list";
 export interface ILruApiCache {
   get: (...key: CacheKey) => ICacheValue<unknown> | undefined;
   set: (user: string, repo: string, endpoint: string, method: Method, data: unknown, headers: CacheResponseHeaders) => void;
+  invalidate: (...key: Partial<CacheKey>) => void;
+  clear: () => void;
 }
 
 export class LruApiCache implements ILruApiCache {
@@ -106,5 +108,11 @@ export class LruApiCache implements ILruApiCache {
 
   invalidate = (...key: Partial<CacheKey>): void => {
     this.#cache.invalidate(...key);
+  };
+
+  clear = (): void => {
+    this.#cache.clear();
+    this.#linkedList.clear();
+    this.#size = 0;
   };
 }

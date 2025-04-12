@@ -70,4 +70,9 @@ export class LinkedList {
       nextNode.prev = parentNode;
     }
   };
+
+  clear = (): void => {
+    this.#head = null;
+    this.#tail = null;
+  };
 }

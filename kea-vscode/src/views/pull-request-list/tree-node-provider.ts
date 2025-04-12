@@ -26,7 +26,10 @@ export abstract class TreeNodeProvider<T extends ITreeNode | IParentTreeNode<T>>
 
   protected abstract _getRootChildren(): Promise<T[]>;
 
+  protected abstract _invalidateCache(): void;
+
   refresh = (): void => {
+    this._invalidateCache();
     this._onDidChangeTreeData.fire();
   };
 }
