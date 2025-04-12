@@ -1,4 +1,4 @@
-import { ICacheNode, ICacheNodeValue } from "./inner-cache";
+import { ICacheNode, ICacheNodeValue } from "./api-cache";
 
 export type Method = "GET" | "POST";
 export type MethodCache = ICacheNode<Map<Method, ICacheNodeValue<unknown>>>;

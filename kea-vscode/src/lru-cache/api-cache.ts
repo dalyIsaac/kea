@@ -1,4 +1,4 @@
-import { CacheKey, EndpointCache, ILinkedListNode, MethodCache, RepositoryCache, UserCache } from "./linked-list";
+import { CacheKey, EndpointCache, ILinkedListNode, MethodCache, RepositoryCache, UserCache } from "./lru-linked-list";
 
 export interface ICacheNode<T> {
   value: T;
@@ -21,7 +21,7 @@ type GetInnerCacheResult =
       linkedListNode?: ILinkedListNode;
     };
 
-export class InnerCache {
+export class ApiCache {
   #cache = new Map<string, UserCache>();
 
   get = (...[user, repo, endpoint, method]: CacheKey): GetInnerCacheResult => {

@@ -1,8 +1,8 @@
-import { InnerCache } from "./inner-cache";
-import { CacheKey, EndpointCache, ILinkedListNode, LinkedList, Method, MethodCache, RepositoryCache, UserCache } from "./linked-list";
+import { ApiCache } from "./api-cache";
+import { CacheKey, EndpointCache, ILinkedListNode, LinkedList, Method, MethodCache, RepositoryCache, UserCache } from "./lru-linked-list";
 
-export class LRUCache {
-  readonly #cache = new InnerCache();
+export class LruApiCache {
+  readonly #cache = new ApiCache();
   readonly #linkedList = new LinkedList();
 
   maxSize: number;
