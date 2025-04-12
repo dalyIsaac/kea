@@ -1,5 +1,6 @@
 import { ApiCache } from "./api-cache";
-import { CacheKey, EndpointCache, ILinkedListNode, LinkedList, Method, MethodCache, RepositoryCache, UserCache } from "./lru-linked-list";
+import { CacheKey, EndpointCache, Method, MethodCache, RepositoryCache, UserCache } from "./cache-types";
+import { ILinkedListNode, LinkedList } from "./lru-linked-list";
 
 export class LruApiCache {
   readonly #cache = new ApiCache();

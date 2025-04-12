@@ -1,4 +1,5 @@
-import { CacheKey, EndpointCache, ILinkedListNode, MethodCache, RepositoryCache, UserCache } from "./lru-linked-list";
+import { CacheKey, EndpointCache, MethodCache, RepositoryCache, UserCache } from "./cache-types";
+import { ILinkedListNode } from "./lru-linked-list";
 
 export interface ICacheNode<T> {
   value: T;
