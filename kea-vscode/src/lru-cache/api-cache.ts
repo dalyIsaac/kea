@@ -1,16 +1,6 @@
 import { CacheKey, EndpointCache, MethodCache, RepositoryCache, UserCache } from "./cache-types";
 import { ILinkedListNode } from "./lru-linked-list";
 
-export interface ICacheNode<T> {
-  value: T;
-}
-
-export interface ICacheNodeValue<T> {
-  key: CacheKey;
-  value: T;
-  linkedListNode: ILinkedListNode;
-}
-
 type GetInnerCacheResult =
   | undefined
   | {

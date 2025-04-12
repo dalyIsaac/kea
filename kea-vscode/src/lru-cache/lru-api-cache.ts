@@ -1,5 +1,5 @@
 import { ApiCache } from "./api-cache";
-import { CacheKey, EndpointCache, Method, MethodCache, RepositoryCache, UserCache } from "./cache-types";
+import { CacheKey, CacheResponseHeaders, EndpointCache, Method, MethodCache, RepositoryCache, UserCache } from "./cache-types";
 import { ILinkedListNode, LinkedList } from "./lru-linked-list";
 
 export class LruApiCache {
@@ -19,7 +19,7 @@ export class LruApiCache {
 
   get = (...key: CacheKey): unknown => this.#cache.get(...key)?.value;
 
-  set = (user: string, repo: string, endpoint: string, method: Method, value: unknown): void => {
+  set = (user: string, repo: string, endpoint: string, method: Method, data: unknown, headers: CacheResponseHeaders): void => {
     const cacheResult = this.#cache.get(user, repo, endpoint, method);
 
     const key: CacheKey = [user, repo, endpoint, method];
@@ -61,7 +61,7 @@ export class LruApiCache {
     }
 
     endpointCache.value.set(method, methodCache);
-    methodCache.value.set(method, { key, value, linkedListNode });
+    methodCache.value.set(method, { key, data, headers, linkedListNode });
   };
 
   #evict = (): void => {
