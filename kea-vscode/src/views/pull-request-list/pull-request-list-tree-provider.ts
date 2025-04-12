@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import { IAccountManager } from "../../account/account-manager";
-import { ICache } from "../../core/cache";
 import { Logger } from "../../core/logger";
+import { ILruApiCache } from "../../lru-cache/lru-api-cache";
 import { IRepositoryManager } from "../../repository/repository-manager";
 import { PullRequestListNode } from "./pull-request-list-node";
 import { RepoTreeNode } from "./repo-tree-node";
@@ -15,9 +15,9 @@ type PullRequestListTreeNode = RepoTreeNode | PullRequestListNode;
 export class PullRequestListTreeProvider extends TreeNodeProvider<PullRequestListTreeNode> {
   #accountManager: IAccountManager;
   #repositoryManager: IRepositoryManager;
-  #cache: ICache;
+  #cache: ILruApiCache;
 
-  constructor(accountManager: IAccountManager, repositoryManager: IRepositoryManager, cache: ICache) {
+  constructor(accountManager: IAccountManager, repositoryManager: IRepositoryManager, cache: ILruApiCache) {
     super();
     this.#accountManager = accountManager;
     this.#repositoryManager = repositoryManager;

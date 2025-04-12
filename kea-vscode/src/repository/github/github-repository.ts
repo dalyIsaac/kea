@@ -8,8 +8,9 @@ import {
   convertGitHubPullRequestListItem,
   convertGitHubPullRequestReviewComment,
 } from "../../account/github/github-utils";
-import { ICache } from "../../core/cache";
 import { Logger } from "../../core/logger";
+import { CacheKey, isMethod } from "../../lru-cache/cache-types";
+import { ILruApiCache } from "../../lru-cache/lru-api-cache";
 import { IssueComment, IssueId, PullRequest, PullRequestComment, PullRequestFile, PullRequestId, RepoId } from "../../types/kea";
 import { IKeaRepository, IssueCommentsPayload, PullRequestReviewCommentsPayload } from "../kea-repository";
 
@@ -17,14 +18,42 @@ export class GitHubRepository implements IKeaRepository {
   account: GitHubAccount;
   remoteUrl: string;
   repoId: RepoId;
-  #cache: ICache;
+  #cache: ILruApiCache;
 
-  constructor(remoteUrl: string, repoId: RepoId, account: GitHubAccount, cache: ICache) {
+  constructor(remoteUrl: string, repoId: RepoId, account: GitHubAccount, cache: ILruApiCache) {
     this.remoteUrl = remoteUrl;
     this.repoId = repoId;
     this.account = account;
     this.#cache = cache;
   }
+
+  #generateKey = <R extends Route>(
+    route: keyof Endpoints | R,
+    options?: R extends keyof Endpoints ? Endpoints[R]["parameters"] : never,
+  ): CacheKey | Error => {
+    const [method, path] = route.split(" ");
+
+    if (typeof method !== "string" || typeof path !== "string") {
+      return new Error(`Invalid route: ${route}`);
+    }
+
+    if (!isMethod(method)) {
+      return new Error(`Invalid method: ${method}`);
+    }
+
+    if (options === undefined) {
+      return new Error(`Invalid options: ${options}`);
+    }
+
+    if (!("owner" in options) || !("repo" in options)) {
+      return new Error("Missing owner or repo in options");
+    }
+
+    const owner = options.owner;
+    const repo = options.repo;
+
+    return [owner, repo, path, method];
+  };
 
   /**
    * Returns the octokit instance for this repository.
@@ -41,12 +70,18 @@ export class GitHubRepository implements IKeaRepository {
   ): Promise<R extends keyof Endpoints ? Endpoints[R]["response"]["data"] : never> => {
     type RequestResult = R extends keyof Endpoints ? Endpoints[R]["response"] : never;
 
-    const cacheKey = this.#cache.generateKey(route, options);
-    const cachedResult = this.#cache.get(cacheKey);
+    const cacheKey = this.#generateKey(route, options);
+    if (cacheKey instanceof Error) {
+      // We throw the error so that the caller can handle it.
+      // eslint-disable-next-line no-restricted-syntax
+      throw cacheKey;
+    }
+
+    const cachedResult = this.#cache.get(...cacheKey);
 
     if (forceRequest !== true) {
-      if (cachedResult !== undefined && cachedResult !== null) {
-        return cachedResult as RequestResult;
+      if (cachedResult !== undefined) {
+        return cachedResult.data as RequestResult;
       }
     }
 
@@ -57,7 +92,8 @@ export class GitHubRepository implements IKeaRepository {
       throw octokit;
     }
 
-    const previousHeaders = this.#cache.getHeaders(cacheKey);
+    // const previousHeaders = this.#cache.getHeaders(cacheKey);
+    const previousHeaders = cachedResult?.headers;
     const requestOptions = {
       ...options,
       headers: {
@@ -75,7 +111,7 @@ export class GitHubRepository implements IKeaRepository {
       etag: fetchedResult.headers.etag,
       lastModified: fetchedResult.headers["last-modified"],
     };
-    this.#cache.set(cacheKey, fetchedResult.data, resultHeaders);
+    this.#cache.set(...cacheKey, fetchedResult.data, resultHeaders);
     return fetchedResult.data as RequestResult;
   };
 

@@ -111,7 +111,6 @@
   },
   "dependencies": {
     "@octokit/rest": "^20.1.2",
-    "lru-cache": "^11.1.0",
     "prettier-plugin-organize-imports": "^4.1.0"
   }
 }

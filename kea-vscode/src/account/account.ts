@@ -1,4 +1,4 @@
-import { ICache } from "../core/cache";
+import { ILruApiCache } from "../lru-cache/lru-api-cache";
 import { IKeaRepository } from "../repository/kea-repository";
 
 export interface IAccountKey {
@@ -9,5 +9,5 @@ export interface IAccountKey {
 export interface IAccount {
   accountKey: IAccountKey;
   isRepoForAccount: (repoUrl: string) => boolean;
-  tryCreateRepoForAccount: (repoUrl: string, cache: ICache) => IKeaRepository | Error;
+  tryCreateRepoForAccount: (repoUrl: string, cache: ILruApiCache) => IKeaRepository | Error;
 }

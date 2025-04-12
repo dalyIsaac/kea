@@ -1,16 +1,14 @@
-import { CacheKey, EndpointCache, MethodCache, RepositoryCache, UserCache } from "./cache-types";
-import { ILinkedListNode } from "./lru-linked-list";
+import { CacheKey, EndpointCache, IFullCacheValue, MethodCache, RepositoryCache, UserCache } from "./cache-types";
 
-type GetInnerCacheResult =
-  | undefined
-  | {
-      userCache: UserCache;
-      repoCache?: RepositoryCache;
-      endpointCache?: EndpointCache;
-      methodCache?: MethodCache;
-      value?: unknown;
-      linkedListNode?: ILinkedListNode;
-    };
+interface GetInnerCacheSuccess {
+  userCache: UserCache;
+  repoCache?: RepositoryCache;
+  endpointCache?: EndpointCache;
+  methodCache?: MethodCache;
+  value?: IFullCacheValue<unknown>;
+}
+
+type GetInnerCacheResult = undefined | GetInnerCacheSuccess;
 
 export class ApiCache {
   #cache = new Map<string, UserCache>();
@@ -36,12 +34,17 @@ export class ApiCache {
       return { userCache, repoCache, endpointCache };
     }
 
+    const cacheValue = cacheMethod.value.get(method);
+    if (cacheValue === undefined) {
+      return { userCache, repoCache, endpointCache };
+    }
+
     return {
       userCache: userCache,
       repoCache: repoCache,
       endpointCache: endpointCache,
       methodCache: cacheMethod,
-      value: cacheMethod.value,
+      value: cacheValue,
     };
   };
 

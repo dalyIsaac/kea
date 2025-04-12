@@ -3,7 +3,7 @@ import sinon from "sinon";
 import * as vscode from "vscode";
 import { IAccount } from "./account/account";
 import { IAccountManager } from "./account/account-manager";
-import { ICache } from "./core/cache";
+import { ILruApiCache } from "./lru-cache/lru-api-cache";
 import { IKeaRepository } from "./repository/kea-repository";
 import { IssueComment, PullRequest, PullRequestComment, PullRequestFile } from "./types/kea";
 import { ITreeNodeProvider } from "./views/pull-request-list/tree-node-provider";
@@ -147,11 +147,9 @@ export const createWorkspaceFolderStub = (props: Partial<vscode.WorkspaceFolder>
   ...props,
 });
 
-export const createCacheStub = (props: Partial<ICache> = {}): ICache => ({
+export const createCacheStub = (props: Partial<ILruApiCache> = {}): ILruApiCache => ({
   get: sinon.stub(),
   set: sinon.stub(),
-  getHeaders: sinon.stub(),
-  generateKey: sinon.stub(),
   ...props,
 });
 

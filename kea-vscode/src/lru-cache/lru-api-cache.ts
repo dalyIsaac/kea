@@ -1,8 +1,13 @@
 import { ApiCache } from "./api-cache";
-import { CacheKey, CacheResponseHeaders, EndpointCache, Method, MethodCache, RepositoryCache, UserCache } from "./cache-types";
+import { CacheKey, CacheResponseHeaders, EndpointCache, ICacheValue, Method, MethodCache, RepositoryCache, UserCache } from "./cache-types";
 import { ILinkedListNode, LinkedList } from "./lru-linked-list";
 
-export class LruApiCache {
+export interface ILruApiCache {
+  get: (...key: CacheKey) => ICacheValue<unknown> | undefined;
+  set: (user: string, repo: string, endpoint: string, method: Method, data: unknown, headers: CacheResponseHeaders) => void;
+}
+
+export class LruApiCache implements ILruApiCache {
   readonly #cache = new ApiCache();
   readonly #linkedList = new LinkedList();
 
@@ -17,7 +22,17 @@ export class LruApiCache {
     this.maxSize = maxSize;
   }
 
-  get = (...key: CacheKey): unknown => this.#cache.get(...key)?.value;
+  get = (...key: CacheKey): ICacheValue<unknown> | undefined => {
+    const cacheResult = this.#cache.get(...key);
+    if (cacheResult?.value === undefined) {
+      return undefined;
+    }
+
+    return {
+      headers: cacheResult.value.headers,
+      data: cacheResult.value.data,
+    };
+  };
 
   set = (user: string, repo: string, endpoint: string, method: Method, data: unknown, headers: CacheResponseHeaders): void => {
     const cacheResult = this.#cache.get(user, repo, endpoint, method);
@@ -35,7 +50,8 @@ export class LruApiCache {
       // Preemptively increment the size for the new cache entry.
       this.#size += 1;
     } else {
-      ({ userCache, repoCache, endpointCache, methodCache, linkedListNode } = cacheResult);
+      ({ userCache, repoCache, endpointCache, methodCache } = cacheResult);
+      linkedListNode = cacheResult.value?.linkedListNode;
     }
 
     if (userCache === undefined) {

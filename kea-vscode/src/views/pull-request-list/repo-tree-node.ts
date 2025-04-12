@@ -1,8 +1,8 @@
 import * as vscode from "vscode";
 import { IAccountManager } from "../../account/account-manager";
-import { ICache } from "../../core/cache";
 import { getRepo } from "../../core/git";
 import { Logger } from "../../core/logger";
+import { ILruApiCache } from "../../lru-cache/lru-api-cache";
 import { IKeaRepository } from "../../repository/kea-repository";
 import { IRepositoryManager } from "../../repository/repository-manager";
 import { CollapsibleState, getCollapsibleState, IParentTreeNode } from "../tree-node";
@@ -26,7 +26,7 @@ export class RepoTreeNode implements IParentTreeNode<PullRequestListNode> {
     accountManager: IAccountManager,
     repositoryManager: IRepositoryManager,
     workspace: vscode.WorkspaceFolder,
-    cache: ICache,
+    cache: ILruApiCache,
   ): Promise<RepoTreeNode | Error> => {
     const repo = await getRepo(workspace.uri);
     if (repo instanceof Error) {
