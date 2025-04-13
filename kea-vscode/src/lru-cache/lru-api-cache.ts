@@ -30,6 +30,8 @@ export class LruApiCache implements ILruApiCache {
       return undefined;
     }
 
+    this.#linkedList.promote(cacheResult.value.linkedListNode);
+
     return {
       headers: cacheResult.value.headers,
       data: cacheResult.value.data,
@@ -46,12 +48,7 @@ export class LruApiCache implements ILruApiCache {
     let methodCache: MethodCache | undefined;
     let linkedListNode: ILinkedListNode | undefined;
 
-    if (cacheResult === undefined) {
-      this.#evict();
-
-      // Preemptively increment the size for the new cache entry.
-      this.#size += 1;
-    } else {
+    if (cacheResult !== undefined) {
       ({ userCache, repoCache, endpointCache, methodCache } = cacheResult);
       linkedListNode = cacheResult.value?.linkedListNode;
     }
@@ -74,20 +71,23 @@ export class LruApiCache implements ILruApiCache {
     if (methodCache === undefined || linkedListNode === undefined) {
       methodCache = { value: new Map() };
       linkedListNode = this.#linkedList.add(key);
+      this.#size += 1;
     } else {
       this.#linkedList.promote(linkedListNode);
     }
 
     endpointCache.value.set(method, methodCache);
     methodCache.value.set(method, { key, data, headers, linkedListNode });
+
+    this.#evict();
   };
 
   #evict = (): void => {
-    if (this.#size < this.maxSize) {
+    if (this.#size <= this.maxSize) {
       return;
     }
 
-    const evictedKey = this.#linkedList.pop();
+    const evictedKey = this.#linkedList.removeOldest();
     if (evictedKey === undefined) {
       return;
     }
@@ -107,7 +107,16 @@ export class LruApiCache implements ILruApiCache {
   };
 
   invalidate = (...key: Partial<CacheKey>): void => {
-    this.#cache.invalidate(...key);
+    const nodesToDelete = this.#cache.invalidate(...key);
+    if (nodesToDelete instanceof Error) {
+      console.error(nodesToDelete.message);
+      return;
+    }
+
+    for (const node of nodesToDelete) {
+      this.#linkedList.removeNode(node);
+      this.#size -= 1;
+    }
   };
 
   clear = (): void => {
