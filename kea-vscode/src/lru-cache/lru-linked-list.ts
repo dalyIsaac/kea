@@ -10,6 +10,14 @@ export class LinkedList {
   #head: ILinkedListNode | null = null;
   #tail: ILinkedListNode | null = null;
 
+  get head(): ILinkedListNode | null {
+    return this.#head;
+  }
+
+  get tail(): ILinkedListNode | null {
+    return this.#tail;
+  }
+
   add = (key: CacheKey): ILinkedListNode => {
     const newNode: ILinkedListNode = {
       prev: this.#tail,
@@ -49,6 +57,10 @@ export class LinkedList {
   };
 
   promote = (node: ILinkedListNode): void => {
+    if (node === this.#head) {
+      return;
+    }
+
     const parentNode = node.prev;
     const grandParentNode = parentNode?.prev ?? null;
     const nextNode = node.next;
@@ -62,12 +74,19 @@ export class LinkedList {
       grandParentNode.next = node;
     }
 
+    node.prev = grandParentNode;
+    node.next = parentNode;
+
     if (parentNode !== null) {
+      parentNode.prev = node;
       parentNode.next = nextNode;
     }
 
     if (nextNode !== null) {
       nextNode.prev = parentNode;
+    } else {
+      // If nextNode is null, parentNode becomes the new tail.
+      this.#tail = parentNode;
     }
   };
 
