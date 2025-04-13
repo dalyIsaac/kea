@@ -1,6 +1,6 @@
 import { ApiCache } from "./api-cache";
 import { CacheKey, CacheResponseHeaders, EndpointCache, ICacheValue, Method, MethodCache, RepositoryCache, UserCache } from "./cache-types";
-import { ILinkedListNode, LinkedList } from "./lru-linked-list";
+import { ILinkedListNode, LinkedList } from "./linked-list";
 
 export interface ILruApiCache {
   get: (...key: CacheKey) => ICacheValue<unknown> | undefined;

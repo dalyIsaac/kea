@@ -1,6 +1,6 @@
 import * as assert from "assert";
 import { CacheKey } from "./cache-types";
-import { ILinkedListNode, LinkedList } from "./lru-linked-list";
+import { ILinkedListNode, LinkedList } from "./linked-list";
 
 suite("LinkedList", () => {
   const createCacheKey = (id: string): CacheKey => ["user", "repo", `endpoint-${id}`, "GET"];
@@ -77,13 +77,13 @@ suite("LinkedList", () => {
     });
   });
 
-  suite("pop", () => {
+  suite("removeOldest", () => {
     test("should return undefined for empty list", () => {
       // Given
       const linkedList = new LinkedList();
 
       // When
-      const result = linkedList.pop();
+      const result = linkedList.removeOldest();
 
       // Then
       assert.strictEqual(result, undefined);
@@ -91,40 +91,37 @@ suite("LinkedList", () => {
       assert.strictEqual(linkedList.tail, null);
     });
 
-    test("should remove and return the last item", () => {
+    test("should remove and return the first item", () => {
       // Given
       const linkedList = new LinkedList();
       const key1 = createCacheKey("1");
       const key2 = createCacheKey("2");
       const key3 = createCacheKey("3");
 
-      const node1 = linkedList.add(key1);
+      linkedList.add(key1);
       const node2 = linkedList.add(key2);
-      linkedList.add(key3);
+      const node3 = linkedList.add(key3);
 
       // When
-      const poppedKey = linkedList.pop();
+      const removedKey = linkedList.removeOldest();
 
       // Then
-      assert.strictEqual(poppedKey, key3);
-      assertNodeOrder(linkedList, node1, node2);
+      assert.strictEqual(removedKey, key1);
+      assertNodeOrder(linkedList, node2, node3);
     });
 
     test("should handle removing the last item correctly", () => {
       // Given
       const linkedList = new LinkedList();
       const key1 = createCacheKey("1");
-      const node1 = linkedList.add(key1);
-
-      // Verify initial state with one node
-      assertNodeOrder(linkedList, node1);
+      linkedList.add(key1);
 
       // When
-      const poppedKey = linkedList.pop();
-      const emptyResult = linkedList.pop();
+      const removedKey = linkedList.removeOldest();
+      const emptyResult = linkedList.removeOldest();
 
       // Then
-      assert.strictEqual(poppedKey, key1);
+      assert.strictEqual(removedKey, key1);
       assert.strictEqual(emptyResult, undefined);
       assertNodeOrder(linkedList);
     });
@@ -213,7 +210,7 @@ suite("LinkedList", () => {
       // Given
       const linkedList = new LinkedList();
       const key1 = createCacheKey("1");
-      
+
       // Create a standalone node that's not connected to the linkedList
       const node = {
         prev: null,
@@ -233,7 +230,7 @@ suite("LinkedList", () => {
       assert.strictEqual(node.prev, initialPrev, "prev property should not change");
       assert.strictEqual(node.next, initialNext, "next property should not change");
       assert.deepStrictEqual(node.key, initialKey, "key property should not change");
-      
+
       // Also verify that the linkedList state remains unchanged
       assert.strictEqual(linkedList.head, null, "head should remain null");
       assert.strictEqual(linkedList.tail, null, "tail should remain null");
@@ -319,16 +316,165 @@ suite("LinkedList", () => {
       assert.strictEqual(linkedList.head, node2);
       assert.strictEqual(linkedList.tail, node4);
 
-      // Pop the tail node
-      const poppedKey = linkedList.pop();
+      // Remove the head node
+      const removedKey = linkedList.removeOldest();
 
       // Then
-      assert.strictEqual(poppedKey, key4);
+      assert.strictEqual(removedKey, key2);
 
-      // Final state should be: node2 -> node3 -> node1
-      assertNodeOrder(linkedList, node2, node3, node1);
+      // Final state should be: node3 -> node1 -> node4
+      assertNodeOrder(linkedList, node3, node1, node4);
+      assert.strictEqual(linkedList.head, node3);
+      assert.strictEqual(linkedList.tail, node4);
+    });
+  });
+
+  suite("removeNode", () => {
+    test("should remove a node from the middle of the list", () => {
+      // Given
+      const linkedList = new LinkedList();
+      const key1 = createCacheKey("1");
+      const key2 = createCacheKey("2");
+      const key3 = createCacheKey("3");
+
+      const node1 = linkedList.add(key1);
+      const node2 = linkedList.add(key2);
+      const node3 = linkedList.add(key3);
+
+      // Initial state: node1 -> node2 -> node3
+      assertNodeOrder(linkedList, node1, node2, node3);
+
+      // When
+      linkedList.removeNode(node2);
+
+      // Then
+      assertNodeOrder(linkedList, node1, node3);
+
+      // Verify that the removed node is detached
+      assert.strictEqual(node2.prev, null);
+      assert.strictEqual(node2.next, null);
+    });
+
+    test("should remove the head node", () => {
+      // Given
+      const linkedList = new LinkedList();
+      const key1 = createCacheKey("1");
+      const key2 = createCacheKey("2");
+      const key3 = createCacheKey("3");
+
+      const node1 = linkedList.add(key1);
+      const node2 = linkedList.add(key2);
+      const node3 = linkedList.add(key3);
+
+      // Initial state: node1 -> node2 -> node3
+      assertNodeOrder(linkedList, node1, node2, node3);
+
+      // When
+      linkedList.removeNode(node1);
+
+      // Then
+      assertNodeOrder(linkedList, node2, node3);
       assert.strictEqual(linkedList.head, node2);
-      assert.strictEqual(linkedList.tail, node1);
+      assert.strictEqual(linkedList.tail, node3);
+    });
+
+    test("should remove the tail node", () => {
+      // Given
+      const linkedList = new LinkedList();
+      const key1 = createCacheKey("1");
+      const key2 = createCacheKey("2");
+      const key3 = createCacheKey("3");
+
+      const node1 = linkedList.add(key1);
+      const node2 = linkedList.add(key2);
+      const node3 = linkedList.add(key3);
+
+      // Initial state: node1 -> node2 -> node3
+      assertNodeOrder(linkedList, node1, node2, node3);
+
+      // When
+      linkedList.removeNode(node3);
+
+      // Then
+      assertNodeOrder(linkedList, node1, node2);
+      assert.strictEqual(linkedList.head, node1);
+      assert.strictEqual(linkedList.tail, node2);
+    });
+
+    test("should handle removing the only node in the list", () => {
+      // Given
+      const linkedList = new LinkedList();
+      const key = createCacheKey("1");
+      const node = linkedList.add(key);
+
+      // Initial state: single node
+      assertNodeOrder(linkedList, node);
+
+      // When
+      linkedList.removeNode(node);
+
+      // Then
+      assertNodeOrder(linkedList);
+      assert.strictEqual(linkedList.head, null);
+      assert.strictEqual(linkedList.tail, null);
+    });
+
+    test("should handle removing multiple nodes in sequence", () => {
+      // Given
+      const linkedList = new LinkedList();
+      const key1 = createCacheKey("1");
+      const key2 = createCacheKey("2");
+      const key3 = createCacheKey("3");
+      const key4 = createCacheKey("4");
+
+      const node1 = linkedList.add(key1);
+      const node2 = linkedList.add(key2);
+      const node3 = linkedList.add(key3);
+      const node4 = linkedList.add(key4);
+
+      // Initial state: node1 -> node2 -> node3 -> node4
+      assertNodeOrder(linkedList, node1, node2, node3, node4);
+
+      // When - remove nodes in sequence
+      linkedList.removeNode(node2);
+      // After first removal: node1 -> node3 -> node4
+      assertNodeOrder(linkedList, node1, node3, node4);
+
+      linkedList.removeNode(node4);
+      // After second removal: node1 -> node3
+      assertNodeOrder(linkedList, node1, node3);
+
+      linkedList.removeNode(node1);
+      // After third removal: node3
+      assertNodeOrder(linkedList, node3);
+
+      linkedList.removeNode(node3);
+      // After fourth removal: empty list
+      assertNodeOrder(linkedList);
+    });
+
+    test("should update next and prev references correctly when removing nodes", () => {
+      // Given
+      const linkedList = new LinkedList();
+      const key1 = createCacheKey("1");
+      const key2 = createCacheKey("2");
+      const key3 = createCacheKey("3");
+
+      const node1 = linkedList.add(key1);
+      const node2 = linkedList.add(key2);
+      const node3 = linkedList.add(key3);
+
+      // Initial state: node1 -> node2 -> node3
+      assertNodeOrder(linkedList, node1, node2, node3);
+
+      // When
+      linkedList.removeNode(node2);
+
+      // Then
+      assert.strictEqual(node1.next, node3, "Node1 next should point to node3");
+      assert.strictEqual(node3.prev, node1, "Node3 prev should point to node1");
+      assert.strictEqual(node2.next, null, "Removed node should have next set to null");
+      assert.strictEqual(node2.prev, null, "Removed node should have prev set to null");
     });
   });
 });

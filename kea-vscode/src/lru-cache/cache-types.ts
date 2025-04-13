@@ -1,4 +1,4 @@
-import { ILinkedListNode } from "./lru-linked-list";
+import { ILinkedListNode } from "./linked-list";
 
 export interface ICacheNode<T> {
   value: T;

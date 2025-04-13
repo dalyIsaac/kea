@@ -1,5 +1,5 @@
 import { CacheKey, EndpointCache, IFullCacheValue, Method, MethodCache, RepositoryCache, UserCache } from "./cache-types";
-import { ILinkedListNode } from "./lru-linked-list";
+import { ILinkedListNode } from "./linked-list";
 
 interface GetInnerCacheSuccess {
   userCache: UserCache;
