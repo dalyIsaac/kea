@@ -77,38 +77,6 @@ export class LinkedList {
     node.next = null;
   };
 
-  promote = (node: ILinkedListNode): void => {
-    const parentNode = node.prev;
-    if (node === this.#head || parentNode === null) {
-      return;
-    }
-
-    const grandParentNode = parentNode.prev ?? null;
-    const nextNode = node.next;
-
-    // [grandParentNode, parentNode, node, nextNode] becomes
-    // [grandParentNode, node, parentNode, nextNode]
-
-    if (grandParentNode === null) {
-      this.#head = node;
-    } else {
-      grandParentNode.next = node;
-    }
-
-    node.prev = grandParentNode;
-    node.next = parentNode;
-
-    parentNode.prev = node;
-    parentNode.next = nextNode;
-
-    if (nextNode !== null) {
-      nextNode.prev = parentNode;
-    } else {
-      // If nextNode is null, parentNode becomes the new tail.
-      this.#tail = parentNode;
-    }
-  };
-
   demote = (node: ILinkedListNode): void => {
     const nextNode = node.next;
     if (nextNode === null) {

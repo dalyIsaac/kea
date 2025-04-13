@@ -127,132 +127,6 @@ suite("LinkedList", () => {
     });
   });
 
-  suite("promote", () => {
-    test("should move a node after its grandparent", () => {
-      // Given
-      const linkedList = new LinkedList();
-      const key1 = createCacheKey("1");
-      const key2 = createCacheKey("2");
-      const key3 = createCacheKey("3");
-      const key4 = createCacheKey("4");
-
-      const node1 = linkedList.add(key1);
-      const node2 = linkedList.add(key2);
-      const node3 = linkedList.add(key3);
-      const node4 = linkedList.add(key4);
-
-      /* Initial state:
-       * node1 -> node2 -> node3 -> node4
-       */
-
-      // When - promote node3
-      linkedList.promote(node3);
-
-      /* After promotion:
-       * node1 -> node3 -> node2 -> node4
-       */
-
-      // Then
-      assertNodeOrder(linkedList, node1, node3, node2, node4);
-    });
-
-    test("should handle promoting to head correctly", () => {
-      // Given
-      const linkedList = new LinkedList();
-      const key1 = createCacheKey("1");
-      const key2 = createCacheKey("2");
-
-      const node1 = linkedList.add(key1);
-      const node2 = linkedList.add(key2);
-
-      /* Initial state:
-       * node1 -> node2
-       */
-
-      // When - promote node2 (should become the head)
-      linkedList.promote(node2);
-
-      /* After promotion:
-       * node2 -> node1
-       */
-
-      // Then
-      assertNodeOrder(linkedList, node2, node1);
-    });
-
-    test("should handle promoting the tail node correctly", () => {
-      // Given
-      const linkedList = new LinkedList();
-      const key1 = createCacheKey("1");
-      const key2 = createCacheKey("2");
-      const key3 = createCacheKey("3");
-
-      const node1 = linkedList.add(key1);
-      const node2 = linkedList.add(key2);
-      const node3 = linkedList.add(key3);
-
-      /* Initial state:
-       * node1 -> node2 -> node3
-       */
-
-      // When - promote the tail node (node3)
-      linkedList.promote(node3);
-
-      /* After promotion:
-       * node1 -> node3 -> node2
-       */
-
-      // Then
-      assertNodeOrder(linkedList, node1, node3, node2);
-    });
-
-    test("should do nothing if node has no parent", () => {
-      // Given
-      const linkedList = new LinkedList();
-      const key1 = createCacheKey("1");
-
-      // Create a standalone node that's not connected to the linkedList
-      const node = {
-        prev: null,
-        next: null,
-        key: key1,
-      };
-
-      // Save initial state
-      const initialPrev = node.prev;
-      const initialNext = node.next;
-      const initialKey = [...node.key]; // Create a copy of the key array
-
-      // When
-      linkedList.promote(node);
-
-      // Then - node should remain unchanged
-      assert.strictEqual(node.prev, initialPrev, "prev property should not change");
-      assert.strictEqual(node.next, initialNext, "next property should not change");
-      assert.deepStrictEqual(node.key, initialKey, "key property should not change");
-
-      // Also verify that the linkedList state remains unchanged
-      assert.strictEqual(linkedList.head, null, "head should remain null");
-      assert.strictEqual(linkedList.tail, null, "tail should remain null");
-    });
-
-    test("should do nothing if node is already head", () => {
-      // Given
-      const linkedList = new LinkedList();
-      const key1 = createCacheKey("1");
-      const key2 = createCacheKey("2");
-
-      const node1 = linkedList.add(key1);
-      const node2 = linkedList.add(key2);
-
-      // When - try to promote the head
-      linkedList.promote(node1);
-
-      // Then - no changes expected
-      assertNodeOrder(linkedList, node1, node2);
-    });
-  });
-
   suite("demote", () => {
     test("should move a node before its grandchild", () => {
       // Given
@@ -456,8 +330,8 @@ suite("LinkedList", () => {
       assertNodeOrder(linkedList, node1, node2, node3);
 
       // When - multiple operations
-      // Promote node2 - should move it after node1's grandparent (which is null, so node2 becomes head)
-      linkedList.promote(node2);
+      // Demote node1 - should move it after node2
+      linkedList.demote(node1);
 
       // Check intermediate state: node2 -> node1 -> node3
       assertNodeOrder(linkedList, node2, node1, node3);
@@ -470,10 +344,10 @@ suite("LinkedList", () => {
       // State after adding node4: node2 -> node1 -> node3 -> node4
       assertNodeOrder(linkedList, node2, node1, node3, node4);
 
-      // Promote node3 - should move it after node1's grandparent (which is node2)
-      linkedList.promote(node3);
+      // Demote node1 - should move it after node3
+      linkedList.demote(node1);
 
-      // Verify state after second promotion: node2 -> node3 -> node1 -> node4
+      // Verify state after second demotion: node2 -> node3 -> node1 -> node4
       assertNodeOrder(linkedList, node2, node3, node1, node4);
       assert.strictEqual(linkedList.head, node2);
       assert.strictEqual(linkedList.tail, node4);
