@@ -209,6 +209,36 @@ suite("LinkedList", () => {
       assertNodeOrder(linkedList, node1, node3, node2);
     });
 
+    test("should do nothing if node has no parent", () => {
+      // Given
+      const linkedList = new LinkedList();
+      const key1 = createCacheKey("1");
+      
+      // Create a standalone node that's not connected to the linkedList
+      const node = {
+        prev: null,
+        next: null,
+        key: key1,
+      };
+
+      // Save initial state
+      const initialPrev = node.prev;
+      const initialNext = node.next;
+      const initialKey = [...node.key]; // Create a copy of the key array
+
+      // When
+      linkedList.promote(node);
+
+      // Then - node should remain unchanged
+      assert.strictEqual(node.prev, initialPrev, "prev property should not change");
+      assert.strictEqual(node.next, initialNext, "next property should not change");
+      assert.deepStrictEqual(node.key, initialKey, "key property should not change");
+      
+      // Also verify that the linkedList state remains unchanged
+      assert.strictEqual(linkedList.head, null, "head should remain null");
+      assert.strictEqual(linkedList.tail, null, "tail should remain null");
+    });
+
     test("should do nothing if node is already head", () => {
       // Given
       const linkedList = new LinkedList();

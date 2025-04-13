@@ -57,12 +57,12 @@ export class LinkedList {
   };
 
   promote = (node: ILinkedListNode): void => {
-    if (node === this.#head) {
+    const parentNode = node.prev;
+    if (node === this.#head || parentNode === null) {
       return;
     }
 
-    const parentNode = node.prev;
-    const grandParentNode = parentNode?.prev ?? null;
+    const grandParentNode = parentNode.prev ?? null;
     const nextNode = node.next;
 
     // [grandParentNode, parentNode, node, nextNode] becomes
@@ -77,10 +77,8 @@ export class LinkedList {
     node.prev = grandParentNode;
     node.next = parentNode;
 
-    if (parentNode !== null) {
-      parentNode.prev = node;
-      parentNode.next = nextNode;
-    }
+    parentNode.prev = node;
+    parentNode.next = nextNode;
 
     if (nextNode !== null) {
       nextNode.prev = parentNode;
