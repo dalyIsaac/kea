@@ -1,6 +1,6 @@
 import * as assert from "assert";
 import { RepositoryManager } from "../../repository/repository-manager";
-import { createPullRequestStub, createRepositoryStub } from "../../test-utils";
+import { createCacheStub, createPullRequestStub, createRepositoryStub } from "../../test-utils";
 import { PullRequestId, RepoId } from "../../types/kea";
 import { PullRequestListNode } from "../pull-request-list/pull-request-list-node";
 import { CollapsibleState } from "../tree-node";
@@ -23,7 +23,9 @@ const createGetChildrenStubs = async () => {
   const repositoryManager = new RepositoryManager();
   repositoryManager.addRepository(repository);
 
-  const provider = new PullRequestTreeProvider(repositoryManager);
+  const cache = createCacheStub();
+
+  const provider = new PullRequestTreeProvider(repositoryManager, cache);
   await provider.openPullRequest(repository.account.accountKey, pullId);
 
   return {
@@ -32,6 +34,7 @@ const createGetChildrenStubs = async () => {
     repositoryManager,
     provider,
     pullId,
+    cache,
   };
 };
 
@@ -39,7 +42,7 @@ suite("PullRequestTreeProvider", () => {
   test("getChildren returns an empty array when the pull request is not open", async () => {
     // Given
     const repositoryManager = new RepositoryManager();
-    const provider = new PullRequestTreeProvider(repositoryManager);
+    const provider = new PullRequestTreeProvider(repositoryManager, createCacheStub());
 
     // When
     const children = await provider.getChildren();
@@ -104,10 +107,9 @@ suite("PullRequestTreeProvider", () => {
     assert.deepStrictEqual(result, []);
   });
 
-  test("refresh calls onDidChangeTreeData", () => {
+  test("refresh calls onDidChangeTreeData and clears cache", async () => {
     // Given
-    const repositoryManager = new RepositoryManager();
-    const provider = new PullRequestTreeProvider(repositoryManager);
+    const { provider, repository, cache } = await createGetChildrenStubs();
 
     let eventFired = false;
     provider.onDidChangeTreeData(() => {
@@ -119,6 +121,10 @@ suite("PullRequestTreeProvider", () => {
 
     // Then
     assert.strictEqual(eventFired, true);
+    assert.strictEqual((cache.invalidate as sinon.SinonStub).calledOnce, true);
+
+    const { owner, repo } = repository.repoId;
+    assert.strictEqual((cache.invalidate as sinon.SinonStub).calledWith(owner, repo), true);
   });
 
   test("openPullRequest updates the pull request info", async () => {

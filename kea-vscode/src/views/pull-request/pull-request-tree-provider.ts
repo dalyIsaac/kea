@@ -1,6 +1,6 @@
 import { IAccountKey } from "../../account/account";
 import { Logger } from "../../core/logger";
-import { LruApiCache } from "../../lru-cache/lru-api-cache";
+import { ILruApiCache } from "../../lru-cache/lru-api-cache";
 import { IKeaRepository } from "../../repository/kea-repository";
 import { IRepositoryManager } from "../../repository/repository-manager";
 import { PullRequest, PullRequestId } from "../../types/kea";
@@ -15,12 +15,12 @@ export type PullRequestTreeNode = CommentsRootTreeNode | FilesRootTreeNode;
  */
 export class PullRequestTreeProvider extends TreeNodeProvider<PullRequestTreeNode> {
   #repositoryManager: IRepositoryManager;
-  #cache: LruApiCache;
+  #cache: ILruApiCache;
   #pullInfo: { repository: IKeaRepository; pullId: PullRequestId; pullRequest: PullRequest } | undefined;
   #commentsRootTreeNode?: CommentsRootTreeNode;
   #filesRootTreeNode?: FilesRootTreeNode;
 
-  constructor(repositoryManager: IRepositoryManager, cache: LruApiCache) {
+  constructor(repositoryManager: IRepositoryManager, cache: ILruApiCache) {
     super();
     this.#repositoryManager = repositoryManager;
     this.#cache = cache;

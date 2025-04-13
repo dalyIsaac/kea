@@ -150,6 +150,8 @@ export const createWorkspaceFolderStub = (props: Partial<vscode.WorkspaceFolder>
 export const createCacheStub = (props: Partial<ILruApiCache> = {}): ILruApiCache => ({
   get: sinon.stub(),
   set: sinon.stub(),
+  clear: sinon.stub(),
+  invalidate: sinon.stub(),
   ...props,
 });
 
