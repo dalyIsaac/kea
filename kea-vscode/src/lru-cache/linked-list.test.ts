@@ -253,6 +253,168 @@ suite("LinkedList", () => {
     });
   });
 
+  suite("demote", () => {
+    test("should move a node before its grandchild", () => {
+      // Given
+      const linkedList = new LinkedList();
+      const key1 = createCacheKey("1");
+      const key2 = createCacheKey("2");
+      const key3 = createCacheKey("3");
+      const key4 = createCacheKey("4");
+
+      const node1 = linkedList.add(key1);
+      const node2 = linkedList.add(key2);
+      const node3 = linkedList.add(key3);
+      const node4 = linkedList.add(key4);
+
+      /* Initial state:
+       * node1 -> node2 -> node3 -> node4
+       */
+
+      // When - demote node2
+      linkedList.demote(node2);
+
+      /* After demotion:
+       * node1 -> node3 -> node2 -> node4
+       */
+
+      // Then
+      assertNodeOrder(linkedList, node1, node3, node2, node4);
+    });
+
+    test("should handle demoting the head node", () => {
+      // Given
+      const linkedList = new LinkedList();
+      const key1 = createCacheKey("1");
+      const key2 = createCacheKey("2");
+      const key3 = createCacheKey("3");
+
+      const node1 = linkedList.add(key1);
+      const node2 = linkedList.add(key2);
+      const node3 = linkedList.add(key3);
+
+      /* Initial state:
+       * node1 -> node2 -> node3
+       */
+
+      // When - demote the head node
+      linkedList.demote(node1);
+
+      /* After demotion:
+       * node2 -> node1 -> node3
+       */
+
+      // Then
+      assertNodeOrder(linkedList, node2, node1, node3);
+      assert.strictEqual(linkedList.head, node2);
+    });
+
+    test("should do nothing if node is the tail", () => {
+      // Given
+      const linkedList = new LinkedList();
+      const key1 = createCacheKey("1");
+      const key2 = createCacheKey("2");
+      const key3 = createCacheKey("3");
+
+      const node1 = linkedList.add(key1);
+      const node2 = linkedList.add(key2);
+      const node3 = linkedList.add(key3);
+
+      /* Initial state:
+       * node1 -> node2 -> node3
+       */
+
+      // When - try to demote the tail node
+      linkedList.demote(node3);
+
+      // Then - no changes expected
+      assertNodeOrder(linkedList, node1, node2, node3);
+    });
+
+    test("should handle demoting to the tail position", () => {
+      // Given
+      const linkedList = new LinkedList();
+      const key1 = createCacheKey("1");
+      const key2 = createCacheKey("2");
+      const key3 = createCacheKey("3");
+
+      const node1 = linkedList.add(key1);
+      const node2 = linkedList.add(key2);
+      const node3 = linkedList.add(key3);
+
+      /* Initial state:
+       * node1 -> node2 -> node3
+       */
+
+      // When - demote node2, which should move after node3 (becoming the tail)
+      linkedList.demote(node2);
+
+      /* After demotion:
+       * node1 -> node3 -> node2
+       */
+
+      // Then
+      assertNodeOrder(linkedList, node1, node3, node2);
+      assert.strictEqual(linkedList.tail, node2);
+    });
+
+    test("should handle demoting node with no next node", () => {
+      // Given
+      const linkedList = new LinkedList();
+      const key1 = createCacheKey("1");
+
+      // Create a standalone node that's not connected properly
+      const node = {
+        prev: null,
+        next: null,
+        key: key1,
+      };
+
+      // Save initial state
+      const initialPrev = node.prev;
+      const initialNext = node.next;
+      const initialKey = [...node.key]; // Create a copy of the key array
+
+      // When
+      linkedList.demote(node);
+
+      // Then - node should remain unchanged
+      assert.strictEqual(node.prev, initialPrev, "prev property should not change");
+      assert.strictEqual(node.next, initialNext, "next property should not change");
+      assert.deepStrictEqual(node.key, initialKey, "key property should not change");
+
+      // Also verify that the linkedList state remains unchanged
+      assert.strictEqual(linkedList.head, null, "head should remain null");
+      assert.strictEqual(linkedList.tail, null, "tail should remain null");
+    });
+
+    test("should handle a list with only two nodes", () => {
+      // Given
+      const linkedList = new LinkedList();
+      const key1 = createCacheKey("1");
+      const key2 = createCacheKey("2");
+
+      const node1 = linkedList.add(key1);
+      const node2 = linkedList.add(key2);
+
+      /* Initial state:
+       * node1 -> node2
+       */
+
+      // When - demote the first node
+      linkedList.demote(node1);
+
+      /* After demotion:
+       * node2 -> node1
+       */
+
+      // Then
+      assertNodeOrder(linkedList, node2, node1);
+      assert.strictEqual(linkedList.head, node2);
+      assert.strictEqual(linkedList.tail, node1);
+    });
+  });
+
   suite("clear", () => {
     test("should remove all nodes", () => {
       // Given
