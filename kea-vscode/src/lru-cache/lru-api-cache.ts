@@ -1,15 +1,6 @@
 import { ApiCache } from "./api-cache";
-import {
-  CacheKey,
-  CacheResponseHeaders,
-  EndpointMethodMap,
-  ICacheValue,
-  Method,
-  MethodValueMap,
-  RepoEndpointMap,
-  UserRepoMap,
-} from "./cache-types";
-import { ILinkedListNode, LinkedList } from "./linked-list";
+import { CacheKey, CacheResponseHeaders, ICacheValue, Method } from "./cache-types";
+import { LinkedList } from "./linked-list";
 
 export interface ILruApiCache {
   get: (...key: CacheKey) => ICacheValue<unknown> | undefined;
@@ -24,9 +15,8 @@ export class LruApiCache implements ILruApiCache {
 
   maxSize: number;
 
-  #size = 0;
   get size(): number {
-    return this.#size;
+    return this.#cache.size;
   }
 
   constructor(maxSize: number) {
@@ -34,65 +24,27 @@ export class LruApiCache implements ILruApiCache {
   }
 
   get = (...key: CacheKey): ICacheValue<unknown> | undefined => {
-    const cacheResult = this.#cache.get(...key);
-    if (cacheResult?.value === undefined) {
+    const cacheResult = this.#cache.get(key);
+    if (cacheResult === undefined) {
       return undefined;
     }
 
-    this.#linkedList.demote(cacheResult.value.linkedListNode);
+    this.#linkedList.demote(cacheResult.linkedListNode);
 
     return {
-      headers: cacheResult.value.headers,
-      data: cacheResult.value.data,
+      headers: cacheResult.headers,
+      data: cacheResult.data,
     };
   };
 
   set = (user: string, repo: string, endpoint: string, method: Method, data: unknown, headers: CacheResponseHeaders): void => {
-    const cacheResult = this.#cache.get(user, repo, endpoint, method);
-
-    const key: CacheKey = [user, repo, endpoint, method];
-    let userRepoMap: UserRepoMap | undefined;
-    let repoEndpointMap: RepoEndpointMap | undefined;
-    let endpointMethodMap: EndpointMethodMap | undefined;
-    let methodValueMap: MethodValueMap | undefined;
-    let linkedListNode: ILinkedListNode | undefined;
-
-    if (cacheResult !== undefined) {
-      ({ userRepoMap, repoEndpointMap, endpointMethodMap, methodValueMap } = cacheResult);
-      linkedListNode = cacheResult.value?.linkedListNode;
-    }
-
-    if (userRepoMap === undefined) {
-      userRepoMap = new Map();
-    }
-    this.#cache.set(user, userRepoMap);
-
-    if (repoEndpointMap === undefined) {
-      repoEndpointMap = new Map();
-    }
-    userRepoMap.set(repo, repoEndpointMap);
-
-    if (endpointMethodMap === undefined) {
-      endpointMethodMap = new Map();
-    }
-    repoEndpointMap.set(endpoint, endpointMethodMap);
-
-    if (methodValueMap === undefined || linkedListNode === undefined) {
-      methodValueMap = new Map();
-      linkedListNode = this.#linkedList.add(key);
-      this.#size += 1;
-    } else {
-      this.#linkedList.demote(linkedListNode);
-    }
-
-    endpointMethodMap.set(method, methodValueMap);
-    methodValueMap.set(method, { key, data, headers, linkedListNode });
-
+    const linkedListNode = this.#cache.set(user, repo, endpoint, method, data, headers);
+    this.#linkedList.demote(linkedListNode);
     this.#evict();
   };
 
   #evict = (): void => {
-    if (this.#size <= this.maxSize) {
+    if (this.size <= this.maxSize) {
       return;
     }
 
@@ -101,18 +53,7 @@ export class LruApiCache implements ILruApiCache {
       return;
     }
 
-    const [user, repo, endpoint, method] = evictedKey;
-    const cacheResult = this.#cache.get(user, repo, endpoint, method);
-    if (cacheResult === undefined) {
-      return;
-    }
-
-    const { userRepoMap, repoEndpointMap, endpointMethodMap, methodValueMap } = cacheResult;
-    methodValueMap?.delete(method);
-    endpointMethodMap?.delete(endpoint);
-    repoEndpointMap?.delete(repo);
-    userRepoMap.delete(user);
-    this.#size -= 1;
+    this.invalidate(...evictedKey);
   };
 
   invalidate = (user: string, repo?: string, endpoint?: string, method?: Method): void => {
@@ -124,13 +65,11 @@ export class LruApiCache implements ILruApiCache {
 
     for (const node of nodesToDelete) {
       this.#linkedList.removeNode(node);
-      this.#size -= 1;
     }
   };
 
   clear = (): void => {
     this.#cache.clear();
     this.#linkedList.clear();
-    this.#size = 0;
   };
 }

@@ -18,22 +18,18 @@ export class LinkedList {
     return this.#tail;
   }
 
-  add = (key: CacheKey): ILinkedListNode => {
-    const newNode: ILinkedListNode = {
-      prev: this.#tail,
-      next: null,
-      key,
-    };
+  add = (node: ILinkedListNode): undefined => {
+    node.prev = this.#tail;
+    node.next = null;
 
     if (this.#head === null) {
-      this.#head = newNode;
+      this.#head = node;
     }
 
     if (this.#tail !== null) {
-      this.#tail.next = newNode;
+      this.#tail.next = node;
     }
-    this.#tail = newNode;
-    return newNode;
+    this.#tail = node;
   };
 
   removeOldest = (): CacheKey | undefined => {
@@ -78,6 +74,11 @@ export class LinkedList {
   };
 
   demote = (node: ILinkedListNode): void => {
+    if (node.next === null && node.prev === null) {
+      this.add(node);
+      return;
+    }
+
     const nextNode = node.next;
     if (nextNode === null) {
       return;
