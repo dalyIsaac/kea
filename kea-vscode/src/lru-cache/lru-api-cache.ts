@@ -1,11 +1,20 @@
 import { ApiCache } from "./api-cache";
-import { CacheKey, CacheResponseHeaders, EndpointCache, ICacheValue, Method, MethodCache, RepositoryCache, UserCache } from "./cache-types";
+import {
+  CacheKey,
+  CacheResponseHeaders,
+  EndpointMethodMap,
+  ICacheValue,
+  Method,
+  MethodValueMap,
+  RepoEndpointMap,
+  UserRepoMap,
+} from "./cache-types";
 import { ILinkedListNode, LinkedList } from "./linked-list";
 
 export interface ILruApiCache {
   get: (...key: CacheKey) => ICacheValue<unknown> | undefined;
   set: (user: string, repo: string, endpoint: string, method: Method, data: unknown, headers: CacheResponseHeaders) => void;
-  invalidate: (...key: Partial<CacheKey>) => void;
+  invalidate: (user: string, repo?: string, endpoint?: string, method?: Method) => void;
   clear: () => void;
 }
 
@@ -30,7 +39,7 @@ export class LruApiCache implements ILruApiCache {
       return undefined;
     }
 
-    this.#linkedList.promote(cacheResult.value.linkedListNode);
+    this.#linkedList.demote(cacheResult.value.linkedListNode);
 
     return {
       headers: cacheResult.value.headers,
@@ -42,42 +51,42 @@ export class LruApiCache implements ILruApiCache {
     const cacheResult = this.#cache.get(user, repo, endpoint, method);
 
     const key: CacheKey = [user, repo, endpoint, method];
-    let userCache: UserCache | undefined;
-    let repoCache: RepositoryCache | undefined;
-    let endpointCache: EndpointCache | undefined;
-    let methodCache: MethodCache | undefined;
+    let userRepoMap: UserRepoMap | undefined;
+    let repoEndpointMap: RepoEndpointMap | undefined;
+    let endpointMethodMap: EndpointMethodMap | undefined;
+    let methodValueMap: MethodValueMap | undefined;
     let linkedListNode: ILinkedListNode | undefined;
 
     if (cacheResult !== undefined) {
-      ({ userCache, repoCache, endpointCache, methodCache } = cacheResult);
+      ({ userRepoMap, repoEndpointMap, endpointMethodMap, methodValueMap } = cacheResult);
       linkedListNode = cacheResult.value?.linkedListNode;
     }
 
-    if (userCache === undefined) {
-      userCache = { value: new Map() };
+    if (userRepoMap === undefined) {
+      userRepoMap = new Map();
     }
-    this.#cache.set(user, userCache);
+    this.#cache.set(user, userRepoMap);
 
-    if (repoCache === undefined) {
-      repoCache = { value: new Map() };
+    if (repoEndpointMap === undefined) {
+      repoEndpointMap = new Map();
     }
-    userCache.value.set(repo, repoCache);
+    userRepoMap.set(repo, repoEndpointMap);
 
-    if (endpointCache === undefined) {
-      endpointCache = { value: new Map() };
+    if (endpointMethodMap === undefined) {
+      endpointMethodMap = new Map();
     }
-    repoCache.value.set(endpoint, endpointCache);
+    repoEndpointMap.set(endpoint, endpointMethodMap);
 
-    if (methodCache === undefined || linkedListNode === undefined) {
-      methodCache = { value: new Map() };
+    if (methodValueMap === undefined || linkedListNode === undefined) {
+      methodValueMap = new Map();
       linkedListNode = this.#linkedList.add(key);
       this.#size += 1;
     } else {
-      this.#linkedList.promote(linkedListNode);
+      this.#linkedList.demote(linkedListNode);
     }
 
-    endpointCache.value.set(method, methodCache);
-    methodCache.value.set(method, { key, data, headers, linkedListNode });
+    endpointMethodMap.set(method, methodValueMap);
+    methodValueMap.set(method, { key, data, headers, linkedListNode });
 
     this.#evict();
   };
@@ -98,16 +107,16 @@ export class LruApiCache implements ILruApiCache {
       return;
     }
 
-    const { userCache, repoCache, endpointCache, methodCache } = cacheResult;
-    methodCache?.value.delete(method);
-    endpointCache?.value.delete(endpoint);
-    repoCache?.value.delete(repo);
-    userCache.value.delete(user);
+    const { userRepoMap, repoEndpointMap, endpointMethodMap, methodValueMap } = cacheResult;
+    methodValueMap?.delete(method);
+    endpointMethodMap?.delete(endpoint);
+    repoEndpointMap?.delete(repo);
+    userRepoMap.delete(user);
     this.#size -= 1;
   };
 
-  invalidate = (...key: Partial<CacheKey>): void => {
-    const nodesToDelete = this.#cache.invalidate(...key);
+  invalidate = (user: string, repo?: string, endpoint?: string, method?: Method): void => {
+    const nodesToDelete = this.#cache.invalidate(user, repo, endpoint, method);
     if (nodesToDelete instanceof Error) {
       console.error(nodesToDelete.message);
       return;

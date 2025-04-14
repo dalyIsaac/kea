@@ -1,8 +1,6 @@
 import { ILinkedListNode } from "./linked-list";
 
-export interface ICacheNode<T> {
-  value: T;
-}
+export type ICacheLevel<TKey, TValue> = Map<TKey, TValue>;
 
 export interface CacheResponseHeaders {
   etag: string | undefined;
@@ -26,9 +24,9 @@ export const isMethod = (method: string): method is Method => {
   return METHODS.includes(method as Method);
 };
 
-export type MethodCache = ICacheNode<Map<Method, IFullCacheValue<unknown>>>;
-export type EndpointCache = ICacheNode<Map<string, MethodCache>>;
-export type RepositoryCache = ICacheNode<Map<string, EndpointCache>>;
-export type UserCache = ICacheNode<Map<string, RepositoryCache>>;
+export type MethodValueMap = ICacheLevel<Method, IFullCacheValue<unknown>>;
+export type EndpointMethodMap = ICacheLevel<string, MethodValueMap>;
+export type RepoEndpointMap = ICacheLevel<string, EndpointMethodMap>;
+export type UserRepoMap = ICacheLevel<string, RepoEndpointMap>;
 
 export type CacheKey = [user: string, repo: string, endpoint: string, method: Method];

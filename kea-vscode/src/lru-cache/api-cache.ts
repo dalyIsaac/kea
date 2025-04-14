@@ -1,156 +1,151 @@
-import { CacheKey, EndpointCache, IFullCacheValue, Method, MethodCache, RepositoryCache, UserCache } from "./cache-types";
+import { Logger } from "../core/logger";
+import { CacheKey, EndpointMethodMap, IFullCacheValue, Method, MethodValueMap, RepoEndpointMap, UserRepoMap } from "./cache-types";
 import { ILinkedListNode } from "./linked-list";
 
 interface GetInnerCacheSuccess {
-  userCache: UserCache;
-  repoCache?: RepositoryCache;
-  endpointCache?: EndpointCache;
-  methodCache?: MethodCache;
+  userRepoMap: UserRepoMap;
+  repoEndpointMap?: RepoEndpointMap;
+  endpointMethodMap?: EndpointMethodMap;
+  methodValueMap?: MethodValueMap;
   value?: IFullCacheValue<unknown>;
 }
 
 type GetInnerCacheResult = undefined | GetInnerCacheSuccess;
 
 export class ApiCache {
-  #cache = new Map<string, UserCache>();
+  #cache = new Map<string, UserRepoMap>();
 
   get = (...[user, repo, endpoint, method]: CacheKey): GetInnerCacheResult => {
-    const userCache = this.#cache.get(user);
-    if (userCache === undefined) {
+    const userRepoMap = this.#cache.get(user);
+    if (userRepoMap === undefined) {
       return undefined;
     }
 
-    const repoCache = userCache.value.get(repo);
-    if (repoCache === undefined) {
-      return { userCache };
+    const repoEndpointMap = userRepoMap.get(repo);
+    if (repoEndpointMap === undefined) {
+      return { userRepoMap: userRepoMap };
     }
 
-    const endpointCache = repoCache.value.get(endpoint);
-    if (endpointCache === undefined) {
-      return { userCache, repoCache };
+    const endpointMethodMap = repoEndpointMap.get(endpoint);
+    if (endpointMethodMap === undefined) {
+      return { userRepoMap: userRepoMap, repoEndpointMap: repoEndpointMap };
     }
 
-    const cacheMethod = endpointCache.value.get(method);
-    if (cacheMethod === undefined) {
-      return { userCache, repoCache, endpointCache };
+    const methodValueMap = endpointMethodMap.get(method);
+    if (methodValueMap === undefined) {
+      return { userRepoMap: userRepoMap, repoEndpointMap: repoEndpointMap, endpointMethodMap: endpointMethodMap };
     }
 
-    const cacheValue = cacheMethod.value.get(method);
+    const cacheValue = methodValueMap.get(method);
     if (cacheValue === undefined) {
-      return { userCache, repoCache, endpointCache };
+      return { userRepoMap: userRepoMap, repoEndpointMap: repoEndpointMap, endpointMethodMap: endpointMethodMap };
     }
 
     return {
-      userCache: userCache,
-      repoCache: repoCache,
-      endpointCache: endpointCache,
-      methodCache: cacheMethod,
+      userRepoMap: userRepoMap,
+      repoEndpointMap: repoEndpointMap,
+      endpointMethodMap: endpointMethodMap,
+      methodValueMap: methodValueMap,
       value: cacheValue,
     };
   };
 
-  set = (user: string, cacheUser: UserCache): void => {
-    this.#cache.set(user, cacheUser);
+  set = (user: string, userRepoMap: UserRepoMap): void => {
+    this.#cache.set(user, userRepoMap);
   };
 
-  invalidate = (...[user, repo, endpoint, method]: Partial<CacheKey>): ILinkedListNode[] | Error => {
-    // Wiping the entire cache if the key is empty is an invalid operation - use the `clear` method instead.
-    if (user === undefined) {
-      return [];
+  invalidate = (user: string, repo?: string, endpoint?: string, method?: Method): ILinkedListNode[] | Error => {
+    const userRepoMap = this.#cache.get(user);
+    if (userRepoMap === undefined) {
+      return new Error("User not found in cache.");
     }
-
-    const userCache = this.#cache.get(user);
-    if (userCache === undefined) {
-      return new Error(`User must be defined`);
-    }
-
-    // Invalidate the entire user cache if the repo is not defined.
     if (repo === undefined) {
-      const userNodes = this.#getUserNodes(userCache, user);
-      userCache.value.delete(user);
-      return userNodes;
+      // Invalidate the entire user.
+      const invalidatedNodes: ILinkedListNode[] = [];
+      this.#invalidateUser(userRepoMap, invalidatedNodes);
+      this.#cache.delete(user);
+      return invalidatedNodes;
     }
 
-    const repoCache = userCache.value.get(repo);
-    if (repoCache === undefined) {
-      return new Error(`Repo cache not found for ${user}/${repo}`);
+    const repoEndpointMap = userRepoMap.get(repo);
+    if (repoEndpointMap === undefined) {
+      return new Error("Repository not found in cache.");
     }
     if (endpoint === undefined) {
-      const repoNodes = this.#getRepoNodes(repoCache, repo);
-      repoCache.value.delete(repo);
-      return repoNodes;
+      // Invalidate the entire repository.
+      const invalidatedNodes: ILinkedListNode[] = [];
+      this.#invalidateRepo(repoEndpointMap, invalidatedNodes);
+      this.#deleteFromMap([user, repo], [userRepoMap, this.#cache]);
+      return invalidatedNodes;
     }
 
-    const endpointCache = repoCache.value.get(endpoint);
-    if (endpointCache === undefined) {
-      return new Error(`Endpoint cache not found for ${user}/${repo}/${endpoint}`);
+    const endpointMethodMap = repoEndpointMap.get(endpoint);
+    if (endpointMethodMap === undefined) {
+      return new Error("Endpoint not found in cache.");
     }
     if (method === undefined) {
-      const endpointNodes = this.#getEndpointNodes(endpointCache, endpoint);
-      endpointCache.value.delete(endpoint);
-      return endpointNodes;
+      // Invalidate the entire endpoint.
+      const invalidatedNodes: ILinkedListNode[] = [];
+      this.#invalidateEndpoint(endpointMethodMap, invalidatedNodes);
+      this.#deleteFromMap([user, repo, endpoint], [userRepoMap, repoEndpointMap, this.#cache]);
+      return invalidatedNodes;
     }
 
-    // Invalid method.
-    const methodCache = endpointCache.value.get(method);
-    if (methodCache === undefined) {
-      return new Error(`Method cache not found for ${user}/${repo}/${endpoint}/${method}`);
+    const methodValueMap = endpointMethodMap.get(method);
+    if (methodValueMap === undefined) {
+      return new Error("Method not found in cache.");
     }
 
-    // Invalidating the specific method cache.
-    const methodNode = this.#getMethodNode(methodCache, method);
-    methodCache.value.delete(method);
-    return methodNode ? [methodNode] : [];
+    // Invalidate the specific method.
+    const invalidatedNodes: ILinkedListNode[] = [];
+    const cacheValue = methodValueMap.get(method);
+    if (cacheValue === undefined) {
+      return new Error("Cache value not found.");
+    }
+
+    invalidatedNodes.push(cacheValue.linkedListNode);
+    this.#deleteFromMap([user, repo, endpoint, method], [userRepoMap, repoEndpointMap, endpointMethodMap, this.#cache]);
+    return invalidatedNodes;
   };
 
-  #getUserNodes = (userCache: UserCache, user: string): ILinkedListNode[] => {
-    const repoCache = userCache.value.get(user);
-    if (repoCache === undefined) {
-      return [];
+  #deleteFromMap = (keys: string[], maps: Array<Map<string, unknown>>): void => {
+    if (keys.length !== maps.length) {
+      Logger.error("Keys and maps length mismatch", { keys, maps });
+      return;
     }
 
-    const nodes: ILinkedListNode[] = [];
-    for (const repo of repoCache.value.keys()) {
-      this.#getRepoNodes(repoCache, repo, nodes);
-    }
-    return nodes;
-  };
+    for (let idx = keys.length - 1; idx >= 0; idx--) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const key = keys[idx]!;
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const map = maps[idx]!;
 
-  #getRepoNodes = (repoCache: RepositoryCache, repo: string, nodes: ILinkedListNode[] = []): ILinkedListNode[] => {
-    const endpointCache = repoCache.value.get(repo);
-    if (endpointCache === undefined) {
-      return [];
-    }
+      map.delete(key);
 
-    for (const endpoint of endpointCache.value.keys()) {
-      this.#getEndpointNodes(endpointCache, endpoint, nodes);
-    }
-
-    return nodes;
-  };
-
-  #getEndpointNodes = (endpointCache: EndpointCache, endpoint: string, nodes: ILinkedListNode[] = []): ILinkedListNode[] => {
-    const methodCache = endpointCache.value.get(endpoint);
-    if (methodCache === undefined) {
-      return [];
-    }
-
-    for (const method of methodCache.value.keys()) {
-      const value = this.#getMethodNode(methodCache, method);
-      if (value !== undefined) {
-        nodes.push(value);
+      if (map.size !== 0) {
+        break;
       }
     }
-
-    return nodes;
   };
 
-  #getMethodNode = (methodCache: MethodCache, method: Method): ILinkedListNode | undefined => {
-    const cacheValue = methodCache.value.get(method);
-    if (cacheValue === undefined) {
-      return undefined;
+  #invalidateUser = (userRepoMap: UserRepoMap, invalidatedNodes: ILinkedListNode[]): void => {
+    for (const repoEndpointMap of userRepoMap.values()) {
+      this.#invalidateRepo(repoEndpointMap, invalidatedNodes);
     }
-    return cacheValue.linkedListNode;
+  };
+
+  #invalidateRepo = (repoEndpointMap: RepoEndpointMap, invalidatedNodes: ILinkedListNode[]): void => {
+    for (const endpointMethodMap of repoEndpointMap.values()) {
+      this.#invalidateEndpoint(endpointMethodMap, invalidatedNodes);
+    }
+  };
+
+  #invalidateEndpoint = (endpointMethodMap: EndpointMethodMap, invalidatedNodes: ILinkedListNode[]): void => {
+    for (const methodValueMap of endpointMethodMap.values()) {
+      for (const cacheValue of methodValueMap.values()) {
+        invalidatedNodes.push(cacheValue.linkedListNode);
+      }
+    }
   };
 
   clear = (): void => {
