@@ -52,7 +52,27 @@ export class GitHubRepository implements IKeaRepository {
     const owner = options.owner;
     const repo = options.repo;
 
-    return [owner, repo, path, method];
+    const pathParts = path.split("/");
+    const templatedEndpoint = pathParts
+      .map((part) => {
+        const isTemplate = part.startsWith("{") && part.endsWith("}");
+        if (!isTemplate) {
+          return part;
+        }
+
+        const paramName = part.slice(1, -1) as keyof typeof options & string;
+        const paramValue = options[paramName];
+        if (paramValue === undefined) {
+          Logger.warn(`Missing parameter ${paramName} in options`);
+          return part;
+        }
+
+        return String(paramValue);
+      })
+      .join("/");
+
+    const cacheKey: CacheKey = [owner, repo, templatedEndpoint, method];
+    return cacheKey;
   };
 
   /**
