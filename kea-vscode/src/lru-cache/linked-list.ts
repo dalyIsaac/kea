@@ -10,10 +10,18 @@ export class LinkedList {
   #head: ILinkedListNode | null = null;
   #tail: ILinkedListNode | null = null;
 
+  /**
+   * The head of the linked list.
+   * The head is the oldest node in the list.
+   */
   get head(): ILinkedListNode | null {
     return this.#head;
   }
 
+  /**
+   * The tail of the linked list.
+   * The tail is the most recently added node in the list.
+   */
   get tail(): ILinkedListNode | null {
     return this.#tail;
   }
@@ -32,6 +40,9 @@ export class LinkedList {
     this.#tail = node;
   };
 
+  /**
+   * Remove the oldest node from the list.
+   */
   removeOldest = (): CacheKey | undefined => {
     if (this.#head === null) {
       return;
@@ -53,6 +64,10 @@ export class LinkedList {
     return removedNode.key;
   };
 
+  /**
+   * Remove a node from the list.
+   * @param node The node to remove.
+   */
   removeNode = (node: ILinkedListNode): void => {
     if (node.prev !== null) {
       node.prev.next = node.next;
@@ -73,6 +88,10 @@ export class LinkedList {
     node.next = null;
   };
 
+  /**
+   * Demote the node towards the tail of the list.
+   * @param node The node to demote.
+   */
   demote = (node: ILinkedListNode): void => {
     if (node.next === null && node.prev === null) {
       this.add(node);

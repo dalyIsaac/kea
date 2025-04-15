@@ -272,6 +272,7 @@ suite("ApiCache", () => {
       keys.forEach((key) => {
         assert.strictEqual(apiCache.get(key), undefined);
       });
+      assert.equal(apiCache.size, 0);
     });
   });
 });

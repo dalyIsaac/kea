@@ -208,5 +208,6 @@ export class ApiCache {
 
   clear = (): void => {
     this.#cache.clear();
+    this.#size = 0;
   };
 }
