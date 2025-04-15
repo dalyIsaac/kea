@@ -1,4 +1,5 @@
 import * as assert from "assert";
+import * as vscode from "vscode";
 import { createPullRequestCommentStub, createPullRequestFileStub, createRepositoryStub } from "../../test-utils";
 import { PullRequestId } from "../../types/kea";
 import { FileTreeNode } from "./file-tree-node";
@@ -158,5 +159,38 @@ suite("FilesRootTreeNode", () => {
     assert.strictEqual(reviewComments.length, 2);
     assert.ok(reviewComments[0] instanceof ReviewCommentTreeNode);
     assert.ok(reviewComments[1] instanceof ReviewCommentTreeNode);
+  });
+
+  test("getTreeItem should return TreeItem with correct properties", () => {
+    // Given
+    const repository = createRepositoryStub({
+      getPullRequestFiles: (_id) => Promise.resolve([]),
+    });
+    const filesRootTreeNode = new FilesRootTreeNode(repository, pullId);
+
+    // When
+    const treeItem = filesRootTreeNode.getTreeItem();
+
+    // Then
+    assert.strictEqual(treeItem.label, "Files");
+    assert.strictEqual(treeItem.collapsibleState, vscode.TreeItemCollapsibleState.Collapsed);
+    assert.strictEqual(treeItem.contextValue, "file");
+    assert.deepStrictEqual(treeItem.iconPath, new vscode.ThemeIcon("file-directory"));
+    assert.strictEqual(treeItem.tooltip, "Files");
+  });
+
+  test("getTreeItem should respect custom collapsibleState", () => {
+    // Given
+    const repository = createRepositoryStub({
+      getPullRequestFiles: (_id) => Promise.resolve([]),
+    });
+    const filesRootTreeNode = new FilesRootTreeNode(repository, pullId);
+    filesRootTreeNode.collapsibleState = "expanded";
+
+    // When
+    const treeItem = filesRootTreeNode.getTreeItem();
+
+    // Then
+    assert.strictEqual(treeItem.collapsibleState, vscode.TreeItemCollapsibleState.Expanded);
   });
 });

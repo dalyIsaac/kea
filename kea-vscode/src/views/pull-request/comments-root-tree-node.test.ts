@@ -1,4 +1,5 @@
 import * as assert from "assert";
+import * as vscode from "vscode";
 import { IssueCommentsPayload, PullRequestReviewCommentsPayload } from "../../repository/kea-repository";
 import {
   createIssueCommentStub,
@@ -216,5 +217,39 @@ suite("CommentsRootTreeNode", () => {
     // Then
     assert.strictEqual(commentsRootTreeNode.collapsibleState, "collapsed");
     assert.strictEqual((treeNodeProvider.refresh as sinon.SinonStub).callCount, 1);
+  });
+
+  test("getTreeItem should return TreeItem with correct properties", () => {
+    // Given
+    const repository = createRepositoryStub();
+    const treeNodeProvider = createTreeNodeProviderStub();
+    const commentsRootTreeNode = new CommentsRootTreeNode(repository, pullId, treeNodeProvider);
+
+    // When
+    const treeItem = commentsRootTreeNode.getTreeItem();
+
+    // Then
+    assert.strictEqual(treeItem.label, "Comments");
+    assert.strictEqual(treeItem.collapsibleState, vscode.TreeItemCollapsibleState.None);
+    assert.strictEqual(treeItem.contextValue, "commentsRoot");
+    assert.deepStrictEqual(treeItem.iconPath, new vscode.ThemeIcon("comment-discussion"));
+
+    // Check resourceUri - it should be using the comments root decoration scheme
+    assert.ok(treeItem.resourceUri);
+    assert.strictEqual(treeItem.resourceUri.scheme, "kea-comments-root");
+  });
+
+  test("getTreeItem should respect custom collapsibleState", () => {
+    // Given
+    const repository = createRepositoryStub();
+    const treeNodeProvider = createTreeNodeProviderStub();
+    const commentsRootTreeNode = new CommentsRootTreeNode(repository, pullId, treeNodeProvider);
+    commentsRootTreeNode.collapsibleState = "expanded";
+
+    // When
+    const treeItem = commentsRootTreeNode.getTreeItem();
+
+    // Then
+    assert.strictEqual(treeItem.collapsibleState, vscode.TreeItemCollapsibleState.Expanded);
   });
 });
