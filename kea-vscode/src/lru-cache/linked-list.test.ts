@@ -5,6 +5,13 @@ import { ILinkedListNode, LinkedList } from "./linked-list";
 suite("LinkedList", () => {
   const createCacheKey = (id: string): CacheKey => ["user", "repo", `endpoint-${id}`, "GET"];
 
+  // Helper function to create a node
+  const createNode = (key: CacheKey): ILinkedListNode => ({
+    prev: null,
+    next: null,
+    key,
+  });
+
   /**
    * Asserts that the nodes are in the correct order and properly linked.
    * Also verifies that the first and last nodes match the head and tail of the linked list.
@@ -42,9 +49,10 @@ suite("LinkedList", () => {
       // Given
       const linkedList = new LinkedList();
       const key = createCacheKey("1");
+      const node = createNode(key);
 
       // When
-      const node = linkedList.add(key);
+      linkedList.add(node);
 
       // Then
       assert.strictEqual(node.key, key);
@@ -61,9 +69,13 @@ suite("LinkedList", () => {
       const key3 = createCacheKey("3");
 
       // When
-      const node1 = linkedList.add(key1);
-      const node2 = linkedList.add(key2);
-      const node3 = linkedList.add(key3);
+      const node1 = createNode(key1);
+      const node2 = createNode(key2);
+      const node3 = createNode(key3);
+
+      linkedList.add(node1);
+      linkedList.add(node2);
+      linkedList.add(node3);
 
       // Then
       assert.strictEqual(node1.key, key1);
@@ -98,9 +110,13 @@ suite("LinkedList", () => {
       const key2 = createCacheKey("2");
       const key3 = createCacheKey("3");
 
-      linkedList.add(key1);
-      const node2 = linkedList.add(key2);
-      const node3 = linkedList.add(key3);
+      const node1 = createNode(key1);
+      const node2 = createNode(key2);
+      const node3 = createNode(key3);
+
+      linkedList.add(node1);
+      linkedList.add(node2);
+      linkedList.add(node3);
 
       // When
       const removedKey = linkedList.removeOldest();
@@ -114,7 +130,8 @@ suite("LinkedList", () => {
       // Given
       const linkedList = new LinkedList();
       const key1 = createCacheKey("1");
-      linkedList.add(key1);
+      const node1 = createNode(key1);
+      linkedList.add(node1);
 
       // When
       const removedKey = linkedList.removeOldest();
@@ -136,10 +153,15 @@ suite("LinkedList", () => {
       const key3 = createCacheKey("3");
       const key4 = createCacheKey("4");
 
-      const node1 = linkedList.add(key1);
-      const node2 = linkedList.add(key2);
-      const node3 = linkedList.add(key3);
-      const node4 = linkedList.add(key4);
+      const node1 = createNode(key1);
+      const node2 = createNode(key2);
+      const node3 = createNode(key3);
+      const node4 = createNode(key4);
+
+      linkedList.add(node1);
+      linkedList.add(node2);
+      linkedList.add(node3);
+      linkedList.add(node4);
 
       /* Initial state:
        * node1 -> node2 -> node3 -> node4
@@ -163,9 +185,13 @@ suite("LinkedList", () => {
       const key2 = createCacheKey("2");
       const key3 = createCacheKey("3");
 
-      const node1 = linkedList.add(key1);
-      const node2 = linkedList.add(key2);
-      const node3 = linkedList.add(key3);
+      const node1 = createNode(key1);
+      const node2 = createNode(key2);
+      const node3 = createNode(key3);
+
+      linkedList.add(node1);
+      linkedList.add(node2);
+      linkedList.add(node3);
 
       /* Initial state:
        * node1 -> node2 -> node3
@@ -190,9 +216,13 @@ suite("LinkedList", () => {
       const key2 = createCacheKey("2");
       const key3 = createCacheKey("3");
 
-      const node1 = linkedList.add(key1);
-      const node2 = linkedList.add(key2);
-      const node3 = linkedList.add(key3);
+      const node1 = createNode(key1);
+      const node2 = createNode(key2);
+      const node3 = createNode(key3);
+
+      linkedList.add(node1);
+      linkedList.add(node2);
+      linkedList.add(node3);
 
       /* Initial state:
        * node1 -> node2 -> node3
@@ -212,9 +242,13 @@ suite("LinkedList", () => {
       const key2 = createCacheKey("2");
       const key3 = createCacheKey("3");
 
-      const node1 = linkedList.add(key1);
-      const node2 = linkedList.add(key2);
-      const node3 = linkedList.add(key3);
+      const node1 = createNode(key1);
+      const node2 = createNode(key2);
+      const node3 = createNode(key3);
+
+      linkedList.add(node1);
+      linkedList.add(node2);
+      linkedList.add(node3);
 
       /* Initial state:
        * node1 -> node2 -> node3
@@ -232,60 +266,52 @@ suite("LinkedList", () => {
       assert.strictEqual(linkedList.tail, node2);
     });
 
-    test("should handle demoting node with no next node", () => {
+    test("should add the given node if the node isn't in the list, when demoting", () => {
       // Given
       const linkedList = new LinkedList();
-      const key1 = createCacheKey("1");
 
-      // Create a standalone node that's not connected properly
-      const node = {
-        prev: null,
-        next: null,
-        key: key1,
-      };
+      const connectedKey = createCacheKey("connected");
+      const disconnectedKey = createCacheKey("disconnected");
 
-      // Save initial state
-      const initialPrev = node.prev;
-      const initialNext = node.next;
-      const initialKey = [...node.key]; // Create a copy of the key array
+      const connectedNode = createNode(connectedKey);
+      const disconnectedNode = createNode(disconnectedKey);
+
+      linkedList.add(connectedNode);
 
       // When
-      linkedList.demote(node);
-
-      // Then - node should remain unchanged
-      assert.strictEqual(node.prev, initialPrev, "prev property should not change");
-      assert.strictEqual(node.next, initialNext, "next property should not change");
-      assert.deepStrictEqual(node.key, initialKey, "key property should not change");
-
-      // Also verify that the linkedList state remains unchanged
-      assert.strictEqual(linkedList.head, null, "head should remain null");
-      assert.strictEqual(linkedList.tail, null, "tail should remain null");
-    });
-
-    test("should handle a list with only two nodes", () => {
-      // Given
-      const linkedList = new LinkedList();
-      const key1 = createCacheKey("1");
-      const key2 = createCacheKey("2");
-
-      const node1 = linkedList.add(key1);
-      const node2 = linkedList.add(key2);
-
-      /* Initial state:
-       * node1 -> node2
-       */
-
-      // When - demote the first node
-      linkedList.demote(node1);
-
-      /* After demotion:
-       * node2 -> node1
-       */
+      linkedList.demote(disconnectedNode);
 
       // Then
-      assertNodeOrder(linkedList, node2, node1);
-      assert.strictEqual(linkedList.head, node2);
-      assert.strictEqual(linkedList.tail, node1);
+      assertNodeOrder(linkedList, connectedNode, disconnectedNode);
+
+      test("should handle a list with only two nodes", () => {
+        // Given
+        const linkedList = new LinkedList();
+        const key1 = createCacheKey("1");
+        const key2 = createCacheKey("2");
+
+        const node1 = createNode(key1);
+        const node2 = createNode(key2);
+
+        linkedList.add(node1);
+        linkedList.add(node2);
+
+        /* Initial state:
+         * node1 -> node2
+         */
+
+        // When - demote the first node
+        linkedList.demote(node1);
+
+        /* After demotion:
+         * node2 -> node1
+         */
+
+        // Then
+        assertNodeOrder(linkedList, node2, node1);
+        assert.strictEqual(linkedList.head, node2);
+        assert.strictEqual(linkedList.tail, node1);
+      });
     });
   });
 
@@ -298,9 +324,13 @@ suite("LinkedList", () => {
       const key3 = createCacheKey("3");
 
       // Add nodes to the list and store them to check later
-      const node1 = linkedList.add(key1);
-      const node2 = linkedList.add(key2);
-      const node3 = linkedList.add(key3);
+      const node1 = createNode(key1);
+      const node2 = createNode(key2);
+      const node3 = createNode(key3);
+
+      linkedList.add(node1);
+      linkedList.add(node2);
+      linkedList.add(node3);
 
       // Verify initial state
       assertNodeOrder(linkedList, node1, node2, node3);
@@ -322,9 +352,13 @@ suite("LinkedList", () => {
       const key3 = createCacheKey("3");
       const key4 = createCacheKey("4");
 
-      const node1 = linkedList.add(key1);
-      const node2 = linkedList.add(key2);
-      const node3 = linkedList.add(key3);
+      const node1 = createNode(key1);
+      const node2 = createNode(key2);
+      const node3 = createNode(key3);
+
+      linkedList.add(node1);
+      linkedList.add(node2);
+      linkedList.add(node3);
 
       // Initial state: node1 -> node2 -> node3
       assertNodeOrder(linkedList, node1, node2, node3);
@@ -339,7 +373,8 @@ suite("LinkedList", () => {
       assert.strictEqual(linkedList.tail, node3);
 
       // Add another node
-      const node4 = linkedList.add(key4);
+      const node4 = createNode(key4);
+      linkedList.add(node4);
 
       // State after adding node4: node2 -> node1 -> node3 -> node4
       assertNodeOrder(linkedList, node2, node1, node3, node4);
@@ -373,9 +408,13 @@ suite("LinkedList", () => {
       const key2 = createCacheKey("2");
       const key3 = createCacheKey("3");
 
-      const node1 = linkedList.add(key1);
-      const node2 = linkedList.add(key2);
-      const node3 = linkedList.add(key3);
+      const node1 = createNode(key1);
+      const node2 = createNode(key2);
+      const node3 = createNode(key3);
+
+      linkedList.add(node1);
+      linkedList.add(node2);
+      linkedList.add(node3);
 
       // Initial state: node1 -> node2 -> node3
       assertNodeOrder(linkedList, node1, node2, node3);
@@ -398,9 +437,13 @@ suite("LinkedList", () => {
       const key2 = createCacheKey("2");
       const key3 = createCacheKey("3");
 
-      const node1 = linkedList.add(key1);
-      const node2 = linkedList.add(key2);
-      const node3 = linkedList.add(key3);
+      const node1 = createNode(key1);
+      const node2 = createNode(key2);
+      const node3 = createNode(key3);
+
+      linkedList.add(node1);
+      linkedList.add(node2);
+      linkedList.add(node3);
 
       // Initial state: node1 -> node2 -> node3
       assertNodeOrder(linkedList, node1, node2, node3);
@@ -421,9 +464,13 @@ suite("LinkedList", () => {
       const key2 = createCacheKey("2");
       const key3 = createCacheKey("3");
 
-      const node1 = linkedList.add(key1);
-      const node2 = linkedList.add(key2);
-      const node3 = linkedList.add(key3);
+      const node1 = createNode(key1);
+      const node2 = createNode(key2);
+      const node3 = createNode(key3);
+
+      linkedList.add(node1);
+      linkedList.add(node2);
+      linkedList.add(node3);
 
       // Initial state: node1 -> node2 -> node3
       assertNodeOrder(linkedList, node1, node2, node3);
@@ -441,7 +488,8 @@ suite("LinkedList", () => {
       // Given
       const linkedList = new LinkedList();
       const key = createCacheKey("1");
-      const node = linkedList.add(key);
+      const node = createNode(key);
+      linkedList.add(node);
 
       // Initial state: single node
       assertNodeOrder(linkedList, node);
@@ -463,10 +511,15 @@ suite("LinkedList", () => {
       const key3 = createCacheKey("3");
       const key4 = createCacheKey("4");
 
-      const node1 = linkedList.add(key1);
-      const node2 = linkedList.add(key2);
-      const node3 = linkedList.add(key3);
-      const node4 = linkedList.add(key4);
+      const node1 = createNode(key1);
+      const node2 = createNode(key2);
+      const node3 = createNode(key3);
+      const node4 = createNode(key4);
+
+      linkedList.add(node1);
+      linkedList.add(node2);
+      linkedList.add(node3);
+      linkedList.add(node4);
 
       // Initial state: node1 -> node2 -> node3 -> node4
       assertNodeOrder(linkedList, node1, node2, node3, node4);
@@ -496,9 +549,13 @@ suite("LinkedList", () => {
       const key2 = createCacheKey("2");
       const key3 = createCacheKey("3");
 
-      const node1 = linkedList.add(key1);
-      const node2 = linkedList.add(key2);
-      const node3 = linkedList.add(key3);
+      const node1 = createNode(key1);
+      const node2 = createNode(key2);
+      const node3 = createNode(key3);
+
+      linkedList.add(node1);
+      linkedList.add(node2);
+      linkedList.add(node3);
 
       // Initial state: node1 -> node2 -> node3
       assertNodeOrder(linkedList, node1, node2, node3);
