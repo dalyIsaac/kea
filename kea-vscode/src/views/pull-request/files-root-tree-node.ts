@@ -1,30 +1,40 @@
 import * as vscode from "vscode";
 import { IKeaRepository } from "../../repository/kea-repository";
 import { PullRequestComment, PullRequestFile, PullRequestId } from "../../types/kea";
-import { ParentTreeItem } from "../parent-tree-item";
-import { FileTreeItem } from "./file-tree-item";
-import { FolderTreeItem } from "./folder-tree-item";
+import { CollapsibleState, getCollapsibleState, IParentTreeNode } from "../tree-node";
+import { FileTreeNode } from "./file-tree-node";
+import { FolderTreeNode } from "./folder-tree-node";
 
-type FilesRootTreeItemChild = FileTreeItem | FolderTreeItem;
+type FilesRootTreeNodeChild = FileTreeNode | FolderTreeNode;
 
 /**
  * Parent tree item for files.
  */
-export class FilesRootTreeItem extends ParentTreeItem<FilesRootTreeItemChild> {
-  override contextValue = "file";
-  override iconPath = new vscode.ThemeIcon("file-directory");
-  override tooltip = "Files";
+export class FilesRootTreeNode implements IParentTreeNode<FilesRootTreeNodeChild> {
+  #contextValue = "file";
+  #iconPath = new vscode.ThemeIcon("file-directory");
+  #tooltip = "Files";
+  #label = "Files";
+
+  collapsibleState: CollapsibleState = "collapsed";
 
   #repository: IKeaRepository;
   #pullId: PullRequestId;
 
   constructor(repository: IKeaRepository, id: PullRequestId) {
-    super("Files", vscode.TreeItemCollapsibleState.Collapsed);
     this.#repository = repository;
     this.#pullId = id;
   }
 
-  getChildren = async (): Promise<FilesRootTreeItemChild[]> => {
+  getTreeItem = (): vscode.TreeItem => {
+    const treeItem = new vscode.TreeItem(this.#label, getCollapsibleState(this.collapsibleState));
+    treeItem.contextValue = this.#contextValue;
+    treeItem.iconPath = this.#iconPath;
+    treeItem.tooltip = this.#tooltip;
+    return treeItem;
+  };
+
+  getChildren = async (): Promise<FilesRootTreeNodeChild[]> => {
     const [files, reviewComments] = await Promise.all([
       this.#repository.getPullRequestFiles(this.#pullId),
       this.#repository.getPullRequestReviewComments(this.#pullId),
@@ -43,9 +53,9 @@ export class FilesRootTreeItem extends ParentTreeItem<FilesRootTreeItemChild> {
     return this.#toTree(files, reviewComments);
   };
 
-  #toTree = (files: PullRequestFile[], reviewComments: PullRequestComment[]): FilesRootTreeItemChild[] => {
+  #toTree = (files: PullRequestFile[], reviewComments: PullRequestComment[]): FilesRootTreeNodeChild[] => {
     const sortedFiles = files.sort((a, b) => a.filename.localeCompare(b.filename));
-    let roots: FilesRootTreeItemChild[] = [];
+    let roots: FilesRootTreeNodeChild[] = [];
 
     for (const entry of sortedFiles) {
       roots = this.#fileToTree(roots, entry, reviewComments);
@@ -55,10 +65,10 @@ export class FilesRootTreeItem extends ParentTreeItem<FilesRootTreeItemChild> {
   };
 
   #fileToTree = (
-    roots: FilesRootTreeItemChild[],
+    roots: FilesRootTreeNodeChild[],
     file: PullRequestFile,
     reviewComments: PullRequestComment[],
-  ): FilesRootTreeItemChild[] => {
+  ): FilesRootTreeNodeChild[] => {
     let parents = roots;
     const pathParts = file.filename.split("/");
 
@@ -66,20 +76,20 @@ export class FilesRootTreeItem extends ParentTreeItem<FilesRootTreeItemChild> {
       const folderName = pathParts[idx];
       const folderPath = pathParts.slice(0, idx + 1).join("/");
 
-      let folderNode = parents.find((node) => node instanceof FolderTreeItem && node.label === folderName);
+      let folderNode = parents.find((node) => node instanceof FolderTreeNode && node.folderName === folderName);
       if (folderNode === undefined) {
-        folderNode = new FolderTreeItem(folderPath);
+        folderNode = new FolderTreeNode(folderPath);
         parents.push(folderNode);
       }
 
-      parents = (folderNode as FolderTreeItem).children;
+      parents = (folderNode as FolderTreeNode).children;
     }
 
     const comments = reviewComments.filter((comment) => comment.path === file.filename);
     const fileName = pathParts[pathParts.length - 1];
-    const fileNode = new FileTreeItem(this.#repository.account.accountKey, this.#pullId, file, comments);
+    const fileNode = new FileTreeNode(this.#repository.account.accountKey, this.#pullId, file, comments);
 
-    if (!parents.some((node) => node instanceof FileTreeItem && node.label === fileName)) {
+    if (!parents.some((node) => node instanceof FileTreeNode && node.fileName === fileName)) {
       parents.push(fileNode);
     }
 

@@ -1,13 +1,13 @@
 import * as assert from "assert";
-import * as vscode from "vscode";
 import { RepositoryManager } from "../../repository/repository-manager";
-import { createPullRequestStub, createRepositoryStub } from "../../test-utils";
+import { createCacheStub, createPullRequestStub, createRepositoryStub } from "../../test-utils";
 import { PullRequestId, RepoId } from "../../types/kea";
-import { ParentTreeItem } from "../parent-tree-item";
-import { CommentsRootTreeItem } from "./comments-root-tree-item";
-import { CommitsRootTreeItem } from "./commits-root-tree-item";
-import { FilesRootTreeItem } from "./files-root-tree-item";
-import { PullRequestTreeItem, PullRequestTreeProvider } from "./pull-request-tree-provider";
+import { PullRequestListNode } from "../pull-request-list/pull-request-list-node";
+import { CollapsibleState } from "../tree-node";
+import { CommentsRootTreeNode } from "./comments-root-tree-node";
+import { CommitsRootTreeNode } from "./commits-root-tree-node";
+import { FilesRootTreeNode } from "./files-root-tree-node";
+import { PullRequestTreeNode, PullRequestTreeProvider } from "./pull-request-tree-provider";
 
 const createGetChildrenStubs = async () => {
   const repoId: RepoId = { owner: "owner", repo: "repo" };
@@ -23,7 +23,9 @@ const createGetChildrenStubs = async () => {
   const repositoryManager = new RepositoryManager();
   repositoryManager.addRepository(repository);
 
-  const provider = new PullRequestTreeProvider(repositoryManager);
+  const cache = createCacheStub();
+
+  const provider = new PullRequestTreeProvider(repositoryManager, cache);
   await provider.openPullRequest(repository.account.accountKey, pullId);
 
   return {
@@ -32,30 +34,18 @@ const createGetChildrenStubs = async () => {
     repositoryManager,
     provider,
     pullId,
+    cache,
   };
 };
 
 suite("PullRequestTreeProvider", () => {
-  test("getTreeItem returns the correct tree item", () => {
+  test("getChildren returns an empty array when the pull request is not open", async () => {
     // Given
     const repositoryManager = new RepositoryManager();
-    const provider = new PullRequestTreeProvider(repositoryManager);
-    const item = new CommitsRootTreeItem();
+    const provider = new PullRequestTreeProvider(repositoryManager, createCacheStub());
 
     // When
-    const treeItem = provider.getTreeItem(item);
-
-    // Then
-    assert.strictEqual(treeItem, item);
-  });
-
-  test("getChildren returns an empty array when the pull request is not open", () => {
-    // Given
-    const repositoryManager = new RepositoryManager();
-    const provider = new PullRequestTreeProvider(repositoryManager);
-
-    // When
-    const children = provider.getChildren();
+    const children = await provider.getChildren();
 
     // Then
     assert.deepStrictEqual(children, []);
@@ -66,35 +56,41 @@ suite("PullRequestTreeProvider", () => {
     const { provider } = await createGetChildrenStubs();
 
     // When
-    const result = provider.getChildren();
+    const result = await provider.getChildren();
 
     // Then
-    const children = result as PullRequestTreeItem[];
-    assert.strictEqual(children.length, 3);
-    assert.ok(children[0] instanceof CommentsRootTreeItem);
-    assert.ok(children[1] instanceof FilesRootTreeItem);
-    assert.ok(children[2] instanceof CommitsRootTreeItem);
+    assert.strictEqual(result.length, 2);
+    assert.ok(result[0] instanceof CommentsRootTreeNode);
+    assert.ok(result[1] instanceof FilesRootTreeNode);
   });
 
-  class SuccessTestTreeItem extends ParentTreeItem<SuccessTestTreeItem> {
-    override getChildren(): SuccessTestTreeItem[] | Promise<SuccessTestTreeItem[]> {
-      return [new SuccessTestTreeItem("Child 1", vscode.TreeItemCollapsibleState.None)];
+  class SuccessTestTreeNode extends PullRequestListNode {
+    label: string;
+    override collapsibleState: CollapsibleState;
+
+    constructor(label: string, collapsibleState: CollapsibleState) {
+      super({ accountId: "", providerId: "" }, createPullRequestStub());
+      this.label = label;
+      this.collapsibleState = collapsibleState;
     }
+
+    getChildren = (): SuccessTestTreeNode[] => {
+      return [new SuccessTestTreeNode("Child 1", "none")];
+    };
   }
 
   test("getChildren returns the children of the given element", async () => {
     // Given
     const { provider } = await createGetChildrenStubs();
 
-    const element = new SuccessTestTreeItem("Parent", vscode.TreeItemCollapsibleState.Collapsed) as PullRequestTreeItem;
+    const element = new SuccessTestTreeNode("Parent", "collapsed") as unknown as PullRequestTreeNode;
 
     // When
-    const result = provider.getChildren(element);
+    const children = await provider.getChildren(element);
 
     // Then
-    const children = result as PullRequestTreeItem[];
     assert.strictEqual(children.length, 1);
-    assert.ok(children[0] instanceof SuccessTestTreeItem);
+    assert.ok(children[0] instanceof SuccessTestTreeNode);
     assert.strictEqual(children[0].label, "Child 1");
   });
 
@@ -102,7 +98,7 @@ suite("PullRequestTreeProvider", () => {
     // Given
     const { provider } = await createGetChildrenStubs();
 
-    const element = new CommitsRootTreeItem() as PullRequestTreeItem;
+    const element = new CommitsRootTreeNode() as unknown as PullRequestTreeNode;
 
     // When
     const result = provider.getChildren(element);
@@ -111,10 +107,9 @@ suite("PullRequestTreeProvider", () => {
     assert.deepStrictEqual(result, []);
   });
 
-  test("refresh calls onDidChangeTreeData", () => {
+  test("refresh calls onDidChangeTreeData and clears cache", async () => {
     // Given
-    const repositoryManager = new RepositoryManager();
-    const provider = new PullRequestTreeProvider(repositoryManager);
+    const { provider, repository, cache } = await createGetChildrenStubs();
 
     let eventFired = false;
     provider.onDidChangeTreeData(() => {
@@ -126,6 +121,10 @@ suite("PullRequestTreeProvider", () => {
 
     // Then
     assert.strictEqual(eventFired, true);
+    assert.strictEqual((cache.invalidate as sinon.SinonStub).calledOnce, true);
+
+    const { owner, repo } = repository.repoId;
+    assert.strictEqual((cache.invalidate as sinon.SinonStub).calledWith(owner, repo), true);
   });
 
   test("openPullRequest updates the pull request info", async () => {

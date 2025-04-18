@@ -1,30 +1,32 @@
 import * as assert from "assert";
 import { createPullRequestCommentStub } from "../../test-utils";
-import { ReviewCommentTreeItem } from "./review-comment-tree-item";
+import { ReviewCommentTreeNode } from "./review-comment-tree-node";
 
-suite("ReviewCommentTreeItem", () => {
-  test("ReviewCommentTreeItem should be created with a comment", () => {
+suite("ReviewCommentTreeNode", () => {
+  test("ReviewCommentTreeNode should be created with a comment", () => {
     // Given
     const comment = createPullRequestCommentStub();
 
     // When
-    const reviewCommentTreeItem = new ReviewCommentTreeItem(comment);
+    const reviewCommentTreeNode = new ReviewCommentTreeNode(comment);
+    const treeItem = reviewCommentTreeNode.getTreeItem();
 
     // Then
-    assert.strictEqual(reviewCommentTreeItem.comment, comment);
-    assert.strictEqual(reviewCommentTreeItem.label, comment.body);
-    assert.strictEqual(reviewCommentTreeItem.tooltip, "Review Comment");
+    assert.strictEqual(reviewCommentTreeNode.comment, comment);
+    assert.strictEqual(treeItem.label, comment.body);
+    assert.strictEqual(treeItem.tooltip, "Review Comment");
   });
 
-  test("ReviewCommentTreeItem should be created with an empty comment", () => {
+  test("ReviewCommentTreeNode should be created with an empty comment", () => {
     // Given
     const comment = createPullRequestCommentStub({ body: null });
 
     // When
-    const reviewCommentTreeItem = new ReviewCommentTreeItem(comment);
+    const reviewCommentTreeNode = new ReviewCommentTreeNode(comment);
+    const treeItem = reviewCommentTreeNode.getTreeItem();
 
     // Then
-    assert.strictEqual(reviewCommentTreeItem.comment, comment);
-    assert.strictEqual(reviewCommentTreeItem.label, "<Empty comment>");
+    assert.strictEqual(reviewCommentTreeNode.comment, comment);
+    assert.strictEqual(treeItem.label, "<Empty comment>");
   });
 });

@@ -1,13 +1,19 @@
 import * as assert from "assert";
 import * as vscode from "vscode";
 import { IssueCommentsPayload, PullRequestReviewCommentsPayload } from "../../repository/kea-repository";
-import { createIssueCommentStub, createPullRequestCommentStub, createRepositoryStub, stubEvents } from "../../test-utils";
+import {
+  createIssueCommentStub,
+  createPullRequestCommentStub,
+  createRepositoryStub,
+  createTreeNodeProviderStub,
+  stubEvents,
+} from "../../test-utils";
 import { IssueComment, PullRequestComment, PullRequestId } from "../../types/kea";
-import { CommentTreeItem } from "./comment-tree-item";
-import { CommentsRootTreeItem } from "./comments-root-tree-item";
-import { ReviewCommentTreeItem } from "./review-comment-tree-item";
+import { CommentTreeNode } from "./comment-tree-node";
+import { CommentsRootTreeNode } from "./comments-root-tree-node";
+import { ReviewCommentTreeNode } from "./review-comment-tree-node";
 
-suite("CommentsRootTreeItem", () => {
+suite("CommentsRootTreeNode", () => {
   const pullId: PullRequestId = { owner: "owner", repo: "repo", number: 1 };
 
   test("Returns an empty array when both API calls fail", async () => {
@@ -16,10 +22,11 @@ suite("CommentsRootTreeItem", () => {
       getIssueComments: (_id) => Promise.resolve(new Error("Issue comments API call failed")),
       getPullRequestReviewComments: (_id) => Promise.resolve(new Error("Review comments API call failed")),
     });
+    const treeNodeProvider = createTreeNodeProviderStub();
 
     // When
-    const commentsRootTreeItem = new CommentsRootTreeItem(repository, pullId);
-    const children = await commentsRootTreeItem.getChildren();
+    const commentsRootTreeNode = new CommentsRootTreeNode(repository, pullId, treeNodeProvider);
+    const children = await commentsRootTreeNode.getChildren();
 
     // Then
     assert.strictEqual(children.length, 0);
@@ -31,10 +38,11 @@ suite("CommentsRootTreeItem", () => {
       getIssueComments: (_id) => Promise.resolve<IssueComment[]>([]),
       getPullRequestReviewComments: (_id) => Promise.resolve<PullRequestComment[]>([]),
     });
+    const treeNodeProvider = createTreeNodeProviderStub();
 
     // When
-    const commentsRootTreeItem = new CommentsRootTreeItem(repository, pullId);
-    const children = await commentsRootTreeItem.getChildren();
+    const commentsRootTreeNode = new CommentsRootTreeNode(repository, pullId, treeNodeProvider);
+    const children = await commentsRootTreeNode.getChildren();
 
     // Then
     assert.strictEqual(children.length, 0);
@@ -51,15 +59,16 @@ suite("CommentsRootTreeItem", () => {
       getIssueComments: (_id) => Promise.resolve<IssueComment[]>(issueComments),
       getPullRequestReviewComments: (_id) => Promise.resolve(new Error("Review comments API call failed")),
     });
+    const treeNodeProvider = createTreeNodeProviderStub();
 
     // When
-    const commentsRootTreeItem = new CommentsRootTreeItem(repository, pullId);
-    const children = await commentsRootTreeItem.getChildren();
+    const commentsRootTreeNode = new CommentsRootTreeNode(repository, pullId, treeNodeProvider);
+    const children = await commentsRootTreeNode.getChildren();
 
     // Then
     assert.strictEqual(children.length, 2);
-    assert.ok(children[0] instanceof CommentTreeItem);
-    assert.equal(children[0].label, "Test issue comment 1");
+    assert.ok(children[0] instanceof CommentTreeNode);
+    assert.equal(children[0].comment.body, "Test issue comment 1");
   });
 
   test("Returns the review comments when the issue comments API call fails", async () => {
@@ -73,15 +82,16 @@ suite("CommentsRootTreeItem", () => {
       getIssueComments: (_id) => Promise.resolve(new Error("Issue comments API call failed")),
       getPullRequestReviewComments: (_id) => Promise.resolve<PullRequestComment[]>(reviewComments),
     });
+    const treeNodeProvider = createTreeNodeProviderStub();
 
     // When
-    const commentsRootTreeItem = new CommentsRootTreeItem(repository, pullId);
-    const children = await commentsRootTreeItem.getChildren();
+    const commentsRootTreeNode = new CommentsRootTreeNode(repository, pullId, treeNodeProvider);
+    const children = await commentsRootTreeNode.getChildren();
 
     // Then
     assert.strictEqual(children.length, 2);
-    assert.ok(children[0] instanceof ReviewCommentTreeItem);
-    assert.equal(children[0].label, "Test review comment 1");
+    assert.ok(children[0] instanceof ReviewCommentTreeNode);
+    assert.equal(children[0].comment.body, "Test review comment 1");
   });
 
   test("Returns multiple comments", async () => {
@@ -100,103 +110,146 @@ suite("CommentsRootTreeItem", () => {
       getIssueComments: (_id) => Promise.resolve<IssueComment[]>(issueComments),
       getPullRequestReviewComments: (_id) => Promise.resolve<PullRequestComment[]>(reviewComments),
     });
+    const treeNodeProvider = createTreeNodeProviderStub();
 
     // When
-    const commentsRootTreeItem = new CommentsRootTreeItem(repository, pullId);
-    const children = await commentsRootTreeItem.getChildren();
+    const commentsRootTreeNode = new CommentsRootTreeNode(repository, pullId, treeNodeProvider);
+    const children = await commentsRootTreeNode.getChildren();
 
     // Then
     assert.strictEqual(children.length, 4);
-    assert.ok(children[0] instanceof ReviewCommentTreeItem);
-    assert.equal(children[0].label, "Test review comment 2");
+    assert.ok(children[0] instanceof ReviewCommentTreeNode);
+    assert.equal(children[0].comment.body, "Test review comment 2");
 
-    assert.ok(children[1] instanceof CommentTreeItem);
-    assert.equal(children[1].label, "Test issue comment 1");
+    assert.ok(children[1] instanceof CommentTreeNode);
+    assert.equal(children[1].comment.body, "Test issue comment 1");
 
-    assert.ok(children[2] instanceof CommentTreeItem);
-    assert.equal(children[2].label, "Test issue comment 2");
+    assert.ok(children[2] instanceof CommentTreeNode);
+    assert.equal(children[2].comment.body, "Test issue comment 2");
 
-    assert.ok(children[3] instanceof ReviewCommentTreeItem);
-    assert.equal(children[3].label, "Test review comment 1");
+    assert.ok(children[3] instanceof ReviewCommentTreeNode);
+    assert.equal(children[3].comment.body, "Test review comment 1");
   });
 
   test("Collapsible state is not updated when the issue comments errors", () => {
     // Given
     const payload: IssueCommentsPayload = { issueId: pullId, comments: new Error("Something went wrong") };
     const { stub: repository, eventFirers } = stubEvents(createRepositoryStub(), ["onDidChangeIssueComments"] as const);
-    const commentsRootTreeItem = new CommentsRootTreeItem(repository, pullId);
+    const treeNodeProvider = createTreeNodeProviderStub();
+    const commentsRootTreeNode = new CommentsRootTreeNode(repository, pullId, treeNodeProvider);
 
     // When
     eventFirers.onDidChangeIssueComments(payload);
 
     // Then
-    assert.strictEqual(commentsRootTreeItem.collapsibleState, vscode.TreeItemCollapsibleState.None);
+    assert.strictEqual(commentsRootTreeNode.collapsibleState, "none");
   });
 
   test("Collapsible state is updated when the issue comments are empty", () => {
     // Given
     const payload: IssueCommentsPayload = { issueId: pullId, comments: [] };
     const { stub: repository, eventFirers } = stubEvents(createRepositoryStub(), ["onDidChangeIssueComments"] as const);
-    const commentsRootTreeItem = new CommentsRootTreeItem(repository, pullId);
+    const treeNodeProvider = createTreeNodeProviderStub();
+    const commentsRootTreeNode = new CommentsRootTreeNode(repository, pullId, treeNodeProvider);
 
     // When
     eventFirers.onDidChangeIssueComments(payload);
 
     // Then
-    assert.strictEqual(commentsRootTreeItem.collapsibleState, vscode.TreeItemCollapsibleState.None);
+    assert.strictEqual(commentsRootTreeNode.collapsibleState, "none");
   });
 
   test("Collapsible state is updated when the issue comments are not empty", () => {
     // Given
     const payload: IssueCommentsPayload = { issueId: pullId, comments: [createIssueCommentStub()] };
     const { stub: repository, eventFirers } = stubEvents(createRepositoryStub(), ["onDidChangeIssueComments"] as const);
-    const commentsRootTreeItem = new CommentsRootTreeItem(repository, pullId);
+    const treeNodeProvider = createTreeNodeProviderStub();
+    const commentsRootTreeNode = new CommentsRootTreeNode(repository, pullId, treeNodeProvider);
 
     // When
     eventFirers.onDidChangeIssueComments(payload);
 
     // Then
-    assert.strictEqual(commentsRootTreeItem.collapsibleState, vscode.TreeItemCollapsibleState.Collapsed);
+    assert.strictEqual(commentsRootTreeNode.collapsibleState, "collapsed");
+    assert.strictEqual((treeNodeProvider.refresh as sinon.SinonStub).callCount, 1);
   });
 
   test("Previously set collapsible state is not overridden when the issue comments are not empty", () => {
     // Given
     const payload: IssueCommentsPayload = { issueId: pullId, comments: [createIssueCommentStub()] };
     const { stub: repository, eventFirers } = stubEvents(createRepositoryStub(), ["onDidChangeIssueComments"] as const);
-    const commentsRootTreeItem = new CommentsRootTreeItem(repository, pullId);
-    commentsRootTreeItem.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+    const treeNodeProvider = createTreeNodeProviderStub();
+    const commentsRootTreeNode = new CommentsRootTreeNode(repository, pullId, treeNodeProvider);
+    commentsRootTreeNode.collapsibleState = "expanded";
 
     // When
     eventFirers.onDidChangeIssueComments(payload);
 
     // Then
-    assert.strictEqual(commentsRootTreeItem.collapsibleState, vscode.TreeItemCollapsibleState.Expanded);
+    assert.strictEqual(commentsRootTreeNode.collapsibleState, "expanded");
   });
 
   test("Doesn't do anything for a different pull request", () => {
     // Given
     const payload: IssueCommentsPayload = { issueId: { owner: "owner", repo: "repo", number: 99 }, comments: [createIssueCommentStub()] };
     const { stub: repository, eventFirers } = stubEvents(createRepositoryStub(), ["onDidChangeIssueComments"] as const);
-    const commentsRootTreeItem = new CommentsRootTreeItem(repository, pullId);
-    commentsRootTreeItem.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+    const treeNodeProvider = createTreeNodeProviderStub();
+    const commentsRootTreeNode = new CommentsRootTreeNode(repository, pullId, treeNodeProvider);
+    commentsRootTreeNode.collapsibleState = "expanded";
 
     // When
     eventFirers.onDidChangeIssueComments(payload);
 
     // Then
-    assert.strictEqual(commentsRootTreeItem.collapsibleState, vscode.TreeItemCollapsibleState.Expanded);
+    assert.strictEqual(commentsRootTreeNode.collapsibleState, "expanded");
   });
 
   test("Collapsible state is updated when review comments are not empty", () => {
     // Given
     const payload: PullRequestReviewCommentsPayload = { pullId, comments: [createPullRequestCommentStub()] };
     const { stub: repository, eventFirers } = stubEvents(createRepositoryStub(), ["onDidChangePullRequestReviewComments"] as const);
-    const commentsRootTreeItem = new CommentsRootTreeItem(repository, pullId);
+    const treeNodeProvider = createTreeNodeProviderStub();
+    const commentsRootTreeNode = new CommentsRootTreeNode(repository, pullId, treeNodeProvider);
 
     // When
     eventFirers.onDidChangePullRequestReviewComments(payload);
 
     // Then
-    assert.strictEqual(commentsRootTreeItem.collapsibleState, vscode.TreeItemCollapsibleState.Collapsed);
+    assert.strictEqual(commentsRootTreeNode.collapsibleState, "collapsed");
+    assert.strictEqual((treeNodeProvider.refresh as sinon.SinonStub).callCount, 1);
+  });
+
+  test("getTreeItem should return TreeItem with correct properties", () => {
+    // Given
+    const repository = createRepositoryStub();
+    const treeNodeProvider = createTreeNodeProviderStub();
+    const commentsRootTreeNode = new CommentsRootTreeNode(repository, pullId, treeNodeProvider);
+
+    // When
+    const treeItem = commentsRootTreeNode.getTreeItem();
+
+    // Then
+    assert.strictEqual(treeItem.label, "Comments");
+    assert.strictEqual(treeItem.collapsibleState, vscode.TreeItemCollapsibleState.None);
+    assert.strictEqual(treeItem.contextValue, "commentsRoot");
+    assert.deepStrictEqual(treeItem.iconPath, new vscode.ThemeIcon("comment-discussion"));
+
+    // Check resourceUri - it should be using the comments root decoration scheme
+    assert.ok(treeItem.resourceUri);
+    assert.strictEqual(treeItem.resourceUri.scheme, "kea-comments-root");
+  });
+
+  test("getTreeItem should respect custom collapsibleState", () => {
+    // Given
+    const repository = createRepositoryStub();
+    const treeNodeProvider = createTreeNodeProviderStub();
+    const commentsRootTreeNode = new CommentsRootTreeNode(repository, pullId, treeNodeProvider);
+    commentsRootTreeNode.collapsibleState = "expanded";
+
+    // When
+    const treeItem = commentsRootTreeNode.getTreeItem();
+
+    // Then
+    assert.strictEqual(treeItem.collapsibleState, vscode.TreeItemCollapsibleState.Expanded);
   });
 });

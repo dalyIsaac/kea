@@ -1,63 +1,43 @@
-import * as vscode from "vscode";
 import { IAccountKey } from "../../account/account";
 import { Logger } from "../../core/logger";
+import { ILruApiCache } from "../../lru-cache/lru-api-cache";
 import { IKeaRepository } from "../../repository/kea-repository";
 import { IRepositoryManager } from "../../repository/repository-manager";
 import { PullRequest, PullRequestId } from "../../types/kea";
-import { ParentTreeItem } from "../parent-tree-item";
-import { CommentsRootTreeItem } from "./comments-root-tree-item";
-import { CommitsRootTreeItem } from "./commits-root-tree-item";
-import { FilesRootTreeItem } from "./files-root-tree-item";
+import { TreeNodeProvider } from "../pull-request-list/tree-node-provider";
+import { CommentsRootTreeNode } from "./comments-root-tree-node";
+import { FilesRootTreeNode } from "./files-root-tree-node";
 
-export type PullRequestTreeItem = CommentsRootTreeItem | FilesRootTreeItem | CommitsRootTreeItem;
+export type PullRequestTreeNode = CommentsRootTreeNode | FilesRootTreeNode;
 
 /**
  * Provides information about the current pull request.
  */
-export class PullRequestTreeProvider implements vscode.TreeDataProvider<PullRequestTreeItem> {
-  #forceRefresh = false;
+export class PullRequestTreeProvider extends TreeNodeProvider<PullRequestTreeNode> {
   #repositoryManager: IRepositoryManager;
-
+  #cache: ILruApiCache;
   #pullInfo: { repository: IKeaRepository; pullId: PullRequestId; pullRequest: PullRequest } | undefined;
-  #onDidChangeTreeData = new vscode.EventEmitter<void | PullRequestTreeItem | null | undefined>();
-  readonly onDidChangeTreeData: vscode.Event<void | PullRequestTreeItem | null | undefined> = this.#onDidChangeTreeData.event;
+  #commentsRootTreeNode?: CommentsRootTreeNode;
+  #filesRootTreeNode?: FilesRootTreeNode;
 
-  constructor(repositoryManager: IRepositoryManager) {
+  constructor(repositoryManager: IRepositoryManager, cache: ILruApiCache) {
+    super();
     this.#repositoryManager = repositoryManager;
+    this.#cache = cache;
   }
 
-  getTreeItem = (element: PullRequestTreeItem): vscode.TreeItem | Thenable<vscode.TreeItem> => {
-    return element;
-  };
-
-  getChildren = (element?: PullRequestTreeItem): vscode.ProviderResult<PullRequestTreeItem[]> => {
+  override _getRootChildren = (): Promise<PullRequestTreeNode[]> => {
     if (this.#pullInfo === undefined) {
-      Logger.info("Pull request is not open");
-      return [];
+      Logger.error("Pull request is not open");
+      return Promise.resolve([]);
     }
 
-    if (element === undefined) {
-      Logger.info("Fetching root items for PullRequestProvider");
-      return [
-        new CommentsRootTreeItem(this.#pullInfo.repository, this.#pullInfo.pullId),
-        new FilesRootTreeItem(this.#pullInfo.repository, this.#pullInfo.pullId),
-        new CommitsRootTreeItem(),
-      ];
-    }
+    const { repository, pullId } = this.#pullInfo;
 
-    if (element instanceof ParentTreeItem) {
-      Logger.info("Fetching children for", element.label);
-      return element.getChildren();
-    }
+    this.#commentsRootTreeNode ??= new CommentsRootTreeNode(repository, pullId, this);
+    this.#filesRootTreeNode ??= new FilesRootTreeNode(repository, pullId);
 
-    Logger.error("Unknown element type: ", element);
-    return [];
-  };
-
-  refresh = (): void => {
-    Logger.info("Refreshing PullRequestProvider");
-    this.#forceRefresh = true;
-    this.#onDidChangeTreeData.fire();
+    return Promise.resolve([this.#commentsRootTreeNode, this.#filesRootTreeNode]);
   };
 
   openPullRequest = async (accountKey: IAccountKey, pullId: PullRequestId): Promise<boolean> => {
@@ -70,7 +50,7 @@ export class PullRequestTreeProvider implements vscode.TreeDataProvider<PullRequ
       return false;
     }
 
-    const pullRequest = await repository.getPullRequest(pullId, this.#forceRefresh);
+    const pullRequest = await repository.getPullRequest(pullId);
     if (pullRequest instanceof Error) {
       Logger.error("Error getting pull request", pullRequest);
       this.#pullInfo = undefined;
@@ -78,8 +58,17 @@ export class PullRequestTreeProvider implements vscode.TreeDataProvider<PullRequ
     }
 
     this.#pullInfo = { repository, pullId, pullRequest };
-    this.#forceRefresh = false;
-    this.#onDidChangeTreeData.fire();
+    this._onDidChangeTreeData.fire();
     return true;
+  };
+
+  override _invalidateCache = (): void => {
+    if (this.#pullInfo === undefined) {
+      Logger.error("Pull request is not open, cannot invalidate cache");
+      return;
+    }
+
+    const { owner, repo } = this.#pullInfo.repository.repoId;
+    this.#cache.invalidate(owner, repo);
   };
 }
