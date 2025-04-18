@@ -5,9 +5,9 @@ import { createCacheStub, createPullRequestStub, createRepositoryStub } from "..
 import { PullRequestId, RepoId } from "../../types/kea";
 import { PullRequestListNode } from "../pull-request-list/pull-request-list-node";
 import { CollapsibleState, ITreeNode } from "../tree-node";
-import { CommentsRootTreeNode } from "./comments-root-tree-node";
-import { CommitsRootTreeNode } from "./commits-root-tree-node";
-import { FilesRootTreeNode } from "./files-root-tree-node";
+import { CommentsRootTreeNode } from "./comments/comments-root-tree-node";
+import { CommitsRootTreeNode } from "./commits/commits-root-tree-node";
+import { FilesRootTreeNode } from "./files/files-root-tree-node";
 import { PullRequestTreeNode, PullRequestTreeProvider } from "./pull-request-tree-provider";
 
 const createGetChildrenStubs = async () => {

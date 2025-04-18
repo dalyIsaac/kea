@@ -1,11 +1,11 @@
 import * as assert from "assert";
 import * as vscode from "vscode";
-import { createFileStub, createPullRequestCommentStub, createRepositoryStub } from "../../test-utils";
-import { PullRequestId } from "../../types/kea";
-import { FileTreeNode } from "./file-tree-node";
+import { createFileStub, createPullRequestCommentStub, createRepositoryStub } from "../../../test-utils";
+import { PullRequestId } from "../../../types/kea";
+import { FileTreeNode } from "../../common/file-tree-node";
+import { FolderTreeNode } from "../../common/folder-tree-node";
+import { ReviewCommentTreeNode } from "../../common/review-comment-tree-node";
 import { FilesRootTreeNode } from "./files-root-tree-node";
-import { FolderTreeNode } from "./folder-tree-node";
-import { ReviewCommentTreeNode } from "./review-comment-tree-node";
 
 suite("FilesRootTreeNode", () => {
   const pullId: PullRequestId = { owner: "owner", repo: "repo", number: 1 };

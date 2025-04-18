@@ -1,7 +1,7 @@
 import * as assert from "assert";
 import * as vscode from "vscode";
-import { IKeaRepository } from "../../repository/kea-repository";
-import { PullRequestId } from "../../types/kea";
+import { IKeaRepository } from "../../../repository/kea-repository";
+import { PullRequestId } from "../../../types/kea";
 import { CommitsRootTreeNode } from "./commits-root-tree-node";
 
 suite("CommitsRootTreeNode", () => {

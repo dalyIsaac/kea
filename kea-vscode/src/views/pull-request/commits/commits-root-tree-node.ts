@@ -1,8 +1,8 @@
 import * as vscode from "vscode";
-import { Logger } from "../../core/logger";
-import { IKeaRepository } from "../../repository/kea-repository";
-import { PullRequestId } from "../../types/kea";
-import { CollapsibleState, getCollapsibleState, IParentTreeNode } from "../tree-node";
+import { Logger } from "../../../core/logger";
+import { IKeaRepository } from "../../../repository/kea-repository";
+import { PullRequestId } from "../../../types/kea";
+import { CollapsibleState, getCollapsibleState, IParentTreeNode } from "../../tree-node";
 import { CommitTreeNode } from "./commit-tree-node";
 
 /**

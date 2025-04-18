@@ -1,17 +1,17 @@
 import * as assert from "assert";
 import * as vscode from "vscode";
-import { IssueCommentsPayload, PullRequestReviewCommentsPayload } from "../../repository/kea-repository";
+import { IssueCommentsPayload, PullRequestReviewCommentsPayload } from "../../../repository/kea-repository";
 import {
   createIssueCommentStub,
   createPullRequestCommentStub,
   createRepositoryStub,
   createTreeNodeProviderStub,
   stubEvents,
-} from "../../test-utils";
-import { IssueComment, PullRequestComment, PullRequestId } from "../../types/kea";
-import { CommentTreeNode } from "./comment-tree-node";
+} from "../../../test-utils";
+import { IssueComment, PullRequestComment, PullRequestId } from "../../../types/kea";
+import { CommentTreeNode } from "../../common/comment-tree-node";
+import { ReviewCommentTreeNode } from "../../common/review-comment-tree-node";
 import { CommentsRootTreeNode } from "./comments-root-tree-node";
-import { ReviewCommentTreeNode } from "./review-comment-tree-node";
 
 suite("CommentsRootTreeNode", () => {
   const pullId: PullRequestId = { owner: "owner", repo: "repo", number: 1 };

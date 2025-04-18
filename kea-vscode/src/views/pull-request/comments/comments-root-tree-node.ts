@@ -1,13 +1,13 @@
 import * as vscode from "vscode";
-import { Logger } from "../../core/logger";
-import { createCommentsRootDecorationUri } from "../../decorations/decoration-schemes";
-import { IKeaRepository, IssueCommentsPayload, PullRequestReviewCommentsPayload } from "../../repository/kea-repository";
-import { isSamePullRequest } from "../../type-utils";
-import { PullRequestId } from "../../types/kea";
-import { ITreeNodeProvider } from "../pull-request-list/tree-node-provider";
-import { CollapsibleState, getCollapsibleState, IParentTreeNode, ITreeNode } from "../tree-node";
-import { CommentTreeNode } from "./comment-tree-node";
-import { ReviewCommentTreeNode } from "./review-comment-tree-node";
+import { Logger } from "../../../core/logger";
+import { createCommentsRootDecorationUri } from "../../../decorations/decoration-schemes";
+import { IKeaRepository, IssueCommentsPayload, PullRequestReviewCommentsPayload } from "../../../repository/kea-repository";
+import { isSamePullRequest } from "../../../type-utils";
+import { PullRequestId } from "../../../types/kea";
+import { CommentTreeNode } from "../../common/comment-tree-node";
+import { ReviewCommentTreeNode } from "../../common/review-comment-tree-node";
+import { ITreeNodeProvider } from "../../pull-request-list/tree-node-provider";
+import { CollapsibleState, getCollapsibleState, IParentTreeNode, ITreeNode } from "../../tree-node";
 
 /**
  * Parent tree node for comments.

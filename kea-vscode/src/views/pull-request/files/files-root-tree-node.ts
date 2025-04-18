@@ -1,8 +1,8 @@
 import * as vscode from "vscode";
-import { IKeaRepository } from "../../repository/kea-repository";
-import { PullRequestId } from "../../types/kea";
-import { CollapsibleState, getCollapsibleState } from "../tree-node";
-import { BaseFilesRootTreeNode, FilesRootTreeNodeChild } from "./base-files-root-tree-node";
+import { IKeaRepository } from "../../../repository/kea-repository";
+import { PullRequestId } from "../../../types/kea";
+import { BaseFilesRootTreeNode, FilesRootTreeNodeChild } from "../../common/base-files-root-tree-node";
+import { CollapsibleState, getCollapsibleState } from "../../tree-node";
 
 /**
  * Parent tree item for files.

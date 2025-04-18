@@ -5,9 +5,9 @@ import { IKeaRepository } from "../../repository/kea-repository";
 import { IRepositoryManager } from "../../repository/repository-manager";
 import { PullRequest, PullRequestId } from "../../types/kea";
 import { TreeNodeProvider } from "../pull-request-list/tree-node-provider";
-import { CommentsRootTreeNode } from "./comments-root-tree-node";
-import { CommitsRootTreeNode } from "./commits-root-tree-node";
-import { FilesRootTreeNode } from "./files-root-tree-node";
+import { CommentsRootTreeNode } from "./comments/comments-root-tree-node";
+import { CommitsRootTreeNode } from "./commits/commits-root-tree-node";
+import { FilesRootTreeNode } from "./files/files-root-tree-node";
 
 export type PullRequestTreeNode = CommitsRootTreeNode | CommentsRootTreeNode | FilesRootTreeNode;
 
