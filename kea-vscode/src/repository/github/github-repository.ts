@@ -87,7 +87,7 @@ export class GitHubRepository implements IKeaRepository {
     route: keyof Endpoints | R,
     options?: R extends keyof Endpoints ? Endpoints[R]["parameters"] & RequestParameters : never,
     forceRequest?: boolean,
-  ): Promise<R extends keyof Endpoints ? Endpoints[R]["response"]["data"] : never> => {
+  ): Promise<{ wasCached: boolean; data: R extends keyof Endpoints ? Endpoints[R]["response"]["data"] : never }> => {
     type RequestResult = R extends keyof Endpoints ? Endpoints[R]["response"] : never;
 
     const cacheKey = this.#generateKey(route, options);
@@ -101,7 +101,10 @@ export class GitHubRepository implements IKeaRepository {
 
     if (forceRequest !== true) {
       if (cachedResult !== undefined) {
-        return cachedResult.data as RequestResult;
+        return {
+          data: cachedResult.data as RequestResult,
+          wasCached: true,
+        };
       }
     }
 
@@ -132,12 +135,15 @@ export class GitHubRepository implements IKeaRepository {
       lastModified: fetchedResult.headers["last-modified"],
     };
     this.#cache.set(...cacheKey, fetchedResult.data, resultHeaders);
-    return fetchedResult.data as RequestResult;
+    return {
+      data: fetchedResult.data as RequestResult,
+      wasCached: false,
+    };
   };
 
   getPullRequestList = async (forceRequest?: boolean): Promise<PullRequest[] | Error> => {
     try {
-      const response = await this.#request(
+      const { data } = await this.#request(
         "GET /repos/{owner}/{repo}/pulls",
         {
           owner: this.repoId.owner,
@@ -150,7 +156,7 @@ export class GitHubRepository implements IKeaRepository {
         forceRequest,
       );
 
-      return response.map(convertGitHubPullRequestListItem);
+      return data.map(convertGitHubPullRequestListItem);
     } catch (error) {
       return new Error(`Error fetching pull requests: ${error instanceof Error ? error.message : String(error)}`);
     }
@@ -158,7 +164,7 @@ export class GitHubRepository implements IKeaRepository {
 
   getPullRequest = async (pullId: PullRequestId, forceRequest?: boolean): Promise<PullRequest | Error> => {
     try {
-      const response = await this.#request(
+      const { data } = await this.#request(
         "GET /repos/{owner}/{repo}/pulls/{pull_number}",
         {
           owner: pullId.owner,
@@ -168,7 +174,7 @@ export class GitHubRepository implements IKeaRepository {
         forceRequest,
       );
 
-      return convertGitHubPullRequest(response);
+      return convertGitHubPullRequest(data);
     } catch (error) {
       return new Error(`Error fetching pull request: ${error instanceof Error ? error.message : String(error)}`);
     }
@@ -176,6 +182,7 @@ export class GitHubRepository implements IKeaRepository {
 
   getIssueComments = async (issueId: IssueId, forceRequest?: boolean): Promise<IssueComment[] | Error> => {
     let result: IssueComment[] | Error;
+    let wasCached = false;
     try {
       const response = await this.#request(
         "GET /repos/{owner}/{repo}/issues/{issue_number}/comments",
@@ -187,17 +194,21 @@ export class GitHubRepository implements IKeaRepository {
         forceRequest,
       );
 
-      result = response.map(convertGitHubIssueComment);
+      result = response.data.map(convertGitHubIssueComment);
+      wasCached = response.wasCached;
     } catch (error) {
       result = new Error(`Error fetching issue comments: ${error instanceof Error ? error.message : String(error)}`);
     }
 
-    this.#onDidChangeIssueComments.fire({ issueId, comments: result });
+    if (!wasCached) {
+      this.#onDidChangeIssueComments.fire({ issueId, comments: result });
+    }
     return result;
   };
 
   getPullRequestReviewComments = async (pullId: PullRequestId, forceRequest?: boolean): Promise<PullRequestComment[] | Error> => {
     let result: PullRequestComment[] | Error;
+    let wasCached = false;
     try {
       const response = await this.#request(
         "GET /repos/{owner}/{repo}/pulls/{pull_number}/comments",
@@ -209,18 +220,21 @@ export class GitHubRepository implements IKeaRepository {
         forceRequest,
       );
 
-      result = response.map(convertGitHubPullRequestReviewComment);
+      result = response.data.map(convertGitHubPullRequestReviewComment);
+      wasCached = response.wasCached;
     } catch (error) {
       result = new Error(`Error fetching pull request comments: ${error instanceof Error ? error.message : String(error)}`);
     }
 
-    this.#onDidChangePullRequestReviewComments.fire({ pullId, comments: result });
+    if (!wasCached) {
+      this.#onDidChangePullRequestReviewComments.fire({ pullId, comments: result });
+    }
     return result;
   };
 
   getPullRequestFiles = async (pullId: PullRequestId, forceRequest?: boolean): Promise<PullRequestFile[] | Error> => {
     try {
-      const response = await this.#request(
+      const { data: response } = await this.#request(
         "GET /repos/{owner}/{repo}/pulls/{pull_number}/files",
         {
           owner: pullId.owner,
