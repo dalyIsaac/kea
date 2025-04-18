@@ -537,4 +537,146 @@ suite("GitHubRepository", () => {
       assert.ok(result.message.includes("Error fetching pull request files"));
     });
   });
+
+  suite("getPullRequestCommits", () => {
+    const createPullRequestCommitsResponse = (wasCached = false) => ({
+      data: [
+        {
+          sha: "abc123def456",
+          commit: {
+            message: "Test commit message",
+            author: {
+              name: "Test Author",
+              email: "test@example.com",
+              date: "2025-04-15T12:00:00Z",
+            },
+            // Add missing fields required by convertGitHubPullRequestCommit
+            committer: {
+              name: "Test Committer",
+              email: "committer@example.com",
+              date: "2025-04-15T12:05:00Z",
+            },
+            comment_count: 0,
+            tree: {
+              sha: "tree-sha-123",
+              url: "https://tree.url",
+            },
+          },
+          author: {
+            // GitHub user info
+            login: "test-user",
+            avatar_url: "https://avatar.url",
+            // Add other fields if needed by conversion, though typically login/avatar are sufficient
+            id: 12345,
+            node_id: "MDQ6VXNlcjEyMzQ1",
+            gravatar_id: "",
+            url: "https://api.github.com/users/test-user",
+            html_url: "https://github.com/test-user",
+            // ... other user fields
+          },
+          committer: {
+            // GitHub user info for committer
+            login: "test-committer",
+            avatar_url: "https://committer-avatar.url",
+            id: 67890,
+            node_id: "MDQ6VXNlcjY3ODkw",
+            gravatar_id: "",
+            url: "https://api.github.com/users/test-committer",
+            html_url: "https://github.com/test-committer",
+            // ... other user fields
+          },
+          html_url: "https://commit.url",
+          // Add other fields expected by the converter if necessary
+          parents: [],
+          url: "https://api.commit.url",
+          comments_url: "https://comments.url",
+          node_id: "commit-node-id",
+        },
+      ],
+      headers: {
+        etag: "etag123",
+        "last-modified": "last-modified-date",
+      },
+      wasCached,
+    });
+
+    test("returns pull request commits successfully when API call succeeds", async () => {
+      // Given
+      const { repository, octokitStub, cache } = createTestGitHubRepository();
+      const pullRequestId = createPullRequestId();
+      const mockResponse = createPullRequestCommitsResponse();
+
+      octokitStub.request.resolves(mockResponse);
+      (cache.get as sinon.SinonStub).returns(undefined);
+
+      // When
+      const result = await repository.getPullRequestCommits(pullRequestId);
+
+      // Then
+      assert.ok(!(result instanceof Error), "Expected result not to be an Error");
+      assert.ok(Array.isArray(result), "Expected result to be an array");
+      assert.strictEqual(result.length, 1);
+
+      // Check content of the first commit
+      const commit = result[0];
+      assert.ok(commit, "Expected result[0] to exist");
+      assert.strictEqual(commit.sha, "abc123def456");
+      // Access message via commit.commit.message
+      assert.strictEqual(commit.commit.message, "Test commit message");
+      // Access author name via commit.commit.author.name (adjusting assertion)
+      assert.strictEqual(commit.commit.author?.name, "Test Author");
+
+      // Verify the API call was made correctly
+      sinon.assert.calledOnceWithExactly(octokitStub.request, "GET /repos/{owner}/{repo}/pulls/{pull_number}/commits", {
+        owner: "test-owner",
+        repo: "test-repo",
+        pull_number: 123,
+        headers: {},
+      });
+    });
+
+    test("uses cached results when available without making API call", async () => {
+      // Given
+      const { repository, octokitStub, cache } = createTestGitHubRepository();
+      const pullRequestId = createPullRequestId();
+      const cachedData = createPullRequestCommitsResponse().data;
+
+      (cache.get as sinon.SinonStub).returns({ data: cachedData, headers: {} } as ICacheValue<unknown>);
+
+      // When
+      const result = await repository.getPullRequestCommits(pullRequestId);
+
+      // Then
+      assert.ok(!(result instanceof Error), "Expected result not to be an Error");
+      assert.ok(Array.isArray(result), "Expected result to be an array");
+      assert.strictEqual(result.length, 1);
+
+      // Check content of the first commit
+      const commit = result[0];
+      assert.ok(commit, "Expected result[0] to exist");
+      assert.strictEqual(commit.sha, "abc123def456");
+      // Access message via commit.commit.message
+      assert.strictEqual(commit.commit.message, "Test commit message");
+      // Access author name via commit.commit.author.name (adjusting assertion)
+      assert.strictEqual(commit.commit.author?.name, "Test Author");
+
+      // Verify the API call was NOT made
+      sinon.assert.notCalled(octokitStub.request);
+    });
+
+    test("returns error object when request fails", async () => {
+      // Given
+      const { repository, octokitStub, cache } = createTestGitHubRepository();
+      const pullRequestId = createPullRequestId();
+      octokitStub.request.rejects(new Error("Network error"));
+      (cache.get as sinon.SinonStub).returns(undefined);
+
+      // When
+      const result = await repository.getPullRequestCommits(pullRequestId);
+
+      // Then
+      assert.ok(result instanceof Error, "Expected result to be an Error");
+      assert.ok(result.message.includes("Error fetching pull request commits"));
+    });
+  });
 });

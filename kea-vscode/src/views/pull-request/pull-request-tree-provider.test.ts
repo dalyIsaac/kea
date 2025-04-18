@@ -1,9 +1,10 @@
 import * as assert from "assert";
+import * as vscode from "vscode";
 import { RepositoryManager } from "../../repository/repository-manager";
 import { createCacheStub, createPullRequestStub, createRepositoryStub } from "../../test-utils";
 import { PullRequestId, RepoId } from "../../types/kea";
 import { PullRequestListNode } from "../pull-request-list/pull-request-list-node";
-import { CollapsibleState } from "../tree-node";
+import { CollapsibleState, ITreeNode } from "../tree-node";
 import { CommentsRootTreeNode } from "./comments-root-tree-node";
 import { CommitsRootTreeNode } from "./commits-root-tree-node";
 import { FilesRootTreeNode } from "./files-root-tree-node";
@@ -59,9 +60,10 @@ suite("PullRequestTreeProvider", () => {
     const result = await provider.getChildren();
 
     // Then
-    assert.strictEqual(result.length, 2);
-    assert.ok(result[0] instanceof CommentsRootTreeNode);
-    assert.ok(result[1] instanceof FilesRootTreeNode);
+    assert.strictEqual(result.length, 3);
+    assert.ok(result[0] instanceof CommitsRootTreeNode);
+    assert.ok(result[1] instanceof CommentsRootTreeNode);
+    assert.ok(result[2] instanceof FilesRootTreeNode);
   });
 
   class SuccessTestTreeNode extends PullRequestListNode {
@@ -98,7 +100,11 @@ suite("PullRequestTreeProvider", () => {
     // Given
     const { provider } = await createGetChildrenStubs();
 
-    const element = new CommitsRootTreeNode() as unknown as PullRequestTreeNode;
+    class NonParentTreeNode implements ITreeNode {
+      getTreeItem = (): vscode.TreeItem => new vscode.TreeItem("Non-parent", vscode.TreeItemCollapsibleState.None);
+    }
+
+    const element = new NonParentTreeNode() as unknown as PullRequestTreeNode;
 
     // When
     const result = provider.getChildren(element);

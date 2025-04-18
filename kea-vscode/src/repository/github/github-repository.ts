@@ -244,7 +244,7 @@ export class GitHubRepository implements IKeaRepository {
 
   getPullRequestFiles = async (pullId: PullRequestId, forceRequest?: boolean): Promise<PullRequestFile[] | Error> => {
     try {
-      const { data: response } = await this.#request(
+      const { data } = await this.#request(
         "GET /repos/{owner}/{repo}/pulls/{pull_number}/files",
         {
           owner: pullId.owner,
@@ -254,7 +254,7 @@ export class GitHubRepository implements IKeaRepository {
         forceRequest,
       );
 
-      return response.map(convertGitHubPullRequestFile);
+      return data.map(convertGitHubPullRequestFile);
     } catch (error) {
       return new Error(`Error fetching pull request files: ${error instanceof Error ? error.message : String(error)}`);
     }
@@ -262,7 +262,7 @@ export class GitHubRepository implements IKeaRepository {
 
   getPullRequestCommits = async (pullId: PullRequestId, forceRequest?: boolean): Promise<PullRequestCommit[] | Error> => {
     try {
-      const { data: response } = await this.#request(
+      const { data } = await this.#request(
         "GET /repos/{owner}/{repo}/pulls/{pull_number}/commits",
         {
           owner: pullId.owner,
@@ -272,7 +272,7 @@ export class GitHubRepository implements IKeaRepository {
         forceRequest,
       );
 
-      return response.map(convertGitHubPullRequestCommit);
+      return data.map(convertGitHubPullRequestCommit);
     } catch (error) {
       return new Error(`Error fetching pull request commits: ${error instanceof Error ? error.message : String(error)}`);
     }
