@@ -69,3 +69,30 @@ export interface PullRequestFile {
   rawUrl: string;
   contentsUrl: string;
 }
+
+export interface Author {
+  name?: string;
+  email?: string;
+  date?: string;
+}
+
+export interface PullRequestCommit {
+  sha: string;
+  commit: {
+    author: Author | null;
+    committer: Author | null;
+    message: string;
+    commentCount: number;
+    tree: {
+      sha: string;
+      url: string;
+    };
+  };
+  stats?: {
+    total?: number | undefined;
+    additions?: number | undefined;
+    deletions?: number | undefined;
+  };
+  files?: PullRequestFile[];
+  url: string;
+}

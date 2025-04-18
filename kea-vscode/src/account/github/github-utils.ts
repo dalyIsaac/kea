@@ -1,5 +1,5 @@
 import { RestEndpointMethodTypes } from "@octokit/rest";
-import { IssueComment, PullRequest, PullRequestComment, PullRequestFile } from "../../types/kea";
+import { IssueComment, PullRequest, PullRequestComment, PullRequestCommit, PullRequestFile } from "../../types/kea";
 
 /**
  * Converts an Octokit Pull Request List item response to our internal PullRequest type.
@@ -95,7 +95,7 @@ export const convertGitHubPullRequestReviewComment = (
 });
 
 /**
- * Converts an Octokit Pull Request File response to our internal PullRequestFile type
+ * Converts an Octokit Pull Request File response to our internal PullRequestFile type.
  */
 export const convertGitHubPullRequestFile = (
   file: RestEndpointMethodTypes["pulls"]["listFiles"]["response"]["data"][number],
@@ -110,4 +110,34 @@ export const convertGitHubPullRequestFile = (
   rawUrl: file.raw_url,
   contentsUrl: file.contents_url,
   patch: file.patch ?? null,
+});
+
+/**
+ * Converts an Octokit Pull Request Commit response to our internal PullRequestCommit type.
+ */
+export const convertGitHubPullRequestCommit = (
+  commit: RestEndpointMethodTypes["pulls"]["listCommits"]["response"]["data"][number],
+): PullRequestCommit => ({
+  sha: commit.sha,
+  commit: {
+    author: commit.commit.author,
+    committer: commit.commit.committer,
+    message: commit.commit.message,
+    commentCount: commit.commit.comment_count,
+    tree: {
+      sha: commit.commit.tree.sha,
+      url: commit.commit.tree.url,
+    },
+  },
+  ...(commit.stats
+    ? {
+        stats: {
+          total: commit.stats.total,
+          additions: commit.stats.additions,
+          deletions: commit.stats.deletions,
+        },
+      }
+    : {}),
+  files: commit.files ? commit.files.map(convertGitHubPullRequestFile) : [],
+  url: commit.html_url,
 });

@@ -4,6 +4,7 @@ import { GitHubAccount } from "../../account/github/github-account";
 import {
   convertGitHubIssueComment,
   convertGitHubPullRequest,
+  convertGitHubPullRequestCommit,
   convertGitHubPullRequestFile,
   convertGitHubPullRequestListItem,
   convertGitHubPullRequestReviewComment,
@@ -11,7 +12,16 @@ import {
 import { Logger } from "../../core/logger";
 import { CacheKey, isMethod } from "../../lru-cache/cache-types";
 import { ILruApiCache } from "../../lru-cache/lru-api-cache";
-import { IssueComment, IssueId, PullRequest, PullRequestComment, PullRequestFile, PullRequestId, RepoId } from "../../types/kea";
+import {
+  IssueComment,
+  IssueId,
+  PullRequest,
+  PullRequestComment,
+  PullRequestCommit,
+  PullRequestFile,
+  PullRequestId,
+  RepoId,
+} from "../../types/kea";
 import { IKeaRepository, IssueCommentsPayload, PullRequestReviewCommentsPayload } from "../kea-repository";
 
 export class GitHubRepository implements IKeaRepository {
@@ -247,6 +257,24 @@ export class GitHubRepository implements IKeaRepository {
       return response.map(convertGitHubPullRequestFile);
     } catch (error) {
       return new Error(`Error fetching pull request files: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  };
+
+  getPullRequestCommits = async (pullId: PullRequestId, forceRequest?: boolean): Promise<PullRequestCommit[] | Error> => {
+    try {
+      const { data: response } = await this.#request(
+        "GET /repos/{owner}/{repo}/pulls/{pull_number}/commits",
+        {
+          owner: pullId.owner,
+          repo: pullId.repo,
+          pull_number: pullId.number,
+        },
+        forceRequest,
+      );
+
+      return response.map(convertGitHubPullRequestCommit);
+    } catch (error) {
+      return new Error(`Error fetching pull request commits: ${error instanceof Error ? error.message : String(error)}`);
     }
   };
 
