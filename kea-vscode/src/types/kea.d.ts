@@ -57,7 +57,7 @@ export interface PullRequestComment extends IssueComment {
 
 export type FileStatus = "added" | "removed" | "modified" | "renamed" | "copied" | "changed" | "unchanged";
 
-export interface PullRequestFile {
+export interface File {
   filename: string;
   sha: string;
   status: FileStatus;
@@ -76,7 +76,7 @@ export interface Author {
   date?: string;
 }
 
-export interface PullRequestCommit {
+export interface Commit {
   sha: string;
   commit: {
     author: Author | null;
@@ -93,6 +93,6 @@ export interface PullRequestCommit {
     additions?: number | undefined;
     deletions?: number | undefined;
   };
-  files?: PullRequestFile[];
+  files?: File[];
   url: string;
 }

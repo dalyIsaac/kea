@@ -5,7 +5,7 @@ import { IAccount } from "./account/account";
 import { IAccountManager } from "./account/account-manager";
 import { ILruApiCache } from "./lru-cache/lru-api-cache";
 import { IKeaRepository } from "./repository/kea-repository";
-import { IssueComment, PullRequest, PullRequestComment, PullRequestFile } from "./types/kea";
+import { File, IssueComment, PullRequest, PullRequestComment } from "./types/kea";
 import { ITreeNodeProvider } from "./views/pull-request-list/tree-node-provider";
 import { ITreeNode } from "./views/tree-node";
 
@@ -96,7 +96,7 @@ export const createPullRequestStub = (props: Partial<PullRequest> = {}): PullReq
   ...props,
 });
 
-export const createPullRequestFileStub = (props: Partial<PullRequestFile> = {}): PullRequestFile => ({
+export const createFileStub = (props: Partial<File> = {}): File => ({
   filename: "filename",
   status: "unchanged",
   sha: "sha",

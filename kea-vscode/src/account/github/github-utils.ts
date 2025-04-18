@@ -1,5 +1,5 @@
 import { RestEndpointMethodTypes } from "@octokit/rest";
-import { IssueComment, PullRequest, PullRequestComment, PullRequestCommit, PullRequestFile } from "../../types/kea";
+import { Commit, File, IssueComment, PullRequest, PullRequestComment } from "../../types/kea";
 
 /**
  * Converts an Octokit Pull Request List item response to our internal PullRequest type.
@@ -97,9 +97,7 @@ export const convertGitHubPullRequestReviewComment = (
 /**
  * Converts an Octokit Pull Request File response to our internal PullRequestFile type.
  */
-export const convertGitHubPullRequestFile = (
-  file: RestEndpointMethodTypes["pulls"]["listFiles"]["response"]["data"][number],
-): PullRequestFile => ({
+export const convertGitHubFile = (file: RestEndpointMethodTypes["pulls"]["listFiles"]["response"]["data"][number]): File => ({
   filename: file.filename,
   sha: file.sha,
   status: file.status,
@@ -115,9 +113,7 @@ export const convertGitHubPullRequestFile = (
 /**
  * Converts an Octokit Pull Request Commit response to our internal PullRequestCommit type.
  */
-export const convertGitHubPullRequestCommit = (
-  commit: RestEndpointMethodTypes["pulls"]["listCommits"]["response"]["data"][number],
-): PullRequestCommit => ({
+export const convertGitHubCommit = (commit: RestEndpointMethodTypes["pulls"]["listCommits"]["response"]["data"][number]): Commit => ({
   sha: commit.sha,
   commit: {
     author: commit.commit.author,
@@ -138,6 +134,6 @@ export const convertGitHubPullRequestCommit = (
         },
       }
     : {}),
-  files: commit.files ? commit.files.map(convertGitHubPullRequestFile) : [],
+  files: commit.files ? commit.files.map(convertGitHubFile) : [],
   url: commit.html_url,
 });

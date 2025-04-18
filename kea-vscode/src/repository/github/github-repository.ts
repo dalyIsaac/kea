@@ -2,26 +2,17 @@ import { Endpoints, RequestParameters, Route } from "@octokit/types";
 import * as vscode from "vscode";
 import { GitHubAccount } from "../../account/github/github-account";
 import {
+  convertGitHubCommit,
+  convertGitHubFile,
   convertGitHubIssueComment,
   convertGitHubPullRequest,
-  convertGitHubPullRequestCommit,
-  convertGitHubPullRequestFile,
   convertGitHubPullRequestListItem,
   convertGitHubPullRequestReviewComment,
 } from "../../account/github/github-utils";
 import { Logger } from "../../core/logger";
 import { CacheKey, isMethod } from "../../lru-cache/cache-types";
 import { ILruApiCache } from "../../lru-cache/lru-api-cache";
-import {
-  IssueComment,
-  IssueId,
-  PullRequest,
-  PullRequestComment,
-  PullRequestCommit,
-  PullRequestFile,
-  PullRequestId,
-  RepoId,
-} from "../../types/kea";
+import { Commit, File, IssueComment, IssueId, PullRequest, PullRequestComment, PullRequestId, RepoId } from "../../types/kea";
 import { IKeaRepository, IssueCommentsPayload, PullRequestReviewCommentsPayload } from "../kea-repository";
 
 export class GitHubRepository implements IKeaRepository {
@@ -242,7 +233,7 @@ export class GitHubRepository implements IKeaRepository {
     return result;
   };
 
-  getPullRequestFiles = async (pullId: PullRequestId, forceRequest?: boolean): Promise<PullRequestFile[] | Error> => {
+  getPullRequestFiles = async (pullId: PullRequestId, forceRequest?: boolean): Promise<File[] | Error> => {
     try {
       const { data } = await this.#request(
         "GET /repos/{owner}/{repo}/pulls/{pull_number}/files",
@@ -254,13 +245,13 @@ export class GitHubRepository implements IKeaRepository {
         forceRequest,
       );
 
-      return data.map(convertGitHubPullRequestFile);
+      return data.map(convertGitHubFile);
     } catch (error) {
       return new Error(`Error fetching pull request files: ${error instanceof Error ? error.message : String(error)}`);
     }
   };
 
-  getPullRequestCommits = async (pullId: PullRequestId, forceRequest?: boolean): Promise<PullRequestCommit[] | Error> => {
+  getPullRequestCommits = async (pullId: PullRequestId, forceRequest?: boolean): Promise<Commit[] | Error> => {
     try {
       const { data } = await this.#request(
         "GET /repos/{owner}/{repo}/pulls/{pull_number}/commits",
@@ -272,7 +263,7 @@ export class GitHubRepository implements IKeaRepository {
         forceRequest,
       );
 
-      return data.map(convertGitHubPullRequestCommit);
+      return data.map(convertGitHubCommit);
     } catch (error) {
       return new Error(`Error fetching pull request commits: ${error instanceof Error ? error.message : String(error)}`);
     }

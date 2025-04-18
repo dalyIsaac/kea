@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { PullRequestCommit } from "../../types/kea";
+import { Commit } from "../../types/kea";
 import { CollapsibleState, getCollapsibleState, ITreeNode } from "../tree-node";
 
 /**
@@ -8,11 +8,11 @@ import { CollapsibleState, getCollapsibleState, ITreeNode } from "../tree-node";
 export class CommitTreeNode implements ITreeNode {
   #contextValue = "commit";
   #iconPath = new vscode.ThemeIcon("git-commit");
-  #comment: PullRequestCommit;
+  #comment: Commit;
 
   collapsibleState: CollapsibleState;
 
-  constructor(commit: PullRequestCommit) {
+  constructor(commit: Commit) {
     this.#comment = commit;
     this.collapsibleState = commit.files && commit.files.length > 0 ? "collapsed" : "none";
   }

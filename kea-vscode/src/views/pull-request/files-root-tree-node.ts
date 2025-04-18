@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { IKeaRepository } from "../../repository/kea-repository";
-import { PullRequestComment, PullRequestFile, PullRequestId } from "../../types/kea";
+import { File, PullRequestComment, PullRequestId } from "../../types/kea";
 import { CollapsibleState, getCollapsibleState, IParentTreeNode } from "../tree-node";
 import { FileTreeNode } from "./file-tree-node";
 import { FolderTreeNode } from "./folder-tree-node";
@@ -53,7 +53,7 @@ export class FilesRootTreeNode implements IParentTreeNode<FilesRootTreeNodeChild
     return this.#toTree(files, reviewComments);
   };
 
-  #toTree = (files: PullRequestFile[], reviewComments: PullRequestComment[]): FilesRootTreeNodeChild[] => {
+  #toTree = (files: File[], reviewComments: PullRequestComment[]): FilesRootTreeNodeChild[] => {
     const sortedFiles = files.sort((a, b) => a.filename.localeCompare(b.filename));
     let roots: FilesRootTreeNodeChild[] = [];
 
@@ -64,11 +64,7 @@ export class FilesRootTreeNode implements IParentTreeNode<FilesRootTreeNodeChild
     return roots;
   };
 
-  #fileToTree = (
-    roots: FilesRootTreeNodeChild[],
-    file: PullRequestFile,
-    reviewComments: PullRequestComment[],
-  ): FilesRootTreeNodeChild[] => {
+  #fileToTree = (roots: FilesRootTreeNodeChild[], file: File, reviewComments: PullRequestComment[]): FilesRootTreeNodeChild[] => {
     let parents = roots;
     const pathParts = file.filename.split("/");
 
