@@ -3,6 +3,7 @@ import * as vscode from "vscode";
 import { GitHubAccount } from "../../account/github/github-account";
 import {
   convertGitHubCommit,
+  convertGitHubCommitComment,
   convertGitHubFile,
   convertGitHubIssueComment,
   convertGitHubPullRequest,
@@ -12,7 +13,17 @@ import {
 import { Logger } from "../../core/logger";
 import { CacheKey, isMethod } from "../../lru-cache/cache-types";
 import { ILruApiCache } from "../../lru-cache/lru-api-cache";
-import { Commit, CommitFile, IssueComment, IssueId, PullRequest, PullRequestComment, PullRequestId, RepoId } from "../../types/kea";
+import {
+  Commit,
+  CommitComment,
+  CommitFile,
+  IssueComment,
+  IssueId,
+  PullRequest,
+  PullRequestComment,
+  PullRequestId,
+  RepoId,
+} from "../../types/kea";
 import { IKeaRepository, IssueCommentsPayload, PullRequestReviewCommentsPayload } from "../kea-repository";
 
 export class GitHubRepository implements IKeaRepository {
@@ -278,6 +289,24 @@ export class GitHubRepository implements IKeaRepository {
       return data.files?.map(convertGitHubFile) ?? [];
     } catch (error) {
       return new Error(`Error fetching commit files: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  };
+
+  getCommitComments = async (commitSha: string, forceRequest?: boolean): Promise<CommitComment[] | Error> => {
+    try {
+      const { data } = await this.#request(
+        "GET /repos/{owner}/{repo}/commits/{commit_sha}/comments",
+        {
+          owner: this.repoId.owner,
+          repo: this.repoId.repo,
+          commit_sha: commitSha,
+        },
+        forceRequest,
+      );
+
+      return data.map(convertGitHubCommitComment);
+    } catch (error) {
+      return new Error(`Error fetching commit comments: ${error instanceof Error ? error.message : String(error)}`);
     }
   };
 

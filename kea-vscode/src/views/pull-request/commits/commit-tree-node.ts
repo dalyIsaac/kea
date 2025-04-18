@@ -29,13 +29,22 @@ export class CommitTreeNode extends BaseFilesRootTreeNode {
   };
 
   getChildren = async (): Promise<FilesRootTreeNodeChild[]> => {
-    const files = await this._repository.getCommitFiles(this.commit.sha);
+    const [files, comments] = await Promise.all([
+      this._repository.getCommitFiles(this.commit.sha),
+      this._repository.getCommitComments(this.commit.sha),
+    ]);
 
     if (files instanceof Error) {
       vscode.window.showErrorMessage(`Error fetching commit files: ${files.message}`);
       return [];
     }
 
-    return this._toTree(files, []);
+    if (comments instanceof Error) {
+      vscode.window.showErrorMessage(`Error fetching commit comments: ${comments.message}`);
+
+      return this._toTree(files, []);
+    }
+
+    return this._toTree(files, comments);
   };
 }

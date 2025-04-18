@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { IKeaRepository } from "../../repository/kea-repository";
-import { CommitFile, PullRequestComment } from "../../types/kea";
+import { CommitFile, FileComment } from "../../types/kea";
 import { IParentTreeNode } from "../tree-node";
 import { FileTreeNode } from "./file-tree-node";
 import { FolderTreeNode } from "./folder-tree-node";
@@ -18,7 +18,7 @@ export abstract class BaseFilesRootTreeNode implements IParentTreeNode<FilesRoot
 
   abstract getChildren(): Promise<FilesRootTreeNodeChild[]>;
 
-  protected _toTree = (files: CommitFile[], reviewComments: PullRequestComment[]): FilesRootTreeNodeChild[] => {
+  protected _toTree = (files: CommitFile[], reviewComments: FileComment[]): FilesRootTreeNodeChild[] => {
     const sortedFiles = files.sort((a, b) => a.filename.localeCompare(b.filename));
     let roots: FilesRootTreeNodeChild[] = [];
 
@@ -29,7 +29,7 @@ export abstract class BaseFilesRootTreeNode implements IParentTreeNode<FilesRoot
     return roots;
   };
 
-  #fileToTree = (roots: FilesRootTreeNodeChild[], file: CommitFile, reviewComments: PullRequestComment[]): FilesRootTreeNodeChild[] => {
+  #fileToTree = (roots: FilesRootTreeNodeChild[], file: CommitFile, reviewComments: FileComment[]): FilesRootTreeNodeChild[] => {
     let parents = roots;
     const pathParts = file.filename.split("/");
 

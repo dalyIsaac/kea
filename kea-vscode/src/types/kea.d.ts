@@ -7,16 +7,36 @@ export interface IssueId extends RepoId {
   number: number;
 }
 
-export interface IssueComment {
+interface BaseComment {
   id: number;
   body: string | null;
   createdAt: Date;
   updatedAt: Date;
+  user: User | null;
+}
+
+export interface IssueComment extends BaseComment {
   replyTo: number | null;
-  user: {
-    login: string;
-    avatarUrl: string;
-  };
+}
+
+export interface CommitComment extends BaseComment {
+  path: string | null;
+  position: number | null;
+  line: number | null;
+}
+
+export type FileComment = PullRequestComment | CommitComment;
+
+export type Side = "LEFT" | "RIGHT" | "BOTH";
+
+export interface PullRequestComment extends IssueComment {
+  path: string;
+  startLine: number | null;
+  originalStartLine: number | null;
+  startSide: Side | null;
+  line: number | null;
+  originalLine: number | null;
+  side: Side | null;
 }
 
 export type PullRequestId = IssueId;
@@ -37,22 +57,7 @@ export interface PullRequest {
     owner: string;
     url: string;
   };
-  user: {
-    login: string;
-    avatarUrl: string;
-  };
-}
-
-export type Side = "LEFT" | "RIGHT" | "BOTH";
-
-export interface PullRequestComment extends IssueComment {
-  path: string;
-  startLine: number | null;
-  originalStartLine: number | null;
-  startSide: Side | null;
-  line: number | null;
-  originalLine: number | null;
-  side: Side | null;
+  user: User | null;
 }
 
 export type FileStatus = "added" | "removed" | "modified" | "renamed" | "copied" | "changed" | "unchanged";
@@ -70,17 +75,16 @@ export interface CommitFile {
   contentsUrl: string;
 }
 
-export interface Author {
-  name?: string;
-  email?: string;
-  date?: string;
+export interface User {
+  name?: string | null;
+  email?: string | null;
 }
 
 export interface Commit {
   sha: string;
   commit: {
-    author: Author | null;
-    committer: Author | null;
+    author: User | null;
+    committer: User | null;
     message: string;
     commentCount: number;
     tree: {
@@ -89,9 +93,9 @@ export interface Commit {
     };
   };
   stats?: {
-    total?: number | undefined;
-    additions?: number | undefined;
-    deletions?: number | undefined;
+    total?: number | null;
+    additions?: number | null;
+    deletions?: number | null;
   };
   url: string;
 }

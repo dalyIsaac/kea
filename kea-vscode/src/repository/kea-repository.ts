@@ -1,6 +1,16 @@
 import * as vscode from "vscode";
 import { IAccount } from "../account/account";
-import { Commit, CommitFile, IssueComment, IssueId, PullRequest, PullRequestComment, PullRequestId, RepoId } from "../types/kea";
+import {
+  Commit,
+  CommitComment,
+  CommitFile,
+  IssueComment,
+  IssueId,
+  PullRequest,
+  PullRequestComment,
+  PullRequestId,
+  RepoId,
+} from "../types/kea";
 
 export interface IssueCommentsPayload {
   issueId: IssueId;
@@ -25,6 +35,7 @@ export interface IKeaRepository {
   getPullRequestFiles: (pullId: PullRequestId, forceRequest?: boolean) => Promise<CommitFile[] | Error>;
   getPullRequestCommits: (pullId: PullRequestId, forceRequest?: boolean) => Promise<Commit[] | Error>;
   getCommitFiles: (commitSha: string, forceRequest?: boolean) => Promise<CommitFile[] | Error>;
+  getCommitComments: (commitSha: string, forceRequest?: boolean) => Promise<CommitComment[] | Error>;
 
   onDidChangeIssueComments: vscode.Event<IssueCommentsPayload>;
   onDidChangePullRequestReviewComments: vscode.Event<PullRequestReviewCommentsPayload>;
