@@ -12,11 +12,6 @@ export interface PullRequestReviewCommentsPayload {
   comments: PullRequestComment[] | Error;
 }
 
-export interface CommitFilesPayload {
-  commitSha: string;
-  files: CommitFile[] | Error;
-}
-
 // TODO: make disposable
 export interface IKeaRepository {
   account: IAccount;
@@ -33,5 +28,4 @@ export interface IKeaRepository {
 
   onDidChangeIssueComments: vscode.Event<IssueCommentsPayload>;
   onDidChangePullRequestReviewComments: vscode.Event<PullRequestReviewCommentsPayload>;
-  onDidChangeCommitFiles: vscode.Event<CommitFilesPayload>;
 }

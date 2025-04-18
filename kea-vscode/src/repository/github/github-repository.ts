@@ -13,7 +13,7 @@ import { Logger } from "../../core/logger";
 import { CacheKey, isMethod } from "../../lru-cache/cache-types";
 import { ILruApiCache } from "../../lru-cache/lru-api-cache";
 import { Commit, CommitFile, IssueComment, IssueId, PullRequest, PullRequestComment, PullRequestId, RepoId } from "../../types/kea";
-import { CommitFilesPayload, IKeaRepository, IssueCommentsPayload, PullRequestReviewCommentsPayload } from "../kea-repository";
+import { IKeaRepository, IssueCommentsPayload, PullRequestReviewCommentsPayload } from "../kea-repository";
 
 export class GitHubRepository implements IKeaRepository {
   account: GitHubAccount;
@@ -287,8 +287,4 @@ export class GitHubRepository implements IKeaRepository {
   #onDidChangePullRequestReviewComments: vscode.EventEmitter<PullRequestReviewCommentsPayload> =
     new vscode.EventEmitter<PullRequestReviewCommentsPayload>();
   onDidChangePullRequestReviewComments = this.#onDidChangePullRequestReviewComments.event;
-
-  // TODO: Remove or plug in.
-  #onDidChangeCommitFiles: vscode.EventEmitter<CommitFilesPayload> = new vscode.EventEmitter<CommitFilesPayload>();
-  onDidChangeCommitFiles = this.#onDidChangeCommitFiles.event;
 }
