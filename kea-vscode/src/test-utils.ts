@@ -5,7 +5,7 @@ import { IAccount } from "./account/account";
 import { IAccountManager } from "./account/account-manager";
 import { ILruApiCache } from "./lru-cache/lru-api-cache";
 import { IKeaRepository } from "./repository/kea-repository";
-import { File, IssueComment, PullRequest, PullRequestComment } from "./types/kea";
+import { CommitFile, IssueComment, PullRequest, PullRequestComment } from "./types/kea";
 import { ITreeNodeProvider } from "./views/pull-request-list/tree-node-provider";
 import { ITreeNode } from "./views/tree-node";
 
@@ -68,6 +68,7 @@ export const createRepositoryStub = (props: Partial<IKeaRepository> = {}): IKeaR
   getPullRequestReviewComments: sinon.stub(),
   getPullRequestFiles: sinon.stub(),
   getPullRequestCommits: sinon.stub(),
+  getCommitFiles: sinon.stub(),
   onDidChangeIssueComments: sinon.stub(),
   onDidChangePullRequestReviewComments: sinon.stub(),
   ...props,
@@ -96,7 +97,7 @@ export const createPullRequestStub = (props: Partial<PullRequest> = {}): PullReq
   ...props,
 });
 
-export const createFileStub = (props: Partial<File> = {}): File => ({
+export const createFileStub = (props: Partial<CommitFile> = {}): CommitFile => ({
   filename: "filename",
   status: "unchanged",
   sha: "sha",

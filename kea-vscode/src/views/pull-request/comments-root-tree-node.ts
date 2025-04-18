@@ -94,8 +94,7 @@ export class CommentsRootTreeNode implements IParentTreeNode<CommentTreeNode | R
       return;
     }
 
-    const length = payload.comments.length;
-    if (length === 0) {
+    if (payload.comments.length === 0) {
       this.collapsibleState = "none";
       return;
     }

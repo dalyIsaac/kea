@@ -37,6 +37,6 @@ export class CommitsRootTreeNode implements IParentTreeNode<CommitTreeNode> {
       return [];
     }
 
-    return commits.map((commit) => new CommitTreeNode(commit));
+    return commits.map((commit) => new CommitTreeNode(this.#repository, commit));
   };
 }

@@ -12,8 +12,8 @@ import {
 import { Logger } from "../../core/logger";
 import { CacheKey, isMethod } from "../../lru-cache/cache-types";
 import { ILruApiCache } from "../../lru-cache/lru-api-cache";
-import { Commit, File, IssueComment, IssueId, PullRequest, PullRequestComment, PullRequestId, RepoId } from "../../types/kea";
-import { IKeaRepository, IssueCommentsPayload, PullRequestReviewCommentsPayload } from "../kea-repository";
+import { Commit, CommitFile, IssueComment, IssueId, PullRequest, PullRequestComment, PullRequestId, RepoId } from "../../types/kea";
+import { CommitFilesPayload, IKeaRepository, IssueCommentsPayload, PullRequestReviewCommentsPayload } from "../kea-repository";
 
 export class GitHubRepository implements IKeaRepository {
   account: GitHubAccount;
@@ -182,10 +182,8 @@ export class GitHubRepository implements IKeaRepository {
   };
 
   getIssueComments = async (issueId: IssueId, forceRequest?: boolean): Promise<IssueComment[] | Error> => {
-    let result: IssueComment[] | Error;
-    let wasCached = false;
     try {
-      const response = await this.#request(
+      const { data, wasCached } = await this.#request(
         "GET /repos/{owner}/{repo}/issues/{issue_number}/comments",
         {
           owner: issueId.owner,
@@ -195,23 +193,20 @@ export class GitHubRepository implements IKeaRepository {
         forceRequest,
       );
 
-      result = response.data.map(convertGitHubIssueComment);
-      wasCached = response.wasCached;
-    } catch (error) {
-      result = new Error(`Error fetching issue comments: ${error instanceof Error ? error.message : String(error)}`);
-    }
+      const result = data.map(convertGitHubIssueComment);
+      if (!wasCached) {
+        this.#onDidChangeIssueComments.fire({ issueId, comments: result });
+      }
 
-    if (!wasCached) {
-      this.#onDidChangeIssueComments.fire({ issueId, comments: result });
+      return result;
+    } catch (error) {
+      return new Error(`Error fetching issue comments: ${error instanceof Error ? error.message : String(error)}`);
     }
-    return result;
   };
 
   getPullRequestReviewComments = async (pullId: PullRequestId, forceRequest?: boolean): Promise<PullRequestComment[] | Error> => {
-    let result: PullRequestComment[] | Error;
-    let wasCached = false;
     try {
-      const response = await this.#request(
+      const { data, wasCached } = await this.#request(
         "GET /repos/{owner}/{repo}/pulls/{pull_number}/comments",
         {
           owner: pullId.owner,
@@ -221,19 +216,18 @@ export class GitHubRepository implements IKeaRepository {
         forceRequest,
       );
 
-      result = response.data.map(convertGitHubPullRequestReviewComment);
-      wasCached = response.wasCached;
-    } catch (error) {
-      result = new Error(`Error fetching pull request comments: ${error instanceof Error ? error.message : String(error)}`);
-    }
+      const result = data.map(convertGitHubPullRequestReviewComment);
+      if (!wasCached) {
+        this.#onDidChangePullRequestReviewComments.fire({ pullId, comments: result });
+      }
 
-    if (!wasCached) {
-      this.#onDidChangePullRequestReviewComments.fire({ pullId, comments: result });
+      return result;
+    } catch (error) {
+      return new Error(`Error fetching pull request comments: ${error instanceof Error ? error.message : String(error)}`);
     }
-    return result;
   };
 
-  getPullRequestFiles = async (pullId: PullRequestId, forceRequest?: boolean): Promise<File[] | Error> => {
+  getPullRequestFiles = async (pullId: PullRequestId, forceRequest?: boolean): Promise<CommitFile[] | Error> => {
     try {
       const { data } = await this.#request(
         "GET /repos/{owner}/{repo}/pulls/{pull_number}/files",
@@ -269,10 +263,32 @@ export class GitHubRepository implements IKeaRepository {
     }
   };
 
+  getCommitFiles = async (commitSha: string, forceRequest?: boolean): Promise<CommitFile[] | Error> => {
+    try {
+      const { data } = await this.#request(
+        "GET /repos/{owner}/{repo}/commits/{ref}",
+        {
+          owner: this.repoId.owner,
+          repo: this.repoId.repo,
+          ref: commitSha,
+        },
+        forceRequest,
+      );
+
+      return data.files?.map(convertGitHubFile) ?? [];
+    } catch (error) {
+      return new Error(`Error fetching commit files: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  };
+
   #onDidChangeIssueComments: vscode.EventEmitter<IssueCommentsPayload> = new vscode.EventEmitter<IssueCommentsPayload>();
   onDidChangeIssueComments = this.#onDidChangeIssueComments.event;
 
   #onDidChangePullRequestReviewComments: vscode.EventEmitter<PullRequestReviewCommentsPayload> =
     new vscode.EventEmitter<PullRequestReviewCommentsPayload>();
   onDidChangePullRequestReviewComments = this.#onDidChangePullRequestReviewComments.event;
+
+  // TODO: Remove or plug in.
+  #onDidChangeCommitFiles: vscode.EventEmitter<CommitFilesPayload> = new vscode.EventEmitter<CommitFilesPayload>();
+  onDidChangeCommitFiles = this.#onDidChangeCommitFiles.event;
 }
