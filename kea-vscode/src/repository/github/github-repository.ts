@@ -33,10 +33,12 @@ export class GitHubRepository extends KeaDisposable implements IKeaRepository {
   repoId: RepoId;
   #cache: ILruApiCache;
 
-  #onDidChangeIssueComments: vscode.EventEmitter<IssueCommentsPayload> = this._register(new vscode.EventEmitter<IssueCommentsPayload>());
+  #onDidChangeIssueComments: vscode.EventEmitter<IssueCommentsPayload> = this._registerDisposable(
+    new vscode.EventEmitter<IssueCommentsPayload>(),
+  );
   onDidChangeIssueComments = this.#onDidChangeIssueComments.event;
 
-  #onDidChangePullRequestReviewComments: vscode.EventEmitter<PullRequestReviewCommentsPayload> = this._register(
+  #onDidChangePullRequestReviewComments: vscode.EventEmitter<PullRequestReviewCommentsPayload> = this._registerDisposable(
     new vscode.EventEmitter<PullRequestReviewCommentsPayload>(),
   );
   onDidChangePullRequestReviewComments = this.#onDidChangePullRequestReviewComments.event;

@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 
-const disposeAll = (disposables: vscode.Disposable[]) => {
+export const disposeAll = (disposables: vscode.Disposable[]) => {
   while (disposables.length) {
     disposables.pop()?.dispose();
   }
@@ -26,7 +26,7 @@ export abstract class KeaDisposable implements IKeaDisposable {
     this.#isDisposed = true;
   };
 
-  protected _register = <T extends vscode.Disposable>(disposable: T): T => {
+  protected _registerDisposable = <T extends vscode.Disposable>(disposable: T): T => {
     if (this.#isDisposed) {
       disposable.dispose();
       return disposable;

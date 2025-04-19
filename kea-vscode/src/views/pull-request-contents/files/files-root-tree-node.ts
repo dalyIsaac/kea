@@ -13,13 +13,12 @@ export class FilesRootTreeNode extends BaseFilesRootTreeNode {
   #tooltip = "Files";
   #label = "Files";
 
+  pullId: PullRequestId;
   collapsibleState: CollapsibleState = "collapsed";
-
-  #pullId: PullRequestId;
 
   constructor(repository: IKeaRepository, id: PullRequestId) {
     super(repository);
-    this.#pullId = id;
+    this.pullId = id;
   }
 
   getTreeItem = (): vscode.TreeItem => {
@@ -32,8 +31,8 @@ export class FilesRootTreeNode extends BaseFilesRootTreeNode {
 
   getChildren = async (): Promise<FilesRootTreeNodeChild[]> => {
     const [files, reviewComments] = await Promise.all([
-      this._repository.getPullRequestFiles(this.#pullId),
-      this._repository.getPullRequestReviewComments(this.#pullId),
+      this._repository.getPullRequestFiles(this.pullId),
+      this._repository.getPullRequestReviewComments(this.pullId),
     ]);
 
     if (files instanceof Error) {

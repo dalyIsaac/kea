@@ -12,13 +12,13 @@ export class CommitsRootTreeNode implements IParentTreeNode<CommitTreeNode> {
   #contextValue = "commit";
   #iconPath = new vscode.ThemeIcon("git-commit");
   #repository: IKeaRepository;
-  #pullId: PullRequestId;
 
+  pullId: PullRequestId;
   collapsibleState: CollapsibleState = "collapsed";
 
   constructor(repository: IKeaRepository, pullId: PullRequestId) {
     this.#repository = repository;
-    this.#pullId = pullId;
+    this.pullId = pullId;
   }
 
   getTreeItem = (): vscode.TreeItem => {
@@ -29,7 +29,7 @@ export class CommitsRootTreeNode implements IParentTreeNode<CommitTreeNode> {
   };
 
   getChildren = async (): Promise<CommitTreeNode[]> => {
-    const commits = await this.#repository.getPullRequestCommits(this.#pullId);
+    const commits = await this.#repository.getPullRequestCommits(this.pullId);
 
     if (commits instanceof Error) {
       Logger.error("Error fetching pull request commits", commits);
