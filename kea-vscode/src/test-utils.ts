@@ -78,6 +78,7 @@ export const createRepositoryStub = (props: Partial<IKeaRepository> = {}): IKeaR
   getCommitComments: sinon.stub(),
   onDidChangeIssueComments: sinon.stub(),
   onDidChangePullRequestReviewComments: sinon.stub(),
+  dispose: sinon.stub(),
   ...props,
 });
 
