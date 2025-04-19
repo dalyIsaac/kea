@@ -24,6 +24,8 @@ suite("GitHubRepository", () => {
     number: 123,
   });
 
+  const createCommitSha = (): string => "abc123def456";
+
   const createOctokitStub = () => ({
     request: sinon.stub(),
   });
@@ -48,33 +50,7 @@ suite("GitHubRepository", () => {
 
   // Create the mock API response objects
   const createPullRequestListResponse = (wasCached = false) => ({
-    data: [
-      {
-        id: 1,
-        number: 123,
-        title: "Test PR",
-        state: "open",
-        created_at: "2025-04-15T12:00:00Z",
-        updated_at: "2025-04-16T14:00:00Z",
-        closed_at: null,
-        merged_at: null,
-        draft: false,
-        user: {
-          login: "test-user",
-          avatar_url: "https://avatar.url",
-        },
-        html_url: "https://pr.url",
-        base: {
-          repo: {
-            name: "test-repo",
-            owner: {
-              login: "test-owner",
-            },
-            html_url: "https://repo.url",
-          },
-        },
-      },
-    ],
+    data: [createPullRequestResponse().data],
     headers: {
       etag: "etag123",
       "last-modified": "last-modified-date",
@@ -181,6 +157,55 @@ suite("GitHubRepository", () => {
     headers: {
       etag: "etag123",
       "last-modified": "last-modified-date",
+    },
+    wasCached,
+  });
+
+  const createCommitFilesResponse = (wasCached = false) => ({
+    data: {
+      files: [
+        {
+          filename: "src/test.ts",
+          status: "modified",
+          sha: "def456",
+          additions: 5,
+          deletions: 2,
+          changes: 7,
+          patch: "@@ -1,1 +1,1 @@",
+          blob_url: "https://blob.url/test",
+          raw_url: "https://raw.url/test",
+          contents_url: "https://contents.url/test",
+        },
+      ],
+    },
+    headers: {
+      etag: "etag456",
+      "last-modified": "last-modified-date-commit",
+    },
+    wasCached,
+  });
+
+  const createCommitCommentsResponse = (wasCached = false) => ({
+    data: [
+      {
+        id: 10,
+        body: "Test commit comment",
+        created_at: "2025-04-18T10:00:00Z",
+        updated_at: "2025-04-18T11:00:00Z",
+        user: {
+          login: "commenter-user",
+          avatar_url: "https://commenter.avatar.url",
+        },
+        path: "src/test.ts",
+        line: 10,
+        position: 5, // Position within the diff hunk
+        commit_id: "abc123def456",
+        html_url: "https://comment.url",
+      },
+    ],
+    headers: {
+      etag: "etag789",
+      "last-modified": "last-modified-date-comment",
     },
     wasCached,
   });
@@ -535,6 +560,279 @@ suite("GitHubRepository", () => {
       // Then
       assert.ok(result instanceof Error, "Expected result to be an Error");
       assert.ok(result.message.includes("Error fetching pull request files"));
+    });
+  });
+
+  suite("getPullRequestCommits", () => {
+    const createPullRequestCommitsResponse = (wasCached = false) => ({
+      data: [
+        {
+          sha: "abc123def456",
+          commit: {
+            message: "Test commit message",
+            author: {
+              name: "Test Author",
+              email: "test@example.com",
+            },
+            committer: {
+              name: "Test Committer",
+              email: "committer@example.com",
+            },
+            comment_count: 0,
+            tree: {
+              sha: "tree-sha-123",
+              url: "https://tree.url",
+            },
+          },
+          author: {
+            login: "test-user",
+            avatar_url: "https://avatar.url",
+            name: "Test Author",
+          },
+          committer: {
+            login: "test-committer",
+            avatar_url: "https://committer-avatar.url",
+            name: "Test Committer",
+          },
+          html_url: "https://commit.url",
+        },
+      ],
+      headers: {
+        etag: "etag123",
+        "last-modified": "last-modified-date",
+      },
+      wasCached,
+    });
+
+    test("returns pull request commits successfully when API call succeeds", async () => {
+      // Given
+      const { repository, octokitStub, cache } = createTestGitHubRepository();
+      const pullRequestId = createPullRequestId();
+      const mockResponse = createPullRequestCommitsResponse();
+
+      octokitStub.request.resolves(mockResponse);
+      (cache.get as sinon.SinonStub).returns(undefined);
+
+      // When
+      const result = await repository.getPullRequestCommits(pullRequestId);
+
+      // Then
+      assert.ok(!(result instanceof Error), "Expected result not to be an Error");
+      assert.ok(Array.isArray(result), "Expected result to be an array");
+      assert.strictEqual(result.length, 1);
+
+      // Check content of the first commit
+      const commit = result[0];
+      assert.ok(commit, "Expected result[0] to exist");
+      assert.strictEqual(commit.sha, "abc123def456");
+      assert.strictEqual(commit.commit.message, "Test commit message");
+      assert.strictEqual(commit.commit.author?.name, "Test Author");
+
+      // Verify the API call was made correctly
+      sinon.assert.calledOnceWithExactly(octokitStub.request, "GET /repos/{owner}/{repo}/pulls/{pull_number}/commits", {
+        owner: "test-owner",
+        repo: "test-repo",
+        pull_number: 123,
+        headers: {},
+      });
+    });
+
+    test("uses cached results when available without making API call", async () => {
+      // Given
+      const { repository, octokitStub, cache } = createTestGitHubRepository();
+      const pullRequestId = createPullRequestId();
+      const cachedData = createPullRequestCommitsResponse().data;
+
+      (cache.get as sinon.SinonStub).returns({ data: cachedData, headers: {} } as ICacheValue<unknown>);
+
+      // When
+      const result = await repository.getPullRequestCommits(pullRequestId);
+
+      // Then
+      assert.ok(!(result instanceof Error), "Expected result not to be an Error");
+      assert.ok(Array.isArray(result), "Expected result to be an array");
+      assert.strictEqual(result.length, 1);
+
+      // Check content of the first commit
+      const commit = result[0];
+      assert.ok(commit, "Expected result[0] to exist");
+      assert.strictEqual(commit.sha, "abc123def456");
+      assert.strictEqual(commit.commit.message, "Test commit message");
+      assert.strictEqual(commit.commit.author?.name, "Test Author");
+
+      // Verify the API call was NOT made
+      sinon.assert.notCalled(octokitStub.request);
+    });
+
+    test("returns error object when request fails", async () => {
+      // Given
+      const { repository, octokitStub, cache } = createTestGitHubRepository();
+      const pullRequestId = createPullRequestId();
+      octokitStub.request.rejects(new Error("Network error"));
+      (cache.get as sinon.SinonStub).returns(undefined);
+
+      // When
+      const result = await repository.getPullRequestCommits(pullRequestId);
+
+      // Then
+      assert.ok(result instanceof Error, "Expected result to be an Error");
+      assert.ok(result.message.includes("Error fetching pull request commits"));
+    });
+  });
+
+  suite("getCommitFiles", () => {
+    test("returns commit files successfully when API call succeeds", async () => {
+      // Given
+      const { repository, octokitStub, cache } = createTestGitHubRepository();
+      const commitSha = createCommitSha();
+      const mockResponse = createCommitFilesResponse();
+
+      octokitStub.request.resolves(mockResponse);
+      (cache.get as sinon.SinonStub).returns(undefined);
+
+      // When
+      const result = await repository.getCommitFiles(commitSha);
+
+      // Then
+      assert.ok(!(result instanceof Error), "Expected result not to be an Error");
+      assert.ok(Array.isArray(result), "Expected result to be an array");
+      assert.strictEqual(result.length, 1);
+
+      // Check content of the first file
+      const file = result[0];
+      assert.ok(file, "Expected result[0] to exist");
+      assert.strictEqual(file.filename, "src/test.ts");
+      assert.strictEqual(file.status, "modified");
+      assert.strictEqual(file.additions, 5);
+
+      // Verify the API call was made correctly
+      sinon.assert.calledOnceWithExactly(octokitStub.request, "GET /repos/{owner}/{repo}/commits/{ref}", {
+        owner: "test-owner",
+        repo: "test-repo",
+        ref: commitSha,
+        headers: {},
+      });
+    });
+
+    test("uses cached results when available without making API call", async () => {
+      // Given
+      const { repository, octokitStub, cache } = createTestGitHubRepository();
+      const commitSha = createCommitSha();
+      // Correct: Cache should store the full data object returned by the API endpoint
+      const cachedData = createCommitFilesResponse().data;
+
+      (cache.get as sinon.SinonStub).returns({ data: cachedData, headers: {} } as ICacheValue<unknown>);
+
+      // When
+      const result = await repository.getCommitFiles(commitSha);
+
+      // Then
+      assert.ok(!(result instanceof Error), "Expected result not to be an Error");
+      assert.ok(Array.isArray(result), "Expected result to be an array");
+      assert.strictEqual(result.length, 1);
+
+      // Check content of the first file
+      const file = result[0];
+      assert.ok(file, "Expected result[0] to exist");
+      assert.strictEqual(file.filename, "src/test.ts");
+      assert.strictEqual(file.status, "modified");
+
+      // Verify the API call was NOT made
+      sinon.assert.notCalled(octokitStub.request);
+    });
+
+    test("returns error object when request fails", async () => {
+      // Given
+      const { repository, octokitStub, cache } = createTestGitHubRepository();
+      const commitSha = createCommitSha();
+      octokitStub.request.rejects(new Error("Network error"));
+      (cache.get as sinon.SinonStub).returns(undefined);
+
+      // When
+      const result = await repository.getCommitFiles(commitSha);
+
+      // Then
+      assert.ok(result instanceof Error, "Expected result to be an Error");
+      assert.ok(result.message.includes("Error fetching commit files"));
+    });
+  });
+
+  suite("getCommitComments", () => {
+    test("returns commit comments successfully", async () => {
+      // Given
+      const { repository: originalRepo, octokitStub, cache } = createTestGitHubRepository();
+      const commitSha = createCommitSha();
+      const commentsResponse = createCommitCommentsResponse();
+
+      // Clear cache and ensure fresh response
+      (cache.get as sinon.SinonStub).returns(undefined);
+
+      // Mock octokit response with fresh data (not cached)
+      octokitStub.request.resolves({
+        data: commentsResponse.data,
+        headers: commentsResponse.headers,
+        status: 200,
+      });
+
+      // When
+      const result = await originalRepo.getCommitComments(commitSha);
+
+      // Then
+      assert.ok(!(result instanceof Error), "Expected result not to be an Error");
+      assert.ok(Array.isArray(result), "Expected result to be an array");
+      assert.strictEqual(result.length, 1);
+
+      // Check content of the first comment
+      const comment = result[0];
+      assert.ok(comment, "Expected result[0] to exist");
+      assert.strictEqual(comment.body, "Test commit comment");
+      assert.strictEqual(comment.path, "src/test.ts");
+
+      // Verify the API call was made correctly
+      sinon.assert.calledOnceWithExactly(octokitStub.request, "GET /repos/{owner}/{repo}/commits/{commit_sha}/comments", {
+        owner: "test-owner",
+        repo: "test-repo",
+        commit_sha: commitSha,
+        headers: {},
+      });
+    });
+
+    test("does not make API call when using cached results", async () => {
+      // Given
+      const { repository: originalRepo, octokitStub, cache } = createTestGitHubRepository();
+      const commitSha = createCommitSha();
+      const cachedData = createCommitCommentsResponse().data;
+
+      // Set up cache to return data
+      (cache.get as sinon.SinonStub).returns({ data: cachedData, headers: {} } as ICacheValue<unknown>);
+
+      // Mock request to simulate a cached response when called
+      octokitStub.request.resolves({
+        data: cachedData,
+        headers: {},
+        wasCached: true, // Simulate cache hit from API layer
+      });
+
+      // When
+      await originalRepo.getCommitComments(commitSha); // Use originalRepo
+
+      // Then - API call should NOT happen because cache has data
+      sinon.assert.notCalled(octokitStub.request); // Correct assertion
+    });
+
+    test("returns error object when request fails", async () => {
+      // Given
+      const { repository: originalRepo, octokitStub, cache } = createTestGitHubRepository();
+      const commitSha = createCommitSha();
+      octokitStub.request.rejects(new Error("Network error"));
+      (cache.get as sinon.SinonStub).returns(undefined);
+
+      // When
+      const result = await originalRepo.getCommitComments(commitSha); // Use originalRepo
+
+      // Then
+      assert.ok(result instanceof Error, "Expected result to be an Error");
+      assert.ok(result.message.includes("Error fetching commit comments"));
     });
   });
 });

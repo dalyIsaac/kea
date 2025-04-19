@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import { IAccountKey } from "../../account/account";
 import { createCommentDecorationUri } from "../../decorations/decoration-schemes";
-import { PullRequestComment, PullRequestFile, RepoId } from "../../types/kea";
+import { CommitFile, FileComment, RepoId } from "../../types/kea";
 import { CollapsibleState, getCollapsibleState, IParentTreeNode } from "../tree-node";
 import { ReviewCommentTreeNode } from "./review-comment-tree-node";
 
@@ -13,12 +13,12 @@ export class FileTreeNode implements IParentTreeNode<ReviewCommentTreeNode> {
   #iconPath = new vscode.ThemeIcon("file");
   #tooltip = "File";
   #resourceUri: vscode.Uri;
-  #comments: PullRequestComment[];
+  #comments: FileComment[];
   fileName: string;
 
   collapsibleState: CollapsibleState;
 
-  constructor(accountKey: IAccountKey, repoId: RepoId, file: PullRequestFile, comments: PullRequestComment[]) {
+  constructor(accountKey: IAccountKey, repoId: RepoId, file: CommitFile, comments: FileComment[]) {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     this.fileName = file.filename.split("/").pop()!;
     this.collapsibleState = comments.length > 0 ? "collapsed" : "none";

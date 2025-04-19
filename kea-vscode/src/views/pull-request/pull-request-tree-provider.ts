@@ -5,10 +5,11 @@ import { IKeaRepository } from "../../repository/kea-repository";
 import { IRepositoryManager } from "../../repository/repository-manager";
 import { PullRequest, PullRequestId } from "../../types/kea";
 import { TreeNodeProvider } from "../pull-request-list/tree-node-provider";
-import { CommentsRootTreeNode } from "./comments-root-tree-node";
-import { FilesRootTreeNode } from "./files-root-tree-node";
+import { CommentsRootTreeNode } from "./comments/comments-root-tree-node";
+import { CommitsRootTreeNode } from "./commits/commits-root-tree-node";
+import { FilesRootTreeNode } from "./files/files-root-tree-node";
 
-export type PullRequestTreeNode = CommentsRootTreeNode | FilesRootTreeNode;
+export type PullRequestTreeNode = CommitsRootTreeNode | CommentsRootTreeNode | FilesRootTreeNode;
 
 /**
  * Provides information about the current pull request.
@@ -19,6 +20,7 @@ export class PullRequestTreeProvider extends TreeNodeProvider<PullRequestTreeNod
   #pullInfo: { repository: IKeaRepository; pullId: PullRequestId; pullRequest: PullRequest } | undefined;
   #commentsRootTreeNode?: CommentsRootTreeNode;
   #filesRootTreeNode?: FilesRootTreeNode;
+  #commitsRootTreeNode?: CommitsRootTreeNode;
 
   constructor(repositoryManager: IRepositoryManager, cache: ILruApiCache) {
     super();
@@ -36,8 +38,9 @@ export class PullRequestTreeProvider extends TreeNodeProvider<PullRequestTreeNod
 
     this.#commentsRootTreeNode ??= new CommentsRootTreeNode(repository, pullId, this);
     this.#filesRootTreeNode ??= new FilesRootTreeNode(repository, pullId);
+    this.#commitsRootTreeNode ??= new CommitsRootTreeNode(repository, pullId);
 
-    return Promise.resolve([this.#commentsRootTreeNode, this.#filesRootTreeNode]);
+    return Promise.resolve([this.#commitsRootTreeNode, this.#commentsRootTreeNode, this.#filesRootTreeNode]);
   };
 
   openPullRequest = async (accountKey: IAccountKey, pullId: PullRequestId): Promise<boolean> => {

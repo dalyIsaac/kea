@@ -1,11 +1,11 @@
 import * as assert from "assert";
 import * as vscode from "vscode";
-import { createPullRequestCommentStub, createPullRequestFileStub, createRepositoryStub } from "../../test-utils";
-import { PullRequestId } from "../../types/kea";
-import { FileTreeNode } from "./file-tree-node";
+import { createFileStub, createPullRequestCommentStub, createRepositoryStub } from "../../../test-utils";
+import { PullRequestId } from "../../../types/kea";
+import { FileTreeNode } from "../../common/file-tree-node";
+import { FolderTreeNode } from "../../common/folder-tree-node";
+import { ReviewCommentTreeNode } from "../../common/review-comment-tree-node";
 import { FilesRootTreeNode } from "./files-root-tree-node";
-import { FolderTreeNode } from "./folder-tree-node";
-import { ReviewCommentTreeNode } from "./review-comment-tree-node";
 
 suite("FilesRootTreeNode", () => {
   const pullId: PullRequestId = { owner: "owner", repo: "repo", number: 1 };
@@ -27,7 +27,7 @@ suite("FilesRootTreeNode", () => {
   test("Continues to return an empty array when the review comments API call fails", async () => {
     // Given
     const repository = createRepositoryStub({
-      getPullRequestFiles: (_id) => Promise.resolve([createPullRequestFileStub({ filename: "README.md" })]),
+      getPullRequestFiles: (_id) => Promise.resolve([createFileStub({ filename: "README.md" })]),
       getPullRequestReviewComments: (_id) => Promise.resolve(new Error("API call failed")),
     });
 
@@ -56,7 +56,7 @@ suite("FilesRootTreeNode", () => {
   test("Returns a single file when there is one file", async () => {
     // Given
     const repository = createRepositoryStub({
-      getPullRequestFiles: (_id) => Promise.resolve([createPullRequestFileStub({ filename: "README.md" })]),
+      getPullRequestFiles: (_id) => Promise.resolve([createFileStub({ filename: "README.md" })]),
       getPullRequestReviewComments: (_id) => Promise.resolve([]),
     });
 
@@ -78,10 +78,10 @@ suite("FilesRootTreeNode", () => {
     const repository = createRepositoryStub({
       getPullRequestFiles: (_id) =>
         Promise.resolve([
-          createPullRequestFileStub({ filename: "src/components/Button.tsx" }),
-          createPullRequestFileStub({ filename: "src/components/Modal.tsx" }),
-          createPullRequestFileStub({ filename: "src/utils/helpers.ts" }),
-          createPullRequestFileStub({ filename: "README.md" }),
+          createFileStub({ filename: "src/components/Button.tsx" }),
+          createFileStub({ filename: "src/components/Modal.tsx" }),
+          createFileStub({ filename: "src/utils/helpers.ts" }),
+          createFileStub({ filename: "README.md" }),
         ]),
       getPullRequestReviewComments: (_id) => Promise.resolve([]),
     });
@@ -135,7 +135,7 @@ suite("FilesRootTreeNode", () => {
   test("Returns a single file with multiple review comments", async () => {
     // Given
     const repository = createRepositoryStub({
-      getPullRequestFiles: (_id) => Promise.resolve([createPullRequestFileStub({ filename: "README.md" })]),
+      getPullRequestFiles: (_id) => Promise.resolve([createFileStub({ filename: "README.md" })]),
       getPullRequestReviewComments: (_id) =>
         Promise.resolve([
           createPullRequestCommentStub({ body: "Comment 1", path: "README.md" }),

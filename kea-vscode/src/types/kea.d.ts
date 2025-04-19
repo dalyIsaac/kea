@@ -7,16 +7,36 @@ export interface IssueId extends RepoId {
   number: number;
 }
 
-export interface IssueComment {
+interface BaseComment {
   id: number;
   body: string | null;
   createdAt: Date;
   updatedAt: Date;
+  user: User | null;
+}
+
+export interface IssueComment extends BaseComment {
   replyTo: number | null;
-  user: {
-    login: string;
-    avatarUrl: string;
-  };
+}
+
+export interface CommitComment extends BaseComment {
+  path: string | null;
+  position: number | null;
+  line: number | null;
+}
+
+export type FileComment = PullRequestComment | CommitComment;
+
+export type Side = "LEFT" | "RIGHT" | "BOTH";
+
+export interface PullRequestComment extends IssueComment {
+  path: string;
+  startLine: number | null;
+  originalStartLine: number | null;
+  startSide: Side | null;
+  line: number | null;
+  originalLine: number | null;
+  side: Side | null;
 }
 
 export type PullRequestId = IssueId;
@@ -37,27 +57,12 @@ export interface PullRequest {
     owner: string;
     url: string;
   };
-  user: {
-    login: string;
-    avatarUrl: string;
-  };
-}
-
-export type Side = "LEFT" | "RIGHT" | "BOTH";
-
-export interface PullRequestComment extends IssueComment {
-  path: string;
-  startLine: number | null;
-  originalStartLine: number | null;
-  startSide: Side | null;
-  line: number | null;
-  originalLine: number | null;
-  side: Side | null;
+  user: User | null;
 }
 
 export type FileStatus = "added" | "removed" | "modified" | "renamed" | "copied" | "changed" | "unchanged";
 
-export interface PullRequestFile {
+export interface CommitFile {
   filename: string;
   sha: string;
   status: FileStatus;
@@ -68,4 +73,29 @@ export interface PullRequestFile {
   blobUrl: string;
   rawUrl: string;
   contentsUrl: string;
+}
+
+export interface User {
+  name?: string | null;
+  email?: string | null;
+}
+
+export interface Commit {
+  sha: string;
+  commit: {
+    author: User | null;
+    committer: User | null;
+    message: string;
+    commentCount: number;
+    tree: {
+      sha: string;
+      url: string;
+    };
+  };
+  stats?: {
+    total?: number | null;
+    additions?: number | null;
+    deletions?: number | null;
+  };
+  url: string;
 }

@@ -1,5 +1,13 @@
 import { RestEndpointMethodTypes } from "@octokit/rest";
-import { IssueComment, PullRequest, PullRequestComment, PullRequestFile } from "../../types/kea";
+import { Commit, CommitComment, CommitFile, IssueComment, PullRequest, PullRequestComment } from "../../types/kea";
+
+/**
+ * Converts an Octokit User response to our internal User type.
+ */
+export const convertGitHubUser = (user: NonNullable<RestEndpointMethodTypes["issues"]["get"]["response"]["data"]["user"]>) => ({
+  name: user.name ?? null,
+  email: user.email ?? null,
+});
 
 /**
  * Converts an Octokit Pull Request List item response to our internal PullRequest type.
@@ -22,10 +30,7 @@ export const convertGitHubPullRequestListItem = (
     owner: pr.base.repo.owner.login,
     url: pr.base.repo.html_url,
   },
-  user: {
-    login: pr.user?.login ?? "",
-    avatarUrl: pr.user?.avatar_url ?? "",
-  },
+  user: pr.user ? convertGitHubUser(pr.user) : null,
 });
 
 /**
@@ -47,10 +52,7 @@ export const convertGitHubPullRequest = (pr: RestEndpointMethodTypes["pulls"]["g
     owner: pr.base.repo.owner.login,
     url: pr.base.repo.html_url,
   },
-  user: {
-    login: pr.user.login,
-    avatarUrl: pr.user.avatar_url,
-  },
+  user: convertGitHubUser(pr.user),
 });
 
 /**
@@ -64,10 +66,23 @@ export const convertGitHubIssueComment = (
   createdAt: new Date(comment.created_at),
   updatedAt: new Date(comment.updated_at),
   replyTo: null,
-  user: {
-    login: comment.user?.login ?? "",
-    avatarUrl: comment.user?.avatar_url ?? "",
-  },
+  user: comment.user ? convertGitHubUser(comment.user) : null,
+});
+
+/**
+ * Converts an Octokit Commit Comment response to our internal CommitComment type.
+ */
+export const convertGitHubCommitComment = (
+  comment: RestEndpointMethodTypes["repos"]["listCommentsForCommit"]["response"]["data"][number],
+): CommitComment => ({
+  id: comment.id,
+  body: comment.body,
+  createdAt: new Date(comment.created_at),
+  updatedAt: new Date(comment.updated_at),
+  path: comment.path ?? null,
+  position: comment.position ?? null,
+  line: comment.line ?? null,
+  user: comment.user ? convertGitHubUser(comment.user) : null,
 });
 
 /**
@@ -88,18 +103,13 @@ export const convertGitHubPullRequestReviewComment = (
   line: comment.line ?? null,
   originalLine: comment.original_line ?? null,
   side: comment.side ?? null,
-  user: {
-    login: comment.user.login,
-    avatarUrl: comment.user.avatar_url,
-  },
+  user: convertGitHubUser(comment.user),
 });
 
 /**
- * Converts an Octokit Pull Request File response to our internal PullRequestFile type
+ * Converts an Octokit Pull Request File response to our internal PullRequestFile type.
  */
-export const convertGitHubPullRequestFile = (
-  file: RestEndpointMethodTypes["pulls"]["listFiles"]["response"]["data"][number],
-): PullRequestFile => ({
+export const convertGitHubFile = (file: RestEndpointMethodTypes["pulls"]["listFiles"]["response"]["data"][number]): CommitFile => ({
   filename: file.filename,
   sha: file.sha,
   status: file.status,
@@ -111,3 +121,37 @@ export const convertGitHubPullRequestFile = (
   contentsUrl: file.contents_url,
   patch: file.patch ?? null,
 });
+
+/**
+ * Converts an Octokit Pull Request Commit response to our internal PullRequestCommit type.
+ */
+export const convertGitHubCommit = (commit: RestEndpointMethodTypes["pulls"]["listCommits"]["response"]["data"][number]): Commit => {
+  const gitAuthor = commit.commit.author ? { name: commit.commit.author.name ?? null, email: commit.commit.author.email ?? null } : null;
+  const gitCommitter = commit.commit.committer
+    ? { name: commit.commit.committer.name ?? null, email: commit.commit.committer.email ?? null }
+    : null;
+
+  return {
+    sha: commit.sha,
+    commit: {
+      author: gitAuthor,
+      committer: gitCommitter,
+      message: commit.commit.message,
+      commentCount: commit.commit.comment_count,
+      tree: {
+        sha: commit.commit.tree.sha,
+        url: commit.commit.tree.url,
+      },
+    },
+    ...(commit.stats
+      ? {
+          stats: {
+            total: commit.stats.total ?? null,
+            additions: commit.stats.additions ?? null,
+            deletions: commit.stats.deletions ?? null,
+          },
+        }
+      : {}),
+    url: commit.html_url,
+  };
+};

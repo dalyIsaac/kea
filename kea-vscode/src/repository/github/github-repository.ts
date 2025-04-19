@@ -2,16 +2,28 @@ import { Endpoints, RequestParameters, Route } from "@octokit/types";
 import * as vscode from "vscode";
 import { GitHubAccount } from "../../account/github/github-account";
 import {
+  convertGitHubCommit,
+  convertGitHubCommitComment,
+  convertGitHubFile,
   convertGitHubIssueComment,
   convertGitHubPullRequest,
-  convertGitHubPullRequestFile,
   convertGitHubPullRequestListItem,
   convertGitHubPullRequestReviewComment,
 } from "../../account/github/github-utils";
 import { Logger } from "../../core/logger";
 import { CacheKey, isMethod } from "../../lru-cache/cache-types";
 import { ILruApiCache } from "../../lru-cache/lru-api-cache";
-import { IssueComment, IssueId, PullRequest, PullRequestComment, PullRequestFile, PullRequestId, RepoId } from "../../types/kea";
+import {
+  Commit,
+  CommitComment,
+  CommitFile,
+  IssueComment,
+  IssueId,
+  PullRequest,
+  PullRequestComment,
+  PullRequestId,
+  RepoId,
+} from "../../types/kea";
 import { IKeaRepository, IssueCommentsPayload, PullRequestReviewCommentsPayload } from "../kea-repository";
 
 export class GitHubRepository implements IKeaRepository {
@@ -181,10 +193,8 @@ export class GitHubRepository implements IKeaRepository {
   };
 
   getIssueComments = async (issueId: IssueId, forceRequest?: boolean): Promise<IssueComment[] | Error> => {
-    let result: IssueComment[] | Error;
-    let wasCached = false;
     try {
-      const response = await this.#request(
+      const { data, wasCached } = await this.#request(
         "GET /repos/{owner}/{repo}/issues/{issue_number}/comments",
         {
           owner: issueId.owner,
@@ -194,23 +204,20 @@ export class GitHubRepository implements IKeaRepository {
         forceRequest,
       );
 
-      result = response.data.map(convertGitHubIssueComment);
-      wasCached = response.wasCached;
-    } catch (error) {
-      result = new Error(`Error fetching issue comments: ${error instanceof Error ? error.message : String(error)}`);
-    }
+      const result = data.map(convertGitHubIssueComment);
+      if (!wasCached) {
+        this.#onDidChangeIssueComments.fire({ issueId, comments: result });
+      }
 
-    if (!wasCached) {
-      this.#onDidChangeIssueComments.fire({ issueId, comments: result });
+      return result;
+    } catch (error) {
+      return new Error(`Error fetching issue comments: ${error instanceof Error ? error.message : String(error)}`);
     }
-    return result;
   };
 
   getPullRequestReviewComments = async (pullId: PullRequestId, forceRequest?: boolean): Promise<PullRequestComment[] | Error> => {
-    let result: PullRequestComment[] | Error;
-    let wasCached = false;
     try {
-      const response = await this.#request(
+      const { data, wasCached } = await this.#request(
         "GET /repos/{owner}/{repo}/pulls/{pull_number}/comments",
         {
           owner: pullId.owner,
@@ -220,21 +227,20 @@ export class GitHubRepository implements IKeaRepository {
         forceRequest,
       );
 
-      result = response.data.map(convertGitHubPullRequestReviewComment);
-      wasCached = response.wasCached;
-    } catch (error) {
-      result = new Error(`Error fetching pull request comments: ${error instanceof Error ? error.message : String(error)}`);
-    }
+      const result = data.map(convertGitHubPullRequestReviewComment);
+      if (!wasCached) {
+        this.#onDidChangePullRequestReviewComments.fire({ pullId, comments: result });
+      }
 
-    if (!wasCached) {
-      this.#onDidChangePullRequestReviewComments.fire({ pullId, comments: result });
+      return result;
+    } catch (error) {
+      return new Error(`Error fetching pull request comments: ${error instanceof Error ? error.message : String(error)}`);
     }
-    return result;
   };
 
-  getPullRequestFiles = async (pullId: PullRequestId, forceRequest?: boolean): Promise<PullRequestFile[] | Error> => {
+  getPullRequestFiles = async (pullId: PullRequestId, forceRequest?: boolean): Promise<CommitFile[] | Error> => {
     try {
-      const { data: response } = await this.#request(
+      const { data } = await this.#request(
         "GET /repos/{owner}/{repo}/pulls/{pull_number}/files",
         {
           owner: pullId.owner,
@@ -244,9 +250,63 @@ export class GitHubRepository implements IKeaRepository {
         forceRequest,
       );
 
-      return response.map(convertGitHubPullRequestFile);
+      return data.map(convertGitHubFile);
     } catch (error) {
       return new Error(`Error fetching pull request files: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  };
+
+  getPullRequestCommits = async (pullId: PullRequestId, forceRequest?: boolean): Promise<Commit[] | Error> => {
+    try {
+      const { data } = await this.#request(
+        "GET /repos/{owner}/{repo}/pulls/{pull_number}/commits",
+        {
+          owner: pullId.owner,
+          repo: pullId.repo,
+          pull_number: pullId.number,
+        },
+        forceRequest,
+      );
+
+      return data.map(convertGitHubCommit);
+    } catch (error) {
+      return new Error(`Error fetching pull request commits: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  };
+
+  getCommitFiles = async (commitSha: string, forceRequest?: boolean): Promise<CommitFile[] | Error> => {
+    try {
+      const { data } = await this.#request(
+        "GET /repos/{owner}/{repo}/commits/{ref}",
+        {
+          owner: this.repoId.owner,
+          repo: this.repoId.repo,
+          ref: commitSha,
+        },
+        forceRequest,
+      );
+
+      return data.files?.map(convertGitHubFile) ?? [];
+    } catch (error) {
+      return new Error(`Error fetching commit files: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  };
+
+  getCommitComments = async (commitSha: string, forceRequest?: boolean): Promise<CommitComment[] | Error> => {
+    try {
+      const { data } = await this.#request(
+        "GET /repos/{owner}/{repo}/commits/{commit_sha}/comments",
+        {
+          owner: this.repoId.owner,
+          repo: this.repoId.repo,
+          commit_sha: commitSha,
+        },
+        forceRequest,
+      );
+
+      return data.map(convertGitHubCommitComment);
+    } catch (error) {
+      return new Error(`Error fetching commit comments: ${error instanceof Error ? error.message : String(error)}`);
     }
   };
 

@@ -1,14 +1,14 @@
 import * as vscode from "vscode";
-import { PullRequestComment } from "../../types/kea";
+import { FileComment } from "../../types/kea";
 import { ITreeNode } from "../tree-node";
 
 export class ReviewCommentTreeNode implements ITreeNode {
   #contextValue = "review-comment";
   #iconPath = new vscode.ThemeIcon("comment-discussion");
   #tooltip = "Review Comment";
-  readonly comment: PullRequestComment;
+  readonly comment: FileComment;
 
-  constructor(comment: PullRequestComment) {
+  constructor(comment: FileComment) {
     this.comment = comment;
   }
 

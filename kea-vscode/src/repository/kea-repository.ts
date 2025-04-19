@@ -1,6 +1,16 @@
 import * as vscode from "vscode";
 import { IAccount } from "../account/account";
-import { IssueComment, IssueId, PullRequest, PullRequestComment, PullRequestFile, PullRequestId, RepoId } from "../types/kea";
+import {
+  Commit,
+  CommitComment,
+  CommitFile,
+  IssueComment,
+  IssueId,
+  PullRequest,
+  PullRequestComment,
+  PullRequestId,
+  RepoId,
+} from "../types/kea";
 
 export interface IssueCommentsPayload {
   issueId: IssueId;
@@ -22,7 +32,10 @@ export interface IKeaRepository {
   getPullRequest: (pullId: PullRequestId, forceRequest?: boolean) => Promise<PullRequest | Error>;
   getIssueComments: (issueId: IssueId, forceRequest?: boolean) => Promise<IssueComment[] | Error>;
   getPullRequestReviewComments: (pullId: PullRequestId, forceRequest?: boolean) => Promise<PullRequestComment[] | Error>;
-  getPullRequestFiles: (pullId: PullRequestId, forceRequest?: boolean) => Promise<PullRequestFile[] | Error>;
+  getPullRequestFiles: (pullId: PullRequestId, forceRequest?: boolean) => Promise<CommitFile[] | Error>;
+  getPullRequestCommits: (pullId: PullRequestId, forceRequest?: boolean) => Promise<Commit[] | Error>;
+  getCommitFiles: (commitSha: string, forceRequest?: boolean) => Promise<CommitFile[] | Error>;
+  getCommitComments: (commitSha: string, forceRequest?: boolean) => Promise<CommitComment[] | Error>;
 
   onDidChangeIssueComments: vscode.Event<IssueCommentsPayload>;
   onDidChangePullRequestReviewComments: vscode.Event<PullRequestReviewCommentsPayload>;

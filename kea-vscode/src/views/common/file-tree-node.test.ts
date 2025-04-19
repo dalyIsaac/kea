@@ -1,6 +1,6 @@
 import * as assert from "assert";
 import { IAccountKey } from "../../account/account";
-import { createPullRequestCommentStub, createPullRequestFileStub } from "../../test-utils";
+import { createFileStub, createPullRequestCommentStub } from "../../test-utils";
 import { PullRequestComment, RepoId } from "../../types/kea";
 import { FileTreeNode } from "./file-tree-node";
 import { ReviewCommentTreeNode } from "./review-comment-tree-node";
@@ -17,7 +17,7 @@ suite("FileTreeNode", () => {
 
   test("FileTreeNode should be created with the name being the last part of the filename", () => {
     // Given
-    const file = createPullRequestFileStub({
+    const file = createFileStub({
       filename: "src/views/pull-request/file-tree-node.ts",
     });
     const comments: PullRequestComment[] = [];
@@ -33,7 +33,7 @@ suite("FileTreeNode", () => {
 
   test("FileTreeNode should contain multiple comments, sorted by createdAt", () => {
     // Given
-    const file = createPullRequestFileStub({
+    const file = createFileStub({
       filename: "src/views/pull-request/file-tree-Node.ts",
     });
     const comments: PullRequestComment[] = [
