@@ -48,33 +48,7 @@ suite("GitHubRepository", () => {
 
   // Create the mock API response objects
   const createPullRequestListResponse = (wasCached = false) => ({
-    data: [
-      {
-        id: 1,
-        number: 123,
-        title: "Test PR",
-        state: "open",
-        created_at: "2025-04-15T12:00:00Z",
-        updated_at: "2025-04-16T14:00:00Z",
-        closed_at: null,
-        merged_at: null,
-        draft: false,
-        user: {
-          login: "test-user",
-          avatar_url: "https://avatar.url",
-        },
-        html_url: "https://pr.url",
-        base: {
-          repo: {
-            name: "test-repo",
-            owner: {
-              login: "test-owner",
-            },
-            html_url: "https://repo.url",
-          },
-        },
-      },
-    ],
+    data: [createPullRequestResponse().data],
     headers: {
       etag: "etag123",
       "last-modified": "last-modified-date",
@@ -548,13 +522,10 @@ suite("GitHubRepository", () => {
             author: {
               name: "Test Author",
               email: "test@example.com",
-              date: "2025-04-15T12:00:00Z",
             },
-            // Add missing fields required by convertGitHubPullRequestCommit
             committer: {
               name: "Test Committer",
               email: "committer@example.com",
-              date: "2025-04-15T12:05:00Z",
             },
             comment_count: 0,
             tree: {
@@ -563,34 +534,16 @@ suite("GitHubRepository", () => {
             },
           },
           author: {
-            // GitHub user info
             login: "test-user",
             avatar_url: "https://avatar.url",
-            // Add other fields if needed by conversion, though typically login/avatar are sufficient
-            id: 12345,
-            node_id: "MDQ6VXNlcjEyMzQ1",
-            gravatar_id: "",
-            url: "https://api.github.com/users/test-user",
-            html_url: "https://github.com/test-user",
-            // ... other user fields
+            name: "Test Author",
           },
           committer: {
-            // GitHub user info for committer
             login: "test-committer",
             avatar_url: "https://committer-avatar.url",
-            id: 67890,
-            node_id: "MDQ6VXNlcjY3ODkw",
-            gravatar_id: "",
-            url: "https://api.github.com/users/test-committer",
-            html_url: "https://github.com/test-committer",
-            // ... other user fields
+            name: "Test Committer",
           },
           html_url: "https://commit.url",
-          // Add other fields expected by the converter if necessary
-          parents: [],
-          url: "https://api.commit.url",
-          comments_url: "https://comments.url",
-          node_id: "commit-node-id",
         },
       ],
       headers: {
@@ -621,9 +574,7 @@ suite("GitHubRepository", () => {
       const commit = result[0];
       assert.ok(commit, "Expected result[0] to exist");
       assert.strictEqual(commit.sha, "abc123def456");
-      // Access message via commit.commit.message
       assert.strictEqual(commit.commit.message, "Test commit message");
-      // Access author name via commit.commit.author.name (adjusting assertion)
       assert.strictEqual(commit.commit.author?.name, "Test Author");
 
       // Verify the API call was made correctly
@@ -655,9 +606,7 @@ suite("GitHubRepository", () => {
       const commit = result[0];
       assert.ok(commit, "Expected result[0] to exist");
       assert.strictEqual(commit.sha, "abc123def456");
-      // Access message via commit.commit.message
       assert.strictEqual(commit.commit.message, "Test commit message");
-      // Access author name via commit.commit.author.name (adjusting assertion)
       assert.strictEqual(commit.commit.author?.name, "Test Author");
 
       // Verify the API call was NOT made

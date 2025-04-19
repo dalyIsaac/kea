@@ -123,22 +123,19 @@ export const convertGitHubFile = (file: RestEndpointMethodTypes["pulls"]["listFi
 });
 
 /**
- * Checks if an object is empty (i.e., has no own properties).
- */
-const isEmptyObject = (obj: object): obj is Record<string, never> => Object.keys(obj).length === 0 && obj.constructor === Object;
-
-/**
  * Converts an Octokit Pull Request Commit response to our internal PullRequestCommit type.
  */
 export const convertGitHubCommit = (commit: RestEndpointMethodTypes["pulls"]["listCommits"]["response"]["data"][number]): Commit => {
-  const author = commit.author !== null && !isEmptyObject(commit.author) ? convertGitHubUser(commit.author) : null;
-  const committer = commit.committer !== null && !isEmptyObject(commit.committer) ? convertGitHubUser(commit.committer) : null;
+  const gitAuthor = commit.commit.author ? { name: commit.commit.author.name ?? null, email: commit.commit.author.email ?? null } : null;
+  const gitCommitter = commit.commit.committer
+    ? { name: commit.commit.committer.name ?? null, email: commit.commit.committer.email ?? null }
+    : null;
 
   return {
     sha: commit.sha,
     commit: {
-      author,
-      committer,
+      author: gitAuthor,
+      committer: gitCommitter,
       message: commit.commit.message,
       commentCount: commit.commit.comment_count,
       tree: {
