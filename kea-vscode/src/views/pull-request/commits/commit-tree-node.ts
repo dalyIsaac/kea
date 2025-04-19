@@ -20,7 +20,14 @@ export class CommitTreeNode extends BaseFilesRootTreeNode {
   }
 
   getTreeItem = (): vscode.TreeItem => {
-    const commitTitle = this.commit.commit.message.split("\n")[0] ?? "<Empty commit>";
+    let commitTitle = this.commit.commit.message.split("\n")[0];
+
+    // Handle empty string explicitly.
+    if (commitTitle === "") {
+      commitTitle = "<Empty commit>";
+    }
+    commitTitle = commitTitle ?? "<Empty commit>";
+
     const treeItem = new vscode.TreeItem(commitTitle, getCollapsibleState(this.collapsibleState));
     treeItem.contextValue = this.#contextValue;
     treeItem.iconPath = this.#iconPath;
