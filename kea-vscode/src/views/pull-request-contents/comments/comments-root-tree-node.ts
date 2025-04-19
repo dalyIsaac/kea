@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { KeaDisposable } from "../../../core/kea-disposable";
 import { Logger } from "../../../core/logger";
 import { createCommentsRootDecorationUri } from "../../../decorations/decoration-schemes";
 import { IKeaRepository, IssueCommentsPayload, PullRequestReviewCommentsPayload } from "../../../repository/kea-repository";
@@ -12,28 +13,28 @@ import { CollapsibleState, getCollapsibleState, IParentTreeNode, ITreeNode } fro
 /**
  * Parent tree node for comments.
  */
-export class CommentsRootTreeNode implements IParentTreeNode<CommentTreeNode | ReviewCommentTreeNode> {
+export class CommentsRootTreeNode extends KeaDisposable implements IParentTreeNode<CommentTreeNode | ReviewCommentTreeNode> {
   #label = "Comments";
   #resourceUri: vscode.Uri;
   #repository: IKeaRepository;
-  #pullId: PullRequestId;
   #provider: ITreeNodeProvider<ITreeNode>;
 
+  pullId: PullRequestId;
   collapsibleState: CollapsibleState = "none";
 
   constructor(repository: IKeaRepository, id: PullRequestId, provider: ITreeNodeProvider<ITreeNode>) {
+    super();
     this.#repository = repository;
-    this.#pullId = id;
+    this.pullId = id;
     this.#provider = provider;
 
     this.#resourceUri = createCommentsRootDecorationUri({
       accountKey: this.#repository.account.accountKey,
-      pullId: this.#pullId,
+      pullId: this.pullId,
     });
 
-    // TODO: Make disposable
-    this.#repository.onDidChangeIssueComments(this.#onDidChangeIssueComments);
-    this.#repository.onDidChangePullRequestReviewComments(this.#onDidChangePullRequestReviewComments);
+    this._registerDisposable(this.#repository.onDidChangeIssueComments(this.#onDidChangeIssueComments));
+    this._registerDisposable(this.#repository.onDidChangePullRequestReviewComments(this.#onDidChangePullRequestReviewComments));
   }
 
   getTreeItem = (): vscode.TreeItem => {
@@ -46,8 +47,8 @@ export class CommentsRootTreeNode implements IParentTreeNode<CommentTreeNode | R
 
   getChildren = async (): Promise<Array<CommentTreeNode | ReviewCommentTreeNode>> => {
     const [reviewComments, issueComments] = await Promise.all([
-      this.#repository.getPullRequestReviewComments(this.#pullId),
-      this.#repository.getIssueComments(this.#pullId),
+      this.#repository.getPullRequestReviewComments(this.pullId),
+      this.#repository.getIssueComments(this.pullId),
     ]);
 
     let hasFailed = false;
@@ -90,7 +91,7 @@ export class CommentsRootTreeNode implements IParentTreeNode<CommentTreeNode | R
       return;
     }
 
-    if (!isSamePullRequest(this.#pullId, pullId)) {
+    if (!isSamePullRequest(this.pullId, pullId)) {
       return;
     }
 

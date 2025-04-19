@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { disposeAll } from "../core/kea-disposable";
 import { IKeaRepository, IssueCommentsPayload } from "../repository/kea-repository";
 import { BaseTreeDecorationProvider } from "./base-tree-decoration-provider";
 import { createCommentsRootDecorationUri } from "./decoration-schemes";
@@ -10,14 +11,13 @@ export class TreeDecorationManager {
   registerProviders = (...providers: BaseTreeDecorationProvider[]): void => {
     this.#providers.push(...providers);
     for (const provider of providers) {
-      // TODO: Make disposable
-      vscode.window.registerFileDecorationProvider(provider);
+      this.#repositoryListeners.push(vscode.window.registerFileDecorationProvider(provider));
     }
   };
 
   updateListeners = (...repositories: IKeaRepository[]): void => {
-    // TODO: Make disposable
-    // this.#repositoryListeners.forEach((listener) => listener.dispose());
+    disposeAll(this.#repositoryListeners);
+
     this.#repositoryListeners = [];
 
     for (const repository of repositories) {

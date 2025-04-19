@@ -11,6 +11,8 @@ export class GitHubAccount implements IAccount {
   static #scopes = ["user:email", "repo", "read:org"];
   static #hasRequestedUser = false;
 
+  #repositories = new Map<string, IKeaRepository>();
+
   accountKey: IAccountKey;
 
   private constructor(accountId: string) {
@@ -60,6 +62,13 @@ export class GitHubAccount implements IAccount {
       return new Error("Expected to find owner and repo name in URL");
     }
 
-    return new GitHubRepository(repoUrl, { owner, repo: repoName }, this, cache);
+    let repo = this.#repositories.get(repoUrl);
+    if (repo !== undefined) {
+      return repo;
+    }
+
+    repo = new GitHubRepository(repoUrl, { owner, repo: repoName }, this, cache);
+    this.#repositories.set(repoUrl, repo);
+    return repo;
   };
 }

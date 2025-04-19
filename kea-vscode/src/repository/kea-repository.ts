@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import { IAccount } from "../account/account";
+import { IKeaDisposable } from "../core/kea-disposable";
 import {
   Commit,
   CommitComment,
@@ -22,8 +23,7 @@ export interface PullRequestReviewCommentsPayload {
   comments: PullRequestComment[] | Error;
 }
 
-// TODO: make disposable
-export interface IKeaRepository {
+export interface IKeaRepository extends IKeaDisposable {
   account: IAccount;
   repoId: RepoId;
   remoteUrl: string;

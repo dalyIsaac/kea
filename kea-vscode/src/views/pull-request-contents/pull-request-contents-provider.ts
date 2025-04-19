@@ -3,6 +3,7 @@ import { Logger } from "../../core/logger";
 import { ILruApiCache } from "../../lru-cache/lru-api-cache";
 import { IKeaRepository } from "../../repository/kea-repository";
 import { IRepositoryManager } from "../../repository/repository-manager";
+import { isSamePullRequest } from "../../type-utils";
 import { PullRequest, PullRequestId } from "../../types/kea";
 import { TreeNodeProvider } from "../pull-request-list/tree-node-provider";
 import { CommentsRootTreeNode } from "./comments/comments-root-tree-node";
@@ -14,7 +15,7 @@ export type PullRequestTreeNode = CommitsRootTreeNode | CommentsRootTreeNode | F
 /**
  * Provides information about the current pull request.
  */
-export class PullRequestTreeProvider extends TreeNodeProvider<PullRequestTreeNode> {
+export class PullRequestContentsProvider extends TreeNodeProvider<PullRequestTreeNode> {
   #repositoryManager: IRepositoryManager;
   #cache: ILruApiCache;
   #pullInfo: { repository: IKeaRepository; pullId: PullRequestId; pullRequest: PullRequest } | undefined;
@@ -36,11 +37,20 @@ export class PullRequestTreeProvider extends TreeNodeProvider<PullRequestTreeNod
 
     const { repository, pullId } = this.#pullInfo;
 
-    this.#commentsRootTreeNode ??= new CommentsRootTreeNode(repository, pullId, this);
-    this.#filesRootTreeNode ??= new FilesRootTreeNode(repository, pullId);
-    this.#commitsRootTreeNode ??= new CommitsRootTreeNode(repository, pullId);
+    if (
+      !isSamePullRequest(this.#commentsRootTreeNode?.pullId, pullId) ||
+      !isSamePullRequest(this.#filesRootTreeNode?.pullId, pullId) ||
+      !isSamePullRequest(this.#commitsRootTreeNode?.pullId, pullId)
+    ) {
+      this.#commentsRootTreeNode?.dispose();
 
-    return Promise.resolve([this.#commitsRootTreeNode, this.#commentsRootTreeNode, this.#filesRootTreeNode]);
+      this.#commentsRootTreeNode = new CommentsRootTreeNode(repository, pullId, this);
+      this.#filesRootTreeNode = new FilesRootTreeNode(repository, pullId);
+      this.#commitsRootTreeNode = new CommitsRootTreeNode(repository, pullId);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return Promise.resolve([this.#commitsRootTreeNode!, this.#commentsRootTreeNode!, this.#filesRootTreeNode!]);
   };
 
   openPullRequest = async (accountKey: IAccountKey, pullId: PullRequestId): Promise<boolean> => {

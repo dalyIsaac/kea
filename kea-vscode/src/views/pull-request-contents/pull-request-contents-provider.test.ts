@@ -8,7 +8,7 @@ import { CollapsibleState, ITreeNode } from "../tree-node";
 import { CommentsRootTreeNode } from "./comments/comments-root-tree-node";
 import { CommitsRootTreeNode } from "./commits/commits-root-tree-node";
 import { FilesRootTreeNode } from "./files/files-root-tree-node";
-import { PullRequestTreeNode, PullRequestTreeProvider } from "./pull-request-tree-provider";
+import { PullRequestContentsProvider, PullRequestTreeNode } from "./pull-request-contents-provider";
 
 const createGetChildrenStubs = async () => {
   const repoId: RepoId = { owner: "owner", repo: "repo" };
@@ -26,7 +26,7 @@ const createGetChildrenStubs = async () => {
 
   const cache = createCacheStub();
 
-  const provider = new PullRequestTreeProvider(repositoryManager, cache);
+  const provider = new PullRequestContentsProvider(repositoryManager, cache);
   await provider.openPullRequest(repository.account.accountKey, pullId);
 
   return {
@@ -43,7 +43,7 @@ suite("PullRequestTreeProvider", () => {
   test("getChildren returns an empty array when the pull request is not open", async () => {
     // Given
     const repositoryManager = new RepositoryManager();
-    const provider = new PullRequestTreeProvider(repositoryManager, createCacheStub());
+    const provider = new PullRequestContentsProvider(repositoryManager, createCacheStub());
 
     // When
     const children = await provider.getChildren();

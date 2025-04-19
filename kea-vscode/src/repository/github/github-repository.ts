@@ -10,6 +10,7 @@ import {
   convertGitHubPullRequestListItem,
   convertGitHubPullRequestReviewComment,
 } from "../../account/github/github-utils";
+import { KeaDisposable } from "../../core/kea-disposable";
 import { Logger } from "../../core/logger";
 import { CacheKey, isMethod } from "../../lru-cache/cache-types";
 import { ILruApiCache } from "../../lru-cache/lru-api-cache";
@@ -26,18 +27,33 @@ import {
 } from "../../types/kea";
 import { IKeaRepository, IssueCommentsPayload, PullRequestReviewCommentsPayload } from "../kea-repository";
 
-export class GitHubRepository implements IKeaRepository {
+export class GitHubRepository extends KeaDisposable implements IKeaRepository {
   account: GitHubAccount;
   remoteUrl: string;
   repoId: RepoId;
   #cache: ILruApiCache;
 
+  #onDidChangeIssueComments: vscode.EventEmitter<IssueCommentsPayload> = this._registerDisposable(
+    new vscode.EventEmitter<IssueCommentsPayload>(),
+  );
+  onDidChangeIssueComments = this.#onDidChangeIssueComments.event;
+
+  #onDidChangePullRequestReviewComments: vscode.EventEmitter<PullRequestReviewCommentsPayload> = this._registerDisposable(
+    new vscode.EventEmitter<PullRequestReviewCommentsPayload>(),
+  );
+  onDidChangePullRequestReviewComments = this.#onDidChangePullRequestReviewComments.event;
+
   constructor(remoteUrl: string, repoId: RepoId, account: GitHubAccount, cache: ILruApiCache) {
+    super();
     this.remoteUrl = remoteUrl;
     this.repoId = repoId;
     this.account = account;
     this.#cache = cache;
   }
+
+  override _dispose = () => {
+    this.#cache.invalidate(this.repoId.owner, this.repoId.repo);
+  };
 
   #generateKey = <R extends Route>(
     route: keyof Endpoints | R,
@@ -309,11 +325,4 @@ export class GitHubRepository implements IKeaRepository {
       return new Error(`Error fetching commit comments: ${error instanceof Error ? error.message : String(error)}`);
     }
   };
-
-  #onDidChangeIssueComments: vscode.EventEmitter<IssueCommentsPayload> = new vscode.EventEmitter<IssueCommentsPayload>();
-  onDidChangeIssueComments = this.#onDidChangeIssueComments.event;
-
-  #onDidChangePullRequestReviewComments: vscode.EventEmitter<PullRequestReviewCommentsPayload> =
-    new vscode.EventEmitter<PullRequestReviewCommentsPayload>();
-  onDidChangePullRequestReviewComments = this.#onDidChangePullRequestReviewComments.event;
 }
