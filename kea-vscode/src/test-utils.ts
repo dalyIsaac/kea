@@ -5,7 +5,7 @@ import { IAccount } from "./account/account";
 import { IAccountManager } from "./account/account-manager";
 import { ILruApiCache } from "./lru-cache/lru-api-cache";
 import { IKeaRepository } from "./repository/kea-repository";
-import { CommitFile, IssueComment, PullRequest, PullRequestComment, User } from "./types/kea";
+import { Commit, CommitComment, CommitFile, IssueComment, PullRequest, PullRequestComment, User } from "./types/kea";
 import { ITreeNodeProvider } from "./views/pull-request-list/tree-node-provider";
 import { ITreeNode } from "./views/tree-node";
 
@@ -134,6 +134,41 @@ export const createPullRequestCommentStub = (props: Partial<PullRequestComment> 
   line: null,
   originalLine: null,
   side: null,
+  ...props,
+});
+
+export const createCommitStub = (props: Partial<Commit> = {}): Commit => ({
+  sha: "sha",
+  commit: {
+    author: createUserStub(),
+    committer: createUserStub(),
+    message: "message",
+    commentCount: 0,
+    tree: {
+      sha: "tree-sha",
+      url: "tree-url",
+    },
+    ...(props.commit ?? {}),
+  },
+  stats: {
+    total: 0,
+    additions: 0,
+    deletions: 0,
+    ...(props.stats ?? {}),
+  },
+  url: "commit-url",
+  ...props,
+});
+
+export const createCommitCommentStub = (props: Partial<CommitComment> = {}): CommitComment => ({
+  id: 1,
+  body: "commit comment body",
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  user: createUserStub(),
+  path: null,
+  position: null,
+  line: null,
   ...props,
 });
 
