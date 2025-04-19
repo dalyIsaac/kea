@@ -9,8 +9,8 @@ import { TreeDecorationManager } from "./decorations/tree-decoration-manager";
 import { LruApiCache } from "./lru-cache/lru-api-cache";
 import { RepositoryManager } from "./repository/repository-manager";
 import { PullRequestId } from "./types/kea";
+import { PullRequestContentsProvider } from "./views/pull-request-contents/pull-request-contents-provider";
 import { PullRequestListTreeProvider } from "./views/pull-request-list/pull-request-list-tree-provider";
-import { PullRequestTreeProvider } from "./views/pull-request/pull-request-tree-provider";
 
 const MAX_CACHE_SIZE = 1000; // Maximum number of items in the cache.
 
@@ -28,18 +28,18 @@ export function activate(_context: vscode.ExtensionContext) {
 
   // Tree providers.
   const pullRequestListTreeProvider = new PullRequestListTreeProvider(accountManager, repositoryManager, cache);
-  const pullRequestTreeProvider = new PullRequestTreeProvider(repositoryManager, cache);
+  const pullRequestContentsProvider = new PullRequestContentsProvider(repositoryManager, cache);
 
   // Register tree providers.
   vscode.window.registerTreeDataProvider("kea.pullRequestList", pullRequestListTreeProvider);
-  vscode.window.registerTreeDataProvider("kea.pullRequest", pullRequestTreeProvider);
+  vscode.window.registerTreeDataProvider("kea.pullRequestContents", pullRequestContentsProvider);
 
   // Commands.
   vscode.commands.registerCommand("kea.refreshPullRequestList", () => {
     pullRequestListTreeProvider.refresh();
   });
   vscode.commands.registerCommand("kea.openPullRequest", async ([accountKey, pullId]: [IAccountKey, PullRequestId]) => {
-    await pullRequestTreeProvider.openPullRequest(accountKey, pullId);
+    await pullRequestContentsProvider.openPullRequest(accountKey, pullId);
 
     const repository = repositoryManager.getRepositoryById(accountKey, pullId);
     if (repository instanceof Error) {
@@ -51,7 +51,7 @@ export function activate(_context: vscode.ExtensionContext) {
   });
 
   vscode.commands.registerCommand("kea.refreshPullRequest", () => {
-    pullRequestTreeProvider.refresh();
+    pullRequestContentsProvider.refresh();
   });
 }
 

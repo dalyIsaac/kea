@@ -14,7 +14,7 @@ export type PullRequestTreeNode = CommitsRootTreeNode | CommentsRootTreeNode | F
 /**
  * Provides information about the current pull request.
  */
-export class PullRequestTreeProvider extends TreeNodeProvider<PullRequestTreeNode> {
+export class PullRequestContentsProvider extends TreeNodeProvider<PullRequestTreeNode> {
   #repositoryManager: IRepositoryManager;
   #cache: ILruApiCache;
   #pullInfo: { repository: IKeaRepository; pullId: PullRequestId; pullRequest: PullRequest } | undefined;
