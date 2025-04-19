@@ -89,6 +89,32 @@ suite("KeaDisposable", () => {
     assert.strictEqual(disposedCount, 2);
   });
 
+  test("should immediately dispose registered disposables if already disposed", () => {
+    // Given
+    let disposedCount = 0;
+    const disposable1 = {
+      dispose: () => {
+        disposedCount++;
+      },
+    } as vscode.Disposable;
+    const disposable2 = {
+      dispose: () => {
+        disposedCount++;
+      },
+    } as vscode.Disposable;
+
+    const keaDisposable = new KeaDisposableImplementation();
+    keaDisposable.dispose();
+
+    // When
+    keaDisposable.registerDisposable(disposable1);
+    keaDisposable.registerDisposable(disposable2);
+    keaDisposable.dispose();
+
+    // Then
+    assert.strictEqual(disposedCount, 2);
+  });
+
   test("should call the custom dispose method", () => {
     // Given
     const disposable = new KeaDisposableImplementation();
