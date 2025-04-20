@@ -10,7 +10,7 @@ import { WrappedError } from "./wrapped-error";
 
 export interface RepoInfo {
   repository: IKeaRepository;
-  workspace: vscode.WorkspaceFolder;
+  workspaceFolder: vscode.WorkspaceFolder;
   account: IAccount;
 }
 
@@ -69,7 +69,7 @@ const getRepo = async (
     }
 
     repositoryManager.addRepository(repo);
-    return { repository: repo, workspace, account };
+    return { repository: repo, workspaceFolder: workspace, account };
   }
 
   return new Error("No account found for repository");

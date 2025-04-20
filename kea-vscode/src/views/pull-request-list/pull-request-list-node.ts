@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import { IAccountKey } from "../../account/account";
 import { ICheckoutPullRequestCommandArgs } from "../../commands/commands/checkout-pull-request";
-import { PullRequest, PullRequestId } from "../../types/kea";
+import { PullRequest, PullRequestGitRef, PullRequestId } from "../../types/kea";
 import { CollapsibleState, ITreeNode } from "../tree-node";
 
 export class PullRequestListNode implements ITreeNode, ICheckoutPullRequestCommandArgs {
@@ -10,6 +10,10 @@ export class PullRequestListNode implements ITreeNode, ICheckoutPullRequestComma
   accountKey: IAccountKey;
   pullRequest: PullRequest;
   workspaceFolder: vscode.WorkspaceFolder;
+
+  get pullRequestHead(): PullRequestGitRef {
+    return this.pullRequest.head;
+  }
 
   constructor(accountKey: IAccountKey, pullRequest: PullRequest, workspaceFolder: vscode.WorkspaceFolder) {
     this.collapsibleState = "none";

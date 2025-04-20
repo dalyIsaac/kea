@@ -34,7 +34,7 @@ export class PullRequestListTreeProvider extends TreeNodeProvider<PullRequestLis
         continue;
       }
 
-      const { repository, workspace } = repoInfo;
+      const { repository, workspaceFolder: workspace } = repoInfo;
       const rootItem = new RepoTreeNode(repository, workspace);
       rootItems.push(rootItem);
     }

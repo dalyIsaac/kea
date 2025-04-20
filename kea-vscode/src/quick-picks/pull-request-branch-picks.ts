@@ -1,23 +1,20 @@
 import * as vscode from "vscode";
-import { IAccountKey } from "../account/account";
 import { IAccountManager } from "../account/account-manager";
+import { ICheckoutPullRequestCommandArgs } from "../commands/commands/checkout-pull-request";
 import { getAllRepositories, RepoInfo } from "../core/git";
 import { Logger } from "../core/logger";
 import { formatDate } from "../core/utils";
 import { ILruApiCache } from "../lru-cache/lru-api-cache";
 import { IRepositoryManager } from "../repository/repository-manager";
-import { PullRequest, PullRequestId } from "../types/kea";
+import { PullRequest } from "../types/kea";
 
-interface PullRequestQuickPickItem extends vscode.QuickPickItem {
-  accountKey: IAccountKey;
-  pullRequestId: PullRequestId;
-}
+interface PullRequestBranchQuickPickItem extends vscode.QuickPickItem, ICheckoutPullRequestCommandArgs {}
 
-export const createPullRequestListQuickPick = async (
+export const createPullRequestBranchPicks = async (
   accountManager: IAccountManager,
   repositoryManager: IRepositoryManager,
   cache: ILruApiCache,
-): Promise<PullRequestQuickPickItem[]> => {
+): Promise<PullRequestBranchQuickPickItem[]> => {
   const allRepos = await getAllRepositories(accountManager, repositoryManager, cache);
 
   const nestedPullRequests = await Promise.all(
@@ -35,7 +32,7 @@ export const createPullRequestListQuickPick = async (
       }
 
       return pullRequests.map((pr) => ({
-        info: createPullRequestQuickPickItem(pr, repoInfo),
+        info: createPullRequestBranchQuickPickItem(pr, repoInfo),
         updatedAt: pr.updatedAt,
       }));
     }),
@@ -47,16 +44,12 @@ export const createPullRequestListQuickPick = async (
   return pullRequests.map((pr) => pr.info);
 };
 
-const createPullRequestQuickPickItem = (pr: PullRequest, repoInfo: RepoInfo): PullRequestQuickPickItem => ({
-  accountKey: repoInfo.account.accountKey,
-  pullRequestId: {
-    owner: pr.repository.owner,
-    repo: pr.repository.name,
-    number: pr.number,
-  },
-  label: pr.title,
-  description: pr.url,
-  detail: `Last modified: ${formatDate(pr.updatedAt)}`,
+const createPullRequestBranchQuickPickItem = (pr: PullRequest, repoInfo: RepoInfo): PullRequestBranchQuickPickItem => ({
+  pullRequestHead: pr.head,
+  workspaceFolder: repoInfo.workspaceFolder,
+  label: pr.head.ref,
+  description: pr.title,
+  detail: `Remote last modified: ${formatDate(pr.updatedAt)}`,
   picked: false,
   alwaysShow: true,
 });

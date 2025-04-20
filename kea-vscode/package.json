@@ -41,7 +41,7 @@
       },
       {
         "command": "kea.checkoutPullRequest",
-        "title": "Checkout Pull Request",
+        "title": "Checkout Pull Request Branch",
         "category": "Kea",
         "icon": "$(git-pull-request)"
       }

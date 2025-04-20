@@ -1,23 +1,35 @@
 import * as vscode from "vscode";
 import { getGitApi, getGitRepository } from "../../core/git";
 import { Logger } from "../../core/logger";
-import { PullRequest } from "../../types/kea";
+import { createPullRequestBranchPicks } from "../../quick-picks/pull-request-branch-picks";
+import { PullRequestGitRef } from "../../types/kea";
+import { CreateCommandArg } from "../command-manager-types";
 
 export interface ICheckoutPullRequestCommandArgs {
-  pullRequest: PullRequest;
+  pullRequestHead: PullRequestGitRef;
   workspaceFolder: vscode.WorkspaceFolder;
 }
 
 export const createCheckoutPullRequest =
-  () =>
+  ({ accountManager, repositoryManager, cache }: CreateCommandArg) =>
   async (args?: ICheckoutPullRequestCommandArgs): Promise<Error | void> => {
     if (args === undefined) {
-      // TODO: Show a quick pick to select a branch
-      Logger.warn("No branch name provided");
-      return;
+      const results = await vscode.window.showQuickPick(createPullRequestBranchPicks(accountManager, repositoryManager, cache), {
+        canPickMany: false,
+        placeHolder: "Select a pull request to checkout",
+      });
+
+      if (results === undefined) {
+        return;
+      }
+
+      args = {
+        pullRequestHead: results.pullRequestHead,
+        workspaceFolder: results.workspaceFolder,
+      };
     }
 
-    const branchName = args.pullRequest.head.ref;
+    const branchName = args.pullRequestHead.ref;
     const workspaceFolder = args.workspaceFolder;
 
     const repository = await getGitRepository(workspaceFolder);
