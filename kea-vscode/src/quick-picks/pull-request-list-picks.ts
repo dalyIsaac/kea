@@ -58,14 +58,4 @@ const createPullRequestQuickPickItem = (pr: PullRequest, repoInfo: RepoInfo): Pu
   detail: pr.updatedAt.toLocaleString(),
   picked: false,
   alwaysShow: true,
-  buttons: [
-    {
-      iconPath: new vscode.ThemeIcon("eye"),
-      tooltip: "Open pull request",
-    },
-    {
-      iconPath: new vscode.ThemeIcon("git-pull-request"),
-      tooltip: "Open pull request in browser",
-    },
-  ],
 });
