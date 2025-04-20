@@ -12,6 +12,7 @@ import {
 } from "../../account/github/github-utils";
 import { KeaDisposable } from "../../core/kea-disposable";
 import { Logger } from "../../core/logger";
+import { WrappedError } from "../../core/wrapped-error";
 import { CacheKey, isMethod } from "../../lru-cache/cache-types";
 import { ILruApiCache } from "../../lru-cache/lru-api-cache";
 import {
@@ -186,7 +187,7 @@ export class GitHubRepository extends KeaDisposable implements IKeaRepository {
 
       return data.map(convertGitHubPullRequestListItem);
     } catch (error) {
-      return new Error(`Error fetching pull requests: ${error instanceof Error ? error.message : String(error)}`);
+      return new WrappedError(`Error fetching pull requests`, error);
     }
   };
 
@@ -204,7 +205,7 @@ export class GitHubRepository extends KeaDisposable implements IKeaRepository {
 
       return convertGitHubPullRequest(data);
     } catch (error) {
-      return new Error(`Error fetching pull request: ${error instanceof Error ? error.message : String(error)}`);
+      return new WrappedError(`Error fetching pull request`, error);
     }
   };
 
@@ -227,7 +228,7 @@ export class GitHubRepository extends KeaDisposable implements IKeaRepository {
 
       return result;
     } catch (error) {
-      return new Error(`Error fetching issue comments: ${error instanceof Error ? error.message : String(error)}`);
+      return new WrappedError(`Error fetching issue comments`, error);
     }
   };
 
@@ -250,7 +251,7 @@ export class GitHubRepository extends KeaDisposable implements IKeaRepository {
 
       return result;
     } catch (error) {
-      return new Error(`Error fetching pull request comments: ${error instanceof Error ? error.message : String(error)}`);
+      return new WrappedError(`Error fetching pull request comments`, error);
     }
   };
 
@@ -268,7 +269,7 @@ export class GitHubRepository extends KeaDisposable implements IKeaRepository {
 
       return data.map(convertGitHubFile);
     } catch (error) {
-      return new Error(`Error fetching pull request files: ${error instanceof Error ? error.message : String(error)}`);
+      return new WrappedError(`Error fetching pull request files`, error);
     }
   };
 
@@ -286,7 +287,7 @@ export class GitHubRepository extends KeaDisposable implements IKeaRepository {
 
       return data.map(convertGitHubCommit);
     } catch (error) {
-      return new Error(`Error fetching pull request commits: ${error instanceof Error ? error.message : String(error)}`);
+      return new WrappedError(`Error fetching pull request commits`, error);
     }
   };
 
@@ -304,7 +305,7 @@ export class GitHubRepository extends KeaDisposable implements IKeaRepository {
 
       return data.files?.map(convertGitHubFile) ?? [];
     } catch (error) {
-      return new Error(`Error fetching commit files: ${error instanceof Error ? error.message : String(error)}`);
+      return new WrappedError(`Error fetching commit files`, error);
     }
   };
 
@@ -322,7 +323,7 @@ export class GitHubRepository extends KeaDisposable implements IKeaRepository {
 
       return data.map(convertGitHubCommitComment);
     } catch (error) {
-      return new Error(`Error fetching commit comments: ${error instanceof Error ? error.message : String(error)}`);
+      return new WrappedError(`Error fetching commit comments`, error);
     }
   };
 }
