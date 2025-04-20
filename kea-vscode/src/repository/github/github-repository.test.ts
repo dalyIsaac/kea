@@ -835,4 +835,18 @@ suite("GitHubRepository", () => {
       assert.ok(result.message.includes("Error fetching commit comments"));
     });
   });
+
+  suite("dispose", () => {
+    test("should invalidate the cache on dispose", () => {
+      // Given
+      const { repository, cache } = createTestGitHubRepository();
+      cache.invalidate = sinon.stub();
+
+      // When
+      repository.dispose();
+
+      // Then
+      assert.strictEqual((cache.invalidate as sinon.SinonStub).calledOnce, true);
+    });
+  });
 });

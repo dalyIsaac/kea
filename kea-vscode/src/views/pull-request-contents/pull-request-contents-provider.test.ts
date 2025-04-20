@@ -1,24 +1,26 @@
 import * as assert from "assert";
 import * as vscode from "vscode";
+import { IKeaRepository } from "../../repository/kea-repository";
 import { RepositoryManager } from "../../repository/repository-manager";
-import { createCacheStub, createPullRequestStub, createRepositoryStub } from "../../test-utils";
+import { assertArrayContentsEqual, createCacheStub, createPullRequestStub, createRepositoryStub } from "../../test-utils";
 import { PullRequestId, RepoId } from "../../types/kea";
 import { PullRequestListNode } from "../pull-request-list/pull-request-list-node";
 import { CollapsibleState, ITreeNode } from "../tree-node";
 import { CommentsRootTreeNode } from "./comments/comments-root-tree-node";
 import { CommitsRootTreeNode } from "./commits/commits-root-tree-node";
 import { FilesRootTreeNode } from "./files/files-root-tree-node";
-import { PullRequestTreeNode, PullRequestTreeProvider } from "./pull-request-tree-provider";
+import { PullRequestContentsProvider, PullRequestTreeNode } from "./pull-request-contents-provider";
 
-const createGetChildrenStubs = async () => {
+const createGetChildrenStubs = async (getPullRequest?: IKeaRepository["getPullRequest"]) => {
   const repoId: RepoId = { owner: "owner", repo: "repo" };
   const pullId: PullRequestId = { ...repoId, number: 1 };
 
   const pullRequest = createPullRequestStub({ number: pullId.number });
   const repository = createRepositoryStub({
     repoId,
-    getPullRequest: (id) =>
-      id.number === pullId.number ? Promise.resolve(pullRequest) : Promise.resolve(new Error("Pull request not found")),
+    getPullRequest:
+      getPullRequest ??
+      ((id) => (id.number === pullId.number ? Promise.resolve(pullRequest) : Promise.resolve(new Error("Pull request not found")))),
   });
 
   const repositoryManager = new RepositoryManager();
@@ -26,7 +28,7 @@ const createGetChildrenStubs = async () => {
 
   const cache = createCacheStub();
 
-  const provider = new PullRequestTreeProvider(repositoryManager, cache);
+  const provider = new PullRequestContentsProvider(repositoryManager, cache);
   await provider.openPullRequest(repository.account.accountKey, pullId);
 
   return {
@@ -39,11 +41,11 @@ const createGetChildrenStubs = async () => {
   };
 };
 
-suite("PullRequestTreeProvider", () => {
+suite("PullRequestContentsProvider", () => {
   test("getChildren returns an empty array when the pull request is not open", async () => {
     // Given
     const repositoryManager = new RepositoryManager();
-    const provider = new PullRequestTreeProvider(repositoryManager, createCacheStub());
+    const provider = new PullRequestContentsProvider(repositoryManager, createCacheStub());
 
     // When
     const children = await provider.getChildren();
@@ -139,9 +141,42 @@ suite("PullRequestTreeProvider", () => {
 
     // When
     const result = await provider.openPullRequest(repository.account.accountKey, pullId);
+    const firstChildren = await provider.getChildren();
+    const secondChildren = await provider.getChildren();
 
     // Then
     assert.strictEqual(result, true);
+    assertArrayContentsEqual(firstChildren, secondChildren);
+  });
+
+  test("openPullRequest will change the returned children", async () => {
+    // Given
+    const getPullRequest = (id: PullRequestId) => {
+      if (id.number === 1) {
+        return Promise.resolve(createPullRequestStub({ number: 1 }));
+      } else if (id.number === 2) {
+        return Promise.resolve(createPullRequestStub({ number: 2 }));
+      }
+      return Promise.resolve(new Error("Pull request not found"));
+    };
+
+    const { provider, repository, pullId } = await createGetChildrenStubs(getPullRequest);
+
+    // When
+    const result = await provider.openPullRequest(repository.account.accountKey, pullId);
+    const firstChildren = await provider.getChildren();
+    const result2 = await provider.openPullRequest(repository.account.accountKey, { ...pullId, number: 2 });
+    const secondChildren = await provider.getChildren();
+
+    // Then
+    assert.strictEqual(result, true);
+    assert.strictEqual(result2, true);
+    assert.strictEqual(firstChildren.length, 3);
+    assert.strictEqual(secondChildren.length, 3);
+
+    for (let i = 0; i < firstChildren.length; i++) {
+      assert.notEqual(firstChildren[i], secondChildren[i]);
+    }
   });
 
   test("openPullRequest fails when the repository is not found", async () => {
