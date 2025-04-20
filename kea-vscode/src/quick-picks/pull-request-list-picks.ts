@@ -55,7 +55,7 @@ const createPullRequestQuickPickItem = (pr: PullRequest, repoInfo: RepoInfo): Pu
   },
   label: pr.title,
   description: pr.url,
-  detail: pr.updatedAt.toLocaleString(),
+  detail: `Last modified: ${pr.updatedAt.toLocaleDateString(vscode.env.language)}`,
   picked: false,
   alwaysShow: true,
 });
