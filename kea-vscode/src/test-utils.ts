@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import * as assert from "assert";
 import sinon from "sinon";
 import * as vscode from "vscode";
 import { IAccount } from "./account/account";
@@ -201,3 +202,11 @@ export const createTreeNodeProviderStub = (props: Partial<ITreeNodeProvider<ITre
   onDidChangeTreeData: sinon.stub(),
   ...props,
 });
+
+export const assertArrayContentsEqual = <T>(arr1: T[], arr2: T[]): void => {
+  assert.strictEqual(arr1.length, arr2.length, `Arrays have different lengths: ${arr1.length} !== ${arr2.length}`);
+
+  for (let i = 0; i < arr1.length; i++) {
+    assert.equal(arr1[i], arr2[i], `Elements at index ${i} are different`);
+  }
+};
