@@ -53,6 +53,10 @@ export function activate(_context: vscode.ExtensionContext) {
   vscode.commands.registerCommand("kea.refreshPullRequest", () => {
     pullRequestContentsProvider.refresh();
   });
+
+  vscode.commands.registerCommand("kea.collapsePullRequestTree", () => {
+    vscode.commands.executeCommand("workbench.actions.treeView.kea.pullRequestContents.collapseAll");
+  });
 }
 
 export function deactivate() {
