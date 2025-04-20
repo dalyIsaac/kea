@@ -32,6 +32,6 @@ export class RepoTreeNode implements IParentTreeNode<PullRequestListNode> {
       return [];
     }
 
-    return pullRequests.map((pr) => new PullRequestListNode(this.repository.account.accountKey, pr));
+    return pullRequests.map((pr) => new PullRequestListNode(this.repository.account.accountKey, pr, this.workspace));
   };
 }

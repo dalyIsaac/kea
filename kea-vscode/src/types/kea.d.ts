@@ -41,9 +41,16 @@ export interface PullRequestComment extends IssueComment {
 
 export type PullRequestId = IssueId;
 
+export interface PullRequestGitRef extends RepoId {
+  ref: string;
+  sha: string;
+}
+
 export interface PullRequest {
   id: number;
   number: number;
+  head: PullRequestGitRef;
+  base: PullRequestGitRef;
   title: string;
   state: string;
   url: string;

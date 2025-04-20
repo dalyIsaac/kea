@@ -4,7 +4,7 @@ import { IAccountManager } from "../account/account-manager";
 import { ILruApiCache } from "../lru-cache/lru-api-cache";
 import { IKeaRepository } from "../repository/kea-repository";
 import { IRepositoryManager } from "../repository/repository-manager";
-import { API, GitExtension } from "../types/git";
+import { API, GitExtension, Repository } from "../types/git";
 import { Logger } from "./logger";
 import { WrappedError } from "./wrapped-error";
 
@@ -41,16 +41,9 @@ const getRepo = async (
   workspace: vscode.WorkspaceFolder,
   cache: ILruApiCache,
 ): Promise<RepoInfo | Error> => {
-  const api = await getGitApi();
-  if (api instanceof Error) {
-    return api;
-  }
-
-  // Open the repository if it is not already opened. This can occur if the Kea extension is
-  // activated before the Git extension.
-  const repo = api.getRepository(workspace.uri) ?? (await api.openRepository(workspace.uri));
-  if (repo === null) {
-    return new Error(`No repository found for ${workspace.uri.toString()}`);
+  const repo = await getGitRepository(workspace);
+  if (repo instanceof Error) {
+    return repo;
   }
 
   const remote = repo.state.remotes[0];
@@ -82,7 +75,23 @@ const getRepo = async (
   return new Error("No account found for repository");
 };
 
-const getGitApi = async (): Promise<API | Error> => {
+export const getGitRepository = async (workspace: vscode.WorkspaceFolder): Promise<Repository | Error> => {
+  const api = await getGitApi();
+  if (api instanceof Error) {
+    return api;
+  }
+
+  // Open the repository if it is not already opened. This can occur if the Kea extension is
+  // activated before the Git extension.
+  const repo = api.getRepository(workspace.uri) ?? (await api.openRepository(workspace.uri));
+  if (repo === null) {
+    return new Error(`No repository found for ${workspace.uri.toString()}`);
+  }
+
+  return repo;
+};
+
+export const getGitApi = async (): Promise<API | Error> => {
   const gitExtension = vscode.extensions.getExtension<GitExtension>("vscode.git");
   if (gitExtension === undefined) {
     return new Error("Git extension not found");

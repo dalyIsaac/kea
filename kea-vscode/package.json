@@ -38,6 +38,12 @@
         "title": "Open Pull Request",
         "category": "Kea",
         "icon": "$(link)"
+      },
+      {
+        "command": "kea.checkoutPullRequest",
+        "title": "Checkout Pull Request",
+        "category": "Kea",
+        "icon": "$(git-pull-request)"
       }
     ],
     "viewsContainers": {
@@ -71,13 +77,20 @@
           "group": "navigation"
         },
         {
-          "command": "kea.refreshPullRequest",
+          "command": "kea.refreshPullRequestContents",
           "when": "view == kea.pullRequestContents",
           "group": "navigation"
         },
         {
           "command": "kea.collapsePullRequestTree",
           "when": "view == kea.pullRequestContents",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "kea.checkoutPullRequest",
+          "when": "view == kea.pullRequestList",
           "group": "navigation"
         }
       ]

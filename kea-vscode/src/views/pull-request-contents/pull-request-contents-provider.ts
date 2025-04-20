@@ -54,8 +54,6 @@ export class PullRequestContentsProvider extends TreeNodeProvider<PullRequestTre
   };
 
   openPullRequest = async (accountKey: IAccountKey, pullId: PullRequestId): Promise<boolean> => {
-    Logger.info("Opening pull request", pullId);
-
     const repository = this.#repositoryManager.getRepositoryById(accountKey, pullId);
     if (repository instanceof Error) {
       Logger.error("Error getting repository", repository);

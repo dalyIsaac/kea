@@ -1,19 +1,22 @@
 import * as vscode from "vscode";
 import { IAccountKey } from "../../account/account";
+import { ICheckoutPullRequestCommandArgs } from "../../commands/commands/checkout-pull-request";
 import { PullRequest, PullRequestId } from "../../types/kea";
 import { CollapsibleState, ITreeNode } from "../tree-node";
 
-export class PullRequestListNode implements ITreeNode {
+export class PullRequestListNode implements ITreeNode, ICheckoutPullRequestCommandArgs {
   collapsibleState: CollapsibleState;
 
   accountKey: IAccountKey;
   pullRequest: PullRequest;
+  workspaceFolder: vscode.WorkspaceFolder;
 
-  constructor(accountKey: IAccountKey, pullRequest: PullRequest) {
+  constructor(accountKey: IAccountKey, pullRequest: PullRequest, workspaceFolder: vscode.WorkspaceFolder) {
+    this.collapsibleState = "none";
+
     this.accountKey = accountKey;
     this.pullRequest = pullRequest;
-
-    this.collapsibleState = "none";
+    this.workspaceFolder = workspaceFolder;
   }
 
   getTreeItem = (): vscode.TreeItem => {

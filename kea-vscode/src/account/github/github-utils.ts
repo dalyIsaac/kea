@@ -12,48 +12,80 @@ export const convertGitHubUser = (user: NonNullable<RestEndpointMethodTypes["iss
 /**
  * Converts an Octokit Pull Request List item response to our internal PullRequest type.
  */
-export const convertGitHubPullRequestListItem = (
-  pr: RestEndpointMethodTypes["pulls"]["list"]["response"]["data"][number],
-): PullRequest => ({
-  id: pr.id,
-  number: pr.number,
-  title: pr.title,
-  state: pr.state,
-  url: pr.html_url,
-  createdAt: new Date(pr.created_at),
-  updatedAt: new Date(pr.updated_at),
-  closedAt: pr.closed_at ? new Date(pr.closed_at) : null,
-  mergedAt: pr.merged_at ? new Date(pr.merged_at) : null,
-  isDraft: pr.draft ?? false,
-  repository: {
-    name: pr.base.repo.name,
+export const convertGitHubPullRequestListItem = (pr: RestEndpointMethodTypes["pulls"]["list"]["response"]["data"][number]): PullRequest => {
+  const repoId = {
     owner: pr.base.repo.owner.login,
-    url: pr.base.repo.html_url,
-  },
-  user: pr.user ? convertGitHubUser(pr.user) : null,
-});
+    repo: pr.base.repo.name,
+  };
+
+  return {
+    id: pr.id,
+    number: pr.number,
+    head: {
+      ...repoId,
+      ref: pr.head.ref,
+      sha: pr.head.sha,
+    },
+    base: {
+      ...repoId,
+      ref: pr.base.ref,
+      sha: pr.base.sha,
+    },
+    title: pr.title,
+    state: pr.state,
+    url: pr.html_url,
+    createdAt: new Date(pr.created_at),
+    updatedAt: new Date(pr.updated_at),
+    closedAt: pr.closed_at ? new Date(pr.closed_at) : null,
+    mergedAt: pr.merged_at ? new Date(pr.merged_at) : null,
+    isDraft: pr.draft ?? false,
+    repository: {
+      name: pr.base.repo.name,
+      owner: pr.base.repo.owner.login,
+      url: pr.base.repo.html_url,
+    },
+    user: pr.user ? convertGitHubUser(pr.user) : null,
+  };
+};
 
 /**
  * Converts an Octokit Pull Request response to our internal PullRequest type.
  */
-export const convertGitHubPullRequest = (pr: RestEndpointMethodTypes["pulls"]["get"]["response"]["data"]): PullRequest => ({
-  id: pr.id,
-  number: pr.number,
-  title: pr.title,
-  state: pr.state,
-  url: pr.html_url,
-  createdAt: new Date(pr.created_at),
-  updatedAt: new Date(pr.updated_at),
-  closedAt: pr.closed_at ? new Date(pr.closed_at) : null,
-  mergedAt: pr.merged_at ? new Date(pr.merged_at) : null,
-  isDraft: pr.draft ?? false,
-  repository: {
-    name: pr.base.repo.name,
+export const convertGitHubPullRequest = (pr: RestEndpointMethodTypes["pulls"]["get"]["response"]["data"]): PullRequest => {
+  const repoId = {
     owner: pr.base.repo.owner.login,
-    url: pr.base.repo.html_url,
-  },
-  user: convertGitHubUser(pr.user),
-});
+    repo: pr.base.repo.name,
+  };
+
+  return {
+    id: pr.id,
+    number: pr.number,
+    head: {
+      ...repoId,
+      ref: pr.head.ref,
+      sha: pr.head.sha,
+    },
+    base: {
+      ...repoId,
+      ref: pr.base.ref,
+      sha: pr.base.sha,
+    },
+    title: pr.title,
+    state: pr.state,
+    url: pr.html_url,
+    createdAt: new Date(pr.created_at),
+    updatedAt: new Date(pr.updated_at),
+    closedAt: pr.closed_at ? new Date(pr.closed_at) : null,
+    mergedAt: pr.merged_at ? new Date(pr.merged_at) : null,
+    isDraft: pr.draft ?? false,
+    repository: {
+      name: pr.base.repo.name,
+      owner: pr.base.repo.owner.login,
+      url: pr.base.repo.html_url,
+    },
+    user: convertGitHubUser(pr.user),
+  };
+};
 
 /**
  * Converts an Octokit Issue Comment response to our internal IssueComment type.

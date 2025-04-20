@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import { KeaDisposable } from "../core/kea-disposable";
+import { Logger } from "../core/logger";
 import { CommandMap, COMMANDS, CreateCommandArg, ICommandManager } from "./command-manager-types";
 
 export class CommandManager extends KeaDisposable implements ICommandManager {
@@ -19,6 +20,7 @@ export class CommandManager extends KeaDisposable implements ICommandManager {
   }
 
   executeCommand: ICommandManager["executeCommand"] = (commandName, ...args) => {
+    Logger.debug(`Executing command: ${commandName}`, ...args);
     return vscode.commands.executeCommand(commandName, ...args);
   };
 }

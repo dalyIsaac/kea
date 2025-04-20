@@ -5,6 +5,7 @@ import { ILruApiCache } from "../lru-cache/lru-api-cache";
 import { IRepositoryManager } from "../repository/repository-manager";
 import { PullRequestContentsProvider } from "../views/pull-request-contents/pull-request-contents-provider";
 import { PullRequestListTreeProvider } from "../views/pull-request-list/pull-request-list-tree-provider";
+import { createCheckoutPullRequest } from "./commands/checkout-pull-request";
 import { createOpenPullRequestCommand } from "./commands/open-pull-request";
 import {
   createCollapsePullRequestTreeCommand,
@@ -28,6 +29,7 @@ export const COMMANDS = {
   "kea.refreshPullRequestList": createRefreshPullRequestListCommand,
   "kea.refreshPullRequestContents": createRefreshPullRequestContentsCommand,
   "kea.collapsePullRequestTree": createCollapsePullRequestTreeCommand,
+  "kea.checkoutPullRequest": createCheckoutPullRequest,
 } satisfies Record<string, CreateCommand>;
 
 export type CommandMap = Record<keyof typeof COMMANDS, ReturnType<(typeof COMMANDS)[keyof typeof COMMANDS]>>;
