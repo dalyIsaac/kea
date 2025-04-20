@@ -1,5 +1,4 @@
 import * as vscode from "vscode";
-
 import { IAccountKey } from "./account/account";
 import { AccountManager } from "./account/account-manager";
 import { Logger } from "./core/logger";
@@ -7,12 +6,13 @@ import { CommentsRootDecorationProvider } from "./decorations/comments-root-deco
 import { FileCommentDecorationProvider } from "./decorations/file-comment-decoration-provider";
 import { TreeDecorationManager } from "./decorations/tree-decoration-manager";
 import { LruApiCache } from "./lru-cache/lru-api-cache";
+import { createPullRequestListQuickPick } from "./quick-picks/pull-request-list-picks";
 import { RepositoryManager } from "./repository/repository-manager";
 import { PullRequestId } from "./types/kea";
 import { PullRequestContentsProvider } from "./views/pull-request-contents/pull-request-contents-provider";
 import { PullRequestListTreeProvider } from "./views/pull-request-list/pull-request-list-tree-provider";
 
-const MAX_CACHE_SIZE = 1000; // Maximum number of items in the cache.
+const MAX_CACHE_SIZE = 1000;
 
 export function activate(_context: vscode.ExtensionContext) {
   Logger.info("Kea extension activated");
@@ -38,7 +38,21 @@ export function activate(_context: vscode.ExtensionContext) {
   vscode.commands.registerCommand("kea.refreshPullRequestList", () => {
     pullRequestListTreeProvider.refresh();
   });
-  vscode.commands.registerCommand("kea.openPullRequest", async ([accountKey, pullId]: [IAccountKey, PullRequestId]) => {
+  vscode.commands.registerCommand("kea.openPullRequest", async (args?: [IAccountKey, PullRequestId]) => {
+    if (args === undefined) {
+      const results = await vscode.window.showQuickPick(createPullRequestListQuickPick(accountManager, repositoryManager, cache), {
+        canPickMany: false,
+        placeHolder: "Select a pull request to open",
+      });
+
+      if (results === undefined) {
+        return;
+      }
+
+      args = [results.accountKey, results.pullRequestId];
+    }
+
+    const [accountKey, pullId] = args;
     await pullRequestContentsProvider.openPullRequest(accountKey, pullId);
 
     const repository = repositoryManager.getRepositoryById(accountKey, pullId);
