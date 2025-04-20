@@ -1,5 +1,5 @@
-import * as vscode from "vscode";
 import { IAccountManager } from "../../account/account-manager";
+import { getAllRepositories } from "../../core/git";
 import { Logger } from "../../core/logger";
 import { ILruApiCache } from "../../lru-cache/lru-api-cache";
 import { IRepositoryManager } from "../../repository/repository-manager";
@@ -25,26 +25,19 @@ export class PullRequestListTreeProvider extends TreeNodeProvider<PullRequestLis
   }
 
   override _getRootChildren = async (): Promise<PullRequestListTreeNode[]> => {
-    const allItems = vscode.workspace.workspaceFolders?.map((workspace) =>
-      RepoTreeNode.create(this.#accountManager, this.#repositoryManager, workspace, this.#cache),
-    );
-    if (allItems === undefined) {
-      Logger.error("No workspace folders found");
-      return [];
-    }
+    const allRepoInfo = await getAllRepositories(this.#accountManager, this.#repositoryManager, this.#cache);
 
-    const resolvedItems = await Promise.all(allItems);
-
-    const rootItems: RepoTreeNode[] = [];
-    for (const item of resolvedItems) {
-      if (item instanceof Error) {
-        Logger.error(`Error creating PullRequestTreeItem: ${item.message}`);
+    const rootItems: PullRequestListTreeNode[] = [];
+    for (const repoInfo of allRepoInfo) {
+      if (repoInfo instanceof Error) {
+        Logger.error(`Error creating RepoTreeNode: ${repoInfo.message}`);
         continue;
       }
 
-      rootItems.push(item);
+      const { repository, workspace } = repoInfo;
+      const rootItem = new RepoTreeNode(repository, workspace);
+      rootItems.push(rootItem);
     }
-
     return rootItems;
   };
 
