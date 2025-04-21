@@ -1,34 +1,34 @@
 import * as vscode from "vscode";
 import { IAccountKey } from "../../account/account";
+import { IKeaContext } from "../../core/context";
 import { Logger } from "../../core/logger";
 import { createPullRequestListQuickPick } from "../../quick-picks/pull-request-list-picks";
 import { PullRequestId } from "../../types/kea";
-import { CreateCommandArg } from "../command-manager-types";
 
-export const createOpenPullRequestCommand =
-  ({ accountManager, repositoryManager, pullRequestContentsProvider, cache, treeDecorationManager }: CreateCommandArg) =>
-  async (args?: [IAccountKey, PullRequestId]) => {
-    if (args === undefined) {
-      const results = await vscode.window.showQuickPick(createPullRequestListQuickPick(accountManager, repositoryManager, cache), {
-        canPickMany: false,
-        placeHolder: "Select a pull request to open",
-      });
+export const createOpenPullRequestCommand = (ctx: IKeaContext) => async (args?: [IAccountKey, PullRequestId]) => {
+  const { repositoryManager, pullRequestContentsProvider, treeDecorationManager } = ctx;
 
-      if (results === undefined) {
-        return;
-      }
+  if (args === undefined) {
+    const results = await vscode.window.showQuickPick(createPullRequestListQuickPick(ctx), {
+      canPickMany: false,
+      placeHolder: "Select a pull request to open",
+    });
 
-      args = [results.accountKey, results.pullRequestId];
-    }
-
-    const [accountKey, pullId] = args;
-    await pullRequestContentsProvider.openPullRequest(accountKey, pullId);
-
-    const repository = repositoryManager.getRepositoryById(accountKey, pullId);
-    if (repository instanceof Error) {
-      Logger.error("Error getting repository", repository);
+    if (results === undefined) {
       return;
     }
 
-    treeDecorationManager.updateListeners(repository);
-  };
+    args = [results.accountKey, results.pullRequestId];
+  }
+
+  const [accountKey, pullId] = args;
+  await pullRequestContentsProvider.openPullRequest(accountKey, pullId);
+
+  const repository = repositoryManager.getRepositoryById(accountKey, pullId);
+  if (repository instanceof Error) {
+    Logger.error("Error getting repository", repository);
+    return;
+  }
+
+  treeDecorationManager.updateListeners(repository);
+};

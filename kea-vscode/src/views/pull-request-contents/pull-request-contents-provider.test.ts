@@ -4,7 +4,7 @@ import { IKeaRepository } from "../../repository/kea-repository";
 import { RepositoryManager } from "../../repository/repository-manager";
 import {
   assertArrayContentsEqual,
-  createCacheStub,
+  createKeaContextStub,
   createPullRequestStub,
   createRepositoryStub,
   createWorkspaceFolderStub,
@@ -32,18 +32,19 @@ const createGetChildrenStubs = async (getPullRequest?: IKeaRepository["getPullRe
   const repositoryManager = new RepositoryManager();
   repositoryManager.addRepository(repository);
 
-  const cache = createCacheStub();
+  const ctx = createKeaContextStub({
+    repositoryManager,
+  });
 
-  const provider = new PullRequestContentsProvider(repositoryManager, cache);
+  const provider = new PullRequestContentsProvider(ctx);
   await provider.openPullRequest(repository.account.accountKey, pullId);
 
   return {
     repoId,
     repository,
-    repositoryManager,
     provider,
     pullId,
-    cache,
+    ctx,
   };
 };
 
@@ -51,7 +52,8 @@ suite("PullRequestContentsProvider", () => {
   test("getChildren returns an empty array when the pull request is not open", async () => {
     // Given
     const repositoryManager = new RepositoryManager();
-    const provider = new PullRequestContentsProvider(repositoryManager, createCacheStub());
+    const ctx = createKeaContextStub({ repositoryManager });
+    const provider = new PullRequestContentsProvider(ctx);
 
     // When
     const children = await provider.getChildren();
@@ -123,7 +125,7 @@ suite("PullRequestContentsProvider", () => {
 
   test("refresh calls onDidChangeTreeData and clears cache", async () => {
     // Given
-    const { provider, repository, cache } = await createGetChildrenStubs();
+    const { provider, repository, ctx } = await createGetChildrenStubs();
 
     let eventFired = false;
     provider.onDidChangeTreeData(() => {
@@ -135,10 +137,10 @@ suite("PullRequestContentsProvider", () => {
 
     // Then
     assert.strictEqual(eventFired, true);
-    assert.strictEqual((cache.invalidate as sinon.SinonStub).calledOnce, true);
+    assert.strictEqual((ctx.cache.invalidate as sinon.SinonStub).calledOnce, true);
 
     const { owner, repo } = repository.repoId;
-    assert.strictEqual((cache.invalidate as sinon.SinonStub).calledWith(owner, repo), true);
+    assert.strictEqual((ctx.cache.invalidate as sinon.SinonStub).calledWith(owner, repo), true);
   });
 
   test("openPullRequest updates the pull request info", async () => {

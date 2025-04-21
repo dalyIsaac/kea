@@ -1,17 +1,18 @@
 import * as vscode from "vscode";
+import { IKeaContext } from "../core/context";
 import { KeaDisposable } from "../core/kea-disposable";
 import { Logger } from "../core/logger";
-import { CommandMap, COMMANDS, CreateCommandArg, ICommandManager } from "./command-manager-types";
+import { CommandMap, COMMANDS, ICommandManager } from "./command-manager-types";
 
 export class CommandManager extends KeaDisposable implements ICommandManager {
   #commands: CommandMap;
 
-  constructor(args: CreateCommandArg) {
+  constructor(ctx: IKeaContext) {
     super();
 
     this.#commands = {} as CommandMap;
     for (const [commandName, createCommandFn] of Object.entries(COMMANDS)) {
-      const command = createCommandFn(args);
+      const command = createCommandFn(ctx);
       this.#commands[commandName as keyof CommandMap] = command;
 
       const disposable = vscode.commands.registerCommand(commandName, command);

@@ -1,10 +1,8 @@
 import * as vscode from "vscode";
 import { IAccount } from "../account/account";
-import { IAccountManager } from "../account/account-manager";
-import { ILruApiCache } from "../cache/lru-api/lru-api-cache";
 import { IKeaRepository } from "../repository/kea-repository";
-import { IRepositoryManager } from "../repository/repository-manager";
 import { API, GitExtension, Repository } from "../types/git";
+import { IKeaContext } from "./context";
 import { Logger } from "./logger";
 import { WrappedError } from "./wrapped-error";
 
@@ -14,11 +12,7 @@ export interface RepoInfo {
   account: IAccount;
 }
 
-export const getAllRepositories = async (
-  accountManager: IAccountManager,
-  repositoryManager: IRepositoryManager,
-  cache: ILruApiCache,
-): Promise<Array<RepoInfo | Error>> =>
+export const getAllRepositories = async (ctx: IKeaContext): Promise<Array<RepoInfo | Error>> =>
   Promise.all(
     vscode.workspace.workspaceFolders?.map(async (workspace) => {
       const api = await getGitApi();
@@ -31,15 +25,13 @@ export const getAllRepositories = async (
         return new Error(`No repository found for ${workspace.uri.toString()}`);
       }
 
-      return getRepo(accountManager, repositoryManager, workspace, cache);
+      return getRepo(ctx, workspace);
     }) ?? [],
   );
 
 const getRepo = async (
-  accountManager: IAccountManager,
-  repositoryManager: IRepositoryManager,
+  { accountManager, repositoryManager, cache }: IKeaContext,
   workspace: vscode.WorkspaceFolder,
-  cache: ILruApiCache,
 ): Promise<RepoInfo | Error> => {
   const repo = await getGitRepository(workspace);
   if (repo instanceof Error) {

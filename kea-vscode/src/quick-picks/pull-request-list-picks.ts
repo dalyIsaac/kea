@@ -1,11 +1,9 @@
 import * as vscode from "vscode";
 import { IAccountKey } from "../account/account";
-import { IAccountManager } from "../account/account-manager";
-import { ILruApiCache } from "../cache/lru-api/lru-api-cache";
+import { IKeaContext } from "../core/context";
 import { getAllRepositories, RepoInfo } from "../core/git";
 import { Logger } from "../core/logger";
 import { formatDate } from "../core/utils";
-import { IRepositoryManager } from "../repository/repository-manager";
 import { PullRequest, PullRequestId } from "../types/kea";
 
 interface PullRequestQuickPickItem extends vscode.QuickPickItem {
@@ -13,12 +11,8 @@ interface PullRequestQuickPickItem extends vscode.QuickPickItem {
   pullRequestId: PullRequestId;
 }
 
-export const createPullRequestListQuickPick = async (
-  accountManager: IAccountManager,
-  repositoryManager: IRepositoryManager,
-  cache: ILruApiCache,
-): Promise<PullRequestQuickPickItem[]> => {
-  const allRepos = await getAllRepositories(accountManager, repositoryManager, cache);
+export const createPullRequestListQuickPick = async (ctx: IKeaContext): Promise<PullRequestQuickPickItem[]> => {
+  const allRepos = await getAllRepositories(ctx);
 
   const nestedPullRequests = await Promise.all(
     allRepos.map(async (repoInfo) => {

@@ -1,9 +1,9 @@
 import * as vscode from "vscode";
+import { IKeaContext } from "../../core/context";
 import { getGitApi, getGitRepository } from "../../core/git";
 import { Logger } from "../../core/logger";
 import { createPullRequestBranchPicks } from "../../quick-picks/pull-request-branch-picks";
 import { PullRequestGitRef } from "../../types/kea";
-import { CreateCommandArg } from "../command-manager-types";
 
 export interface ICheckoutPullRequestCommandArgs {
   pullRequestHead: PullRequestGitRef;
@@ -11,10 +11,10 @@ export interface ICheckoutPullRequestCommandArgs {
 }
 
 export const createCheckoutPullRequest =
-  ({ accountManager, repositoryManager, cache }: CreateCommandArg) =>
+  (ctx: IKeaContext) =>
   async (args?: ICheckoutPullRequestCommandArgs): Promise<Error | void> => {
     if (args === undefined) {
-      const results = await vscode.window.showQuickPick(createPullRequestBranchPicks(accountManager, repositoryManager, cache), {
+      const results = await vscode.window.showQuickPick(createPullRequestBranchPicks(ctx), {
         canPickMany: false,
         placeHolder: "Select a pull request to checkout",
       });

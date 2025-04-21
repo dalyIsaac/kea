@@ -5,8 +5,13 @@ import * as vscode from "vscode";
 import { IAccount } from "./account/account";
 import { IAccountManager } from "./account/account-manager";
 import { ILruApiCache } from "./cache/lru-api/lru-api-cache";
+import { IKeaContext } from "./core/context";
+import { ITreeDecorationManager } from "./decorations/tree-decoration-manager";
 import { IKeaRepository } from "./repository/kea-repository";
+import { IRepositoryManager } from "./repository/repository-manager";
 import { Commit, CommitComment, CommitFile, IssueComment, PullRequest, PullRequestComment, PullRequestGitRef, User } from "./types/kea";
+import { PullRequestContentsProvider } from "./views/pull-request-contents/pull-request-contents-provider";
+import { PullRequestListTreeProvider } from "./views/pull-request-list/pull-request-list-tree-provider";
 import { ITreeNodeProvider } from "./views/pull-request-list/tree-node-provider";
 import { ITreeNode } from "./views/tree-node";
 
@@ -211,6 +216,28 @@ export const createTreeNodeProviderStub = (props: Partial<ITreeNodeProvider<ITre
   getTreeItem: sinon.stub(),
   refresh: sinon.stub(),
   onDidChangeTreeData: sinon.stub(),
+  ...props,
+});
+
+export const createRepositoryManagerStub = (props: Partial<IRepositoryManager> = {}): IRepositoryManager => ({
+  addRepository: sinon.stub(),
+  getRepositoryById: sinon.stub(),
+  ...props,
+});
+
+export const createTreeDecorationManagerStub = (props: Partial<ITreeDecorationManager> = {}): ITreeDecorationManager => ({
+  registerProviders: sinon.stub(),
+  updateListeners: sinon.stub(),
+  ...props,
+});
+
+export const createKeaContextStub = (props: Partial<IKeaContext> = {}): IKeaContext => ({
+  accountManager: createAccountManagerStub(),
+  repositoryManager: createRepositoryManagerStub(),
+  cache: createCacheStub(),
+  treeDecorationManager: createTreeDecorationManagerStub(),
+  pullRequestListTreeProvider: createTreeNodeProviderStub() as PullRequestListTreeProvider,
+  pullRequestContentsProvider: createTreeNodeProviderStub() as PullRequestContentsProvider,
   ...props,
 });
 

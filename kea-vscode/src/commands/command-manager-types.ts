@@ -1,10 +1,5 @@
-import { IAccountManager } from "../account/account-manager";
-import { ILruApiCache } from "../cache/lru-api/lru-api-cache";
+import { IKeaContext } from "../core/context";
 import { IKeaDisposable } from "../core/kea-disposable";
-import { TreeDecorationManager } from "../decorations/tree-decoration-manager";
-import { IRepositoryManager } from "../repository/repository-manager";
-import { PullRequestContentsProvider } from "../views/pull-request-contents/pull-request-contents-provider";
-import { PullRequestListTreeProvider } from "../views/pull-request-list/pull-request-list-tree-provider";
 import { createCheckoutPullRequest } from "./commands/checkout-pull-request";
 import { createOpenPullRequestCommand } from "./commands/open-pull-request";
 import {
@@ -13,16 +8,7 @@ import {
   createRefreshPullRequestListCommand,
 } from "./commands/small-commands";
 
-export interface CreateCommandArg {
-  accountManager: IAccountManager;
-  repositoryManager: IRepositoryManager;
-  pullRequestContentsProvider: PullRequestContentsProvider;
-  pullRequestListTreeProvider: PullRequestListTreeProvider;
-  cache: ILruApiCache;
-  treeDecorationManager: TreeDecorationManager;
-}
-
-type CreateCommand = (args: CreateCommandArg) => unknown;
+type CreateCommand = (ctx: IKeaContext) => unknown;
 
 export const COMMANDS = {
   "kea.openPullRequest": createOpenPullRequestCommand,

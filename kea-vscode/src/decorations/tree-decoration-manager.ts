@@ -4,7 +4,12 @@ import { IKeaRepository, IssueCommentsPayload } from "../repository/kea-reposito
 import { BaseTreeDecorationProvider } from "./base-tree-decoration-provider";
 import { createCommentsRootDecorationUri } from "./decoration-schemes";
 
-export class TreeDecorationManager {
+export interface ITreeDecorationManager {
+  registerProviders: (...providers: BaseTreeDecorationProvider[]) => void;
+  updateListeners: (...repositories: IKeaRepository[]) => void;
+}
+
+export class TreeDecorationManager implements ITreeDecorationManager {
   #repositoryListeners: vscode.Disposable[] = [];
   #providers: BaseTreeDecorationProvider[] = [];
 

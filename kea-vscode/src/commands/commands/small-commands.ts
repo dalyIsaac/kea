@@ -1,14 +1,14 @@
 import * as vscode from "vscode";
-import { CreateCommandArg } from "../command-manager-types";
+import { IKeaContext } from "../../core/context";
 
 export const createRefreshPullRequestListCommand =
-  ({ pullRequestListTreeProvider }: CreateCommandArg) =>
+  ({ pullRequestListTreeProvider }: IKeaContext) =>
   () => {
     pullRequestListTreeProvider.refresh();
   };
 
 export const createRefreshPullRequestContentsCommand =
-  ({ pullRequestContentsProvider }: CreateCommandArg) =>
+  ({ pullRequestContentsProvider }: IKeaContext) =>
   () => {
     pullRequestContentsProvider.refresh();
   };
