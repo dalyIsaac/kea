@@ -1,5 +1,6 @@
 import * as assert from "assert";
 import * as vscode from "vscode";
+import { IKeaContext } from "../../core/context";
 import { IKeaRepository } from "../../repository/kea-repository";
 import { RepositoryManager } from "../../repository/repository-manager";
 import {
@@ -77,25 +78,27 @@ suite("PullRequestContentsProvider", () => {
   });
 
   class SuccessTestTreeNode extends PullRequestListNode {
+    #ctx: IKeaContext;
     label: string;
     override collapsibleState: CollapsibleState;
 
-    constructor(label: string, collapsibleState: CollapsibleState) {
-      super({ accountId: "", providerId: "" }, createPullRequestStub(), createWorkspaceFolderStub());
+    constructor(ctx: IKeaContext, label: string, collapsibleState: CollapsibleState) {
+      super(ctx, { accountId: "", providerId: "" }, createPullRequestStub(), createWorkspaceFolderStub());
+      this.#ctx = ctx;
       this.label = label;
       this.collapsibleState = collapsibleState;
     }
 
     getChildren = (): SuccessTestTreeNode[] => {
-      return [new SuccessTestTreeNode("Child 1", "none")];
+      return [new SuccessTestTreeNode(this.#ctx, "Child 1", "none")];
     };
   }
 
   test("getChildren returns the children of the given element", async () => {
     // Given
-    const { provider } = await createGetChildrenStubs();
+    const { provider, ctx } = await createGetChildrenStubs();
 
-    const element = new SuccessTestTreeNode("Parent", "collapsed") as unknown as PullRequestTreeNode;
+    const element = new SuccessTestTreeNode(ctx, "Parent", "collapsed") as unknown as PullRequestTreeNode;
 
     // When
     const children = await provider.getChildren(element);

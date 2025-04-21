@@ -5,7 +5,7 @@ import { IKeaDisposable, KeaDisposable } from "../core/kea-disposable";
 import { Logger } from "../core/logger";
 import { WrappedError } from "../core/wrapped-error";
 import { IKeaRepository } from "../repository/kea-repository";
-import { GitApi, GitExtension, Repository } from "../types/git";
+import { Branch, GitApi, GitExtension, Repository } from "../types/git";
 
 export interface RepoInfo {
   repository: IKeaRepository;
@@ -14,14 +14,22 @@ export interface RepoInfo {
 }
 
 export interface IGitManager extends IKeaDisposable {
-  getGitRepository: (workspaceFolder: vscode.WorkspaceFolder) => Promise<Repository | Error>;
   getAllRepositoriesAndInfo: () => Promise<Array<RepoInfo | Error>>;
   getRepositoryInfo: (workspace: vscode.WorkspaceFolder) => Promise<RepoInfo | Error>;
+  getGitRepository: (workspaceFolder: vscode.WorkspaceFolder) => Promise<Repository | Error>;
+  getGitBranchForRepository: (workspaceFolder: vscode.WorkspaceFolder) => Promise<Branch | Error>;
+
+  onRepositoryStateChanged: vscode.Event<Repository>;
 }
 
 export class GitManager extends KeaDisposable implements IGitManager {
   #ctx: IKeaContext;
   #gitApi: GitApi | undefined = undefined;
+
+  #openRepos = new Map<vscode.Uri, Repository>();
+
+  #onRepositoryStateChanged = new vscode.EventEmitter<Repository>();
+  onRepositoryStateChanged = this.#onRepositoryStateChanged.event;
 
   constructor(ctx: IKeaContext) {
     super();
@@ -48,22 +56,6 @@ export class GitManager extends KeaDisposable implements IGitManager {
 
     this.#gitApi = gitExtension.exports.getAPI(1);
     return this.#gitApi;
-  };
-
-  getGitRepository = async (workspaceFolder: vscode.WorkspaceFolder): Promise<Repository | Error> => {
-    const api = await this.#getGitApi();
-    if (api instanceof Error) {
-      return api;
-    }
-
-    // Open the repository if it is not already opened. This can occur if the Kea extension is
-    // activated before the Git extension.
-    const repo = api.getRepository(workspaceFolder.uri) ?? (await api.openRepository(workspaceFolder.uri));
-    if (repo === null) {
-      return new Error(`No repository found for ${workspaceFolder.uri.toString()}`);
-    }
-
-    return repo;
   };
 
   getAllRepositoriesAndInfo = async (): Promise<Array<RepoInfo | Error>> =>
@@ -111,5 +103,51 @@ export class GitManager extends KeaDisposable implements IGitManager {
     }
 
     return new Error("No account found for repository");
+  };
+
+  getGitRepository = async (workspaceFolder: vscode.WorkspaceFolder): Promise<Repository | Error> => {
+    const cachedRepo = this.#openRepos.get(workspaceFolder.uri);
+    if (cachedRepo) {
+      return cachedRepo;
+    }
+
+    const api = await this.#getGitApi();
+    if (api instanceof Error) {
+      return api;
+    }
+
+    // Open the repository if it is not already opened. This can occur if the Kea extension is
+    // activated before the Git extension.
+    const repo = api.getRepository(workspaceFolder.uri) ?? (await api.openRepository(workspaceFolder.uri));
+    if (repo === null) {
+      return new Error(`No repository found for ${workspaceFolder.uri.toString()}`);
+    }
+
+    this.#openRepos.set(workspaceFolder.uri, repo);
+    this._registerDisposable(
+      repo.state.onDidChange(() => {
+        this.#onRepositoryStateChange(repo);
+      }),
+    );
+
+    return repo;
+  };
+
+  getGitBranchForRepository = async (workspaceFolder: vscode.WorkspaceFolder): Promise<Branch | Error> => {
+    const repo = await this.getGitRepository(workspaceFolder);
+    if (repo instanceof Error) {
+      return repo;
+    }
+
+    const branch = repo.state.HEAD;
+    if (branch === undefined) {
+      return new Error("No branch found");
+    }
+
+    return branch;
+  };
+
+  #onRepositoryStateChange = (repo: Repository): void => {
+    this.#onRepositoryStateChanged.fire(repo);
   };
 }

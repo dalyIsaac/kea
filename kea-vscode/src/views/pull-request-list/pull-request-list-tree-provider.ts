@@ -15,7 +15,13 @@ export class PullRequestListTreeProvider extends TreeNodeProvider<PullRequestLis
   constructor(ctx: IKeaContext) {
     super();
     this.#ctx = ctx;
+
+    this._registerDisposable(this.#ctx.gitManager.onRepositoryStateChanged(this.#onRepositoryStateChanged));
   }
+
+  #onRepositoryStateChanged = (): void => {
+    this._onDidChangeTreeData.fire();
+  };
 
   override _getRootChildren = async (): Promise<PullRequestListTreeNode[]> => {
     const allRepoInfo = await this.#ctx.gitManager.getAllRepositoriesAndInfo();
@@ -28,7 +34,7 @@ export class PullRequestListTreeProvider extends TreeNodeProvider<PullRequestLis
       }
 
       const { repository, workspaceFolder: workspace } = repoInfo;
-      const rootItem = new RepoTreeNode(repository, workspace);
+      const rootItem = new RepoTreeNode(this.#ctx, repository, workspace);
       rootItems.push(rootItem);
     }
     return rootItems;

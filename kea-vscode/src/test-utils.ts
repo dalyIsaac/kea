@@ -233,9 +233,11 @@ export const createTreeDecorationManagerStub = (props: Partial<ITreeDecorationMa
 });
 
 export const createGitManagerStub = (props: Partial<IGitManager> = {}): IGitManager => ({
-  getGitRepository: sinon.stub(),
   getAllRepositoriesAndInfo: sinon.stub(),
   getRepositoryInfo: sinon.stub(),
+  getGitRepository: sinon.stub(),
+  getGitBranchForRepository: sinon.stub(),
+  onRepositoryStateChanged: sinon.stub(),
   dispose: sinon.stub(),
   ...props,
 });

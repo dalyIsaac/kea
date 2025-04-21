@@ -1,12 +1,17 @@
 import * as assert from "assert";
 import * as vscode from "vscode";
 import { IAccount, IAccountKey } from "../../account/account";
-import { createPullRequestStub, createRepositoryStub, createWorkspaceFolderStub } from "../../test-utils";
+import { createKeaContextStub, createPullRequestStub, createRepositoryStub, createWorkspaceFolderStub } from "../../test-utils";
 import { PullRequestListNode } from "./pull-request-list-node";
 import { RepoTreeNode } from "./repo-tree-node";
 
 suite("RepoTreeNode", () => {
+  const ctx = createKeaContextStub();
   const accountKey: IAccountKey = { providerId: "github", accountId: "test-account" };
+  const workspaceFolder = createWorkspaceFolderStub({
+    uri: vscode.Uri.file("c:/test/workspace"),
+    name: "test-workspace",
+  });
 
   test("should be created with the correct properties", () => {
     // Given
@@ -14,17 +19,13 @@ suite("RepoTreeNode", () => {
       remoteUrl: "https://github.com/owner/repo",
       account: { accountKey } as IAccount,
     });
-    const mockWorkspaceFolder = createWorkspaceFolderStub({
-      uri: vscode.Uri.file("c:/test/workspace"),
-      name: "test-workspace",
-    });
 
     // When
-    const repoTreeNode = new RepoTreeNode(mockRepository, mockWorkspaceFolder);
+    const repoTreeNode = new RepoTreeNode(ctx, mockRepository, workspaceFolder);
 
     // Then
     assert.strictEqual(repoTreeNode.repository, mockRepository);
-    assert.strictEqual(repoTreeNode.workspace, mockWorkspaceFolder);
+    assert.strictEqual(repoTreeNode.workspace, workspaceFolder);
     assert.strictEqual(repoTreeNode.collapsibleState, "collapsed");
   });
 
@@ -38,7 +39,7 @@ suite("RepoTreeNode", () => {
       uri: vscode.Uri.file("c:/test/workspace"),
       name: "test-workspace",
     });
-    const repoTreeNode = new RepoTreeNode(mockRepository, mockWorkspaceFolder);
+    const repoTreeNode = new RepoTreeNode(ctx, mockRepository, mockWorkspaceFolder);
 
     // When
     const treeItem = repoTreeNode.getTreeItem();
@@ -63,7 +64,7 @@ suite("RepoTreeNode", () => {
       uri: vscode.Uri.file("c:/test/workspace"),
       name: "test-workspace",
     });
-    const repoTreeNode = new RepoTreeNode(mockRepository, mockWorkspaceFolder);
+    const repoTreeNode = new RepoTreeNode(ctx, mockRepository, mockWorkspaceFolder);
 
     // When
     const children = await repoTreeNode.getChildren();
@@ -90,7 +91,7 @@ suite("RepoTreeNode", () => {
       uri: vscode.Uri.file("c:/test/workspace"),
       name: "test-workspace",
     });
-    const repoTreeNode = new RepoTreeNode(mockRepository, mockWorkspaceFolder);
+    const repoTreeNode = new RepoTreeNode(ctx, mockRepository, mockWorkspaceFolder);
 
     // When
     const children = await repoTreeNode.getChildren();

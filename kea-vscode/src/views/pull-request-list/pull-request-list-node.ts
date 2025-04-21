@@ -1,11 +1,14 @@
 import * as vscode from "vscode";
 import { IAccountKey } from "../../account/account";
 import { ICheckoutPullRequestCommandArgs } from "../../commands/commands/checkout-pull-request";
+import { IKeaContext } from "../../core/context";
 import { trimLength } from "../../core/utils";
 import { PullRequest, PullRequestGitRef, PullRequestId } from "../../types/kea";
 import { CollapsibleState, getCollapsibleState, ITreeNode } from "../tree-node";
 
 export class PullRequestListNode implements ITreeNode, ICheckoutPullRequestCommandArgs {
+  #ctx: IKeaContext;
+
   collapsibleState: CollapsibleState = "none";
 
   accountKey: IAccountKey;
@@ -16,7 +19,9 @@ export class PullRequestListNode implements ITreeNode, ICheckoutPullRequestComma
     return this.pullRequest.head;
   }
 
-  constructor(accountKey: IAccountKey, pullRequest: PullRequest, workspaceFolder: vscode.WorkspaceFolder) {
+  constructor(ctx: IKeaContext, accountKey: IAccountKey, pullRequest: PullRequest, workspaceFolder: vscode.WorkspaceFolder) {
+    this.#ctx = ctx;
+
     this.collapsibleState = "none";
 
     this.accountKey = accountKey;
@@ -24,7 +29,7 @@ export class PullRequestListNode implements ITreeNode, ICheckoutPullRequestComma
     this.workspaceFolder = workspaceFolder;
   }
 
-  getTreeItem = (): vscode.TreeItem => {
+  getTreeItem = async (): Promise<vscode.TreeItem> => {
     const pullId: PullRequestId = {
       owner: this.pullRequest.repository.owner,
       repo: this.pullRequest.repository.name,
@@ -41,17 +46,23 @@ export class PullRequestListNode implements ITreeNode, ICheckoutPullRequestComma
     }
     description += ` (${shortHead})`;
 
+    const branch = await this.#ctx.gitManager.getGitBranchForRepository(this.workspaceFolder);
+    const isCheckedOut = branch instanceof Error ? false : branch.name === head;
+
+    const iconPath = isCheckedOut ? new vscode.ThemeIcon("git-branch") : "";
+
     return {
       label: this.pullRequest.title,
       description,
       collapsibleState: getCollapsibleState(this.collapsibleState),
-      contextValue: "pullRequest",
+      contextValue: `pullRequest${isCheckedOut ? ":checkedout" : ""}`, // Add state to contextValue
       command: {
         command: "kea.openPullRequest",
         title: "Open Pull Request",
         arguments: [[this.accountKey, pullId]],
       },
-      tooltip: `${head}...${base}`,
+      tooltip: `${head}...${base}${isCheckedOut ? " (Checked out)" : ""}`,
+      iconPath: iconPath,
     };
   };
 }

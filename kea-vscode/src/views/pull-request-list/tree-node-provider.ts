@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { KeaDisposable } from "../../core/kea-disposable";
 import { IParentTreeNode, isParentTreeNode, ITreeNode } from "../tree-node";
 
 export interface ITreeNodeProvider<T extends ITreeNode | IParentTreeNode<T>> extends vscode.TreeDataProvider<T> {
@@ -6,7 +7,7 @@ export interface ITreeNodeProvider<T extends ITreeNode | IParentTreeNode<T>> ext
   refresh: () => void;
 }
 
-export abstract class TreeNodeProvider<T extends ITreeNode | IParentTreeNode<T>> implements ITreeNodeProvider<T> {
+export abstract class TreeNodeProvider<T extends ITreeNode | IParentTreeNode<T>> extends KeaDisposable implements ITreeNodeProvider<T> {
   protected _onDidChangeTreeData: vscode.EventEmitter<T | undefined | void> = new vscode.EventEmitter<T | undefined | void>();
   readonly onDidChangeTreeData: vscode.Event<T | undefined | void> = this._onDidChangeTreeData.event;
 
