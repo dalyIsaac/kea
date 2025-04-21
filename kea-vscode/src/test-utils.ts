@@ -59,6 +59,7 @@ export const createAccountStub = (props: Partial<IAccount> = {}): IAccount => ({
 export const createUserStub = (props: Partial<User> = {}): User => ({
   email: "jane@doe.com",
   name: "Jane Doe",
+  login: "janedoe",
   ...props,
 });
 

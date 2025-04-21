@@ -6,6 +6,18 @@ import { Commit, CommitComment, CommitFile, IssueComment, PullRequest, PullReque
  */
 export const convertGitHubUser = (user: NonNullable<RestEndpointMethodTypes["issues"]["get"]["response"]["data"]["user"]>) => ({
   name: user.name ?? null,
+  login: user.login,
+  email: user.email ?? null,
+});
+
+/**
+ * Converts an Octokit Git User response to our internal GitUser type.
+ */
+export const convertGitHubGitUser = (
+  user: NonNullable<RestEndpointMethodTypes["pulls"]["listCommits"]["response"]["data"][number]["author"]>,
+) => ({
+  name: user.name ?? null,
+  login: user.login,
   email: user.email ?? null,
 });
 
@@ -157,33 +169,26 @@ export const convertGitHubFile = (file: RestEndpointMethodTypes["pulls"]["listFi
 /**
  * Converts an Octokit Pull Request Commit response to our internal PullRequestCommit type.
  */
-export const convertGitHubCommit = (commit: RestEndpointMethodTypes["pulls"]["listCommits"]["response"]["data"][number]): Commit => {
-  const gitAuthor = commit.commit.author ? { name: commit.commit.author.name ?? null, email: commit.commit.author.email ?? null } : null;
-  const gitCommitter = commit.commit.committer
-    ? { name: commit.commit.committer.name ?? null, email: commit.commit.committer.email ?? null }
-    : null;
-
-  return {
-    sha: commit.sha,
-    commit: {
-      author: gitAuthor,
-      committer: gitCommitter,
-      message: commit.commit.message,
-      commentCount: commit.commit.comment_count,
-      tree: {
-        sha: commit.commit.tree.sha,
-        url: commit.commit.tree.url,
-      },
+export const convertGitHubCommit = (commit: RestEndpointMethodTypes["pulls"]["listCommits"]["response"]["data"][number]): Commit => ({
+  sha: commit.sha,
+  commit: {
+    author: commit.author ? convertGitHubGitUser(commit.author) : null,
+    committer: commit.committer ? convertGitHubGitUser(commit.committer) : null,
+    message: commit.commit.message,
+    commentCount: commit.commit.comment_count,
+    tree: {
+      sha: commit.commit.tree.sha,
+      url: commit.commit.tree.url,
     },
-    ...(commit.stats
-      ? {
-          stats: {
-            total: commit.stats.total ?? null,
-            additions: commit.stats.additions ?? null,
-            deletions: commit.stats.deletions ?? null,
-          },
-        }
-      : {}),
-    url: commit.html_url,
-  };
-};
+  },
+  ...(commit.stats
+    ? {
+        stats: {
+          total: commit.stats.total ?? null,
+          additions: commit.stats.additions ?? null,
+          deletions: commit.stats.deletions ?? null,
+        },
+      }
+    : {}),
+  url: commit.html_url,
+});

@@ -84,6 +84,7 @@ export interface CommitFile {
 
 export interface User {
   name?: string | null;
+  login: string | null;
   email?: string | null;
 }
 

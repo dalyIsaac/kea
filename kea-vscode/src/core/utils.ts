@@ -12,3 +12,10 @@ export const formatDate = (date: Date): string =>
     hour12: false,
     timeZoneName: "short",
   });
+
+export const trimLength = (str: string, length: number): string => {
+  if (str.length <= length) {
+    return str;
+  }
+  return str.slice(0, length) + "...";
+};

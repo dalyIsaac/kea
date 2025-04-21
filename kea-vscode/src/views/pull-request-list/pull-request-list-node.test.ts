@@ -54,6 +54,41 @@ suite("PullRequestListNode", () => {
     assert.strictEqual(treeItem.contextValue, "pullRequest");
   });
 
+  test("getTreeItem returns a TreeItem with trimmed branch name in description when branch name is long", () => {
+    // Given
+    const longBranchName = "very-long-branch-name-that-exceeds-the-limit";
+    const pullRequest = createPullRequestStub({
+      title: "Test PR with long branch",
+      number: 456,
+      head: {
+        ref: longBranchName,
+        sha: "abc123",
+        owner: "owner",
+        repo: "repo",
+      },
+      user: {
+        login: "testUser",
+      },
+      repository: {
+        owner: "owner",
+        name: "repo",
+        url: "https://github.com/owner/repo",
+      },
+    });
+    const pullRequestListNode = new PullRequestListNode(accountKey, pullRequest, createWorkspaceFolderStub());
+
+    // When
+    const treeItem = pullRequestListNode.getTreeItem();
+
+    // Then
+    assert.ok(treeItem.description);
+    assert.strictEqual(
+      treeItem.description,
+      "#456 by testUser (very-long-branch...)",
+      "Description should contain the PR number, user login, and trimmed branch name",
+    );
+  });
+
   test("getTreeItem returns a TreeItem with the correct command", () => {
     // Given
     const pullRequest = createPullRequestStub({
