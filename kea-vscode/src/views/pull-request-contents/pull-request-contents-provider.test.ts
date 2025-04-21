@@ -2,7 +2,13 @@ import * as assert from "assert";
 import * as vscode from "vscode";
 import { IKeaRepository } from "../../repository/kea-repository";
 import { RepositoryManager } from "../../repository/repository-manager";
-import { assertArrayContentsEqual, createCacheStub, createPullRequestStub, createRepositoryStub } from "../../test-utils";
+import {
+  assertArrayContentsEqual,
+  createCacheStub,
+  createPullRequestStub,
+  createRepositoryStub,
+  createWorkspaceFolderStub,
+} from "../../test-utils";
 import { PullRequestId, RepoId } from "../../types/kea";
 import { PullRequestListNode } from "../pull-request-list/pull-request-list-node";
 import { CollapsibleState, ITreeNode } from "../tree-node";
@@ -73,7 +79,7 @@ suite("PullRequestContentsProvider", () => {
     override collapsibleState: CollapsibleState;
 
     constructor(label: string, collapsibleState: CollapsibleState) {
-      super({ accountId: "", providerId: "" }, createPullRequestStub());
+      super({ accountId: "", providerId: "" }, createPullRequestStub(), createWorkspaceFolderStub());
       this.label = label;
       this.collapsibleState = collapsibleState;
     }

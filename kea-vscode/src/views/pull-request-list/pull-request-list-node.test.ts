@@ -1,7 +1,7 @@
 import * as assert from "assert";
 import * as vscode from "vscode";
 import { IAccountKey } from "../../account/account";
-import { createPullRequestStub } from "../../test-utils";
+import { createPullRequestStub, createWorkspaceFolderStub } from "../../test-utils";
 import { PullRequestId } from "../../types/kea";
 import { PullRequestListNode } from "./pull-request-list-node";
 
@@ -24,7 +24,7 @@ suite("PullRequestListNode", () => {
     });
 
     // When
-    const pullRequestListNode = new PullRequestListNode(accountKey, pullRequest);
+    const pullRequestListNode = new PullRequestListNode(accountKey, pullRequest, createWorkspaceFolderStub());
 
     // Then
     assert.strictEqual(pullRequestListNode.accountKey, accountKey);
@@ -43,7 +43,7 @@ suite("PullRequestListNode", () => {
         url: "https://github.com/owner/repo",
       },
     });
-    const pullRequestListNode = new PullRequestListNode(accountKey, pullRequest);
+    const pullRequestListNode = new PullRequestListNode(accountKey, pullRequest, createWorkspaceFolderStub());
 
     // When
     const treeItem = pullRequestListNode.getTreeItem();
@@ -65,7 +65,7 @@ suite("PullRequestListNode", () => {
         url: "https://github.com/owner/repo",
       },
     });
-    const pullRequestListNode = new PullRequestListNode(accountKey, pullRequest);
+    const pullRequestListNode = new PullRequestListNode(accountKey, pullRequest, createWorkspaceFolderStub());
 
     // When
     const treeItem = pullRequestListNode.getTreeItem();

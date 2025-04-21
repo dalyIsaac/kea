@@ -6,7 +6,7 @@ import { IAccount } from "./account/account";
 import { IAccountManager } from "./account/account-manager";
 import { ILruApiCache } from "./lru-cache/lru-api-cache";
 import { IKeaRepository } from "./repository/kea-repository";
-import { Commit, CommitComment, CommitFile, IssueComment, PullRequest, PullRequestComment, User } from "./types/kea";
+import { Commit, CommitComment, CommitFile, IssueComment, PullRequest, PullRequestComment, PullRequestGitRef, User } from "./types/kea";
 import { ITreeNodeProvider } from "./views/pull-request-list/tree-node-provider";
 import { ITreeNode } from "./views/tree-node";
 
@@ -83,6 +83,14 @@ export const createRepositoryStub = (props: Partial<IKeaRepository> = {}): IKeaR
   ...props,
 });
 
+export const createPullRequestGitRefStub = (props: Partial<PullRequestGitRef> = {}): PullRequestGitRef => ({
+  sha: "sha",
+  ref: "ref",
+  owner: "owner",
+  repo: "repo",
+  ...props,
+});
+
 export const createPullRequestStub = (props: Partial<PullRequest> = {}): PullRequest => ({
   id: 1,
   number: 1,
@@ -100,6 +108,8 @@ export const createPullRequestStub = (props: Partial<PullRequest> = {}): PullReq
   },
   url: "url",
   user: createUserStub(),
+  base: createPullRequestGitRefStub(),
+  head: createPullRequestGitRefStub(),
   ...props,
 });
 

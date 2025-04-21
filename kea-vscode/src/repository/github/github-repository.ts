@@ -63,19 +63,19 @@ export class GitHubRepository extends KeaDisposable implements IKeaRepository {
     const [method, path] = route.split(" ");
 
     if (typeof method !== "string" || typeof path !== "string") {
-      return new Error(`Invalid route: ${route}`);
+      return new WrappedError(`Invalid route: ${route}`);
     }
 
     if (!isMethod(method)) {
-      return new Error(`Invalid method: ${method}`);
+      return new WrappedError(`Invalid method: ${method}`);
     }
 
     if (options === undefined) {
-      return new Error(`Invalid options: ${options}`);
+      return new WrappedError(`Invalid options: ${options}`);
     }
 
     if (!("owner" in options) || !("repo" in options)) {
-      return new Error("Missing owner or repo in options");
+      return new WrappedError("Missing owner or repo in options");
     }
 
     const owner = options.owner;
