@@ -4,7 +4,7 @@ import sinon from "sinon";
 import * as vscode from "vscode";
 import { IAccount } from "./account/account";
 import { IAccountManager } from "./account/account-manager";
-import { ILruApiCache } from "./lru-cache/lru-api-cache";
+import { ILruApiCache } from "./cache/lru-api/lru-api-cache";
 import { IKeaRepository } from "./repository/kea-repository";
 import { Commit, CommitComment, CommitFile, IssueComment, PullRequest, PullRequestComment, PullRequestGitRef, User } from "./types/kea";
 import { ITreeNodeProvider } from "./views/pull-request-list/tree-node-provider";

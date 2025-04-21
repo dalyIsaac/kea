@@ -1,6 +1,6 @@
 import { IAccountKey } from "../../account/account";
+import { ILruApiCache } from "../../cache/lru-api/lru-api-cache";
 import { Logger } from "../../core/logger";
-import { ILruApiCache } from "../../lru-cache/lru-api-cache";
 import { IKeaRepository } from "../../repository/kea-repository";
 import { IRepositoryManager } from "../../repository/repository-manager";
 import { isSamePullRequest } from "../../type-utils";

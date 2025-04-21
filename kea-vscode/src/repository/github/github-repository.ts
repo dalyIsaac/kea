@@ -10,11 +10,11 @@ import {
   convertGitHubPullRequestListItem,
   convertGitHubPullRequestReviewComment,
 } from "../../account/github/github-utils";
+import { CacheKey, isMethod } from "../../cache/lru-api/cache-types";
+import { ILruApiCache } from "../../cache/lru-api/lru-api-cache";
 import { KeaDisposable } from "../../core/kea-disposable";
 import { Logger } from "../../core/logger";
 import { WrappedError } from "../../core/wrapped-error";
-import { CacheKey, isMethod } from "../../lru-cache/cache-types";
-import { ILruApiCache } from "../../lru-cache/lru-api-cache";
 import {
   Commit,
   CommitComment,

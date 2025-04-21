@@ -1,10 +1,10 @@
 import * as vscode from "vscode";
 import { IAccountManager } from "../account/account-manager";
+import { ILruApiCache } from "../cache/lru-api/lru-api-cache";
 import { ICheckoutPullRequestCommandArgs } from "../commands/commands/checkout-pull-request";
 import { getAllRepositories, RepoInfo } from "../core/git";
 import { Logger } from "../core/logger";
 import { formatDate } from "../core/utils";
-import { ILruApiCache } from "../lru-cache/lru-api-cache";
 import { IRepositoryManager } from "../repository/repository-manager";
 import { PullRequest } from "../types/kea";
 

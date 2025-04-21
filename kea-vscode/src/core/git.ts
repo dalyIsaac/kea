@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import { IAccount } from "../account/account";
 import { IAccountManager } from "../account/account-manager";
-import { ILruApiCache } from "../lru-cache/lru-api-cache";
+import { ILruApiCache } from "../cache/lru-api/lru-api-cache";
 import { IKeaRepository } from "../repository/kea-repository";
 import { IRepositoryManager } from "../repository/repository-manager";
 import { API, GitExtension, Repository } from "../types/git";

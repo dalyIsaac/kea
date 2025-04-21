@@ -1,7 +1,7 @@
 import { IAccountManager } from "../account/account-manager";
+import { ILruApiCache } from "../cache/lru-api/lru-api-cache";
 import { IKeaDisposable } from "../core/kea-disposable";
 import { TreeDecorationManager } from "../decorations/tree-decoration-manager";
-import { ILruApiCache } from "../lru-cache/lru-api-cache";
 import { IRepositoryManager } from "../repository/repository-manager";
 import { PullRequestContentsProvider } from "../views/pull-request-contents/pull-request-contents-provider";
 import { PullRequestListTreeProvider } from "../views/pull-request-list/pull-request-list-tree-provider";

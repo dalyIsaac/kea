@@ -1,7 +1,7 @@
 import { IAccountManager } from "../../account/account-manager";
+import { ILruApiCache } from "../../cache/lru-api/lru-api-cache";
 import { getAllRepositories } from "../../core/git";
 import { Logger } from "../../core/logger";
-import { ILruApiCache } from "../../lru-cache/lru-api-cache";
 import { IRepositoryManager } from "../../repository/repository-manager";
 import { PullRequestListNode } from "./pull-request-list-node";
 import { RepoTreeNode } from "./repo-tree-node";
