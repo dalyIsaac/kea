@@ -1,5 +1,4 @@
 import { IKeaContext } from "../../core/context";
-import { getAllRepositories } from "../../core/git";
 import { Logger } from "../../core/logger";
 import { PullRequestListNode } from "./pull-request-list-node";
 import { RepoTreeNode } from "./repo-tree-node";
@@ -19,7 +18,7 @@ export class PullRequestListTreeProvider extends TreeNodeProvider<PullRequestLis
   }
 
   override _getRootChildren = async (): Promise<PullRequestListTreeNode[]> => {
-    const allRepoInfo = await getAllRepositories(this.#ctx);
+    const allRepoInfo = await this.#ctx.gitManager.getAllRepositoriesAndInfo();
 
     const rootItems: PullRequestListTreeNode[] = [];
     for (const repoInfo of allRepoInfo) {

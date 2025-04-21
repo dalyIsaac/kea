@@ -7,6 +7,7 @@ import { IAccountManager } from "./account/account-manager";
 import { ILruApiCache } from "./cache/lru-api/lru-api-cache";
 import { IKeaContext } from "./core/context";
 import { ITreeDecorationManager } from "./decorations/tree-decoration-manager";
+import { IGitManager } from "./git/git-manager";
 import { IKeaRepository } from "./repository/kea-repository";
 import { IRepositoryManager } from "./repository/repository-manager";
 import { Commit, CommitComment, CommitFile, IssueComment, PullRequest, PullRequestComment, PullRequestGitRef, User } from "./types/kea";
@@ -231,8 +232,17 @@ export const createTreeDecorationManagerStub = (props: Partial<ITreeDecorationMa
   ...props,
 });
 
+export const createGitManagerStub = (props: Partial<IGitManager> = {}): IGitManager => ({
+  getGitRepository: sinon.stub(),
+  getAllRepositoriesAndInfo: sinon.stub(),
+  getRepositoryInfo: sinon.stub(),
+  dispose: sinon.stub(),
+  ...props,
+});
+
 export const createKeaContextStub = (props: Partial<IKeaContext> = {}): IKeaContext => ({
   accountManager: createAccountManagerStub(),
+  gitManager: createGitManagerStub(),
   repositoryManager: createRepositoryManagerStub(),
   cache: createCacheStub(),
   treeDecorationManager: createTreeDecorationManagerStub(),

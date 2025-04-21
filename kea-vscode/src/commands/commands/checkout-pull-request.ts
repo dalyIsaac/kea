@@ -1,6 +1,5 @@
 import * as vscode from "vscode";
 import { IKeaContext } from "../../core/context";
-import { getGitApi, getGitRepository } from "../../core/git";
 import { Logger } from "../../core/logger";
 import { createPullRequestBranchPicks } from "../../quick-picks/pull-request-branch-picks";
 import { PullRequestGitRef } from "../../types/kea";
@@ -32,15 +31,9 @@ export const createCheckoutPullRequest =
     const branchName = args.pullRequestHead.ref;
     const workspaceFolder = args.workspaceFolder;
 
-    const repository = await getGitRepository(workspaceFolder);
+    const repository = await ctx.gitManager.getGitRepository(workspaceFolder);
     if (repository instanceof Error) {
       Logger.error("Error getting repository", repository);
-      return;
-    }
-
-    const api = await getGitApi();
-    if (api instanceof Error) {
-      Logger.error("Error getting Git API", api);
       return;
     }
 

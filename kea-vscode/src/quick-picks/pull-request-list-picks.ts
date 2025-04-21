@@ -1,9 +1,9 @@
 import * as vscode from "vscode";
 import { IAccountKey } from "../account/account";
 import { IKeaContext } from "../core/context";
-import { getAllRepositories, RepoInfo } from "../core/git";
 import { Logger } from "../core/logger";
 import { formatDate } from "../core/utils";
+import { RepoInfo } from "../git/git-manager";
 import { PullRequest, PullRequestId } from "../types/kea";
 
 interface PullRequestQuickPickItem extends vscode.QuickPickItem {
@@ -12,7 +12,7 @@ interface PullRequestQuickPickItem extends vscode.QuickPickItem {
 }
 
 export const createPullRequestListQuickPick = async (ctx: IKeaContext): Promise<PullRequestQuickPickItem[]> => {
-  const allRepos = await getAllRepositories(ctx);
+  const allRepos = await ctx.gitManager.getAllRepositoriesAndInfo();
 
   const nestedPullRequests = await Promise.all(
     allRepos.map(async (repoInfo) => {
