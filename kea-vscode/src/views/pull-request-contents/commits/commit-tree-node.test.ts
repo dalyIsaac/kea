@@ -13,21 +13,24 @@ suite("CommitTreeNode", () => {
   let sandbox: sinon.SinonSandbox;
   let mockRepository: sinon.SinonStubbedInstance<IKeaRepository>;
   let testCommit: Commit;
+  let showErrorMessageStub: sinon.SinonStub;
 
   setup(() => {
     sandbox = sinon.createSandbox();
     mockRepository = createRepositoryStub() as sinon.SinonStubbedInstance<IKeaRepository>;
-    // Ensure the default testCommit has all required nested properties
+
     testCommit = createCommitStub({
       sha: "test-sha",
       commit: {
-        author: createUserStub(), // Add required nested properties
+        author: createUserStub(),
         committer: createUserStub(),
         message: "Test commit title\n\nThis is the commit body.",
         commentCount: 0,
         tree: { sha: "tree-sha", url: "tree-url" },
       },
     });
+
+    showErrorMessageStub = sandbox.stub(vscode.window, "showErrorMessage");
   });
 
   teardown(() => {
@@ -136,7 +139,6 @@ suite("CommitTreeNode", () => {
     mockRepository.getCommitFiles.resolves(error);
     mockRepository.getCommitComments.resolves([]);
     const node = new CommitTreeNode(mockRepository, testCommit);
-    const showErrorMessageStub = sandbox.stub(vscode.window, "showErrorMessage");
 
     // When
     const children = await node.getChildren();
@@ -157,7 +159,6 @@ suite("CommitTreeNode", () => {
     mockRepository.getCommitFiles.resolves(files);
     mockRepository.getCommitComments.resolves(error);
     const node = new CommitTreeNode(mockRepository, testCommit);
-    const showErrorMessageStub = sandbox.stub(vscode.window, "showErrorMessage");
 
     // When
     const children = await node.getChildren();
