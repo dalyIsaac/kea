@@ -206,10 +206,7 @@ export interface Repository {
   unsetConfig(key: string): Promise<string>;
   getGlobalConfig(key: string): Promise<string>;
 
-  getObjectDetails(
-    treeish: string,
-    path: string,
-  ): Promise<{ mode: string; object: string; size: number }>;
+  getObjectDetails(treeish: string, path: string): Promise<{ mode: string; object: string; size: number }>;
   detectObjectType(object: string): Promise<{ mimetype: string; encoding?: string }>;
   buffer(ref: string, path: string): Promise<Buffer>;
   show(ref: string, path: string): Promise<string>;
@@ -261,12 +258,7 @@ export interface Repository {
   fetch(options?: FetchOptions): Promise<void>;
   fetch(remote?: string, ref?: string, depth?: number): Promise<void>;
   pull(unshallow?: boolean): Promise<void>;
-  push(
-    remoteName?: string,
-    branchName?: string,
-    setUpstream?: boolean,
-    force?: ForcePushMode,
-  ): Promise<void>;
+  push(remoteName?: string, branchName?: string, setUpstream?: boolean, force?: ForcePushMode): Promise<void>;
 
   blame(path: string): Promise<string>;
   log(options?: LogOptions): Promise<Commit[]>;
@@ -350,10 +342,7 @@ export interface AvatarQuery {
 }
 
 export interface SourceControlHistoryItemDetailsProvider {
-  provideAvatar(
-    repository: Repository,
-    query: AvatarQuery,
-  ): ProviderResult<Map<string, string | undefined>>;
+  provideAvatar(repository: Repository, query: AvatarQuery): ProviderResult<Map<string, string | undefined>>;
   provideHoverCommands(repository: Repository): ProviderResult<Command[]>;
   provideMessageLinks(repository: Repository, message: string): ProviderResult<string>;
 }
@@ -365,7 +354,7 @@ export interface PublishEvent {
   branch?: string;
 }
 
-export interface API {
+export interface GitApi {
   readonly state: APIState;
   readonly onDidChangeState: Event<APIState>;
   readonly onDidPublish: Event<PublishEvent>;
@@ -385,9 +374,7 @@ export interface API {
   registerPostCommitCommandsProvider(provider: PostCommitCommandsProvider): Disposable;
   registerPushErrorHandler(handler: PushErrorHandler): Disposable;
   registerBranchProtectionProvider(root: Uri, provider: BranchProtectionProvider): Disposable;
-  registerSourceControlHistoryItemDetailsProvider(
-    provider: SourceControlHistoryItemDetailsProvider,
-  ): Disposable;
+  registerSourceControlHistoryItemDetailsProvider(provider: SourceControlHistoryItemDetailsProvider): Disposable;
 }
 
 export interface GitExtension {
@@ -404,7 +391,7 @@ export interface GitExtension {
    * @param version Version number.
    * @returns API instance
    */
-  getAPI(version: 1): API;
+  getAPI(version: 1): GitApi;
 }
 
 export const enum GitErrorCodes {

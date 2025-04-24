@@ -1,76 +1,23 @@
 import * as vscode from "vscode";
-import { IAccountKey } from "./account/account";
-import { AccountManager } from "./account/account-manager";
+import { CommandManager } from "./commands/command-manager";
+import { KeaContext } from "./core/context";
 import { Logger } from "./core/logger";
 import { CommentsRootDecorationProvider } from "./decorations/comments-root-decoration-provider";
 import { FileCommentDecorationProvider } from "./decorations/file-comment-decoration-provider";
-import { TreeDecorationManager } from "./decorations/tree-decoration-manager";
-import { LruApiCache } from "./lru-cache/lru-api-cache";
-import { createPullRequestListQuickPick } from "./quick-picks/pull-request-list-picks";
-import { RepositoryManager } from "./repository/repository-manager";
-import { PullRequestId } from "./types/kea";
-import { PullRequestContentsProvider } from "./views/pull-request-contents/pull-request-contents-provider";
-import { PullRequestListTreeProvider } from "./views/pull-request-list/pull-request-list-tree-provider";
-
-const MAX_CACHE_SIZE = 1000;
 
 export function activate(_context: vscode.ExtensionContext) {
   Logger.info("Kea extension activated");
 
-  const cache = new LruApiCache(MAX_CACHE_SIZE);
+  const ctx = new KeaContext();
 
-  const accountManager = new AccountManager();
-  const repositoryManager = new RepositoryManager();
+  ctx.treeDecorationManager.registerProviders(
+    new FileCommentDecorationProvider(),
+    new CommentsRootDecorationProvider(ctx.repositoryManager),
+  );
 
-  // Tree decorations.
-  const treeDecorationManager = new TreeDecorationManager();
-  treeDecorationManager.registerProviders(new FileCommentDecorationProvider(), new CommentsRootDecorationProvider(repositoryManager));
+  // Tree views are created via TreeViewContainer in context, no need to register manually
 
-  // Tree providers.
-  const pullRequestListTreeProvider = new PullRequestListTreeProvider(accountManager, repositoryManager, cache);
-  const pullRequestContentsProvider = new PullRequestContentsProvider(repositoryManager, cache);
-
-  // Register tree providers.
-  vscode.window.registerTreeDataProvider("kea.pullRequestList", pullRequestListTreeProvider);
-  vscode.window.registerTreeDataProvider("kea.pullRequestContents", pullRequestContentsProvider);
-
-  // Commands.
-  vscode.commands.registerCommand("kea.refreshPullRequestList", () => {
-    pullRequestListTreeProvider.refresh();
-  });
-  vscode.commands.registerCommand("kea.openPullRequest", async (args?: [IAccountKey, PullRequestId]) => {
-    if (args === undefined) {
-      const results = await vscode.window.showQuickPick(createPullRequestListQuickPick(accountManager, repositoryManager, cache), {
-        canPickMany: false,
-        placeHolder: "Select a pull request to open",
-      });
-
-      if (results === undefined) {
-        return;
-      }
-
-      args = [results.accountKey, results.pullRequestId];
-    }
-
-    const [accountKey, pullId] = args;
-    await pullRequestContentsProvider.openPullRequest(accountKey, pullId);
-
-    const repository = repositoryManager.getRepositoryById(accountKey, pullId);
-    if (repository instanceof Error) {
-      Logger.error("Error getting repository", repository);
-      return;
-    }
-
-    treeDecorationManager.updateListeners(repository);
-  });
-
-  vscode.commands.registerCommand("kea.refreshPullRequest", () => {
-    pullRequestContentsProvider.refresh();
-  });
-
-  vscode.commands.registerCommand("kea.collapsePullRequestTree", () => {
-    vscode.commands.executeCommand("workbench.actions.treeView.kea.pullRequestContents.collapseAll");
-  });
+  const _commandManager = new CommandManager(ctx);
 }
 
 export function deactivate() {

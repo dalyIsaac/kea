@@ -1,6 +1,6 @@
 import { Octokit } from "@octokit/rest";
 import * as vscode from "vscode";
-import { ILruApiCache } from "../../lru-cache/lru-api-cache";
+import { ILruApiCache } from "../../cache/lru-api/lru-api-cache";
 import { GitHubRepository } from "../../repository/github/github-repository";
 import { IKeaRepository } from "../../repository/kea-repository";
 import { IAccount, IAccountKey } from "../account";

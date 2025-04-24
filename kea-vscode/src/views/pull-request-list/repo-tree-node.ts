@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { IKeaContext } from "../../core/context";
 import { Logger } from "../../core/logger";
 import { IKeaRepository } from "../../repository/kea-repository";
 import { CollapsibleState, getCollapsibleState, IParentTreeNode } from "../tree-node";
@@ -6,12 +7,16 @@ import { PullRequestListNode } from "./pull-request-list-node";
 
 export class RepoTreeNode implements IParentTreeNode<PullRequestListNode> {
   static #contextValue = "repository";
+
+  #ctx: IKeaContext;
   collapsibleState: CollapsibleState;
 
   repository: IKeaRepository;
   workspace: vscode.WorkspaceFolder;
 
-  constructor(repository: IKeaRepository, workspace: vscode.WorkspaceFolder) {
+  constructor(ctx: IKeaContext, repository: IKeaRepository, workspace: vscode.WorkspaceFolder) {
+    this.#ctx = ctx;
+
     this.repository = repository;
     this.workspace = workspace;
 
@@ -32,6 +37,6 @@ export class RepoTreeNode implements IParentTreeNode<PullRequestListNode> {
       return [];
     }
 
-    return pullRequests.map((pr) => new PullRequestListNode(this.repository.account.accountKey, pr));
+    return pullRequests.map((pr) => new PullRequestListNode(this.#ctx, this.repository.account.accountKey, pr, this.workspace));
   };
 }

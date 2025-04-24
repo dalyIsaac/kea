@@ -1,8 +1,5 @@
-import { IAccountManager } from "../../account/account-manager";
-import { getAllRepositories } from "../../core/git";
+import { IKeaContext } from "../../core/context";
 import { Logger } from "../../core/logger";
-import { ILruApiCache } from "../../lru-cache/lru-api-cache";
-import { IRepositoryManager } from "../../repository/repository-manager";
 import { PullRequestListNode } from "./pull-request-list-node";
 import { RepoTreeNode } from "./repo-tree-node";
 import { TreeNodeProvider } from "./tree-node-provider";
@@ -13,19 +10,21 @@ type PullRequestListTreeNode = RepoTreeNode | PullRequestListNode;
  * Provides a list of pull requests for all the repositories in the workspace.
  */
 export class PullRequestListTreeProvider extends TreeNodeProvider<PullRequestListTreeNode> {
-  #accountManager: IAccountManager;
-  #repositoryManager: IRepositoryManager;
-  #cache: ILruApiCache;
+  #ctx: IKeaContext;
 
-  constructor(accountManager: IAccountManager, repositoryManager: IRepositoryManager, cache: ILruApiCache) {
+  constructor(ctx: IKeaContext) {
     super();
-    this.#accountManager = accountManager;
-    this.#repositoryManager = repositoryManager;
-    this.#cache = cache;
+    this.#ctx = ctx;
+
+    this._registerDisposable(this.#ctx.gitManager.onRepositoryStateChanged(this.#onRepositoryStateChanged));
   }
 
+  #onRepositoryStateChanged = (): void => {
+    this._onDidChangeTreeData.fire();
+  };
+
   override _getRootChildren = async (): Promise<PullRequestListTreeNode[]> => {
-    const allRepoInfo = await getAllRepositories(this.#accountManager, this.#repositoryManager, this.#cache);
+    const allRepoInfo = await this.#ctx.gitManager.getAllRepositoriesAndInfo();
 
     const rootItems: PullRequestListTreeNode[] = [];
     for (const repoInfo of allRepoInfo) {
@@ -34,14 +33,14 @@ export class PullRequestListTreeProvider extends TreeNodeProvider<PullRequestLis
         continue;
       }
 
-      const { repository, workspace } = repoInfo;
-      const rootItem = new RepoTreeNode(repository, workspace);
+      const { repository, workspaceFolder: workspace } = repoInfo;
+      const rootItem = new RepoTreeNode(this.#ctx, repository, workspace);
       rootItems.push(rootItem);
     }
     return rootItems;
   };
 
   override _invalidateCache = (): void => {
-    this.#cache.clear();
+    this.#ctx.cache.clear();
   };
 }

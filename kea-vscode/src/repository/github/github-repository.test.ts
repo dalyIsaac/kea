@@ -1,7 +1,7 @@
 import * as assert from "assert";
 import sinon from "sinon";
 import { GitHubAccount } from "../../account/github/github-account";
-import { ICacheValue } from "../../lru-cache/cache-types";
+import { ICacheValue } from "../../cache/lru-api/cache-types";
 import { createAccountStub, createCacheStub, stubEvents } from "../../test-utils";
 import { IssueId, PullRequestId, RepoId } from "../../types/kea";
 import { IssueCommentsPayload, PullRequestReviewCommentsPayload } from "../kea-repository";
@@ -71,17 +71,26 @@ suite("GitHubRepository", () => {
       draft: false,
       user: {
         login: "test-user",
-        avatar_url: "https://avatar.url",
       },
-      html_url: "https://pr.url",
       base: {
         repo: {
           name: "test-repo",
           owner: {
             login: "test-owner",
           },
-          html_url: "https://repo.url",
         },
+        ref: "main",
+        sha: "abc123def456",
+      },
+      head: {
+        repo: {
+          name: "test-repo",
+          owner: {
+            login: "test-owner",
+          },
+        },
+        ref: "test-branch",
+        sha: "def456abc123",
       },
     },
     headers: {

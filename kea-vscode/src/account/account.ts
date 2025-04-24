@@ -1,4 +1,4 @@
-import { ILruApiCache } from "../lru-cache/lru-api-cache";
+import { ILruApiCache } from "../cache/lru-api/lru-api-cache";
 import { IKeaRepository } from "../repository/kea-repository";
 
 export interface IAccountKey {

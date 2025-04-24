@@ -4,9 +4,15 @@ import sinon from "sinon";
 import * as vscode from "vscode";
 import { IAccount } from "./account/account";
 import { IAccountManager } from "./account/account-manager";
-import { ILruApiCache } from "./lru-cache/lru-api-cache";
+import { ILruApiCache } from "./cache/lru-api/lru-api-cache";
+import { IKeaContext } from "./core/context";
+import { ITreeDecorationManager } from "./decorations/tree-decoration-manager";
+import { IGitManager } from "./git/git-manager";
 import { IKeaRepository } from "./repository/kea-repository";
-import { Commit, CommitComment, CommitFile, IssueComment, PullRequest, PullRequestComment, User } from "./types/kea";
+import { IRepositoryManager } from "./repository/repository-manager";
+import { Commit, CommitComment, CommitFile, IssueComment, PullRequest, PullRequestComment, PullRequestGitRef, User } from "./types/kea";
+import { PullRequestContentsProvider } from "./views/pull-request-contents/pull-request-contents-provider";
+import { PullRequestListTreeProvider } from "./views/pull-request-list/pull-request-list-tree-provider";
 import { ITreeNodeProvider } from "./views/pull-request-list/tree-node-provider";
 import { ITreeNode } from "./views/tree-node";
 
@@ -59,6 +65,7 @@ export const createAccountStub = (props: Partial<IAccount> = {}): IAccount => ({
 export const createUserStub = (props: Partial<User> = {}): User => ({
   email: "jane@doe.com",
   name: "Jane Doe",
+  login: "janedoe",
   ...props,
 });
 
@@ -83,6 +90,14 @@ export const createRepositoryStub = (props: Partial<IKeaRepository> = {}): IKeaR
   ...props,
 });
 
+export const createPullRequestGitRefStub = (props: Partial<PullRequestGitRef> = {}): PullRequestGitRef => ({
+  sha: "sha",
+  ref: "ref",
+  owner: "owner",
+  repo: "repo",
+  ...props,
+});
+
 export const createPullRequestStub = (props: Partial<PullRequest> = {}): PullRequest => ({
   id: 1,
   number: 1,
@@ -100,6 +115,8 @@ export const createPullRequestStub = (props: Partial<PullRequest> = {}): PullReq
   },
   url: "url",
   user: createUserStub(),
+  base: createPullRequestGitRefStub(),
+  head: createPullRequestGitRefStub(),
   ...props,
 });
 
@@ -200,6 +217,47 @@ export const createTreeNodeProviderStub = (props: Partial<ITreeNodeProvider<ITre
   getTreeItem: sinon.stub(),
   refresh: sinon.stub(),
   onDidChangeTreeData: sinon.stub(),
+  ...props,
+});
+
+export const createRepositoryManagerStub = (props: Partial<IRepositoryManager> = {}): IRepositoryManager => ({
+  addRepository: sinon.stub(),
+  getRepositoryById: sinon.stub(),
+  ...props,
+});
+
+export const createTreeDecorationManagerStub = (props: Partial<ITreeDecorationManager> = {}): ITreeDecorationManager => ({
+  registerProviders: sinon.stub(),
+  updateListeners: sinon.stub(),
+  ...props,
+});
+
+export const createGitManagerStub = (props: Partial<IGitManager> = {}): IGitManager => ({
+  getAllRepositoriesAndInfo: sinon.stub(),
+  getRepositoryInfo: sinon.stub(),
+  getGitRepository: sinon.stub(),
+  getGitBranchForRepository: sinon.stub(),
+  onRepositoryStateChanged: sinon.stub(),
+  dispose: sinon.stub(),
+  ...props,
+});
+
+export const createKeaContextStub = (props: Partial<IKeaContext> = {}): IKeaContext => ({
+  accountManager: createAccountManagerStub(),
+  gitManager: createGitManagerStub(),
+  repositoryManager: createRepositoryManagerStub(),
+  cache: createCacheStub(),
+  treeDecorationManager: createTreeDecorationManagerStub(),
+  pullRequestListTree: {
+    treeViewProvider: createTreeNodeProviderStub() as PullRequestListTreeProvider,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    treeView: {} as vscode.TreeView<any>,
+  },
+  pullRequestContents: {
+    treeViewProvider: createTreeNodeProviderStub() as PullRequestContentsProvider,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    treeView: {} as vscode.TreeView<any>,
+  },
   ...props,
 });
 

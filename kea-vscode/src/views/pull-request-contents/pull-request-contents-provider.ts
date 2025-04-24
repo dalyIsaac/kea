@@ -1,8 +1,7 @@
 import { IAccountKey } from "../../account/account";
+import { IKeaContext } from "../../core/context";
 import { Logger } from "../../core/logger";
-import { ILruApiCache } from "../../lru-cache/lru-api-cache";
 import { IKeaRepository } from "../../repository/kea-repository";
-import { IRepositoryManager } from "../../repository/repository-manager";
 import { isSamePullRequest } from "../../type-utils";
 import { PullRequest, PullRequestId } from "../../types/kea";
 import { TreeNodeProvider } from "../pull-request-list/tree-node-provider";
@@ -16,17 +15,15 @@ export type PullRequestTreeNode = CommitsRootTreeNode | CommentsRootTreeNode | F
  * Provides information about the current pull request.
  */
 export class PullRequestContentsProvider extends TreeNodeProvider<PullRequestTreeNode> {
-  #repositoryManager: IRepositoryManager;
-  #cache: ILruApiCache;
+  #ctx: IKeaContext;
   #pullInfo: { repository: IKeaRepository; pullId: PullRequestId; pullRequest: PullRequest } | undefined;
   #commentsRootTreeNode?: CommentsRootTreeNode;
   #filesRootTreeNode?: FilesRootTreeNode;
   #commitsRootTreeNode?: CommitsRootTreeNode;
 
-  constructor(repositoryManager: IRepositoryManager, cache: ILruApiCache) {
+  constructor(ctx: IKeaContext) {
     super();
-    this.#repositoryManager = repositoryManager;
-    this.#cache = cache;
+    this.#ctx = ctx;
   }
 
   override _getRootChildren = (): Promise<PullRequestTreeNode[]> => {
@@ -54,9 +51,7 @@ export class PullRequestContentsProvider extends TreeNodeProvider<PullRequestTre
   };
 
   openPullRequest = async (accountKey: IAccountKey, pullId: PullRequestId): Promise<boolean> => {
-    Logger.info("Opening pull request", pullId);
-
-    const repository = this.#repositoryManager.getRepositoryById(accountKey, pullId);
+    const repository = this.#ctx.repositoryManager.getRepositoryById(accountKey, pullId);
     if (repository instanceof Error) {
       Logger.error("Error getting repository", repository);
       this.#pullInfo = undefined;
@@ -72,6 +67,9 @@ export class PullRequestContentsProvider extends TreeNodeProvider<PullRequestTre
 
     this.#pullInfo = { repository, pullId, pullRequest };
     this._onDidChangeTreeData.fire();
+
+    this.#ctx.pullRequestContents.treeView.description = `#${pullRequest.number} ${pullRequest.title}`;
+
     return true;
   };
 
@@ -82,6 +80,6 @@ export class PullRequestContentsProvider extends TreeNodeProvider<PullRequestTre
     }
 
     const { owner, repo } = this.#pullInfo.repository.repoId;
-    this.#cache.invalidate(owner, repo);
+    this.#ctx.cache.invalidate(owner, repo);
   };
 }

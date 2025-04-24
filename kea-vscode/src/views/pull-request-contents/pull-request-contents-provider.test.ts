@@ -1,8 +1,15 @@
 import * as assert from "assert";
 import * as vscode from "vscode";
+import { IKeaContext } from "../../core/context";
 import { IKeaRepository } from "../../repository/kea-repository";
 import { RepositoryManager } from "../../repository/repository-manager";
-import { assertArrayContentsEqual, createCacheStub, createPullRequestStub, createRepositoryStub } from "../../test-utils";
+import {
+  assertArrayContentsEqual,
+  createKeaContextStub,
+  createPullRequestStub,
+  createRepositoryStub,
+  createWorkspaceFolderStub,
+} from "../../test-utils";
 import { PullRequestId, RepoId } from "../../types/kea";
 import { PullRequestListNode } from "../pull-request-list/pull-request-list-node";
 import { CollapsibleState, ITreeNode } from "../tree-node";
@@ -26,18 +33,19 @@ const createGetChildrenStubs = async (getPullRequest?: IKeaRepository["getPullRe
   const repositoryManager = new RepositoryManager();
   repositoryManager.addRepository(repository);
 
-  const cache = createCacheStub();
+  const ctx = createKeaContextStub({
+    repositoryManager,
+  });
 
-  const provider = new PullRequestContentsProvider(repositoryManager, cache);
+  const provider = new PullRequestContentsProvider(ctx);
   await provider.openPullRequest(repository.account.accountKey, pullId);
 
   return {
     repoId,
     repository,
-    repositoryManager,
     provider,
     pullId,
-    cache,
+    ctx,
   };
 };
 
@@ -45,7 +53,8 @@ suite("PullRequestContentsProvider", () => {
   test("getChildren returns an empty array when the pull request is not open", async () => {
     // Given
     const repositoryManager = new RepositoryManager();
-    const provider = new PullRequestContentsProvider(repositoryManager, createCacheStub());
+    const ctx = createKeaContextStub({ repositoryManager });
+    const provider = new PullRequestContentsProvider(ctx);
 
     // When
     const children = await provider.getChildren();
@@ -69,25 +78,27 @@ suite("PullRequestContentsProvider", () => {
   });
 
   class SuccessTestTreeNode extends PullRequestListNode {
+    #ctx: IKeaContext;
     label: string;
     override collapsibleState: CollapsibleState;
 
-    constructor(label: string, collapsibleState: CollapsibleState) {
-      super({ accountId: "", providerId: "" }, createPullRequestStub());
+    constructor(ctx: IKeaContext, label: string, collapsibleState: CollapsibleState) {
+      super(ctx, { accountId: "", providerId: "" }, createPullRequestStub(), createWorkspaceFolderStub());
+      this.#ctx = ctx;
       this.label = label;
       this.collapsibleState = collapsibleState;
     }
 
     getChildren = (): SuccessTestTreeNode[] => {
-      return [new SuccessTestTreeNode("Child 1", "none")];
+      return [new SuccessTestTreeNode(this.#ctx, "Child 1", "none")];
     };
   }
 
   test("getChildren returns the children of the given element", async () => {
     // Given
-    const { provider } = await createGetChildrenStubs();
+    const { provider, ctx } = await createGetChildrenStubs();
 
-    const element = new SuccessTestTreeNode("Parent", "collapsed") as unknown as PullRequestTreeNode;
+    const element = new SuccessTestTreeNode(ctx, "Parent", "collapsed") as unknown as PullRequestTreeNode;
 
     // When
     const children = await provider.getChildren(element);
@@ -117,7 +128,7 @@ suite("PullRequestContentsProvider", () => {
 
   test("refresh calls onDidChangeTreeData and clears cache", async () => {
     // Given
-    const { provider, repository, cache } = await createGetChildrenStubs();
+    const { provider, repository, ctx } = await createGetChildrenStubs();
 
     let eventFired = false;
     provider.onDidChangeTreeData(() => {
@@ -129,10 +140,10 @@ suite("PullRequestContentsProvider", () => {
 
     // Then
     assert.strictEqual(eventFired, true);
-    assert.strictEqual((cache.invalidate as sinon.SinonStub).calledOnce, true);
+    assert.strictEqual((ctx.cache.invalidate as sinon.SinonStub).calledOnce, true);
 
     const { owner, repo } = repository.repoId;
-    assert.strictEqual((cache.invalidate as sinon.SinonStub).calledWith(owner, repo), true);
+    assert.strictEqual((ctx.cache.invalidate as sinon.SinonStub).calledWith(owner, repo), true);
   });
 
   test("openPullRequest updates the pull request info", async () => {
@@ -201,5 +212,17 @@ suite("PullRequestContentsProvider", () => {
 
     // Then
     assert.strictEqual(result, false);
+  });
+
+  test("openPullRequest sets treeView.description", async () => {
+    // Given
+    const { ctx, pullId } = await createGetChildrenStubs();
+
+    // Then
+    const defaultPr = createPullRequestStub();
+    assert.strictEqual(
+      ctx.pullRequestContents.treeView.description,
+      `#${pullId.number} ${defaultPr.title}`
+    );
   });
 });

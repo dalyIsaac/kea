@@ -17,7 +17,7 @@ export default tseslint.config(
     ignores: ["**/*.mjs", "**/*.js", "src/types/git.d.ts"],
   },
   {
-    files: ["**/*.ts"],
+    files: ["src/**/*.ts"],
     rules: {
       "@typescript-eslint/naming-convention": [
         "error",
