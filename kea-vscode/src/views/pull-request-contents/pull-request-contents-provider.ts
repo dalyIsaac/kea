@@ -67,6 +67,9 @@ export class PullRequestContentsProvider extends TreeNodeProvider<PullRequestTre
 
     this.#pullInfo = { repository, pullId, pullRequest };
     this._onDidChangeTreeData.fire();
+
+    this.#ctx.pullRequestContents.treeView.description = `#${pullRequest.number} ${pullRequest.title}`;
+
     return true;
   };
 

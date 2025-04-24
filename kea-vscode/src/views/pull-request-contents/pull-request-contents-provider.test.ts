@@ -213,4 +213,16 @@ suite("PullRequestContentsProvider", () => {
     // Then
     assert.strictEqual(result, false);
   });
+
+  test("openPullRequest sets treeView.description", async () => {
+    // Given
+    const { ctx, pullId } = await createGetChildrenStubs();
+
+    // Then
+    const defaultPr = createPullRequestStub();
+    assert.strictEqual(
+      ctx.pullRequestContents.treeView.description,
+      `#${pullId.number} ${defaultPr.title}`
+    );
+  });
 });
