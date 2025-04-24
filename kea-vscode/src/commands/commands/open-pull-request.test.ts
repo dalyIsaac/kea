@@ -28,7 +28,8 @@ suite("open-pull-request", () => {
     loggerErrorStub = sandbox.stub(Logger, "error");
     showQuickPickStub = sandbox.stub(vscode.window, "showQuickPick");
 
-    (contextStub.pullRequestContentsProvider.openPullRequest as sinon.SinonStub) = sinon.stub();
+    // Stub container's treeViewProvider.openPullRequest
+    (contextStub.pullRequestContents.treeViewProvider.openPullRequest as sinon.SinonStub) = sinon.stub();
   });
 
   teardown(() => {
@@ -44,7 +45,9 @@ suite("open-pull-request", () => {
     await command([accountKey, pullId]);
 
     // Then
-    assert.ok((contextStub.pullRequestContentsProvider.openPullRequest as sinon.SinonStub).calledOnceWithExactly(accountKey, pullId));
+    assert.ok(
+      (contextStub.pullRequestContents.treeViewProvider.openPullRequest as sinon.SinonStub).calledOnceWithExactly(accountKey, pullId),
+    );
     assert.ok((contextStub.repositoryManager.getRepositoryById as sinon.SinonStub).calledOnceWithExactly(accountKey, pullId));
     assert.ok((contextStub.treeDecorationManager.updateListeners as sinon.SinonStub).calledOnceWithExactly(repositoryStub));
   });
@@ -69,7 +72,9 @@ suite("open-pull-request", () => {
 
     // Then
     assert.ok(showQuickPickStub.calledOnce);
-    assert.ok((contextStub.pullRequestContentsProvider.openPullRequest as sinon.SinonStub).calledOnceWithExactly(accountKey, pullId));
+    assert.ok(
+      (contextStub.pullRequestContents.treeViewProvider.openPullRequest as sinon.SinonStub).calledOnceWithExactly(accountKey, pullId),
+    );
     assert.ok((contextStub.repositoryManager.getRepositoryById as sinon.SinonStub).calledOnceWithExactly(accountKey, pullId));
     assert.ok((contextStub.treeDecorationManager.updateListeners as sinon.SinonStub).calledOnceWithExactly(repositoryStub));
   });
@@ -85,7 +90,7 @@ suite("open-pull-request", () => {
 
     // Then
     assert.ok(showQuickPickStub.calledOnce);
-    assert.ok((contextStub.pullRequestContentsProvider.openPullRequest as sinon.SinonStub).notCalled);
+    assert.ok((contextStub.pullRequestContents.treeViewProvider.openPullRequest as sinon.SinonStub).notCalled);
     assert.ok((contextStub.repositoryManager.getRepositoryById as sinon.SinonStub).notCalled);
     assert.ok((contextStub.treeDecorationManager.updateListeners as sinon.SinonStub).notCalled);
   });
@@ -100,7 +105,9 @@ suite("open-pull-request", () => {
     await command([accountKey, pullId]);
 
     // Then
-    assert.ok((contextStub.pullRequestContentsProvider.openPullRequest as sinon.SinonStub).calledOnceWithExactly(accountKey, pullId));
+    assert.ok(
+      (contextStub.pullRequestContents.treeViewProvider.openPullRequest as sinon.SinonStub).calledOnceWithExactly(accountKey, pullId),
+    );
     assert.ok((contextStub.repositoryManager.getRepositoryById as sinon.SinonStub).calledOnceWithExactly(accountKey, pullId));
     assert.ok(loggerErrorStub.calledOnceWith("Error getting repository", error));
     assert.ok((contextStub.treeDecorationManager.updateListeners as sinon.SinonStub).notCalled);

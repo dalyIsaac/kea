@@ -3,8 +3,9 @@ import { ILruApiCache, LruApiCache } from "../cache/lru-api/lru-api-cache";
 import { ITreeDecorationManager, TreeDecorationManager } from "../decorations/tree-decoration-manager";
 import { GitManager, IGitManager } from "../git/git-manager";
 import { IRepositoryManager, RepositoryManager } from "../repository/repository-manager";
-import { PullRequestContentsProvider } from "../views/pull-request-contents/pull-request-contents-provider";
 import { PullRequestListTreeProvider } from "../views/pull-request-list/pull-request-list-tree-provider";
+import { PullRequestContentsProvider } from "../views/pull-request-contents/pull-request-contents-provider";
+import { ITreeViewContainer, TreeViewContainer } from "../views/tree-view-container";
 
 export interface IKeaContext {
   accountManager: IAccountManager;
@@ -12,8 +13,8 @@ export interface IKeaContext {
   repositoryManager: IRepositoryManager;
   treeDecorationManager: ITreeDecorationManager;
   cache: ILruApiCache;
-  pullRequestListTreeProvider: PullRequestListTreeProvider;
-  pullRequestContentsProvider: PullRequestContentsProvider;
+  pullRequestListTree: ITreeViewContainer<PullRequestListTreeProvider>;
+  pullRequestContents: ITreeViewContainer<PullRequestContentsProvider>;
 }
 
 const MAX_CACHE_SIZE = 1000;
@@ -24,8 +25,8 @@ export class KeaContext implements IKeaContext {
   repositoryManager: IRepositoryManager;
   treeDecorationManager: TreeDecorationManager;
   cache: ILruApiCache;
-  pullRequestListTreeProvider: PullRequestListTreeProvider;
-  pullRequestContentsProvider: PullRequestContentsProvider;
+  pullRequestListTree: ITreeViewContainer<PullRequestListTreeProvider>;
+  pullRequestContents: ITreeViewContainer<PullRequestContentsProvider>;
 
   constructor() {
     this.cache = new LruApiCache(MAX_CACHE_SIZE);
@@ -36,7 +37,10 @@ export class KeaContext implements IKeaContext {
 
     this.treeDecorationManager = new TreeDecorationManager();
 
-    this.pullRequestListTreeProvider = new PullRequestListTreeProvider(this);
-    this.pullRequestContentsProvider = new PullRequestContentsProvider(this);
+    const prListProvider = new PullRequestListTreeProvider(this);
+    this.pullRequestListTree = new TreeViewContainer("kea.pullRequestList", prListProvider);
+
+    const prContentsProvider = new PullRequestContentsProvider(this);
+    this.pullRequestContents = new TreeViewContainer("kea.pullRequestContents", prContentsProvider);
   }
 }

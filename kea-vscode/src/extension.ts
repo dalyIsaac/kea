@@ -15,9 +15,7 @@ export function activate(_context: vscode.ExtensionContext) {
     new CommentsRootDecorationProvider(ctx.repositoryManager),
   );
 
-  // Register tree providers.
-  vscode.window.registerTreeDataProvider("kea.pullRequestList", ctx.pullRequestListTreeProvider);
-  vscode.window.registerTreeDataProvider("kea.pullRequestContents", ctx.pullRequestContentsProvider);
+  // Tree views are created via TreeViewContainer in context, no need to register manually
 
   const _commandManager = new CommandManager(ctx);
 }

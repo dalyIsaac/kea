@@ -11,29 +11,28 @@ import {
 suite("small-commands", () => {
   suite("createRefreshPullRequestListCommand", () => {
     test("should call refresh on pullRequestListTreeProvider", () => {
-      // Given
       const contextStub = createKeaContextStub();
-
+      // Replace stub to spy on treeViewProvider
+      const refreshStub = contextStub.pullRequestListTree.treeViewProvider.refresh as sinon.SinonStub;
       // When
       const command = createRefreshPullRequestListCommand(contextStub);
       command();
 
       // Then
-      assert.ok((contextStub.pullRequestListTreeProvider.refresh as sinon.SinonStub).calledOnce);
+      assert.ok(refreshStub.calledOnce);
     });
   });
 
   suite("createRefreshPullRequestContentsCommand", () => {
     test("should call refresh on pullRequestContentsProvider", () => {
-      // Given
       const contextStub = createKeaContextStub();
-
+      const refreshStub = contextStub.pullRequestContents.treeViewProvider.refresh as sinon.SinonStub;
       // When
       const command = createRefreshPullRequestContentsCommand(contextStub);
       command();
 
       // Then
-      assert.ok((contextStub.pullRequestContentsProvider.refresh as sinon.SinonStub).calledOnce);
+      assert.ok(refreshStub.calledOnce);
     });
   });
 

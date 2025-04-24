@@ -248,8 +248,16 @@ export const createKeaContextStub = (props: Partial<IKeaContext> = {}): IKeaCont
   repositoryManager: createRepositoryManagerStub(),
   cache: createCacheStub(),
   treeDecorationManager: createTreeDecorationManagerStub(),
-  pullRequestListTreeProvider: createTreeNodeProviderStub() as PullRequestListTreeProvider,
-  pullRequestContentsProvider: createTreeNodeProviderStub() as PullRequestContentsProvider,
+  pullRequestListTree: {
+    treeViewProvider: createTreeNodeProviderStub() as PullRequestListTreeProvider,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    treeView: {} as vscode.TreeView<any>,
+  },
+  pullRequestContents: {
+    treeViewProvider: createTreeNodeProviderStub() as PullRequestContentsProvider,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    treeView: {} as vscode.TreeView<any>,
+  },
   ...props,
 });
 

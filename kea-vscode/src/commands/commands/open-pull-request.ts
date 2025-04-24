@@ -6,7 +6,7 @@ import { createPullRequestListQuickPick } from "../../quick-picks/pull-request-l
 import { PullRequestId } from "../../types/kea";
 
 export const createOpenPullRequestCommand = (ctx: IKeaContext) => async (args?: [IAccountKey, PullRequestId]) => {
-  const { repositoryManager, pullRequestContentsProvider, treeDecorationManager } = ctx;
+  const { repositoryManager, pullRequestContents, treeDecorationManager } = ctx;
 
   if (args === undefined) {
     const results = await vscode.window.showQuickPick(createPullRequestListQuickPick(ctx), {
@@ -22,7 +22,7 @@ export const createOpenPullRequestCommand = (ctx: IKeaContext) => async (args?: 
   }
 
   const [accountKey, pullId] = args;
-  await pullRequestContentsProvider.openPullRequest(accountKey, pullId);
+  await pullRequestContents.treeViewProvider.openPullRequest(accountKey, pullId);
 
   const repository = repositoryManager.getRepositoryById(accountKey, pullId);
   if (repository instanceof Error) {

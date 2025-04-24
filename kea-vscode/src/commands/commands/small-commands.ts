@@ -2,15 +2,15 @@ import * as vscode from "vscode";
 import { IKeaContext } from "../../core/context";
 
 export const createRefreshPullRequestListCommand =
-  ({ pullRequestListTreeProvider }: IKeaContext) =>
+  ({ pullRequestListTree }: IKeaContext) =>
   () => {
-    pullRequestListTreeProvider.refresh();
+    pullRequestListTree.treeViewProvider.refresh();
   };
 
 export const createRefreshPullRequestContentsCommand =
-  ({ pullRequestContentsProvider }: IKeaContext) =>
+  ({ pullRequestContents }: IKeaContext) =>
   () => {
-    pullRequestContentsProvider.refresh();
+    pullRequestContents.treeViewProvider.refresh();
   };
 
 export const createCollapsePullRequestTreeCommand = () => async () => {
