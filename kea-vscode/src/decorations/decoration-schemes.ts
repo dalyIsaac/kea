@@ -8,7 +8,6 @@ export const DECORATION_SCHEMES = {
   commentsRoot: "kea-comments-root" as const,
 } satisfies Record<string, string>;
 
-// TODO: Manually construct.
 interface PullRequestFileDecorationPayload {
   accountKey: IAccountKey;
   repoId: RepoId;

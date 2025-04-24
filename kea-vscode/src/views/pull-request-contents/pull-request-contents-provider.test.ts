@@ -220,9 +220,6 @@ suite("PullRequestContentsProvider", () => {
 
     // Then
     const defaultPr = createPullRequestStub();
-    assert.strictEqual(
-      ctx.pullRequestContents.treeView.description,
-      `#${pullId.number} ${defaultPr.title}`
-    );
+    assert.strictEqual(ctx.pullRequestContents.treeView.description, `#${pullId.number} ${defaultPr.title}`);
   });
 });
