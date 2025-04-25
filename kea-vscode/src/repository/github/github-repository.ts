@@ -54,6 +54,7 @@ export class GitHubRepository extends KeaDisposable implements IKeaRepository {
 
   override _dispose = () => {
     this.#cache.invalidate(this.repoId.owner, this.repoId.repo);
+    return Promise.resolve();
   };
 
   #generateKey = <R extends Route>(

@@ -5,6 +5,7 @@ import * as vscode from "vscode";
 import { IAccount } from "./account/account";
 import { IAccountManager } from "./account/account-manager";
 import { IApiCache } from "./cache/api/api-cache";
+import { ICommandManager } from "./commands/command-manager-types";
 import { IKeaContext } from "./core/context";
 import { ITreeDecorationManager } from "./decorations/tree-decoration-manager";
 import { IGitManager } from "./git/git-manager";
@@ -242,8 +243,15 @@ export const createGitManagerStub = (props: Partial<IGitManager> = {}): IGitMana
   ...props,
 });
 
+export const createCommandManagerStub = (props: Partial<ICommandManager> = {}): ICommandManager => ({
+  executeCommand: sinon.stub() as unknown as ICommandManager["executeCommand"],
+  dispose: sinon.stub(),
+  ...props,
+});
+
 export const createKeaContextStub = (props: Partial<IKeaContext> = {}): IKeaContext => ({
   accountManager: createAccountManagerStub(),
+  commandManager: createCommandManagerStub(),
   gitManager: createGitManagerStub(),
   repositoryManager: createRepositoryManagerStub(),
   apiCache: createCacheStub(),
@@ -258,6 +266,7 @@ export const createKeaContextStub = (props: Partial<IKeaContext> = {}): IKeaCont
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     treeView: {} as vscode.TreeView<any>,
   },
+  dispose: sinon.stub(),
   ...props,
 });
 
