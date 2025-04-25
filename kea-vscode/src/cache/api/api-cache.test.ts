@@ -1,6 +1,7 @@
 import * as assert from "assert";
+import { CacheResponseHeaders } from "../common/common-api-types";
 import { ApiCache } from "./api-cache";
-import { CacheKey, CacheResponseHeaders, Method } from "./api-cache-types";
+import { CacheKey, Method } from "./api-cache-types";
 
 const createHeaders = (etag = "etag123", lastModified = "2023-01-01"): CacheResponseHeaders => ({
   etag,

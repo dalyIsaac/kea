@@ -1,9 +1,10 @@
+import { CacheResponseHeaders } from "../common/common-api-types";
 import { LinkedList } from "../common/linked-list";
-import { CacheKey, CacheResponseHeaders, ICacheValue, Method } from "./api-cache-types";
+import { ApiCacheValue, CacheKey, Method } from "./api-cache-types";
 import { BaseApiCache } from "./base-api-cache";
 
 export interface IApiCache {
-  get: (...key: CacheKey) => ICacheValue<unknown> | undefined;
+  get: (...key: CacheKey) => ApiCacheValue | undefined;
   set: (user: string, repo: string, endpoint: string, method: Method, data: unknown, headers: CacheResponseHeaders) => void;
   invalidate: (user: string, repo?: string, endpoint?: string, method?: Method) => void;
   clear: () => void;
@@ -26,7 +27,7 @@ export class ApiCache implements IApiCache {
     this.maxSize = maxSize;
   }
 
-  get = (...key: CacheKey): ICacheValue<unknown> | undefined => {
+  get = (...key: CacheKey): ApiCacheValue | undefined => {
     const cacheResult = this.#cache.get(key);
     if (cacheResult === undefined) {
       return undefined;
@@ -67,7 +68,7 @@ export class ApiCache implements IApiCache {
     }
 
     for (const node of nodesToDelete) {
-      this.#linkedList.removeNode(node);
+      this.#linkedList.remove(node);
     }
   };
 

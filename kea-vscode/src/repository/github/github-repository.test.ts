@@ -1,7 +1,7 @@
 import * as assert from "assert";
 import sinon from "sinon";
 import { GitHubAccount } from "../../account/github/github-account";
-import { ICacheValue } from "../../cache/api/api-cache-types";
+import { ICacheValue } from "../../cache/common/common-api-types";
 import { createAccountStub, createCacheStub, stubEvents } from "../../test-utils";
 import { IssueId, PullRequestId, RepoId } from "../../types/kea";
 import { IssueCommentsPayload, PullRequestReviewCommentsPayload } from "../kea-repository";

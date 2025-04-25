@@ -1,22 +1,14 @@
 import { Logger } from "../../core/logger";
+import { CacheResponseHeaders } from "../common/common-api-types";
 import { ILinkedListNode } from "../common/linked-list";
-import {
-  CacheKey,
-  CacheResponseHeaders,
-  EndpointMethodMap,
-  IFullCacheValue,
-  Method,
-  MethodValueMap,
-  RepoEndpointMap,
-  UserRepoMap,
-} from "./api-cache-types";
+import { ApiCacheFullValue, CacheKey, EndpointMethodMap, Method, MethodValueMap, RepoEndpointMap, UserRepoMap } from "./api-cache-types";
 
 interface GetInnerCacheSuccess {
   userRepoMap: UserRepoMap;
   repoEndpointMap?: RepoEndpointMap;
   endpointMethodMap?: EndpointMethodMap;
   methodValueMap?: MethodValueMap;
-  cacheValue?: IFullCacheValue<unknown>;
+  cacheValue?: ApiCacheFullValue;
 }
 
 type GetInnerCacheResult = undefined | GetInnerCacheSuccess;
@@ -35,7 +27,7 @@ export class BaseApiCache {
     return this.#size;
   }
 
-  get = (key: CacheKey): IFullCacheValue<unknown> | undefined => this.#get(...key)?.cacheValue;
+  get = (key: CacheKey): ApiCacheFullValue | undefined => this.#get(...key)?.cacheValue;
 
   #get = (...[user, repo, endpoint, method]: CacheKey): GetInnerCacheResult => {
     const userRepoMap = this.#cache.get(user);

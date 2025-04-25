@@ -400,7 +400,7 @@ suite("LinkedList", () => {
     });
   });
 
-  suite("removeNode", () => {
+  suite("remove", () => {
     test("should remove a node from the middle of the list", () => {
       // Given
       const linkedList = new LinkedList<CacheKey>();
@@ -420,7 +420,7 @@ suite("LinkedList", () => {
       assertNodeOrder(linkedList, node1, node2, node3);
 
       // When
-      linkedList.removeNode(node2);
+      linkedList.remove(node2);
 
       // Then
       assertNodeOrder(linkedList, node1, node3);
@@ -449,7 +449,7 @@ suite("LinkedList", () => {
       assertNodeOrder(linkedList, node1, node2, node3);
 
       // When
-      linkedList.removeNode(node1);
+      linkedList.remove(node1);
 
       // Then
       assertNodeOrder(linkedList, node2, node3);
@@ -476,7 +476,7 @@ suite("LinkedList", () => {
       assertNodeOrder(linkedList, node1, node2, node3);
 
       // When
-      linkedList.removeNode(node3);
+      linkedList.remove(node3);
 
       // Then
       assertNodeOrder(linkedList, node1, node2);
@@ -495,7 +495,7 @@ suite("LinkedList", () => {
       assertNodeOrder(linkedList, node);
 
       // When
-      linkedList.removeNode(node);
+      linkedList.remove(node);
 
       // Then
       assertNodeOrder(linkedList);
@@ -525,19 +525,19 @@ suite("LinkedList", () => {
       assertNodeOrder(linkedList, node1, node2, node3, node4);
 
       // When - remove nodes in sequence
-      linkedList.removeNode(node2);
+      linkedList.remove(node2);
       // After first removal: node1 -> node3 -> node4
       assertNodeOrder(linkedList, node1, node3, node4);
 
-      linkedList.removeNode(node4);
+      linkedList.remove(node4);
       // After second removal: node1 -> node3
       assertNodeOrder(linkedList, node1, node3);
 
-      linkedList.removeNode(node1);
+      linkedList.remove(node1);
       // After third removal: node3
       assertNodeOrder(linkedList, node3);
 
-      linkedList.removeNode(node3);
+      linkedList.remove(node3);
       // After fourth removal: empty list
       assertNodeOrder(linkedList);
     });
@@ -561,7 +561,7 @@ suite("LinkedList", () => {
       assertNodeOrder(linkedList, node1, node2, node3);
 
       // When
-      linkedList.removeNode(node2);
+      linkedList.remove(node2);
 
       // Then
       assert.strictEqual(node1.next, node3, "Node1 next should point to node3");

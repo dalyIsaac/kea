@@ -66,7 +66,7 @@ export class LinkedList<TKey> {
    * Remove a node from the list.
    * @param node The node to remove.
    */
-  removeNode = (node: ILinkedListNode<TKey>): void => {
+  remove = (node: ILinkedListNode<TKey>): void => {
     if (node.prev !== null) {
       node.prev.next = node.next;
     } else {
