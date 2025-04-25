@@ -1,17 +1,20 @@
-import { ApiCache } from "./api-cache";
-import { CacheKey, CacheResponseHeaders, ICacheValue, Method } from "./cache-types";
-import { LinkedList } from "./linked-list";
+import { LinkedList } from "../common/linked-list";
+import { CacheKey, CacheResponseHeaders, ICacheValue, Method } from "./api-cache-types";
+import { BaseApiCache } from "./base-api-cache";
 
-export interface ILruApiCache {
+export interface IApiCache {
   get: (...key: CacheKey) => ICacheValue<unknown> | undefined;
   set: (user: string, repo: string, endpoint: string, method: Method, data: unknown, headers: CacheResponseHeaders) => void;
   invalidate: (user: string, repo?: string, endpoint?: string, method?: Method) => void;
   clear: () => void;
 }
 
-export class LruApiCache implements ILruApiCache {
-  readonly #cache = new ApiCache();
-  readonly #linkedList = new LinkedList();
+/**
+ * An LRU (Least Recently Used) cache implementation for API responses.
+ */
+export class ApiCache implements IApiCache {
+  readonly #cache = new BaseApiCache();
+  readonly #linkedList = new LinkedList<CacheKey>();
 
   maxSize: number;
 

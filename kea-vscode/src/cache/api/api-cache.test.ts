@@ -1,6 +1,6 @@
 import * as assert from "assert";
-import { CacheKey, CacheResponseHeaders, Method } from "./cache-types";
-import { LruApiCache } from "./lru-api-cache";
+import { ApiCache } from "./api-cache";
+import { CacheKey, CacheResponseHeaders, Method } from "./api-cache-types";
 
 const createHeaders = (etag = "etag123", lastModified = "2023-01-01"): CacheResponseHeaders => ({
   etag,
@@ -9,14 +9,14 @@ const createHeaders = (etag = "etag123", lastModified = "2023-01-01"): CacheResp
 
 const createCacheKey = (id: string, method: Method = "GET"): CacheKey => ["user1", "repo1", `endpoint-${id}`, method];
 
-suite("LruApiCache", () => {
+suite("ApiCache", () => {
   suite("Constructor", () => {
     test("should initialize with the correct maxSize", () => {
       // Given
       const maxSize = 10;
 
       // When
-      const cache = new LruApiCache(maxSize);
+      const cache = new ApiCache(maxSize);
 
       // Then
       assert.strictEqual(cache.maxSize, maxSize);
@@ -27,7 +27,7 @@ suite("LruApiCache", () => {
   suite("get", () => {
     test("should return undefined for non-existent cache key", () => {
       // Given
-      const cache = new LruApiCache(10);
+      const cache = new ApiCache(10);
       const key = createCacheKey("1");
 
       // When
@@ -39,7 +39,7 @@ suite("LruApiCache", () => {
 
     test("should return cached value after setting", () => {
       // Given
-      const cache = new LruApiCache(10);
+      const cache = new ApiCache(10);
       const [user, repo, endpoint, method] = createCacheKey("1");
       const data = { foo: "bar" };
       const headers = createHeaders();
@@ -59,7 +59,7 @@ suite("LruApiCache", () => {
   suite("set", () => {
     test("should increase cache size when adding new items", () => {
       // Given
-      const cache = new LruApiCache(10);
+      const cache = new ApiCache(10);
       const key1 = createCacheKey("1");
       const key2 = createCacheKey("2");
       const data = { test: "data" };
@@ -80,7 +80,7 @@ suite("LruApiCache", () => {
 
     test("should not increase size when updating existing item", () => {
       // Given
-      const cache = new LruApiCache(10);
+      const cache = new ApiCache(10);
       const [user, repo, endpoint, method] = createCacheKey("1");
       const initialData = { test: "initial" };
       const updatedData = { test: "updated" };
@@ -101,7 +101,7 @@ suite("LruApiCache", () => {
 
     test("should store items with different methods separately", () => {
       // Given
-      const cache = new LruApiCache(10);
+      const cache = new ApiCache(10);
       const key1 = ["user1", "repo1", "endpoint1", "GET"] as CacheKey;
       const key2 = ["user1", "repo1", "endpoint1", "POST"] as CacheKey;
       const getData = { method: "GET" };
@@ -123,7 +123,7 @@ suite("LruApiCache", () => {
     test("should evict least recently used item when cache is full", () => {
       // Given
       const maxSize = 3;
-      const cache = new LruApiCache(maxSize);
+      const cache = new ApiCache(maxSize);
       const headers = createHeaders();
 
       // Add maxSize items to fill the cache
@@ -144,7 +144,7 @@ suite("LruApiCache", () => {
 
     test("should not evict when accessing items (get doesn't trigger eviction)", () => {
       // Given
-      const cache = new LruApiCache(3);
+      const cache = new ApiCache(3);
       const headers = createHeaders();
       const key1 = createCacheKey("1");
       const key2 = createCacheKey("2");
@@ -172,7 +172,7 @@ suite("LruApiCache", () => {
 
     test("should promote items when accessed with set", () => {
       // Given
-      const cache = new LruApiCache(3);
+      const cache = new ApiCache(3);
       const headers = createHeaders();
       const key1 = createCacheKey("1");
       const key2 = createCacheKey("2");
@@ -201,7 +201,7 @@ suite("LruApiCache", () => {
   suite("invalidate", () => {
     test("should invalidate specific cache entry", () => {
       // Given
-      const cache = new LruApiCache(10);
+      const cache = new ApiCache(10);
       const headers = createHeaders();
       const key1 = createCacheKey("1");
       const key2 = createCacheKey("2");
@@ -222,7 +222,7 @@ suite("LruApiCache", () => {
 
     test("should invalidate entries by user", () => {
       // Given
-      const cache = new LruApiCache(10);
+      const cache = new ApiCache(10);
       const headers = createHeaders();
       const key1 = ["user1", "repo1", "endpoint1", "GET"] as CacheKey;
       const key2 = ["user2", "repo1", "endpoint1", "GET"] as CacheKey;
@@ -243,7 +243,7 @@ suite("LruApiCache", () => {
 
     test("should invalidate entries by user and repo", () => {
       // Given
-      const cache = new LruApiCache(10);
+      const cache = new ApiCache(10);
       const headers = createHeaders();
       const key1 = ["user1", "repo1", "endpoint1", "GET"] as CacheKey;
       const key2 = ["user1", "repo2", "endpoint1", "GET"] as CacheKey;
@@ -264,7 +264,7 @@ suite("LruApiCache", () => {
 
     test("should invalidate entries by user, repo, and endpoint", () => {
       // Given
-      const cache = new LruApiCache(10);
+      const cache = new ApiCache(10);
       const headers = createHeaders();
       const key1 = ["user1", "repo1", "endpoint1", "GET"] as CacheKey;
       const key2 = ["user1", "repo1", "endpoint2", "GET"] as CacheKey;
@@ -287,7 +287,7 @@ suite("LruApiCache", () => {
   suite("clear", () => {
     test("should remove all cache entries", () => {
       // Given
-      const cache = new LruApiCache(10);
+      const cache = new ApiCache(10);
       const headers = createHeaders();
 
       for (let i = 1; i <= 5; i += 1) {
@@ -313,7 +313,7 @@ suite("LruApiCache", () => {
   suite("complex scenario", () => {
     test("should handle a mix of operations correctly", () => {
       // Given
-      const cache = new LruApiCache(4);
+      const cache = new ApiCache(4);
       const headers = createHeaders();
 
       // Add initial items

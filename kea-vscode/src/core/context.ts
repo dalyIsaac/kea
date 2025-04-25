@@ -1,10 +1,10 @@
 import { AccountManager, IAccountManager } from "../account/account-manager";
-import { ILruApiCache, LruApiCache } from "../cache/lru-api/lru-api-cache";
+import { ApiCache, IApiCache } from "../cache/api/api-cache";
 import { ITreeDecorationManager, TreeDecorationManager } from "../decorations/tree-decoration-manager";
 import { GitManager, IGitManager } from "../git/git-manager";
 import { IRepositoryManager, RepositoryManager } from "../repository/repository-manager";
-import { PullRequestListTreeProvider } from "../views/pull-request-list/pull-request-list-tree-provider";
 import { PullRequestContentsProvider } from "../views/pull-request-contents/pull-request-contents-provider";
+import { PullRequestListTreeProvider } from "../views/pull-request-list/pull-request-list-tree-provider";
 import { ITreeViewContainer, TreeViewContainer } from "../views/tree-view-container";
 
 export interface IKeaContext {
@@ -12,7 +12,7 @@ export interface IKeaContext {
   gitManager: IGitManager;
   repositoryManager: IRepositoryManager;
   treeDecorationManager: ITreeDecorationManager;
-  cache: ILruApiCache;
+  cache: IApiCache;
   pullRequestListTree: ITreeViewContainer<PullRequestListTreeProvider>;
   pullRequestContents: ITreeViewContainer<PullRequestContentsProvider>;
 }
@@ -24,12 +24,12 @@ export class KeaContext implements IKeaContext {
   gitManager: IGitManager;
   repositoryManager: IRepositoryManager;
   treeDecorationManager: TreeDecorationManager;
-  cache: ILruApiCache;
+  cache: IApiCache;
   pullRequestListTree: ITreeViewContainer<PullRequestListTreeProvider>;
   pullRequestContents: ITreeViewContainer<PullRequestContentsProvider>;
 
   constructor() {
-    this.cache = new LruApiCache(MAX_CACHE_SIZE);
+    this.cache = new ApiCache(MAX_CACHE_SIZE);
 
     this.accountManager = new AccountManager();
     this.gitManager = new GitManager(this);

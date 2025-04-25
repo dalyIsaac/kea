@@ -1,4 +1,4 @@
-import { ILinkedListNode } from "./linked-list";
+import { ILinkedListNode } from "../common/linked-list";
 
 export type ICacheLevel<TKey, TValue> = Map<TKey, TValue>;
 
@@ -14,7 +14,7 @@ export interface ICacheValue<T> {
 
 export interface IFullCacheValue<T> extends ICacheValue<T> {
   key: CacheKey;
-  linkedListNode: ILinkedListNode;
+  linkedListNode: ILinkedListNode<CacheKey>;
 }
 
 const METHODS = ["GET", "POST"] as const;

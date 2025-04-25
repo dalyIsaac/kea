@@ -4,7 +4,7 @@ import sinon from "sinon";
 import * as vscode from "vscode";
 import { IAccount } from "./account/account";
 import { IAccountManager } from "./account/account-manager";
-import { ILruApiCache } from "./cache/lru-api/lru-api-cache";
+import { IApiCache } from "./cache/api/api-cache";
 import { IKeaContext } from "./core/context";
 import { ITreeDecorationManager } from "./decorations/tree-decoration-manager";
 import { IGitManager } from "./git/git-manager";
@@ -204,7 +204,7 @@ export const createWorkspaceFolderStub = (props: Partial<vscode.WorkspaceFolder>
   ...props,
 });
 
-export const createCacheStub = (props: Partial<ILruApiCache> = {}): ILruApiCache => ({
+export const createCacheStub = (props: Partial<IApiCache> = {}): IApiCache => ({
   get: sinon.stub(),
   set: sinon.stub(),
   clear: sinon.stub(),
