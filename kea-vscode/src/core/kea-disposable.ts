@@ -7,22 +7,22 @@ export const disposeAll = (disposables: vscode.Disposable[]) => {
 };
 
 export interface IKeaDisposable {
-  dispose(): void;
+  dispose: () => Promise<void>;
 }
 
 export abstract class KeaDisposable implements IKeaDisposable {
   #isDisposed = false;
   #disposables: vscode.Disposable[] = [];
 
-  protected _dispose: (() => void) | undefined = undefined;
+  protected _dispose: (() => Promise<void>) | undefined = undefined;
 
-  dispose = () => {
+  dispose = async (): Promise<void> => {
     if (this.#isDisposed) {
       return;
     }
 
     disposeAll(this.#disposables);
-    this._dispose?.();
+    await this._dispose?.();
     this.#isDisposed = true;
   };
 
