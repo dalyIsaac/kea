@@ -12,7 +12,7 @@ export interface IKeaContext {
   gitManager: IGitManager;
   repositoryManager: IRepositoryManager;
   treeDecorationManager: ITreeDecorationManager;
-  cache: IApiCache;
+  apiCache: IApiCache;
   pullRequestListTree: ITreeViewContainer<PullRequestListTreeProvider>;
   pullRequestContents: ITreeViewContainer<PullRequestContentsProvider>;
 }
@@ -24,12 +24,12 @@ export class KeaContext implements IKeaContext {
   gitManager: IGitManager;
   repositoryManager: IRepositoryManager;
   treeDecorationManager: TreeDecorationManager;
-  cache: IApiCache;
+  apiCache: IApiCache;
   pullRequestListTree: ITreeViewContainer<PullRequestListTreeProvider>;
   pullRequestContents: ITreeViewContainer<PullRequestContentsProvider>;
 
   constructor() {
-    this.cache = new ApiCache(MAX_CACHE_SIZE);
+    this.apiCache = new ApiCache(MAX_CACHE_SIZE);
 
     this.accountManager = new AccountManager();
     this.gitManager = new GitManager(this);

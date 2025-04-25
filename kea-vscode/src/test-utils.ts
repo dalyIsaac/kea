@@ -246,7 +246,7 @@ export const createKeaContextStub = (props: Partial<IKeaContext> = {}): IKeaCont
   accountManager: createAccountManagerStub(),
   gitManager: createGitManagerStub(),
   repositoryManager: createRepositoryManagerStub(),
-  cache: createCacheStub(),
+  apiCache: createCacheStub(),
   treeDecorationManager: createTreeDecorationManagerStub(),
   pullRequestListTree: {
     treeViewProvider: createTreeNodeProviderStub() as PullRequestListTreeProvider,

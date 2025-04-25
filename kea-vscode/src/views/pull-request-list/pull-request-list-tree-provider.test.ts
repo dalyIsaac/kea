@@ -93,7 +93,7 @@ suite("PullRequestListTreeProvider", () => {
     treeProvider.refresh();
 
     // Then
-    assert.ok((contextStub.cache.clear as sinon.SinonStub).calledOnce);
+    assert.ok((contextStub.apiCache.clear as sinon.SinonStub).calledOnce);
     assert.ok(fireStub.calledOnce);
   });
 });

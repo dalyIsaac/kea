@@ -41,6 +41,6 @@ export class PullRequestListTreeProvider extends TreeNodeProvider<PullRequestLis
   };
 
   override _invalidateCache = (): void => {
-    this.#ctx.cache.clear();
+    this.#ctx.apiCache.clear();
   };
 }

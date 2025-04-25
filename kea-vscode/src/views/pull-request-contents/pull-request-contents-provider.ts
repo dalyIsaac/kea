@@ -80,6 +80,6 @@ export class PullRequestContentsProvider extends TreeNodeProvider<PullRequestTre
     }
 
     const { owner, repo } = this.#pullInfo.repository.repoId;
-    this.#ctx.cache.invalidate(owner, repo);
+    this.#ctx.apiCache.invalidate(owner, repo);
   };
 }
