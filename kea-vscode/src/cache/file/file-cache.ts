@@ -21,7 +21,7 @@ export interface IFileCache {
    * @param sha1 The SHA1 hash of the file.
    * @returns The URI and headers of the file, or undefined if not found.
    */
-  get: (repoId: RepoId, sha1: string) => Promise<FileCacheValue | undefined>;
+  get: (repoId: RepoId, sha1: string) => Promise<FileCacheValue | Error>;
 
   /**
    * Caches the file data and the headers for the given blob URL.
@@ -83,16 +83,16 @@ export class FileCache extends KeaDisposable implements IFileCache {
 
   #createFileUri = (repoId: RepoId, sha1: string): vscode.Uri => vscode.Uri.joinPath(this.#createRepoUri(repoId), sha1);
 
-  get = async (repoId: RepoId, sha1: string): Promise<FileCacheValue | undefined> => {
+  get = async (repoId: RepoId, sha1: string): Promise<FileCacheValue | Error> => {
     const repoKey = this.#createRepoKey(repoId);
     const blobFilenameMap = this.#repoMap.get(repoKey);
     if (blobFilenameMap === undefined) {
-      return undefined;
+      return new Error("Repository not found in cache");
     }
 
     const cacheResult = blobFilenameMap.get(sha1);
     if (cacheResult === undefined) {
-      return undefined;
+      return new Error("File not found in cache");
     }
 
     this.#linkedList.demote(cacheResult.linkedListNode);
@@ -102,8 +102,7 @@ export class FileCache extends KeaDisposable implements IFileCache {
     try {
       const fileStat = await this.#fileSystem.stat(fileUri);
       if (fileStat.type !== vscode.FileType.File) {
-        Logger.error("File is not a file", fileUri);
-        return undefined;
+        return new Error(`Expected a file, received ${fileStat.type}`);
       }
 
       return {

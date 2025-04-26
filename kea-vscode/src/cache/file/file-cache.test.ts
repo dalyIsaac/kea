@@ -72,7 +72,7 @@ suite("FileCache", () => {
     // Then
     assert.strictEqual(cache.size, 1);
     const result = await cache.get(repoId, url);
-    assert.ok(result);
+    assert.ok(!(result instanceof Error), "Expected result not to be an Error");
     assert.deepStrictEqual(result.headers, headers);
     assert.ok(result.data instanceof vscode.Uri);
     // And the URI matches the expected path
@@ -151,7 +151,7 @@ suite("FileCache", () => {
     const result = await cache.get(repoId, url);
 
     // Then
-    assert.ok(result);
+    assert.ok(!(result instanceof Error), "Expected result not to be an Error");
     assert.deepStrictEqual(result.headers, headers);
     assert.ok(result.data instanceof vscode.Uri);
   });
