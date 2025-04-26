@@ -1,37 +1,44 @@
-import crypto from "crypto";
 import * as vscode from "vscode";
 import { KeaDisposable } from "../../core/kea-disposable";
 import { Logger } from "../../core/logger";
+import { RepoId } from "../../types/kea";
 import { CacheResponseHeaders, ICacheValue, IFullCacheValue } from "../common/common-api-types";
 import { ILinkedListNode, LinkedList } from "../common/linked-list";
 
+interface NodeKey {
+  repoId: RepoId;
+  sha1: string;
+}
+
 type FileCacheValue = ICacheValue<vscode.Uri>;
-type FileCacheFullValue = IFullCacheValue<string, vscode.Uri>;
+type FileCacheFullValue = IFullCacheValue<NodeKey, vscode.Uri>;
 
 export interface IFileCache {
   /**
    * Gets the URI and headers of the file from the cache.
-   * @param blobUrl The URL of the file to cache.
+   * @param repoId The ID of the repository.
+   * @param sha1 The SHA1 hash of the file.
    * @returns The URI and headers of the file, or undefined if not found.
    */
-  get: (blobUrl: string) => Promise<FileCacheValue | undefined>;
+  get: (repoId: RepoId, sha1: string) => Promise<FileCacheValue | undefined>;
 
   /**
    * Caches the file data and the headers for the given blob URL.
-   * This will evict the oldest file if the cache size exceeds the maximum size.
-   * @param blobUrl The URL of the file to cache.
+   * @param repoId The ID of the repository.
+   * @param sha1 The SHA1 hash of the file.
    * @param data The file data to cache.
    * @param headers The headers to cache.
    * @returns A promise that resolves when the file is cached.
    */
-  set: (blobUrl: string, data: string, headers: CacheResponseHeaders) => Promise<void>;
+  set: (repoId: RepoId, sha1: string, data: string, headers: CacheResponseHeaders) => Promise<void>;
 
   /**
-   * Invalidates the cache for the given blob URL.
-   * @param blobUrl The URL of the file to invalidate.
+   * Invalidates the cache for the given repository ID and SHA1 hash.
+   * @param repoId The ID of the repository.
+   * @param sha1 The SHA1 hash of the file. If not provided, all files for the repository will be invalidated.
    * @returns A promise that resolves when the cache is invalidated.
    */
-  invalidate: (blobUrl: string) => Promise<void>;
+  invalidate: (repoId: RepoId, sha1?: string) => Promise<void>;
 
   /**
    * Clears the entire cache.
@@ -40,19 +47,22 @@ export interface IFileCache {
   clear: () => Promise<void>;
 }
 
+type BlobFilenameMap = Map<string, FileCacheFullValue>;
+
 /**
  * A cache implementation for file blobs.
  */
 export class FileCache extends KeaDisposable implements IFileCache {
-  readonly #blobFilenameMap = new Map<string, FileCacheFullValue>();
-  readonly #linkedList = new LinkedList<string>();
+  readonly #repoMap = new Map<string, BlobFilenameMap>();
+  readonly #linkedList = new LinkedList<NodeKey>();
   readonly #tempDir;
   readonly #fileSystem: vscode.FileSystem;
 
+  #size = 0;
   maxSize: number;
 
   get size(): number {
-    return this.#blobFilenameMap.size;
+    return this.#size;
   }
 
   constructor(extCtx: vscode.ExtensionContext, maxSize: number, fileSystem: vscode.FileSystem = vscode.workspace.fs) {
@@ -66,13 +76,20 @@ export class FileCache extends KeaDisposable implements IFileCache {
     await this.clear();
   };
 
-  #createFileUri = (url: string): vscode.Uri => {
-    const hash = crypto.createHash("sha256").update(url).digest("hex");
-    return vscode.Uri.joinPath(this.#tempDir, hash);
-  };
+  #createRepoKey = (repoId: RepoId): string => `${repoId.owner}/${repoId.repo}`;
 
-  get = async (blobUrl: string): Promise<FileCacheValue | undefined> => {
-    const cacheResult = this.#blobFilenameMap.get(blobUrl);
+  #createRepoUri = (repoId: RepoId): vscode.Uri => vscode.Uri.joinPath(this.#tempDir, repoId.owner, repoId.repo);
+
+  #createFileUri = (repoId: RepoId, sha1: string): vscode.Uri => vscode.Uri.joinPath(this.#createRepoUri(repoId), sha1);
+
+  get = async (repoId: RepoId, sha1: string): Promise<FileCacheValue | undefined> => {
+    const repoKey = this.#createRepoKey(repoId);
+    const blobFilenameMap = this.#repoMap.get(repoKey);
+    if (blobFilenameMap === undefined) {
+      return undefined;
+    }
+
+    const cacheResult = blobFilenameMap.get(sha1);
     if (cacheResult === undefined) {
       return undefined;
     }
@@ -102,13 +119,30 @@ export class FileCache extends KeaDisposable implements IFileCache {
     };
   };
 
-  set = async (blobUrl: string, data: string, headers: CacheResponseHeaders): Promise<void> => {
-    const linkedListNode: ILinkedListNode<string> = { key: blobUrl, next: null, prev: null };
-    const fileUri = this.#createFileUri(blobUrl);
+  set = async (repoId: RepoId, sha1: string, data: string, headers: CacheResponseHeaders): Promise<void> => {
+    const repoKey = this.#createRepoKey(repoId);
+    const nodeKey = { repoId, sha1 };
+
+    const linkedListNode: ILinkedListNode<NodeKey> = {
+      key: nodeKey,
+      next: null,
+      prev: null,
+    };
+    const fileUri = this.#createFileUri(repoId, sha1);
 
     this.#linkedList.add(linkedListNode);
 
-    this.#blobFilenameMap.set(blobUrl, { key: blobUrl, data: fileUri, headers, linkedListNode });
+    const cacheValue: FileCacheFullValue = {
+      key: nodeKey,
+      data: fileUri,
+      headers,
+      linkedListNode,
+    };
+
+    const blobFilenameMap = this.#repoMap.get(repoKey) ?? new Map<string, FileCacheFullValue>();
+    blobFilenameMap.set(sha1, cacheValue);
+
+    this.#repoMap.set(repoKey, blobFilenameMap);
 
     try {
       await this.#fileSystem.createDirectory(this.#tempDir);
@@ -118,6 +152,7 @@ export class FileCache extends KeaDisposable implements IFileCache {
       Logger.error("Error writing file", error);
     }
 
+    this.#size += 1;
     await this.#evict();
   };
 
@@ -131,30 +166,64 @@ export class FileCache extends KeaDisposable implements IFileCache {
       return;
     }
 
-    await this.invalidate(evictedKey);
+    await this.invalidate(evictedKey.repoId, evictedKey.sha1);
   };
 
-  invalidate = async (blobUrl: string): Promise<void> => {
-    const cacheValue = this.#blobFilenameMap.get(blobUrl);
+  invalidate = async (repoId: RepoId, sha1?: string): Promise<void> => {
+    if (sha1 === undefined) {
+      await this.#removeRepoFiles(repoId);
+      return;
+    }
+
+    await this.#removeFile(repoId, sha1);
+  };
+
+  #removeRepoFiles = async (repoId: RepoId): Promise<void> => {
+    const repoKey = this.#createRepoKey(repoId);
+    const blobFilenameMap = this.#repoMap.get(repoKey);
+    if (blobFilenameMap === undefined) {
+      return;
+    }
+
+    try {
+      await this.#fileSystem.delete(this.#createRepoUri(repoId), { recursive: true, useTrash: false });
+    } catch (error) {
+      Logger.error("Error deleting directory", error);
+    }
+
+    this.#repoMap.delete(repoKey);
+    this.#size -= blobFilenameMap.size;
+  };
+
+  #removeFile = async (repoId: RepoId, sha1: string): Promise<void> => {
+    const repoKey = this.#createRepoKey(repoId);
+    const blobFilenameMap = this.#repoMap.get(repoKey);
+    if (blobFilenameMap === undefined) {
+      return;
+    }
+
+    const cacheValue = blobFilenameMap.get(sha1);
     if (cacheValue === undefined) {
       return;
     }
 
     this.#linkedList.remove(cacheValue.linkedListNode);
-    this.#blobFilenameMap.delete(blobUrl);
+    blobFilenameMap.delete(sha1);
 
     try {
-      const fileUri = cacheValue.data;
-      await this.#fileSystem.delete(fileUri, { recursive: false, useTrash: true });
-      Logger.info("Deleted file", fileUri);
+      await this.#fileSystem.delete(cacheValue.data, { recursive: false, useTrash: true });
+      Logger.info("Deleted file", cacheValue.data);
     } catch (error) {
       Logger.error("Error deleting file", error);
     }
+
+    this.#size -= 1;
   };
 
   clear = async (): Promise<void> => {
-    this.#blobFilenameMap.clear();
+    this.#repoMap.clear();
     this.#linkedList.clear();
+    this.#size = 0;
 
     try {
       await this.#fileSystem.delete(this.#tempDir, { recursive: true, useTrash: false });
