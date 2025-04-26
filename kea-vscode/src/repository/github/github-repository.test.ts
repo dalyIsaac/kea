@@ -846,13 +846,13 @@ suite("GitHubRepository", () => {
   });
 
   suite("dispose", () => {
-    test("should invalidate the cache on dispose", () => {
+    test("should invalidate the cache on dispose", async () => {
       // Given
       const { repository, cache } = createTestGitHubRepository();
       cache.invalidate = sinon.stub();
 
       // When
-      repository.dispose();
+      await repository.dispose();
 
       // Then
       assert.strictEqual((cache.invalidate as sinon.SinonStub).calledOnce, true);

@@ -97,14 +97,14 @@ suite("CommandManager", () => {
     assert.ok(executeCommandStub.calledWith(commandName, contextStub), "VS Code's executeCommand should pass arguments correctly");
   });
 
-  test("dispose unregisters all commands", () => {
+  test("dispose unregisters all commands", async () => {
     // Given
     const disposeSpy = sinon.spy();
     registerCommandStub.returns({ dispose: disposeSpy });
     const commandManager = new CommandManager(contextStub);
 
     // When
-    commandManager.dispose();
+    await commandManager.dispose();
 
     // Then
     const commandCount = Object.keys(COMMANDS).length;
