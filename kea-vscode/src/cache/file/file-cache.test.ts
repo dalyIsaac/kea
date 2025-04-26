@@ -108,4 +108,74 @@ suite("FileCache", () => {
     assert.strictEqual(await cache.get("u1"), undefined);
     assert.strictEqual(await cache.get("u2"), undefined);
   });
+
+  test("get should return undefined when file is a directory", async () => {
+    // Given
+    const cache = new FileCache(extCtx as any, 5, fakeFs as any);
+    const url = "dir-url";
+    (fakeFs.stat as sinon.SinonStub).resolves({ type: vscode.FileType.Directory } as any);
+    await cache.set(url, "data", headers);
+    // When
+    const result = await cache.get(url);
+    // Then
+    assert.strictEqual(result, undefined);
+  });
+
+  test("get should return existing data when stat throws error", async () => {
+    // Given
+    const cache = new FileCache(extCtx as any, 5, fakeFs as any);
+    const url = "error-url";
+    (fakeFs.stat as sinon.SinonStub).rejects(new Error("stat error"));
+    await cache.set(url, "data", headers);
+    // When
+    const result = await cache.get(url);
+    // Then
+    assert.ok(result);
+    assert.deepStrictEqual(result!.headers, headers);
+    assert.ok(result!.data instanceof vscode.Uri);
+  });
+
+  test("set should not throw when writeFile fails", async () => {
+    // Given
+    fakeFs.writeFile = sandbox.stub().rejects(new Error("write error"));
+    const cache = new FileCache(extCtx as any, 5, fakeFs as any);
+    // When
+    const action = () => cache.set("u-error", "d", headers);
+    // Then
+    await assert.doesNotReject(action);
+  });
+
+  test("invalidate does nothing for unknown key", async () => {
+    // Given
+    const cache = new FileCache(extCtx as any, 5, fakeFs as any);
+    // When
+    await cache.invalidate("unknown-key");
+    // Then
+    assert.strictEqual(cache.size, 0);
+  });
+
+  test("invalidate should not throw when delete fails", async () => {
+    // Given
+    fakeFs.delete = sandbox.stub().rejects(new Error("delete error"));
+    const cache = new FileCache(extCtx as any, 5, fakeFs as any);
+    await cache.set("u2", "d", headers);
+    // When
+    const action = () => cache.invalidate("u2");
+    // Then
+    await assert.doesNotReject(action);
+    assert.strictEqual(cache.size, 0);
+  });
+
+  test("clear should not throw when delete fails", async () => {
+    // Given
+    fakeFs.delete = sandbox.stub().rejects(new Error("clear error"));
+    const cache = new FileCache(extCtx as any, 5, fakeFs as any);
+    await cache.set("u1", "d1", headers);
+    await cache.set("u2", "d2", headers);
+    // When
+    const action = () => cache.clear();
+    // Then
+    await assert.doesNotReject(action);
+    assert.strictEqual(cache.size, 0);
+  });
 });
