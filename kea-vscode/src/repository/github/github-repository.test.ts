@@ -2,7 +2,7 @@ import * as assert from "assert";
 import sinon from "sinon";
 import { GitHubAccount } from "../../account/github/github-account";
 import { ICacheValue } from "../../cache/common/common-api-types";
-import { createAccountStub, createApiCacheStub, stubEvents } from "../../test-utils";
+import { createAccountStub, createApiCacheStub, createKeaContextStub, stubEvents } from "../../test-utils";
 import { IssueId, PullRequestId, RepoId } from "../../types/kea";
 import { IssueCommentsPayload, PullRequestReviewCommentsPayload } from "../kea-repository";
 import { GitHubRepository } from "./github-repository";
@@ -42,8 +42,11 @@ suite("GitHubRepository", () => {
     const cache = createApiCacheStub();
     (cache.get as sinon.SinonStub).returns(undefined);
 
+    // Mock the context.
+    const ctx = createKeaContextStub({ apiCache: cache });
+
     // Create the repository instance
-    const repository = new GitHubRepository("https://github.com/test-owner/test-repo", createRepoId(), githubAccount, cache);
+    const repository = new GitHubRepository("https://github.com/test-owner/test-repo", createRepoId(), githubAccount, ctx);
 
     return { repository, octokitStub, githubAccount, cache };
   };

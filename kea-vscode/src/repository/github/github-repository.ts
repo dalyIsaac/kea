@@ -10,8 +10,8 @@ import {
   convertGitHubPullRequestListItem,
   convertGitHubPullRequestReviewComment,
 } from "../../account/github/github-utils";
-import { IApiCache } from "../../cache/api/api-cache";
 import { CacheKey, isMethod } from "../../cache/api/api-cache-types";
+import { IKeaContext } from "../../core/context";
 import { KeaDisposable } from "../../core/kea-disposable";
 import { Logger } from "../../core/logger";
 import { WrappedError } from "../../core/wrapped-error";
@@ -32,7 +32,7 @@ export class GitHubRepository extends KeaDisposable implements IKeaRepository {
   account: GitHubAccount;
   remoteUrl: string;
   repoId: RepoId;
-  #cache: IApiCache;
+  #ctx: IKeaContext;
 
   #onDidChangeIssueComments: vscode.EventEmitter<IssueCommentsPayload> = this._registerDisposable(
     new vscode.EventEmitter<IssueCommentsPayload>(),
@@ -44,16 +44,16 @@ export class GitHubRepository extends KeaDisposable implements IKeaRepository {
   );
   onDidChangePullRequestReviewComments = this.#onDidChangePullRequestReviewComments.event;
 
-  constructor(remoteUrl: string, repoId: RepoId, account: GitHubAccount, cache: IApiCache) {
+  constructor(remoteUrl: string, repoId: RepoId, account: GitHubAccount, ctx: IKeaContext) {
     super();
     this.remoteUrl = remoteUrl;
     this.repoId = repoId;
     this.account = account;
-    this.#cache = cache;
+    this.#ctx = ctx;
   }
 
   override _dispose = () => {
-    this.#cache.invalidate(this.repoId.owner, this.repoId.repo);
+    this.#ctx.apiCache.invalidate(this.repoId.owner, this.repoId.repo);
     return Promise.resolve();
   };
 
@@ -127,7 +127,7 @@ export class GitHubRepository extends KeaDisposable implements IKeaRepository {
       throw cacheKey;
     }
 
-    const cachedResult = this.#cache.get(...cacheKey);
+    const cachedResult = this.#ctx.apiCache.get(...cacheKey);
 
     if (forceRequest !== true) {
       if (cachedResult !== undefined) {
@@ -164,7 +164,7 @@ export class GitHubRepository extends KeaDisposable implements IKeaRepository {
       etag: fetchedResult.headers.etag,
       lastModified: fetchedResult.headers["last-modified"],
     };
-    this.#cache.set(...cacheKey, fetchedResult.data, resultHeaders);
+    this.#ctx.apiCache.set(...cacheKey, fetchedResult.data, resultHeaders);
     return {
       data: fetchedResult.data as RequestResult,
       wasCached: false,
