@@ -5,7 +5,7 @@ import { Logger } from "../../core/logger";
 import { createPullRequestListQuickPick } from "../../quick-picks/pull-request-list-picks";
 import { PullRequestId } from "../../types/kea";
 
-export const createOpenPullRequestCommand = (ctx: IKeaContext) => async (args?: [IAccountKey, PullRequestId]) => {
+export const createOpenPullRequestCommand = (ctx: IKeaContext) => async (args?: { accountKey: IAccountKey; pullId: PullRequestId }) => {
   const { repositoryManager, pullRequestContents, treeDecorationManager } = ctx;
 
   if (args === undefined) {
@@ -18,10 +18,10 @@ export const createOpenPullRequestCommand = (ctx: IKeaContext) => async (args?: 
       return;
     }
 
-    args = [results.accountKey, results.pullRequestId];
+    args = { accountKey: results.accountKey, pullId: results.pullRequestId };
   }
 
-  const [accountKey, pullId] = args;
+  const { accountKey, pullId } = args;
   await pullRequestContents.treeViewProvider.openPullRequest(accountKey, pullId);
 
   const repository = repositoryManager.getRepositoryById(accountKey, pullId);

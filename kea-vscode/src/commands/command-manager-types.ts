@@ -20,6 +20,31 @@ export const COMMANDS = {
 
 export type CommandMap = Record<keyof typeof COMMANDS, ReturnType<(typeof COMMANDS)[keyof typeof COMMANDS]>>;
 
+export interface TypedCommand<TCommand extends keyof typeof COMMANDS> {
+  /**
+   * Title of the command, like `save`.
+   */
+  title: string;
+
+  /**
+   * The identifier of the actual command handler.
+   */
+  command: TCommand;
+
+  /**
+   * A tooltip for the command, when represented in the UI.
+   */
+  tooltip?: string | undefined;
+
+  /**
+   * Arguments that the command handler should be invoked with.
+   */
+  args: Parameters<ReturnType<(typeof COMMANDS)[TCommand]>>;
+}
+
 export interface ICommandManager extends IKeaDisposable {
-  executeCommand: <T extends keyof typeof COMMANDS>(commandName: T, ...args: Parameters<(typeof COMMANDS)[T]>) => Thenable<void>;
+  executeCommand: <TCommand extends keyof typeof COMMANDS>(
+    commandName: TCommand,
+    ...args: Parameters<(typeof COMMANDS)[TCommand]>
+  ) => Thenable<void>;
 }

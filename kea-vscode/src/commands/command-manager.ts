@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import { IKeaContext } from "../core/context";
 import { KeaDisposable } from "../core/kea-disposable";
 import { Logger } from "../core/logger";
-import { CommandMap, COMMANDS, ICommandManager } from "./command-manager-types";
+import { CommandMap, COMMANDS, ICommandManager, TypedCommand } from "./command-manager-types";
 
 export class CommandManager extends KeaDisposable implements ICommandManager {
   #commands: CommandMap;
@@ -25,3 +25,15 @@ export class CommandManager extends KeaDisposable implements ICommandManager {
     return vscode.commands.executeCommand(commandName, ...args);
   };
 }
+
+export const createCommand = <TCommand extends keyof typeof COMMANDS>({
+  title,
+  command,
+  tooltip,
+  args,
+}: TypedCommand<TCommand>): vscode.Command => ({
+  title,
+  command,
+  arguments: args,
+  ...(tooltip ? { tooltip } : {}),
+});

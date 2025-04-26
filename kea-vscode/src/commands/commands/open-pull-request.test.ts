@@ -42,7 +42,7 @@ suite("open-pull-request", () => {
 
     // When
     const command = createOpenPullRequestCommand(contextStub);
-    await command([accountKey, pullId]);
+    await command({ accountKey, pullId });
 
     // Then
     assert.ok(
@@ -102,7 +102,7 @@ suite("open-pull-request", () => {
 
     // When
     const command = createOpenPullRequestCommand(contextStub);
-    await command([accountKey, pullId]);
+    await command({ accountKey, pullId });
 
     // Then
     assert.ok(
