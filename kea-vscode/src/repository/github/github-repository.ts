@@ -332,7 +332,7 @@ export class GitHubRepository extends KeaDisposable implements IKeaRepository {
   getBlobUri = async (sha1: string, forceRequest?: boolean): Promise<vscode.Uri | Error> => {
     if (forceRequest === true) {
       const cachedUri = await this.#ctx.fileCache.get(this.repoId, sha1);
-      if (cachedUri !== undefined) {
+      if (!(cachedUri instanceof Error)) {
         return cachedUri.data;
       }
     }

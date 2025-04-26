@@ -882,19 +882,19 @@ suite("GitHubRepository", () => {
       // Given
       const testUri = vscode.Uri.parse("file:///cached/file/path");
       const sha1 = "test-sha-123";
-      
+
       // Setup file cache with get returning the cached URI
       const fileCache = createKeaContextStub().fileCache;
       fileCache.get = sinon.stub().resolves({ data: testUri, headers: {} });
-      
+
       // Mock the GitHub account
       const githubAccount = createAccountStub() as unknown as GitHubAccount;
       const octokitStub = createOctokitStub();
       githubAccount.getOctokit = sinon.stub().resolves(octokitStub);
-      
+
       // Create context with our mocked file cache
       const ctx = createKeaContextStub({ fileCache });
-      
+
       // Create repository with mocked dependencies
       const repository = new GitHubRepository("https://github.com/test-owner/test-repo", createRepoId(), githubAccount, ctx);
 
@@ -916,45 +916,42 @@ suite("GitHubRepository", () => {
       const sha1 = "test-sha-123";
       const testUri = vscode.Uri.parse("file:///new/cached/path");
       const blobResponse = createBlobResponse();
-      
+
       // Setup file cache mock returning undefined for get (not cached)
       // and returning the new URI for set
       const fileCache = createKeaContextStub().fileCache;
       // We can't check the cache if forceRequest is false (which is the default)
       // so we don't need to mock fileCache.get in this test
       fileCache.set = sinon.stub().resolves(testUri);
-      
+
       // Mock the GitHub account
       const githubAccount = createAccountStub() as unknown as GitHubAccount;
       const octokitStub = createOctokitStub();
       githubAccount.getOctokit = sinon.stub().resolves(octokitStub);
       octokitStub.request.resolves(blobResponse);
-      
+
       // Create context with our mocked file cache
       const ctx = createKeaContextStub({ fileCache });
-      
+
       // Create repository with mocked dependencies
       const repository = new GitHubRepository("https://github.com/test-owner/test-repo", createRepoId(), githubAccount, ctx);
-      
+
       // When - with the default forceRequest=undefined
       const result = await repository.getBlobUri(sha1);
 
       // Then
       assert.ok(!(result instanceof Error), "Expected result not to be an Error");
       assert.strictEqual(result.toString(), testUri.toString(), "URI should match set URI");
-      
+
       // We don't check the cache when forceRequest is not true
       sinon.assert.notCalled(fileCache.get as sinon.SinonStub);
-      
+
       // Verify file cache's set method was called
       sinon.assert.calledOnce(fileCache.set as sinon.SinonStub);
-      
+
       // Verify API request was made
       sinon.assert.calledOnce(octokitStub.request);
-      sinon.assert.calledWithMatch(
-        octokitStub.request,
-        "GET /repos/{owner}/{repo}/git/blobs/{file_sha}"
-      );
+      sinon.assert.calledWithMatch(octokitStub.request, "GET /repos/{owner}/{repo}/git/blobs/{file_sha}");
     });
 
     test("forces refetch when forceRequest is true", async () => {
@@ -962,25 +959,25 @@ suite("GitHubRepository", () => {
       const sha1 = "test-sha-123";
       const newUri = vscode.Uri.parse("file:///new/forced/path");
       const blobResponse = createBlobResponse();
-      
+
       // Setup file cache mock returning a URI for get (cached)
       // and returning a new URI for set
       const fileCache = createKeaContextStub().fileCache;
       fileCache.get = sinon.stub(); // Will be configured below
       fileCache.set = sinon.stub().resolves(newUri);
-      
+
       // Mock the GitHub account
       const githubAccount = createAccountStub() as unknown as GitHubAccount;
       const octokitStub = createOctokitStub();
       githubAccount.getOctokit = sinon.stub().resolves(octokitStub);
       octokitStub.request.resolves(blobResponse);
-      
+
       // Create context with our mocked file cache
       const ctx = createKeaContextStub({ fileCache });
-      
+
       // Create repository with mocked dependencies
       const repository = new GitHubRepository("https://github.com/test-owner/test-repo", createRepoId(), githubAccount, ctx);
-      
+
       // When - calling with forceRequest = true
       // Make sure fileCache.get returns undefined so we go through the API request path
       (fileCache.get as sinon.SinonStub).resolves(undefined);
@@ -989,7 +986,7 @@ suite("GitHubRepository", () => {
       // Then
       assert.ok(!(result instanceof Error), "Expected result not to be an Error");
       assert.strictEqual(result.toString(), newUri.toString(), "URI should match new URI from forced refresh");
-      
+
       // Verify API request was made
       sinon.assert.calledOnce(octokitStub.request);
     });
@@ -998,30 +995,30 @@ suite("GitHubRepository", () => {
       // Given
       const sha1 = "test-sha-123";
       const errorMessage = "API Error";
-      
+
       // Setup file cache mock returning undefined for get (not cached)
       const fileCache = createKeaContextStub().fileCache;
       fileCache.get = sinon.stub().resolves(undefined);
-      
+
       // Mock the GitHub account
       const githubAccount = createAccountStub() as unknown as GitHubAccount;
       const octokitStub = createOctokitStub();
       githubAccount.getOctokit = sinon.stub().resolves(octokitStub);
       octokitStub.request.rejects(new Error(errorMessage));
-      
+
       // Create context with our mocked file cache
       const ctx = createKeaContextStub({ fileCache });
-      
+
       // Create repository with mocked dependencies
       const repository = new GitHubRepository("https://github.com/test-owner/test-repo", createRepoId(), githubAccount, ctx);
-      
+
       // When
       const result = await repository.getBlobUri(sha1);
 
       // Then
       assert.ok(result instanceof Error, "Expected result to be an Error");
       assert.ok(result.message.includes("Error fetching blob"), "Error message should mention fetching blob");
-      
+
       // Verify file cache set was not called
       sinon.assert.notCalled(fileCache.set as sinon.SinonStub);
     });
@@ -1031,25 +1028,25 @@ suite("GitHubRepository", () => {
       const sha1 = "test-sha-123";
       const cacheError = new Error("Cache error");
       const blobResponse = createBlobResponse();
-      
+
       // Setup file cache mock returning undefined for get (not cached)
       // and returning an error for set
       const fileCache = createKeaContextStub().fileCache;
       fileCache.get = sinon.stub().resolves(undefined);
       fileCache.set = sinon.stub().resolves(cacheError);
-      
+
       // Mock the GitHub account
       const githubAccount = createAccountStub() as unknown as GitHubAccount;
       const octokitStub = createOctokitStub();
       githubAccount.getOctokit = sinon.stub().resolves(octokitStub);
       octokitStub.request.resolves(blobResponse);
-      
+
       // Create context with our mocked file cache
       const ctx = createKeaContextStub({ fileCache });
-      
+
       // Create repository with mocked dependencies
       const repository = new GitHubRepository("https://github.com/test-owner/test-repo", createRepoId(), githubAccount, ctx);
-      
+
       // When
       const result = await repository.getBlobUri(sha1);
 

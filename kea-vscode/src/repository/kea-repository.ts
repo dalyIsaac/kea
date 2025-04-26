@@ -36,6 +36,7 @@ export interface IKeaRepository extends IKeaDisposable {
   getPullRequestCommits: (pullId: PullRequestId, forceRequest?: boolean) => Promise<Commit[] | Error>;
   getCommitFiles: (commitSha: string, forceRequest?: boolean) => Promise<CommitFile[] | Error>;
   getCommitComments: (commitSha: string, forceRequest?: boolean) => Promise<CommitComment[] | Error>;
+  getBlobUri: (sha1: string, path: string) => Promise<vscode.Uri | Error>;
 
   onDidChangeIssueComments: vscode.Event<IssueCommentsPayload>;
   onDidChangePullRequestReviewComments: vscode.Event<PullRequestReviewCommentsPayload>;
