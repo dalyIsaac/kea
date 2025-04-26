@@ -10,7 +10,7 @@ import {
 
 type CreateCommand = (ctx: IKeaContext) => unknown;
 
-export const COMMANDS = {
+export const KEA_COMMANDS = {
   "kea.openPullRequest": createOpenPullRequestCommand,
   "kea.refreshPullRequestList": createRefreshPullRequestListCommand,
   "kea.refreshPullRequestContents": createRefreshPullRequestContentsCommand,
@@ -18,9 +18,9 @@ export const COMMANDS = {
   "kea.checkoutPullRequest": createCheckoutPullRequest,
 } satisfies Record<string, CreateCommand>;
 
-export type CommandMap = Record<keyof typeof COMMANDS, ReturnType<(typeof COMMANDS)[keyof typeof COMMANDS]>>;
+export type KeaCommandMap = Record<keyof typeof KEA_COMMANDS, ReturnType<(typeof KEA_COMMANDS)[keyof typeof KEA_COMMANDS]>>;
 
-export interface TypedCommand<TCommand extends keyof typeof COMMANDS> {
+export interface TypedCommand<TCommand extends keyof typeof KEA_COMMANDS> {
   /**
    * Title of the command, like `save`.
    */
@@ -39,12 +39,12 @@ export interface TypedCommand<TCommand extends keyof typeof COMMANDS> {
   /**
    * Arguments that the command handler should be invoked with.
    */
-  args: Parameters<ReturnType<(typeof COMMANDS)[TCommand]>>;
+  args: Parameters<ReturnType<(typeof KEA_COMMANDS)[TCommand]>>;
 }
 
 export interface ICommandManager extends IKeaDisposable {
-  executeCommand: <TCommand extends keyof typeof COMMANDS>(
+  executeCommand: <TCommand extends keyof typeof KEA_COMMANDS>(
     commandName: TCommand,
-    ...args: Parameters<(typeof COMMANDS)[TCommand]>
+    ...args: Parameters<(typeof KEA_COMMANDS)[TCommand]>
   ) => Thenable<void>;
 }
