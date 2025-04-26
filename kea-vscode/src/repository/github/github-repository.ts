@@ -1,4 +1,4 @@
-import { Endpoints, RequestParameters, Route } from "@octokit/types";
+import { Endpoints, OctokitResponse, RequestParameters, Route } from "@octokit/types";
 import * as vscode from "vscode";
 import { GitHubAccount } from "../../account/github/github-account";
 import {
@@ -11,6 +11,7 @@ import {
   convertGitHubPullRequestReviewComment,
 } from "../../account/github/github-utils";
 import { CacheKey, isMethod } from "../../cache/api/api-cache-types";
+import { CacheResponseHeaders } from "../../cache/common/common-api-types";
 import { IKeaContext } from "../../core/context";
 import { KeaDisposable } from "../../core/kea-disposable";
 import { Logger } from "../../core/logger";
@@ -105,6 +106,11 @@ export class GitHubRepository extends KeaDisposable implements IKeaRepository {
     return cacheKey;
   };
 
+  #getResultHeaders = (response: OctokitResponse<unknown>): CacheResponseHeaders => ({
+    etag: response.headers.etag,
+    lastModified: response.headers["last-modified"],
+  });
+
   /**
    * Returns the octokit instance for this repository.
    * @param route The route to request.
@@ -145,7 +151,6 @@ export class GitHubRepository extends KeaDisposable implements IKeaRepository {
       throw octokit;
     }
 
-    // const previousHeaders = this.#cache.getHeaders(cacheKey);
     const previousHeaders = cachedResult?.headers;
     const requestOptions = {
       ...options,
@@ -160,11 +165,7 @@ export class GitHubRepository extends KeaDisposable implements IKeaRepository {
 
     const fetchedResult = await octokit.request(route, requestOptions);
 
-    const resultHeaders = {
-      etag: fetchedResult.headers.etag,
-      lastModified: fetchedResult.headers["last-modified"],
-    };
-    this.#ctx.apiCache.set(...cacheKey, fetchedResult.data, resultHeaders);
+    this.#ctx.apiCache.set(...cacheKey, fetchedResult.data, this.#getResultHeaders(fetchedResult));
     return {
       data: fetchedResult.data as RequestResult,
       wasCached: false,
@@ -325,6 +326,32 @@ export class GitHubRepository extends KeaDisposable implements IKeaRepository {
       return data.map(convertGitHubCommitComment);
     } catch (error) {
       return new WrappedError(`Error fetching commit comments`, error);
+    }
+  };
+
+  getBlobUri = async (sha1: string, forceRequest?: boolean): Promise<vscode.Uri | Error> => {
+    if (forceRequest === true) {
+      const cachedUri = await this.#ctx.fileCache.get(this.repoId, sha1);
+      if (cachedUri !== undefined) {
+        return cachedUri.data;
+      }
+    }
+
+    try {
+      const octokit = await this.account.getOctokit();
+      if (octokit instanceof Error) {
+        return octokit;
+      }
+
+      const result = await octokit.request("GET /repos/{owner}/{repo}/git/blobs/{file_sha}", {
+        owner: this.repoId.owner,
+        repo: this.repoId.repo,
+        file_sha: sha1,
+      });
+
+      return await this.#ctx.fileCache.set(this.repoId, sha1, result.data.content, this.#getResultHeaders(result));
+    } catch (error) {
+      return new WrappedError(`Error fetching blob`, error);
     }
   };
 }

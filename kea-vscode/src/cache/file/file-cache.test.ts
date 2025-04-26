@@ -207,4 +207,36 @@ suite("FileCache", () => {
     await assert.doesNotReject(action);
     assert.strictEqual(cache.size, 0);
   });
+
+  test("set should return the file URI on success", async () => {
+    // Given
+    const cache = new FileCache(extCtx, 5, fakeFs);
+    const sha1 = "testsha123";
+    const data = "file-content";
+
+    // When
+    const result = await cache.set(repoId, sha1, data, headers);
+
+    // Then
+    assert.ok(!(result instanceof Error), "Expected result not to be an Error");
+    assert.ok(result instanceof vscode.Uri, "Expected result to be a vscode.Uri");
+    const expectedUri = vscode.Uri.joinPath(extCtx.globalStorageUri, "file-cache", repoId.owner, repoId.repo, sha1);
+    assert.strictEqual(result.toString(), expectedUri.toString());
+  });
+
+  test("set should return an Error when file system operations fail", async () => {
+    // Given
+    fakeFs.createDirectory = sandbox.stub().rejects(new Error("Failed to create directory"));
+    const cache = new FileCache(extCtx, 5, fakeFs);
+    const sha1 = "errorsha";
+    const data = "file-content";
+
+    // When
+    const result = await cache.set(repoId, sha1, data, headers);
+
+    // Then
+    assert.ok(result instanceof Error, "Expected result to be an Error");
+    // Check for Error instance without requiring specific message content
+    assert.ok(result instanceof Error && result.message.length > 0, "Error should have a message");
+  });
 });

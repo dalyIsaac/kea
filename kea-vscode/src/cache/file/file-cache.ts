@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import { KeaDisposable } from "../../core/kea-disposable";
 import { Logger } from "../../core/logger";
+import { WrappedError } from "../../core/wrapped-error";
 import { RepoId } from "../../types/kea";
 import { CacheResponseHeaders, ICacheValue, IFullCacheValue } from "../common/common-api-types";
 import { ILinkedListNode, LinkedList } from "../common/linked-list";
@@ -28,9 +29,9 @@ export interface IFileCache {
    * @param sha1 The SHA1 hash of the file.
    * @param data The file data to cache.
    * @param headers The headers to cache.
-   * @returns A promise that resolves when the file is cached.
+   * @returns The URI of the cached file, or an error if the operation fails.
    */
-  set: (repoId: RepoId, sha1: string, data: string, headers: CacheResponseHeaders) => Promise<void>;
+  set: (repoId: RepoId, sha1: string, data: string, headers: CacheResponseHeaders) => Promise<vscode.Uri | Error>;
 
   /**
    * Invalidates the cache for the given repository ID and SHA1 hash.
@@ -119,7 +120,7 @@ export class FileCache extends KeaDisposable implements IFileCache {
     };
   };
 
-  set = async (repoId: RepoId, sha1: string, data: string, headers: CacheResponseHeaders): Promise<void> => {
+  set = async (repoId: RepoId, sha1: string, data: string, headers: CacheResponseHeaders): Promise<vscode.Uri | Error> => {
     const repoKey = this.#createRepoKey(repoId);
     const nodeKey = { repoId, sha1 };
 
@@ -150,10 +151,14 @@ export class FileCache extends KeaDisposable implements IFileCache {
       Logger.info("File written", fileUri);
     } catch (error) {
       Logger.error("Error writing file", error);
+      this.#linkedList.remove(linkedListNode);
+      return error instanceof Error ? error : new WrappedError("Error writing file", error);
     }
 
     this.#size += 1;
     await this.#evict();
+
+    return fileUri;
   };
 
   #evict = async (): Promise<void> => {
