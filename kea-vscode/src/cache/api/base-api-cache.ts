@@ -1,27 +1,25 @@
 import { Logger } from "../../core/logger";
-import {
-  CacheKey,
-  CacheResponseHeaders,
-  EndpointMethodMap,
-  IFullCacheValue,
-  Method,
-  MethodValueMap,
-  RepoEndpointMap,
-  UserRepoMap,
-} from "./cache-types";
-import { ILinkedListNode } from "./linked-list";
+import { CacheResponseHeaders } from "../common/common-api-types";
+import { ILinkedListNode } from "../common/linked-list";
+import { ApiCacheFullValue, CacheKey, EndpointMethodMap, Method, MethodValueMap, RepoEndpointMap, UserRepoMap } from "./api-cache-types";
 
 interface GetInnerCacheSuccess {
   userRepoMap: UserRepoMap;
   repoEndpointMap?: RepoEndpointMap;
   endpointMethodMap?: EndpointMethodMap;
   methodValueMap?: MethodValueMap;
-  cacheValue?: IFullCacheValue<unknown>;
+  cacheValue?: ApiCacheFullValue;
 }
 
 type GetInnerCacheResult = undefined | GetInnerCacheSuccess;
 
-export class ApiCache {
+/**
+ * BaseApiCache is a class that implements a cache for API responses.
+ * It uses a nested map structure to store the cache values.
+ * The cache is organized by user, repository, endpoint, and method.
+ * This is a component of the LRU (Least Recently Used) API cache implementation.
+ */
+export class BaseApiCache {
   #cache = new Map<string, UserRepoMap>();
   #size = 0;
 
@@ -29,7 +27,7 @@ export class ApiCache {
     return this.#size;
   }
 
-  get = (key: CacheKey): IFullCacheValue<unknown> | undefined => this.#get(...key)?.cacheValue;
+  get = (key: CacheKey): ApiCacheFullValue | undefined => this.#get(...key)?.cacheValue;
 
   #get = (...[user, repo, endpoint, method]: CacheKey): GetInnerCacheResult => {
     const userRepoMap = this.#cache.get(user);
@@ -66,7 +64,14 @@ export class ApiCache {
     };
   };
 
-  set = (user: string, repo: string, endpoint: string, method: Method, data: unknown, headers: CacheResponseHeaders): ILinkedListNode => {
+  set = (
+    user: string,
+    repo: string,
+    endpoint: string,
+    method: Method,
+    data: unknown,
+    headers: CacheResponseHeaders,
+  ): ILinkedListNode<CacheKey> => {
     const cacheResult = this.#get(user, repo, endpoint, method);
 
     const key: CacheKey = [user, repo, endpoint, method];
@@ -74,7 +79,7 @@ export class ApiCache {
     let repoEndpointMap: RepoEndpointMap | undefined;
     let endpointMethodMap: EndpointMethodMap | undefined;
     let methodValueMap: MethodValueMap | undefined;
-    let linkedListNode: ILinkedListNode | undefined;
+    let linkedListNode: ILinkedListNode<CacheKey> | undefined;
 
     if (cacheResult !== undefined) {
       ({ userRepoMap, repoEndpointMap, endpointMethodMap, methodValueMap } = cacheResult);
@@ -108,14 +113,14 @@ export class ApiCache {
     return linkedListNode;
   };
 
-  invalidate = (user: string, repo?: string, endpoint?: string, method?: Method): ILinkedListNode[] | Error => {
+  invalidate = (user: string, repo?: string, endpoint?: string, method?: Method): Array<ILinkedListNode<CacheKey>> | Error => {
     const userRepoMap = this.#cache.get(user);
     if (userRepoMap === undefined) {
       return new Error(`User '${user}' not found in cache.`);
     }
     if (repo === undefined) {
       // Invalidate the entire user.
-      const invalidatedNodes: ILinkedListNode[] = [];
+      const invalidatedNodes: Array<ILinkedListNode<CacheKey>> = [];
       this.#invalidateUser(userRepoMap, invalidatedNodes);
       this.#cache.delete(user);
       this.#size -= invalidatedNodes.length;
@@ -128,7 +133,7 @@ export class ApiCache {
     }
     if (endpoint === undefined) {
       // Invalidate the entire repository.
-      const invalidatedNodes: ILinkedListNode[] = [];
+      const invalidatedNodes: Array<ILinkedListNode<CacheKey>> = [];
       this.#invalidateRepo(repoEndpointMap, invalidatedNodes);
       this.#deleteFromMap([user, repo], [this.#cache, userRepoMap]);
       this.#size -= invalidatedNodes.length;
@@ -141,7 +146,7 @@ export class ApiCache {
     }
     if (method === undefined) {
       // Invalidate the entire endpoint.
-      const invalidatedNodes: ILinkedListNode[] = [];
+      const invalidatedNodes: Array<ILinkedListNode<CacheKey>> = [];
       this.#invalidateEndpoint(endpointMethodMap, invalidatedNodes);
       this.#deleteFromMap([user, repo, endpoint], [this.#cache, userRepoMap, repoEndpointMap]);
       this.#size -= invalidatedNodes.length;
@@ -154,7 +159,7 @@ export class ApiCache {
     }
 
     // Invalidate the specific method.
-    const invalidatedNodes: ILinkedListNode[] = [];
+    const invalidatedNodes: Array<ILinkedListNode<CacheKey>> = [];
     const cacheValue = methodValueMap.get(method);
     if (cacheValue === undefined) {
       return new Error(`Cache value for method '${method}' not found.`);
@@ -186,19 +191,19 @@ export class ApiCache {
     }
   };
 
-  #invalidateUser = (userRepoMap: UserRepoMap, invalidatedNodes: ILinkedListNode[]): void => {
+  #invalidateUser = (userRepoMap: UserRepoMap, invalidatedNodes: Array<ILinkedListNode<CacheKey>>): void => {
     for (const repoEndpointMap of userRepoMap.values()) {
       this.#invalidateRepo(repoEndpointMap, invalidatedNodes);
     }
   };
 
-  #invalidateRepo = (repoEndpointMap: RepoEndpointMap, invalidatedNodes: ILinkedListNode[]): void => {
+  #invalidateRepo = (repoEndpointMap: RepoEndpointMap, invalidatedNodes: Array<ILinkedListNode<CacheKey>>): void => {
     for (const endpointMethodMap of repoEndpointMap.values()) {
       this.#invalidateEndpoint(endpointMethodMap, invalidatedNodes);
     }
   };
 
-  #invalidateEndpoint = (endpointMethodMap: EndpointMethodMap, invalidatedNodes: ILinkedListNode[]): void => {
+  #invalidateEndpoint = (endpointMethodMap: EndpointMethodMap, invalidatedNodes: Array<ILinkedListNode<CacheKey>>): void => {
     for (const methodValueMap of endpointMethodMap.values()) {
       for (const cacheValue of methodValueMap.values()) {
         invalidatedNodes.push(cacheValue.linkedListNode);

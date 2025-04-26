@@ -1,17 +1,21 @@
-import { ApiCache } from "./api-cache";
-import { CacheKey, CacheResponseHeaders, ICacheValue, Method } from "./cache-types";
-import { LinkedList } from "./linked-list";
+import { CacheResponseHeaders } from "../common/common-api-types";
+import { LinkedList } from "../common/linked-list";
+import { ApiCacheValue, CacheKey, Method } from "./api-cache-types";
+import { BaseApiCache } from "./base-api-cache";
 
-export interface ILruApiCache {
-  get: (...key: CacheKey) => ICacheValue<unknown> | undefined;
+export interface IApiCache {
+  get: (...key: CacheKey) => ApiCacheValue | undefined;
   set: (user: string, repo: string, endpoint: string, method: Method, data: unknown, headers: CacheResponseHeaders) => void;
   invalidate: (user: string, repo?: string, endpoint?: string, method?: Method) => void;
   clear: () => void;
 }
 
-export class LruApiCache implements ILruApiCache {
-  readonly #cache = new ApiCache();
-  readonly #linkedList = new LinkedList();
+/**
+ * An LRU (Least Recently Used) cache implementation for API responses.
+ */
+export class ApiCache implements IApiCache {
+  readonly #cache = new BaseApiCache();
+  readonly #linkedList = new LinkedList<CacheKey>();
 
   maxSize: number;
 
@@ -23,7 +27,7 @@ export class LruApiCache implements ILruApiCache {
     this.maxSize = maxSize;
   }
 
-  get = (...key: CacheKey): ICacheValue<unknown> | undefined => {
+  get = (...key: CacheKey): ApiCacheValue | undefined => {
     const cacheResult = this.#cache.get(key);
     if (cacheResult === undefined) {
       return undefined;
@@ -64,7 +68,7 @@ export class LruApiCache implements ILruApiCache {
     }
 
     for (const node of nodesToDelete) {
-      this.#linkedList.removeNode(node);
+      this.#linkedList.remove(node);
     }
   };
 

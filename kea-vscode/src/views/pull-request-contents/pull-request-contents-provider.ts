@@ -26,7 +26,7 @@ export class PullRequestContentsProvider extends TreeNodeProvider<PullRequestTre
     this.#ctx = ctx;
   }
 
-  override _getRootChildren = (): Promise<PullRequestTreeNode[]> => {
+  override _getRootChildren = async (): Promise<PullRequestTreeNode[]> => {
     if (this.#pullInfo === undefined) {
       Logger.error("Pull request is not open");
       return Promise.resolve([]);
@@ -39,7 +39,7 @@ export class PullRequestContentsProvider extends TreeNodeProvider<PullRequestTre
       !isSamePullRequest(this.#filesRootTreeNode?.pullId, pullId) ||
       !isSamePullRequest(this.#commitsRootTreeNode?.pullId, pullId)
     ) {
-      this.#commentsRootTreeNode?.dispose();
+      await this.#commentsRootTreeNode?.dispose();
 
       this.#commentsRootTreeNode = new CommentsRootTreeNode(repository, pullId, this);
       this.#filesRootTreeNode = new FilesRootTreeNode(repository, pullId);
@@ -80,6 +80,6 @@ export class PullRequestContentsProvider extends TreeNodeProvider<PullRequestTre
     }
 
     const { owner, repo } = this.#pullInfo.repository.repoId;
-    this.#ctx.cache.invalidate(owner, repo);
+    this.#ctx.apiCache.invalidate(owner, repo);
   };
 }

@@ -10,8 +10,8 @@ import {
   convertGitHubPullRequestListItem,
   convertGitHubPullRequestReviewComment,
 } from "../../account/github/github-utils";
-import { CacheKey, isMethod } from "../../cache/lru-api/cache-types";
-import { ILruApiCache } from "../../cache/lru-api/lru-api-cache";
+import { IApiCache } from "../../cache/api/api-cache";
+import { CacheKey, isMethod } from "../../cache/api/api-cache-types";
 import { KeaDisposable } from "../../core/kea-disposable";
 import { Logger } from "../../core/logger";
 import { WrappedError } from "../../core/wrapped-error";
@@ -32,7 +32,7 @@ export class GitHubRepository extends KeaDisposable implements IKeaRepository {
   account: GitHubAccount;
   remoteUrl: string;
   repoId: RepoId;
-  #cache: ILruApiCache;
+  #cache: IApiCache;
 
   #onDidChangeIssueComments: vscode.EventEmitter<IssueCommentsPayload> = this._registerDisposable(
     new vscode.EventEmitter<IssueCommentsPayload>(),
@@ -44,7 +44,7 @@ export class GitHubRepository extends KeaDisposable implements IKeaRepository {
   );
   onDidChangePullRequestReviewComments = this.#onDidChangePullRequestReviewComments.event;
 
-  constructor(remoteUrl: string, repoId: RepoId, account: GitHubAccount, cache: ILruApiCache) {
+  constructor(remoteUrl: string, repoId: RepoId, account: GitHubAccount, cache: IApiCache) {
     super();
     this.remoteUrl = remoteUrl;
     this.repoId = repoId;
@@ -54,6 +54,7 @@ export class GitHubRepository extends KeaDisposable implements IKeaRepository {
 
   override _dispose = () => {
     this.#cache.invalidate(this.repoId.owner, this.repoId.repo);
+    return Promise.resolve();
   };
 
   #generateKey = <R extends Route>(

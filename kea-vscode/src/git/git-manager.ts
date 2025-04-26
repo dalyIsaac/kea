@@ -92,7 +92,7 @@ export class GitManager extends KeaDisposable implements IGitManager {
         continue;
       }
 
-      const repo = account.tryCreateRepoForAccount(repoUrl, this.#ctx.cache);
+      const repo = account.tryCreateRepoForAccount(repoUrl, this.#ctx.apiCache);
       if (repo instanceof Error) {
         Logger.error(`Error creating repository for account`, repo);
         continue;

@@ -1,12 +1,12 @@
 import * as assert from "assert";
-import { ApiCache } from "./api-cache";
-import { CacheKey, Method } from "./cache-types";
+import { CacheKey, Method } from "./api-cache-types";
+import { BaseApiCache } from "./base-api-cache";
 
 const createDefaultKey = (): CacheKey => ["user", "repo", "endpoint", "GET"];
 
 // Helper to add data to cache with a full key
 const setupCache = (
-  apiCache: ApiCache,
+  apiCache: BaseApiCache,
   key: CacheKey,
   data = { test: "value" },
   headers = { etag: "etag123", lastModified: "2023-01-01" },
@@ -14,11 +14,11 @@ const setupCache = (
   return apiCache.set(key[0], key[1], key[2], key[3], data, headers);
 };
 
-suite("ApiCache", () => {
+suite("BaseApiCache", () => {
   suite("get", () => {
     test("should return undefined when the user is not in cache", () => {
       // Given
-      const apiCache = new ApiCache();
+      const apiCache = new BaseApiCache();
       const key = createDefaultKey();
 
       // When
@@ -30,7 +30,7 @@ suite("ApiCache", () => {
 
     test("should return value when cache has been properly set", () => {
       // Given
-      const apiCache = new ApiCache();
+      const apiCache = new BaseApiCache();
       const key = createDefaultKey();
       const data = { test: "value" };
       const headers = { etag: "etag123", lastModified: "2023-01-01" };
@@ -53,7 +53,7 @@ suite("ApiCache", () => {
   suite("set", () => {
     test("should set a cache entry and return the linked list node", () => {
       // Given
-      const apiCache = new ApiCache();
+      const apiCache = new BaseApiCache();
       const key = createDefaultKey();
       const data = { test: "value" };
       const headers = { etag: "etag123", lastModified: "2023-01-01" };
@@ -74,7 +74,7 @@ suite("ApiCache", () => {
 
     test("should overwrite existing cache entry", () => {
       // Given
-      const apiCache = new ApiCache();
+      const apiCache = new BaseApiCache();
       const key = createDefaultKey();
       const initialData = { test: "initial" };
       const initialHeaders = { etag: "etag-initial", lastModified: "2023-01-01" };
@@ -104,7 +104,7 @@ suite("ApiCache", () => {
   suite("invalidate", () => {
     test("should do nothing if user is not in cache", () => {
       // Given
-      const apiCache = new ApiCache();
+      const apiCache = new BaseApiCache();
       const key: CacheKey = ["user1", "repo", "endpoint", "GET"];
 
       setupCache(apiCache, key);
@@ -121,7 +121,7 @@ suite("ApiCache", () => {
 
     test("should delete user if repo is undefined", () => {
       // Given
-      const apiCache = new ApiCache();
+      const apiCache = new BaseApiCache();
       const key = createDefaultKey();
 
       setupCache(apiCache, key);
@@ -138,7 +138,7 @@ suite("ApiCache", () => {
 
     test("should do nothing if repo is not in cache", () => {
       // Given
-      const apiCache = new ApiCache();
+      const apiCache = new BaseApiCache();
       const key: CacheKey = ["user", "repo1", "endpoint", "GET"];
 
       setupCache(apiCache, key);
@@ -155,7 +155,7 @@ suite("ApiCache", () => {
 
     test("should delete repo if endpoint is undefined", () => {
       // Given
-      const apiCache = new ApiCache();
+      const apiCache = new BaseApiCache();
       const key = createDefaultKey();
 
       setupCache(apiCache, key);
@@ -171,7 +171,7 @@ suite("ApiCache", () => {
 
     test("should do nothing if endpoint is not in cache", () => {
       // Given
-      const apiCache = new ApiCache();
+      const apiCache = new BaseApiCache();
       const key: CacheKey = ["user", "repo", "endpoint1", "GET"];
 
       setupCache(apiCache, key);
@@ -188,7 +188,7 @@ suite("ApiCache", () => {
 
     test("should delete endpoint if method is undefined", () => {
       // Given
-      const apiCache = new ApiCache();
+      const apiCache = new BaseApiCache();
       const key = createDefaultKey();
 
       setupCache(apiCache, key);
@@ -204,7 +204,7 @@ suite("ApiCache", () => {
 
     test("should do nothing if method is not in cache", () => {
       // Given
-      const apiCache = new ApiCache();
+      const apiCache = new BaseApiCache();
       const key = createDefaultKey();
 
       setupCache(apiCache, key);
@@ -221,7 +221,7 @@ suite("ApiCache", () => {
 
     test("should delete method cache entry for specific method", () => {
       // Given
-      const apiCache = new ApiCache();
+      const apiCache = new BaseApiCache();
       const key = createDefaultKey();
 
       setupCache(apiCache, key);
@@ -248,7 +248,7 @@ suite("ApiCache", () => {
   suite("clear", () => {
     test("should clear all cache entries", () => {
       // Given
-      const apiCache = new ApiCache();
+      const apiCache = new BaseApiCache();
       const keys: CacheKey[] = [
         ["user1", "repo1", "endpoint1", "GET"],
         ["user1", "repo2", "endpoint1", "GET"],

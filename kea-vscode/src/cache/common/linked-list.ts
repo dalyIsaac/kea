@@ -1,20 +1,18 @@
-import { CacheKey } from "./cache-types";
-
-export interface ILinkedListNode {
-  prev: ILinkedListNode | null;
-  next: ILinkedListNode | null;
-  key: CacheKey;
+export interface ILinkedListNode<TKey> {
+  prev: ILinkedListNode<TKey> | null;
+  next: ILinkedListNode<TKey> | null;
+  key: TKey;
 }
 
-export class LinkedList {
-  #head: ILinkedListNode | null = null;
-  #tail: ILinkedListNode | null = null;
+export class LinkedList<TKey> {
+  #head: ILinkedListNode<TKey> | null = null;
+  #tail: ILinkedListNode<TKey> | null = null;
 
   /**
    * The head of the linked list.
    * The head is the oldest node in the list.
    */
-  get head(): ILinkedListNode | null {
+  get head(): ILinkedListNode<TKey> | null {
     return this.#head;
   }
 
@@ -22,11 +20,11 @@ export class LinkedList {
    * The tail of the linked list.
    * The tail is the most recently added node in the list.
    */
-  get tail(): ILinkedListNode | null {
+  get tail(): ILinkedListNode<TKey> | null {
     return this.#tail;
   }
 
-  add = (node: ILinkedListNode): undefined => {
+  add = (node: ILinkedListNode<TKey>): undefined => {
     node.prev = this.#tail;
     node.next = null;
 
@@ -43,7 +41,7 @@ export class LinkedList {
   /**
    * Remove the oldest node from the list.
    */
-  removeOldest = (): CacheKey | undefined => {
+  removeOldest = (): TKey | undefined => {
     if (this.#head === null) {
       return;
     }
@@ -68,7 +66,7 @@ export class LinkedList {
    * Remove a node from the list.
    * @param node The node to remove.
    */
-  removeNode = (node: ILinkedListNode): void => {
+  remove = (node: ILinkedListNode<TKey>): void => {
     if (node.prev !== null) {
       node.prev.next = node.next;
     } else {
@@ -92,7 +90,7 @@ export class LinkedList {
    * Demote the node towards the tail of the list.
    * @param node The node to demote.
    */
-  demote = (node: ILinkedListNode): void => {
+  demote = (node: ILinkedListNode<TKey>): void => {
     if (node.next === null && node.prev === null) {
       this.add(node);
       return;

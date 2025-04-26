@@ -140,10 +140,10 @@ suite("PullRequestContentsProvider", () => {
 
     // Then
     assert.strictEqual(eventFired, true);
-    assert.strictEqual((ctx.cache.invalidate as sinon.SinonStub).calledOnce, true);
+    assert.strictEqual((ctx.apiCache.invalidate as sinon.SinonStub).calledOnce, true);
 
     const { owner, repo } = repository.repoId;
-    assert.strictEqual((ctx.cache.invalidate as sinon.SinonStub).calledWith(owner, repo), true);
+    assert.strictEqual((ctx.apiCache.invalidate as sinon.SinonStub).calledWith(owner, repo), true);
   });
 
   test("openPullRequest updates the pull request info", async () => {

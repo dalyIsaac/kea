@@ -1,25 +1,23 @@
 import * as vscode from "vscode";
-import { CommandManager } from "./commands/command-manager";
 import { KeaContext } from "./core/context";
 import { Logger } from "./core/logger";
 import { CommentsRootDecorationProvider } from "./decorations/comments-root-decoration-provider";
 import { FileCommentDecorationProvider } from "./decorations/file-comment-decoration-provider";
 
-export function activate(_context: vscode.ExtensionContext) {
+let ctx: KeaContext;
+
+export function activate(extCtx: vscode.ExtensionContext) {
   Logger.info("Kea extension activated");
 
-  const ctx = new KeaContext();
+  ctx = new KeaContext(extCtx);
 
   ctx.treeDecorationManager.registerProviders(
     new FileCommentDecorationProvider(),
     new CommentsRootDecorationProvider(ctx.repositoryManager),
   );
-
-  // Tree views are created via TreeViewContainer in context, no need to register manually
-
-  const _commandManager = new CommandManager(ctx);
 }
 
-export function deactivate() {
+export async function deactivate() {
+  await ctx.dispose();
   Logger.info("Kea extension deactivated");
 }

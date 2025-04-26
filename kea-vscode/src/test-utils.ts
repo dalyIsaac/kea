@@ -4,7 +4,9 @@ import sinon from "sinon";
 import * as vscode from "vscode";
 import { IAccount } from "./account/account";
 import { IAccountManager } from "./account/account-manager";
-import { ILruApiCache } from "./cache/lru-api/lru-api-cache";
+import { IApiCache } from "./cache/api/api-cache";
+import { IFileCache } from "./cache/file/file-cache";
+import { ICommandManager } from "./commands/command-manager-types";
 import { IKeaContext } from "./core/context";
 import { ITreeDecorationManager } from "./decorations/tree-decoration-manager";
 import { IGitManager } from "./git/git-manager";
@@ -204,11 +206,19 @@ export const createWorkspaceFolderStub = (props: Partial<vscode.WorkspaceFolder>
   ...props,
 });
 
-export const createCacheStub = (props: Partial<ILruApiCache> = {}): ILruApiCache => ({
+export const createApiCacheStub = (props: Partial<IApiCache> = {}): IApiCache => ({
   get: sinon.stub(),
   set: sinon.stub(),
   clear: sinon.stub(),
   invalidate: sinon.stub(),
+  ...props,
+});
+
+export const createFileCacheStub = (props: Partial<IFileCache> = {}): IFileCache => ({
+  get: sinon.stub(),
+  set: sinon.stub(),
+  invalidate: sinon.stub(),
+  clear: sinon.stub(),
   ...props,
 });
 
@@ -242,12 +252,20 @@ export const createGitManagerStub = (props: Partial<IGitManager> = {}): IGitMana
   ...props,
 });
 
+export const createCommandManagerStub = (props: Partial<ICommandManager> = {}): ICommandManager => ({
+  executeCommand: sinon.stub() as unknown as ICommandManager["executeCommand"],
+  dispose: sinon.stub(),
+  ...props,
+});
+
 export const createKeaContextStub = (props: Partial<IKeaContext> = {}): IKeaContext => ({
   accountManager: createAccountManagerStub(),
+  commandManager: createCommandManagerStub(),
   gitManager: createGitManagerStub(),
   repositoryManager: createRepositoryManagerStub(),
-  cache: createCacheStub(),
   treeDecorationManager: createTreeDecorationManagerStub(),
+  apiCache: createApiCacheStub(),
+  fileCache: createFileCacheStub(),
   pullRequestListTree: {
     treeViewProvider: createTreeNodeProviderStub() as PullRequestListTreeProvider,
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
@@ -258,6 +276,7 @@ export const createKeaContextStub = (props: Partial<IKeaContext> = {}): IKeaCont
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     treeView: {} as vscode.TreeView<any>,
   },
+  dispose: sinon.stub(),
   ...props,
 });
 

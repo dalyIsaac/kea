@@ -1,12 +1,12 @@
 import * as assert from "assert";
-import { CacheKey } from "./cache-types";
+import { CacheKey } from "../api/api-cache-types";
 import { ILinkedListNode, LinkedList } from "./linked-list";
 
 suite("LinkedList", () => {
   const createCacheKey = (id: string): CacheKey => ["user", "repo", `endpoint-${id}`, "GET"];
 
   // Helper function to create a node
-  const createNode = (key: CacheKey): ILinkedListNode => ({
+  const createNode = (key: CacheKey): ILinkedListNode<CacheKey> => ({
     prev: null,
     next: null,
     key,
@@ -16,7 +16,7 @@ suite("LinkedList", () => {
    * Asserts that the nodes are in the correct order and properly linked.
    * Also verifies that the first and last nodes match the head and tail of the linked list.
    */
-  const assertNodeOrder = (linkedList: LinkedList, ...nodes: ILinkedListNode[]) => {
+  const assertNodeOrder = (linkedList: LinkedList<CacheKey>, ...nodes: Array<ILinkedListNode<CacheKey>>) => {
     // Check if nodes array is empty
     if (nodes.length === 0) {
       assert.strictEqual(linkedList.head, null);
@@ -47,7 +47,7 @@ suite("LinkedList", () => {
   suite("add", () => {
     test("should add a node and return it", () => {
       // Given
-      const linkedList = new LinkedList();
+      const linkedList = new LinkedList<CacheKey>();
       const key = createCacheKey("1");
       const node = createNode(key);
 
@@ -63,7 +63,7 @@ suite("LinkedList", () => {
 
     test("should connect nodes correctly when adding multiple items", () => {
       // Given
-      const linkedList = new LinkedList();
+      const linkedList = new LinkedList<CacheKey>();
       const key1 = createCacheKey("1");
       const key2 = createCacheKey("2");
       const key3 = createCacheKey("3");
@@ -92,7 +92,7 @@ suite("LinkedList", () => {
   suite("removeOldest", () => {
     test("should return undefined for empty list", () => {
       // Given
-      const linkedList = new LinkedList();
+      const linkedList = new LinkedList<CacheKey>();
 
       // When
       const result = linkedList.removeOldest();
@@ -105,7 +105,7 @@ suite("LinkedList", () => {
 
     test("should remove and return the first item", () => {
       // Given
-      const linkedList = new LinkedList();
+      const linkedList = new LinkedList<CacheKey>();
       const key1 = createCacheKey("1");
       const key2 = createCacheKey("2");
       const key3 = createCacheKey("3");
@@ -128,7 +128,7 @@ suite("LinkedList", () => {
 
     test("should handle removing the last item correctly", () => {
       // Given
-      const linkedList = new LinkedList();
+      const linkedList = new LinkedList<CacheKey>();
       const key1 = createCacheKey("1");
       const node1 = createNode(key1);
       linkedList.add(node1);
@@ -147,7 +147,7 @@ suite("LinkedList", () => {
   suite("demote", () => {
     test("should move a node before its grandchild", () => {
       // Given
-      const linkedList = new LinkedList();
+      const linkedList = new LinkedList<CacheKey>();
       const key1 = createCacheKey("1");
       const key2 = createCacheKey("2");
       const key3 = createCacheKey("3");
@@ -180,7 +180,7 @@ suite("LinkedList", () => {
 
     test("should handle demoting the head node", () => {
       // Given
-      const linkedList = new LinkedList();
+      const linkedList = new LinkedList<CacheKey>();
       const key1 = createCacheKey("1");
       const key2 = createCacheKey("2");
       const key3 = createCacheKey("3");
@@ -211,7 +211,7 @@ suite("LinkedList", () => {
 
     test("should do nothing if node is the tail", () => {
       // Given
-      const linkedList = new LinkedList();
+      const linkedList = new LinkedList<CacheKey>();
       const key1 = createCacheKey("1");
       const key2 = createCacheKey("2");
       const key3 = createCacheKey("3");
@@ -237,7 +237,7 @@ suite("LinkedList", () => {
 
     test("should handle demoting to the tail position", () => {
       // Given
-      const linkedList = new LinkedList();
+      const linkedList = new LinkedList<CacheKey>();
       const key1 = createCacheKey("1");
       const key2 = createCacheKey("2");
       const key3 = createCacheKey("3");
@@ -268,7 +268,7 @@ suite("LinkedList", () => {
 
     test("should add the given node if the node isn't in the list, when demoting", () => {
       // Given
-      const linkedList = new LinkedList();
+      const linkedList = new LinkedList<CacheKey>();
 
       const connectedKey = createCacheKey("connected");
       const disconnectedKey = createCacheKey("disconnected");
@@ -286,7 +286,7 @@ suite("LinkedList", () => {
 
       test("should handle a list with only two nodes", () => {
         // Given
-        const linkedList = new LinkedList();
+        const linkedList = new LinkedList<CacheKey>();
         const key1 = createCacheKey("1");
         const key2 = createCacheKey("2");
 
@@ -318,7 +318,7 @@ suite("LinkedList", () => {
   suite("clear", () => {
     test("should remove all nodes", () => {
       // Given
-      const linkedList = new LinkedList();
+      const linkedList = new LinkedList<CacheKey>();
       const key1 = createCacheKey("1");
       const key2 = createCacheKey("2");
       const key3 = createCacheKey("3");
@@ -346,7 +346,7 @@ suite("LinkedList", () => {
   suite("operations sequence", () => {
     test("should work correctly when performing multiple operations", () => {
       // Given
-      const linkedList = new LinkedList();
+      const linkedList = new LinkedList<CacheKey>();
       const key1 = createCacheKey("1");
       const key2 = createCacheKey("2");
       const key3 = createCacheKey("3");
@@ -400,10 +400,10 @@ suite("LinkedList", () => {
     });
   });
 
-  suite("removeNode", () => {
+  suite("remove", () => {
     test("should remove a node from the middle of the list", () => {
       // Given
-      const linkedList = new LinkedList();
+      const linkedList = new LinkedList<CacheKey>();
       const key1 = createCacheKey("1");
       const key2 = createCacheKey("2");
       const key3 = createCacheKey("3");
@@ -420,7 +420,7 @@ suite("LinkedList", () => {
       assertNodeOrder(linkedList, node1, node2, node3);
 
       // When
-      linkedList.removeNode(node2);
+      linkedList.remove(node2);
 
       // Then
       assertNodeOrder(linkedList, node1, node3);
@@ -432,7 +432,7 @@ suite("LinkedList", () => {
 
     test("should remove the head node", () => {
       // Given
-      const linkedList = new LinkedList();
+      const linkedList = new LinkedList<CacheKey>();
       const key1 = createCacheKey("1");
       const key2 = createCacheKey("2");
       const key3 = createCacheKey("3");
@@ -449,7 +449,7 @@ suite("LinkedList", () => {
       assertNodeOrder(linkedList, node1, node2, node3);
 
       // When
-      linkedList.removeNode(node1);
+      linkedList.remove(node1);
 
       // Then
       assertNodeOrder(linkedList, node2, node3);
@@ -459,7 +459,7 @@ suite("LinkedList", () => {
 
     test("should remove the tail node", () => {
       // Given
-      const linkedList = new LinkedList();
+      const linkedList = new LinkedList<CacheKey>();
       const key1 = createCacheKey("1");
       const key2 = createCacheKey("2");
       const key3 = createCacheKey("3");
@@ -476,7 +476,7 @@ suite("LinkedList", () => {
       assertNodeOrder(linkedList, node1, node2, node3);
 
       // When
-      linkedList.removeNode(node3);
+      linkedList.remove(node3);
 
       // Then
       assertNodeOrder(linkedList, node1, node2);
@@ -486,7 +486,7 @@ suite("LinkedList", () => {
 
     test("should handle removing the only node in the list", () => {
       // Given
-      const linkedList = new LinkedList();
+      const linkedList = new LinkedList<CacheKey>();
       const key = createCacheKey("1");
       const node = createNode(key);
       linkedList.add(node);
@@ -495,7 +495,7 @@ suite("LinkedList", () => {
       assertNodeOrder(linkedList, node);
 
       // When
-      linkedList.removeNode(node);
+      linkedList.remove(node);
 
       // Then
       assertNodeOrder(linkedList);
@@ -505,7 +505,7 @@ suite("LinkedList", () => {
 
     test("should handle removing multiple nodes in sequence", () => {
       // Given
-      const linkedList = new LinkedList();
+      const linkedList = new LinkedList<CacheKey>();
       const key1 = createCacheKey("1");
       const key2 = createCacheKey("2");
       const key3 = createCacheKey("3");
@@ -525,26 +525,26 @@ suite("LinkedList", () => {
       assertNodeOrder(linkedList, node1, node2, node3, node4);
 
       // When - remove nodes in sequence
-      linkedList.removeNode(node2);
+      linkedList.remove(node2);
       // After first removal: node1 -> node3 -> node4
       assertNodeOrder(linkedList, node1, node3, node4);
 
-      linkedList.removeNode(node4);
+      linkedList.remove(node4);
       // After second removal: node1 -> node3
       assertNodeOrder(linkedList, node1, node3);
 
-      linkedList.removeNode(node1);
+      linkedList.remove(node1);
       // After third removal: node3
       assertNodeOrder(linkedList, node3);
 
-      linkedList.removeNode(node3);
+      linkedList.remove(node3);
       // After fourth removal: empty list
       assertNodeOrder(linkedList);
     });
 
     test("should update next and prev references correctly when removing nodes", () => {
       // Given
-      const linkedList = new LinkedList();
+      const linkedList = new LinkedList<CacheKey>();
       const key1 = createCacheKey("1");
       const key2 = createCacheKey("2");
       const key3 = createCacheKey("3");
@@ -561,7 +561,7 @@ suite("LinkedList", () => {
       assertNodeOrder(linkedList, node1, node2, node3);
 
       // When
-      linkedList.removeNode(node2);
+      linkedList.remove(node2);
 
       // Then
       assert.strictEqual(node1.next, node3, "Node1 next should point to node3");

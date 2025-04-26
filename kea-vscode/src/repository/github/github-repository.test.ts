@@ -1,8 +1,8 @@
 import * as assert from "assert";
 import sinon from "sinon";
 import { GitHubAccount } from "../../account/github/github-account";
-import { ICacheValue } from "../../cache/lru-api/cache-types";
-import { createAccountStub, createCacheStub, stubEvents } from "../../test-utils";
+import { ICacheValue } from "../../cache/common/common-api-types";
+import { createAccountStub, createApiCacheStub, stubEvents } from "../../test-utils";
 import { IssueId, PullRequestId, RepoId } from "../../types/kea";
 import { IssueCommentsPayload, PullRequestReviewCommentsPayload } from "../kea-repository";
 import { GitHubRepository } from "./github-repository";
@@ -39,7 +39,7 @@ suite("GitHubRepository", () => {
     githubAccount.getOctokit = sinon.stub().resolves(octokitStub);
 
     // Mock the cache with proper typed stubs
-    const cache = createCacheStub();
+    const cache = createApiCacheStub();
     (cache.get as sinon.SinonStub).returns(undefined);
 
     // Create the repository instance
@@ -846,13 +846,13 @@ suite("GitHubRepository", () => {
   });
 
   suite("dispose", () => {
-    test("should invalidate the cache on dispose", () => {
+    test("should invalidate the cache on dispose", async () => {
       // Given
       const { repository, cache } = createTestGitHubRepository();
       cache.invalidate = sinon.stub();
 
       // When
-      repository.dispose();
+      await repository.dispose();
 
       // Then
       assert.strictEqual((cache.invalidate as sinon.SinonStub).calledOnce, true);
