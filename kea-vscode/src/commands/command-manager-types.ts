@@ -1,3 +1,4 @@
+import * as vscode from "vscode";
 import { IKeaContext } from "../core/context";
 import { IKeaDisposable } from "../core/kea-disposable";
 import { createCheckoutPullRequest } from "./commands/checkout-pull-request";
@@ -20,7 +21,11 @@ export const KEA_COMMANDS = {
 
 export type KeaCommandMap = Record<keyof typeof KEA_COMMANDS, ReturnType<(typeof KEA_COMMANDS)[keyof typeof KEA_COMMANDS]>>;
 
-export interface TypedCommand<TCommand extends keyof typeof KEA_COMMANDS> {
+export interface VSCODE_COMMANDS {
+  "vscode.diff": [left: vscode.Uri, right: vscode.Uri, label: string, options: vscode.TextDocumentShowOptions];
+}
+
+export interface KeaCommand<TCommand extends keyof typeof KEA_COMMANDS> {
   /**
    * Title of the command, like `save`.
    */
@@ -40,6 +45,28 @@ export interface TypedCommand<TCommand extends keyof typeof KEA_COMMANDS> {
    * Arguments that the command handler should be invoked with.
    */
   args: Parameters<ReturnType<(typeof KEA_COMMANDS)[TCommand]>>;
+}
+
+export interface VscodeCommand<TCommand extends keyof VSCODE_COMMANDS> {
+  /**
+   * Title of the command, like `save`.
+   */
+  title: string;
+
+  /**
+   * The identifier of the actual command handler.
+   */
+  command: TCommand;
+
+  /**
+   * A tooltip for the command, when represented in the UI.
+   */
+  tooltip?: string | undefined;
+
+  /**
+   * Arguments that the command handler should be invoked with.
+   */
+  args: VSCODE_COMMANDS[TCommand];
 }
 
 export interface ICommandManager extends IKeaDisposable {

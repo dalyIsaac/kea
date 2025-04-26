@@ -25,15 +25,3 @@ export class CommandManager extends KeaDisposable implements ICommandManager {
     return vscode.commands.executeCommand(commandName, ...args);
   };
 }
-
-export const createCommand = <TCommand extends keyof typeof KEA_COMMANDS>({
-  title,
-  command,
-  tooltip,
-  args,
-}: TypedCommand<TCommand>): vscode.Command => ({
-  title,
-  command,
-  arguments: args,
-  ...(tooltip ? { tooltip } : {}),
-});
