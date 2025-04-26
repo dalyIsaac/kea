@@ -5,6 +5,7 @@ import * as vscode from "vscode";
 import { IAccount } from "./account/account";
 import { IAccountManager } from "./account/account-manager";
 import { IApiCache } from "./cache/api/api-cache";
+import { IFileCache } from "./cache/file/file-cache";
 import { ICommandManager } from "./commands/command-manager-types";
 import { IKeaContext } from "./core/context";
 import { ITreeDecorationManager } from "./decorations/tree-decoration-manager";
@@ -205,11 +206,19 @@ export const createWorkspaceFolderStub = (props: Partial<vscode.WorkspaceFolder>
   ...props,
 });
 
-export const createCacheStub = (props: Partial<IApiCache> = {}): IApiCache => ({
+export const createApiCacheStub = (props: Partial<IApiCache> = {}): IApiCache => ({
   get: sinon.stub(),
   set: sinon.stub(),
   clear: sinon.stub(),
   invalidate: sinon.stub(),
+  ...props,
+});
+
+export const createFileCacheStub = (props: Partial<IFileCache> = {}): IFileCache => ({
+  get: sinon.stub(),
+  set: sinon.stub(),
+  invalidate: sinon.stub(),
+  clear: sinon.stub(),
   ...props,
 });
 
@@ -254,8 +263,9 @@ export const createKeaContextStub = (props: Partial<IKeaContext> = {}): IKeaCont
   commandManager: createCommandManagerStub(),
   gitManager: createGitManagerStub(),
   repositoryManager: createRepositoryManagerStub(),
-  apiCache: createCacheStub(),
   treeDecorationManager: createTreeDecorationManagerStub(),
+  apiCache: createApiCacheStub(),
+  fileCache: createFileCacheStub(),
   pullRequestListTree: {
     treeViewProvider: createTreeNodeProviderStub() as PullRequestListTreeProvider,
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment

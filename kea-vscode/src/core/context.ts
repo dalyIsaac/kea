@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import { AccountManager, IAccountManager } from "../account/account-manager";
 import { ApiCache, IApiCache } from "../cache/api/api-cache";
+import { FileCache, IFileCache } from "../cache/file/file-cache";
 import { CommandManager } from "../commands/command-manager";
 import { ICommandManager } from "../commands/command-manager-types";
 import { ITreeDecorationManager, TreeDecorationManager } from "../decorations/tree-decoration-manager";
@@ -18,11 +19,13 @@ export interface IKeaContext extends IKeaDisposable {
   repositoryManager: IRepositoryManager;
   treeDecorationManager: ITreeDecorationManager;
   apiCache: IApiCache;
+  fileCache: IFileCache;
   pullRequestListTree: ITreeViewContainer<PullRequestListTreeProvider>;
   pullRequestContents: ITreeViewContainer<PullRequestContentsProvider>;
 }
 
-const MAX_CACHE_SIZE = 1000;
+const MAX_API_CACHE_SIZE = 1000;
+const MAX_FILE_CACHE_SIZE = 100;
 
 export class KeaContext extends KeaDisposable implements IKeaContext {
   accountManager: IAccountManager;
@@ -31,12 +34,14 @@ export class KeaContext extends KeaDisposable implements IKeaContext {
   repositoryManager: IRepositoryManager;
   treeDecorationManager: TreeDecorationManager;
   apiCache: IApiCache;
+  fileCache: IFileCache;
   pullRequestListTree: ITreeViewContainer<PullRequestListTreeProvider>;
   pullRequestContents: ITreeViewContainer<PullRequestContentsProvider>;
 
   constructor(extCtx: vscode.ExtensionContext) {
     super();
-    this.apiCache = new ApiCache(MAX_CACHE_SIZE);
+    this.apiCache = new ApiCache(MAX_API_CACHE_SIZE);
+    this.fileCache = this._registerDisposable(new FileCache(extCtx, MAX_FILE_CACHE_SIZE));
 
     this.accountManager = new AccountManager();
     this.gitManager = this._registerDisposable(new GitManager(this));

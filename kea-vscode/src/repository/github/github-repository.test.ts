@@ -2,7 +2,7 @@ import * as assert from "assert";
 import sinon from "sinon";
 import { GitHubAccount } from "../../account/github/github-account";
 import { ICacheValue } from "../../cache/common/common-api-types";
-import { createAccountStub, createCacheStub, stubEvents } from "../../test-utils";
+import { createAccountStub, createApiCacheStub, stubEvents } from "../../test-utils";
 import { IssueId, PullRequestId, RepoId } from "../../types/kea";
 import { IssueCommentsPayload, PullRequestReviewCommentsPayload } from "../kea-repository";
 import { GitHubRepository } from "./github-repository";
@@ -39,7 +39,7 @@ suite("GitHubRepository", () => {
     githubAccount.getOctokit = sinon.stub().resolves(octokitStub);
 
     // Mock the cache with proper typed stubs
-    const cache = createCacheStub();
+    const cache = createApiCacheStub();
     (cache.get as sinon.SinonStub).returns(undefined);
 
     // Create the repository instance
