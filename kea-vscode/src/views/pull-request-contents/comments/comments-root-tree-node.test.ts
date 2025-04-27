@@ -252,4 +252,46 @@ suite("CommentsRootTreeNode", () => {
     // Then
     assert.strictEqual(treeItem.collapsibleState, vscode.TreeItemCollapsibleState.Expanded);
   });
+
+  test("getTreeItem should set description with singular form for one comment", () => {
+    // Given
+    const payload: IssueCommentsPayload = { issueId: pullId, comments: [createIssueCommentStub()] };
+    const { stub: repository, eventFirers } = stubEvents(createRepositoryStub(), ["onDidChangeIssueComments"] as const);
+    const treeNodeProvider = createTreeNodeProviderStub();
+    const commentsRootTreeNode = new CommentsRootTreeNode(repository, pullId, treeNodeProvider);
+
+    // When
+    eventFirers.onDidChangeIssueComments(payload); // This sets the issueCommentsCount
+    const treeItem = commentsRootTreeNode.getTreeItem();
+
+    // Then
+    assert.strictEqual(treeItem.description, "1 comment");
+  });
+
+  test("getTreeItem should set description with plural form for multiple comments", () => {
+    // Given
+    const issuePayload: IssueCommentsPayload = {
+      issueId: pullId,
+      comments: [createIssueCommentStub(), createIssueCommentStub()],
+    };
+    const reviewPayload: PullRequestReviewCommentsPayload = {
+      pullId,
+      comments: [createPullRequestCommentStub()],
+    };
+
+    const { stub: repository, eventFirers } = stubEvents(createRepositoryStub(), [
+      "onDidChangeIssueComments",
+      "onDidChangePullRequestReviewComments",
+    ] as const);
+    const treeNodeProvider = createTreeNodeProviderStub();
+    const commentsRootTreeNode = new CommentsRootTreeNode(repository, pullId, treeNodeProvider);
+
+    // When
+    eventFirers.onDidChangeIssueComments(issuePayload); // This sets the issueCommentsCount to 2
+    eventFirers.onDidChangePullRequestReviewComments(reviewPayload); // This sets the reviewCommentsCount to 1
+    const treeItem = commentsRootTreeNode.getTreeItem();
+
+    // Then
+    assert.strictEqual(treeItem.description, "3 comments");
+  });
 });
