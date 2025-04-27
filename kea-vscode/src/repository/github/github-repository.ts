@@ -58,11 +58,6 @@ export class GitHubRepository extends KeaDisposable implements IKeaRepository {
     return Promise.resolve();
   };
 
-  #getResultHeaders = (response: OctokitResponse<unknown>): CacheResponseHeaders => ({
-    etag: response.headers.etag,
-    lastModified: response.headers["last-modified"],
-  });
-
   /**
    * Returns the octokit instance for this repository.
    * @param route The route to request.
@@ -71,7 +66,7 @@ export class GitHubRepository extends KeaDisposable implements IKeaRepository {
    * @throws Error if the octokit instance cannot be created, or if the request fails.
    * @returns The response data from the request.
    */
-  #request = async <R extends Route>(
+  #requestApi = async <R extends Route>(
     route: keyof Endpoints | R,
     options?: R extends keyof Endpoints ? Endpoints[R]["parameters"] & RequestParameters : never,
     forceRequest?: boolean,
@@ -117,7 +112,7 @@ export class GitHubRepository extends KeaDisposable implements IKeaRepository {
 
     const fetchedResult = await octokit.request(route, requestOptions);
 
-    this.#ctx.apiCache.set(...cacheKey, fetchedResult.data, this.#getResultHeaders(fetchedResult));
+    this.#ctx.apiCache.set(...cacheKey, fetchedResult.data, getResultHeaders(fetchedResult));
     return {
       data: fetchedResult.data as RequestResult,
       wasCached: false,
@@ -126,7 +121,7 @@ export class GitHubRepository extends KeaDisposable implements IKeaRepository {
 
   getPullRequestList = async (forceRequest?: boolean): Promise<PullRequest[] | Error> => {
     try {
-      const { data } = await this.#request(
+      const { data } = await this.#requestApi(
         "GET /repos/{owner}/{repo}/pulls",
         {
           owner: this.repoId.owner,
@@ -147,7 +142,7 @@ export class GitHubRepository extends KeaDisposable implements IKeaRepository {
 
   getPullRequest = async (pullId: PullRequestId, forceRequest?: boolean): Promise<PullRequest | Error> => {
     try {
-      const { data } = await this.#request(
+      const { data } = await this.#requestApi(
         "GET /repos/{owner}/{repo}/pulls/{pull_number}",
         {
           owner: pullId.owner,
@@ -165,7 +160,7 @@ export class GitHubRepository extends KeaDisposable implements IKeaRepository {
 
   getIssueComments = async (issueId: IssueId, forceRequest?: boolean): Promise<IssueComment[] | Error> => {
     try {
-      const { data, wasCached } = await this.#request(
+      const { data, wasCached } = await this.#requestApi(
         "GET /repos/{owner}/{repo}/issues/{issue_number}/comments",
         {
           owner: issueId.owner,
@@ -188,7 +183,7 @@ export class GitHubRepository extends KeaDisposable implements IKeaRepository {
 
   getPullRequestReviewComments = async (pullId: PullRequestId, forceRequest?: boolean): Promise<PullRequestComment[] | Error> => {
     try {
-      const { data, wasCached } = await this.#request(
+      const { data, wasCached } = await this.#requestApi(
         "GET /repos/{owner}/{repo}/pulls/{pull_number}/comments",
         {
           owner: pullId.owner,
@@ -211,7 +206,7 @@ export class GitHubRepository extends KeaDisposable implements IKeaRepository {
 
   getPullRequestFiles = async (pullId: PullRequestId, forceRequest?: boolean): Promise<CommitFile[] | Error> => {
     try {
-      const { data } = await this.#request(
+      const { data } = await this.#requestApi(
         "GET /repos/{owner}/{repo}/pulls/{pull_number}/files",
         {
           owner: pullId.owner,
@@ -229,7 +224,7 @@ export class GitHubRepository extends KeaDisposable implements IKeaRepository {
 
   getPullRequestCommits = async (pullId: PullRequestId, forceRequest?: boolean): Promise<Commit[] | Error> => {
     try {
-      const { data } = await this.#request(
+      const { data } = await this.#requestApi(
         "GET /repos/{owner}/{repo}/pulls/{pull_number}/commits",
         {
           owner: pullId.owner,
@@ -247,7 +242,7 @@ export class GitHubRepository extends KeaDisposable implements IKeaRepository {
 
   getCommitFiles = async (commitSha: string, forceRequest?: boolean): Promise<CommitFile[] | Error> => {
     try {
-      const { data } = await this.#request(
+      const { data } = await this.#requestApi(
         "GET /repos/{owner}/{repo}/commits/{ref}",
         {
           owner: this.repoId.owner,
@@ -265,7 +260,7 @@ export class GitHubRepository extends KeaDisposable implements IKeaRepository {
 
   getCommitComments = async (commitSha: string, forceRequest?: boolean): Promise<CommitComment[] | Error> => {
     try {
-      const { data } = await this.#request(
+      const { data } = await this.#requestApi(
         "GET /repos/{owner}/{repo}/commits/{commit_sha}/comments",
         {
           owner: this.repoId.owner,
@@ -301,12 +296,17 @@ export class GitHubRepository extends KeaDisposable implements IKeaRepository {
         file_sha: sha1,
       });
 
-      return await this.#ctx.fileCache.set(this.repoId, sha1, result.data.content, this.#getResultHeaders(result));
+      return await this.#ctx.fileCache.set(this.repoId, sha1, result.data.content, getResultHeaders(result));
     } catch (error) {
       return new WrappedError(`Error fetching blob`, error);
     }
   };
 }
+
+const getResultHeaders = (response: OctokitResponse<unknown>): CacheResponseHeaders => ({
+  etag: response.headers.etag,
+  lastModified: response.headers["last-modified"],
+});
 
 const generateApiCacheKey = <R extends Route>(
   route: keyof Endpoints | R,
