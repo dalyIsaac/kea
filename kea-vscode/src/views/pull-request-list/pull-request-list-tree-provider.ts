@@ -1,8 +1,8 @@
 import { IKeaContext } from "../../core/context";
 import { Logger } from "../../core/logger";
+import { TreeNodeProvider } from "../tree-node-provider";
 import { PullRequestListNode } from "./pull-request-list-node";
 import { RepoTreeNode } from "./repo-tree-node";
-import { TreeNodeProvider } from "./tree-node-provider";
 
 type PullRequestListTreeNode = RepoTreeNode | PullRequestListNode;
 

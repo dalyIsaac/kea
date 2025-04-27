@@ -7,8 +7,8 @@ import { isSamePullRequest } from "../../../type-utils";
 import { PullRequestId } from "../../../types/kea";
 import { CommentTreeNode } from "../../common/comment-tree-node";
 import { ReviewCommentTreeNode } from "../../common/review-comment-tree-node";
-import { ITreeNodeProvider } from "../../pull-request-list/tree-node-provider";
 import { CollapsibleState, getCollapsibleState, IParentTreeNode, ITreeNode } from "../../tree-node";
+import { ITreeNodeProvider } from "../../tree-node-provider";
 
 /**
  * Parent tree node for comments.

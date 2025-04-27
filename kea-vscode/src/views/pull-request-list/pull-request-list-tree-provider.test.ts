@@ -90,10 +90,19 @@ suite("PullRequestListTreeProvider", () => {
 
   test("should clear cache when invalidating", () => {
     // When
-    treeProvider.refresh();
+    treeProvider.refresh(true);
 
     // Then
     assert.ok((contextStub.apiCache.clear as sinon.SinonStub).calledOnce);
+    assert.ok(fireStub.calledOnce);
+  });
+
+  test("should clear not cache when just refreshing", () => {
+    // When
+    treeProvider.refresh();
+
+    // Then
+    assert.equal((contextStub.apiCache.clear as sinon.SinonStub).callCount, 0);
     assert.ok(fireStub.calledOnce);
   });
 });
