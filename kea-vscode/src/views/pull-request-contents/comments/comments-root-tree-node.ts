@@ -49,6 +49,8 @@ export class CommentsRootTreeNode extends KeaDisposable implements IParentTreeNo
     if (this.#issueCommentsCount !== undefined || this.#reviewCommentsCount !== undefined) {
       const count = (this.#issueCommentsCount ?? 0) + (this.#reviewCommentsCount ?? 0);
       treeItem.description = count > 1 ? `${count} comments` : `${count} comment`;
+    } else {
+      void Promise.all([this.#repository.getPullRequestReviewComments(this.pullId), this.#repository.getIssueComments(this.pullId)]);
     }
 
     return treeItem;
