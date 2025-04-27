@@ -71,6 +71,7 @@ export type FileStatus = "added" | "removed" | "modified" | "renamed" | "copied"
 
 export interface CommitFile {
   filename: string;
+  previousFilename?: string | null;
   sha: string;
   status: FileStatus;
   additions: number;

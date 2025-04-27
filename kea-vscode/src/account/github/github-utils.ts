@@ -155,6 +155,7 @@ export const convertGitHubPullRequestReviewComment = (
  */
 export const convertGitHubFile = (file: RestEndpointMethodTypes["pulls"]["listFiles"]["response"]["data"][number]): CommitFile => ({
   filename: file.filename,
+  previousFilename: file.previous_filename ?? null,
   sha: file.sha,
   status: file.status,
   additions: file.additions,
