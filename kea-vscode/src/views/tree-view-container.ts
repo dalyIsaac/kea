@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import { KeaDisposable } from "../core/kea-disposable";
-import { TreeNodeProvider } from "./pull-request-list/tree-node-provider";
 import { IParentTreeNode, ITreeNode } from "./tree-node";
+import { TreeNodeProvider } from "./tree-node-provider";
 
 type NodeType<T> = T extends TreeNodeProvider<infer N> ? N : never;
 

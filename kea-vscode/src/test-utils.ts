@@ -15,8 +15,8 @@ import { IRepositoryManager } from "./repository/repository-manager";
 import { Commit, CommitComment, CommitFile, IssueComment, PullRequest, PullRequestComment, PullRequestGitRef, User } from "./types/kea";
 import { PullRequestContentsProvider } from "./views/pull-request-contents/pull-request-contents-provider";
 import { PullRequestListTreeProvider } from "./views/pull-request-list/pull-request-list-tree-provider";
-import { ITreeNodeProvider } from "./views/pull-request-list/tree-node-provider";
 import { ITreeNode } from "./views/tree-node";
+import { ITreeNodeProvider } from "./views/tree-node-provider";
 
 export const stubEvents = <TObject extends object, TProperties extends Array<keyof TObject>>(
   stub: TObject,

@@ -4,7 +4,7 @@ import { Logger } from "../../core/logger";
 import { IKeaRepository } from "../../repository/kea-repository";
 import { isSamePullRequest } from "../../type-utils";
 import { PullRequest, PullRequestId } from "../../types/kea";
-import { TreeNodeProvider } from "../pull-request-list/tree-node-provider";
+import { TreeNodeProvider } from "../tree-node-provider";
 import { CommentsRootTreeNode } from "./comments/comments-root-tree-node";
 import { CommitsRootTreeNode } from "./commits/commits-root-tree-node";
 import { FilesRootTreeNode } from "./files/files-root-tree-node";
