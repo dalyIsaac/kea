@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { IAccountKey } from "../../account/account";
-import { createCommentDecorationUri } from "../../decorations/decoration-schemes";
+import { createGitDecorationUri } from "../../decorations/decoration-schemes";
 import { CommitFile, FileComment, RepoId } from "../../types/kea";
 import { CollapsibleState, getCollapsibleState, IParentTreeNode } from "../tree-node";
 import { ReviewCommentTreeNode } from "./review-comment-tree-node";
@@ -22,12 +22,11 @@ export class FileTreeNode implements IParentTreeNode<ReviewCommentTreeNode> {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     this.fileName = file.filename.split("/").pop()!;
     this.collapsibleState = comments.length > 0 ? "collapsed" : "none";
-    this.#resourceUri = createCommentDecorationUri({
+    this.#resourceUri = createGitDecorationUri({
       accountKey,
       filePath: file.filename,
       repoId,
       fileStatus: file.status,
-      commentCount: comments.length,
     });
 
     this.#comments = comments;
