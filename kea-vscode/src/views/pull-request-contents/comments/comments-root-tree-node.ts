@@ -19,6 +19,9 @@ export class CommentsRootTreeNode extends KeaDisposable implements IParentTreeNo
   #repository: IKeaRepository;
   #provider: ITreeNodeProvider<ITreeNode>;
 
+  #issueCommentsCount: number | undefined;
+  #reviewCommentsCount: number | undefined;
+
   pullId: PullRequestId;
   collapsibleState: CollapsibleState = "none";
 
@@ -42,6 +45,12 @@ export class CommentsRootTreeNode extends KeaDisposable implements IParentTreeNo
     treeItem.resourceUri = this.#resourceUri;
     treeItem.contextValue = "commentsRoot";
     treeItem.iconPath = new vscode.ThemeIcon("comment-discussion");
+
+    if (this.#issueCommentsCount !== undefined || this.#reviewCommentsCount !== undefined) {
+      const count = (this.#issueCommentsCount ?? 0) + (this.#reviewCommentsCount ?? 0);
+      treeItem.description = count > 1 ? `${count} comments` : `${count} comment`;
+    }
+
     return treeItem;
   };
 
@@ -91,6 +100,13 @@ export class CommentsRootTreeNode extends KeaDisposable implements IParentTreeNo
       return;
     }
 
+    if ("issueId" in payload) {
+      this.#issueCommentsCount = payload.comments.length;
+    }
+    if ("pullId" in payload) {
+      this.#reviewCommentsCount = payload.comments.length;
+    }
+
     if (!isSamePullRequest(this.pullId, pullId)) {
       return;
     }
@@ -102,9 +118,10 @@ export class CommentsRootTreeNode extends KeaDisposable implements IParentTreeNo
 
     if (this.collapsibleState === "none") {
       this.collapsibleState = "collapsed";
-      this.#provider.refresh();
     } else {
       this.collapsibleState = "expanded";
     }
+
+    this.#provider.refresh();
   };
 }
