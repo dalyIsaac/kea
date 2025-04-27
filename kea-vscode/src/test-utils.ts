@@ -239,6 +239,7 @@ export const createRepositoryManagerStub = (props: Partial<IRepositoryManager> =
 export const createTreeDecorationManagerStub = (props: Partial<ITreeDecorationManager> = {}): ITreeDecorationManager => ({
   registerProviders: sinon.stub(),
   updateListeners: sinon.stub(),
+  dispose: sinon.stub(),
   ...props,
 });
 
