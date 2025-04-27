@@ -1,10 +1,15 @@
 import * as vscode from "vscode";
-import { KeaDisposable } from "../../core/kea-disposable";
-import { IParentTreeNode, isParentTreeNode, ITreeNode } from "../tree-node";
+import { KeaDisposable } from "../core/kea-disposable";
+import { IParentTreeNode, isParentTreeNode, ITreeNode } from "./tree-node";
 
 export interface ITreeNodeProvider<T extends ITreeNode | IParentTreeNode<T>> extends vscode.TreeDataProvider<T> {
   onDidChangeTreeData: vscode.Event<T | undefined | void>;
-  refresh: () => void;
+
+  /**
+   * Refreshes the tree view.
+   * @param invalidate If true, invalidates the cache before refreshing.
+   */
+  refresh: (invalidate?: boolean) => void;
 }
 
 export abstract class TreeNodeProvider<T extends ITreeNode | IParentTreeNode<T>> extends KeaDisposable implements ITreeNodeProvider<T> {
@@ -29,8 +34,10 @@ export abstract class TreeNodeProvider<T extends ITreeNode | IParentTreeNode<T>>
 
   protected abstract _invalidateCache(): void;
 
-  refresh = (): void => {
-    this._invalidateCache();
+  refresh = (invalidate = false): void => {
+    if (invalidate) {
+      this._invalidateCache();
+    }
     this._onDidChangeTreeData.fire();
   };
 }

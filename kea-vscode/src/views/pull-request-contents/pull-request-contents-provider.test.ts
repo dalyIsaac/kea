@@ -126,9 +126,9 @@ suite("PullRequestContentsProvider", () => {
     assert.deepStrictEqual(result, []);
   });
 
-  test("refresh calls onDidChangeTreeData and clears cache", async () => {
+  test("refresh calls onDidChangeTreeData and doesn't clear cache", async () => {
     // Given
-    const { provider, repository, ctx } = await createGetChildrenStubs();
+    const { provider, ctx } = await createGetChildrenStubs();
 
     let eventFired = false;
     provider.onDidChangeTreeData(() => {
@@ -140,10 +140,7 @@ suite("PullRequestContentsProvider", () => {
 
     // Then
     assert.strictEqual(eventFired, true);
-    assert.strictEqual((ctx.apiCache.invalidate as sinon.SinonStub).calledOnce, true);
-
-    const { owner, repo } = repository.repoId;
-    assert.strictEqual((ctx.apiCache.invalidate as sinon.SinonStub).calledWith(owner, repo), true);
+    assert.strictEqual((ctx.apiCache.invalidate as sinon.SinonStub).callCount, 0);
   });
 
   test("openPullRequest updates the pull request info", async () => {

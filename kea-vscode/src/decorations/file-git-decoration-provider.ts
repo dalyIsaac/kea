@@ -3,7 +3,7 @@ import { Logger } from "../core/logger";
 import { BaseTreeDecorationProvider } from "./base-tree-decoration-provider";
 import { DECORATION_SCHEMES, parseDecorationPayload } from "./decoration-schemes";
 
-export class FileCommentDecorationProvider extends BaseTreeDecorationProvider {
+export class FileGitDecorationProvider extends BaseTreeDecorationProvider {
   override provideFileDecoration = (uri: vscode.Uri, _token: vscode.CancellationToken): vscode.ProviderResult<vscode.FileDecoration> => {
     const payload = parseDecorationPayload(uri);
     if (payload instanceof Error) {
@@ -15,7 +15,7 @@ export class FileCommentDecorationProvider extends BaseTreeDecorationProvider {
       return null;
     }
 
-    const { fileStatus, commentCount } = payload.payload;
+    const { fileStatus } = payload.payload;
 
     let color: vscode.ThemeColor | undefined;
     let statusChar: string | undefined;
@@ -51,18 +51,8 @@ export class FileCommentDecorationProvider extends BaseTreeDecorationProvider {
         break;
     }
 
-    // There is a two-character limit for the badge, enforced by vscode.
-    let badge: string;
-    if (commentCount > 9) {
-      badge = "9+";
-    } else if (commentCount > 0) {
-      badge = `${commentCount}`;
-    } else {
-      badge = statusChar;
-    }
-
     return {
-      badge,
+      badge: statusChar,
       color,
     };
   };

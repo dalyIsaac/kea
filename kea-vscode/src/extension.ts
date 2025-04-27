@@ -1,8 +1,7 @@
 import * as vscode from "vscode";
 import { KeaContext } from "./core/context";
 import { Logger } from "./core/logger";
-import { CommentsRootDecorationProvider } from "./decorations/comments-root-decoration-provider";
-import { FileCommentDecorationProvider } from "./decorations/file-comment-decoration-provider";
+import { FileGitDecorationProvider } from "./decorations/file-git-decoration-provider";
 
 let ctx: KeaContext;
 
@@ -11,10 +10,7 @@ export function activate(extCtx: vscode.ExtensionContext) {
 
   ctx = new KeaContext(extCtx);
 
-  ctx.treeDecorationManager.registerProviders(
-    new FileCommentDecorationProvider(),
-    new CommentsRootDecorationProvider(ctx.repositoryManager),
-  );
+  ctx.treeDecorationManager.registerProviders(new FileGitDecorationProvider());
 }
 
 export async function deactivate() {
