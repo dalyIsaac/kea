@@ -13,6 +13,7 @@ export class FileTreeNode implements IParentTreeNode<ReviewCommentTreeNode> {
   #iconPath = new vscode.ThemeIcon("file");
   #tooltip = "File";
   #resourceUri: vscode.Uri;
+
   #comments: FileComment[];
   fileName: string;
 
@@ -38,6 +39,10 @@ export class FileTreeNode implements IParentTreeNode<ReviewCommentTreeNode> {
     treeItem.contextValue = this.#contextValue;
     treeItem.iconPath = this.#iconPath;
     treeItem.tooltip = this.#tooltip;
+
+    if (this.#comments.length > 0) {
+      treeItem.description = `${this.#comments.length} comment${this.#comments.length > 1 ? "s" : ""}`;
+    }
 
     return treeItem;
   };

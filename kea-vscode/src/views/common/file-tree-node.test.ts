@@ -29,6 +29,33 @@ suite("FileTreeNode", () => {
     // Then
     assert.strictEqual(treeItem.label, "file-tree-node.ts");
     assert.strictEqual(treeItem.tooltip, "File");
+    assert.strictEqual(treeItem.description, undefined);
+  });
+
+  test("FileTreeNode should display comment count in description when comments exist", () => {
+    // Given
+    const file = createFileStub({
+      filename: "src/views/pull-request/file-tree-node.ts",
+    });
+
+    // When - with single comment
+    const singleComment: PullRequestComment[] = [createPullRequestCommentStub({ createdAt: new Date("2023-01-01") })];
+    const singleCommentNode = new FileTreeNode(accountKey, repoId, file, singleComment);
+    const singleCommentTreeItem = singleCommentNode.getTreeItem();
+
+    // Then
+    assert.strictEqual(singleCommentTreeItem.description, "1 comment");
+
+    // When - with multiple comments
+    const multipleComments: PullRequestComment[] = [
+      createPullRequestCommentStub({ createdAt: new Date("2023-01-01") }),
+      createPullRequestCommentStub({ createdAt: new Date("2023-01-02") }),
+    ];
+    const multipleCommentsNode = new FileTreeNode(accountKey, repoId, file, multipleComments);
+    const multipleCommentsTreeItem = multipleCommentsNode.getTreeItem();
+
+    // Then
+    assert.strictEqual(multipleCommentsTreeItem.description, "2 comments");
   });
 
   test("FileTreeNode should contain multiple comments, sorted by createdAt", () => {
