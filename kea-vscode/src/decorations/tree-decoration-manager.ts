@@ -1,22 +1,24 @@
 import * as vscode from "vscode";
-import { disposeAll } from "../core/kea-disposable";
+import { disposeAll, IKeaDisposable, KeaDisposable } from "../core/kea-disposable";
 import { IKeaRepository, IssueCommentsPayload } from "../repository/kea-repository";
 import { BaseTreeDecorationProvider } from "./base-tree-decoration-provider";
 import { createCommentsRootDecorationUri } from "./decoration-schemes";
 
-export interface ITreeDecorationManager {
+export interface ITreeDecorationManager extends IKeaDisposable {
   registerProviders: (...providers: BaseTreeDecorationProvider[]) => void;
   updateListeners: (...repositories: IKeaRepository[]) => void;
 }
 
-export class TreeDecorationManager implements ITreeDecorationManager {
-  #repositoryListeners: vscode.Disposable[] = [];
-  #providers: BaseTreeDecorationProvider[] = [];
+export class TreeDecorationManager extends KeaDisposable implements ITreeDecorationManager {
+  #fileDecorationProviders: BaseTreeDecorationProvider[] = [];
 
-  registerProviders = (...providers: BaseTreeDecorationProvider[]): void => {
-    this.#providers.push(...providers);
-    for (const provider of providers) {
-      this.#repositoryListeners.push(vscode.window.registerFileDecorationProvider(provider));
+  #repositoryListeners: vscode.Disposable[] = [];
+
+  registerProviders = (...fileDecorationProviders: BaseTreeDecorationProvider[]): void => {
+    this.#fileDecorationProviders.push(...fileDecorationProviders);
+
+    for (const provider of fileDecorationProviders) {
+      this._registerDisposable(vscode.window.registerFileDecorationProvider(provider));
     }
   };
 
@@ -39,7 +41,7 @@ export class TreeDecorationManager implements ITreeDecorationManager {
       return;
     }
 
-    for (const provider of this.#providers) {
+    for (const provider of this.#fileDecorationProviders) {
       const uri = createCommentsRootDecorationUri({
         pullId: payload.issueId,
         accountKey: repository.account.accountKey,
@@ -47,5 +49,11 @@ export class TreeDecorationManager implements ITreeDecorationManager {
 
       provider.refresh(uri);
     }
+  };
+
+  protected override _dispose = async (): Promise<void> => {
+    disposeAll(this.#repositoryListeners);
+    this.#repositoryListeners = [];
+    return Promise.resolve();
   };
 }

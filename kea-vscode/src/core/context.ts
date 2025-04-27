@@ -47,7 +47,7 @@ export class KeaContext extends KeaDisposable implements IKeaContext {
     this.gitManager = this._registerDisposable(new GitManager(this));
     this.repositoryManager = new RepositoryManager();
 
-    this.treeDecorationManager = new TreeDecorationManager();
+    this.treeDecorationManager = this._registerDisposable(new TreeDecorationManager());
 
     const prListProvider = this._registerDisposable(new PullRequestListTreeProvider(this));
     this.pullRequestListTree = this._registerDisposable(new TreeViewContainer("kea.pullRequestList", prListProvider));
