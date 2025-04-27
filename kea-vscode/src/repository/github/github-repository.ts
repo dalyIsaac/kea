@@ -58,54 +58,6 @@ export class GitHubRepository extends KeaDisposable implements IKeaRepository {
     return Promise.resolve();
   };
 
-  #generateKey = <R extends Route>(
-    route: keyof Endpoints | R,
-    options?: R extends keyof Endpoints ? Endpoints[R]["parameters"] : never,
-  ): CacheKey | Error => {
-    const [method, path] = route.split(" ");
-
-    if (typeof method !== "string" || typeof path !== "string") {
-      return new WrappedError(`Invalid route: ${route}`);
-    }
-
-    if (!isMethod(method)) {
-      return new WrappedError(`Invalid method: ${method}`);
-    }
-
-    if (options === undefined) {
-      return new WrappedError(`Invalid options: ${options}`);
-    }
-
-    if (!("owner" in options) || !("repo" in options)) {
-      return new WrappedError("Missing owner or repo in options");
-    }
-
-    const owner = options.owner;
-    const repo = options.repo;
-
-    const pathParts = path.split("/");
-    const templatedEndpoint = pathParts
-      .map((part) => {
-        const isTemplate = part.startsWith("{") && part.endsWith("}");
-        if (!isTemplate) {
-          return part;
-        }
-
-        const paramName = part.slice(1, -1) as keyof typeof options & string;
-        const paramValue = options[paramName];
-        if (paramValue === undefined) {
-          Logger.warn(`Missing parameter ${paramName} in options`);
-          return part;
-        }
-
-        return String(paramValue);
-      })
-      .join("/");
-
-    const cacheKey: CacheKey = [owner, repo, templatedEndpoint, method];
-    return cacheKey;
-  };
-
   #getResultHeaders = (response: OctokitResponse<unknown>): CacheResponseHeaders => ({
     etag: response.headers.etag,
     lastModified: response.headers["last-modified"],
@@ -126,7 +78,7 @@ export class GitHubRepository extends KeaDisposable implements IKeaRepository {
   ): Promise<{ wasCached: boolean; data: R extends keyof Endpoints ? Endpoints[R]["response"]["data"] : never }> => {
     type RequestResult = R extends keyof Endpoints ? Endpoints[R]["response"] : never;
 
-    const cacheKey = this.#generateKey(route, options);
+    const cacheKey = generateApiCacheKey(route, options);
     if (cacheKey instanceof Error) {
       // We throw the error so that the caller can handle it.
       // eslint-disable-next-line no-restricted-syntax
@@ -355,3 +307,50 @@ export class GitHubRepository extends KeaDisposable implements IKeaRepository {
     }
   };
 }
+
+const generateApiCacheKey = <R extends Route>(
+  route: keyof Endpoints | R,
+  options?: R extends keyof Endpoints ? Endpoints[R]["parameters"] : never,
+): CacheKey | Error => {
+  const [method, path] = route.split(" ");
+
+  if (typeof method !== "string" || typeof path !== "string") {
+    return new WrappedError(`Invalid route: ${route}`);
+  }
+
+  if (!isMethod(method)) {
+    return new WrappedError(`Invalid method: ${method}`);
+  }
+
+  if (options === undefined) {
+    return new WrappedError(`Invalid options: ${options}`);
+  }
+
+  if (!("owner" in options) || !("repo" in options)) {
+    return new WrappedError("Missing owner or repo in options");
+  }
+
+  const owner = options.owner;
+  const repo = options.repo;
+
+  const pathParts = path.split("/");
+  const templatedEndpoint = pathParts
+    .map((part) => {
+      const isTemplate = part.startsWith("{") && part.endsWith("}");
+      if (!isTemplate) {
+        return part;
+      }
+
+      const paramName = part.slice(1, -1) as keyof typeof options & string;
+      const paramValue = options[paramName];
+      if (paramValue === undefined) {
+        Logger.warn(`Missing parameter ${paramName} in options`);
+        return part;
+      }
+
+      return String(paramValue);
+    })
+    .join("/");
+
+  return [owner, repo, templatedEndpoint, method];
+};
