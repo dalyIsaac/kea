@@ -7,8 +7,15 @@ import { CacheResponseHeaders, ICacheValue, IFullCacheValue } from "../common/co
 import { ILinkedListNode, LinkedList } from "../common/linked-list";
 
 interface NodeKey {
+  /**
+   * The ID of the repository.
+   */
   repoId: RepoId;
-  sha1: string;
+
+  /**
+   * The file ID - either a commit hash + path, or a blob URL.
+   */
+  fileId: string;
 }
 
 type FileCacheValue = ICacheValue<vscode.Uri>;
@@ -18,28 +25,28 @@ export interface IFileCache {
   /**
    * Gets the URI and headers of the file from the cache.
    * @param repoId The ID of the repository.
-   * @param sha1 The SHA1 hash of the file.
+   * @param fileId The file ID - either a commit hash + path, or a blob URL.
    * @returns The URI and headers of the file, or undefined if not found.
    */
-  get: (repoId: RepoId, sha1: string) => Promise<FileCacheValue | Error>;
+  get: (repoId: RepoId, fileId: string) => Promise<FileCacheValue | Error>;
 
   /**
    * Caches the file data and the headers for the given blob URL.
    * @param repoId The ID of the repository.
-   * @param sha1 The SHA1 hash of the file.
+   * @param fileId The file ID - either a commit hash + path, or a blob URL.
    * @param data The file data to cache.
    * @param headers The headers to cache.
    * @returns The URI of the cached file, or an error if the operation fails.
    */
-  set: (repoId: RepoId, sha1: string, data: string, headers: CacheResponseHeaders) => Promise<vscode.Uri | Error>;
+  set: (repoId: RepoId, fileId: string, data: string, headers: CacheResponseHeaders) => Promise<vscode.Uri | Error>;
 
   /**
-   * Invalidates the cache for the given repository ID and SHA1 hash.
+   * Invalidates the cache for the given repository ID and file ID.
    * @param repoId The ID of the repository.
-   * @param sha1 The SHA1 hash of the file. If not provided, all files for the repository will be invalidated.
+   * @param fileId The file ID. If not provided, all files for the repository will be invalidated.
    * @returns A promise that resolves when the cache is invalidated.
    */
-  invalidate: (repoId: RepoId, sha1?: string) => Promise<void>;
+  invalidate: (repoId: RepoId, fileId?: string) => Promise<void>;
 
   /**
    * Clears the entire cache.
@@ -81,16 +88,16 @@ export class FileCache extends KeaDisposable implements IFileCache {
 
   #createRepoUri = (repoId: RepoId): vscode.Uri => vscode.Uri.joinPath(this.#tempDir, repoId.owner, repoId.repo);
 
-  #createFileUri = (repoId: RepoId, sha1: string): vscode.Uri => vscode.Uri.joinPath(this.#createRepoUri(repoId), sha1);
+  #createFileUri = (repoId: RepoId, fileId: string): vscode.Uri => vscode.Uri.joinPath(this.#createRepoUri(repoId), fileId);
 
-  get = async (repoId: RepoId, sha1: string): Promise<FileCacheValue | Error> => {
+  get = async (repoId: RepoId, fileId: string): Promise<FileCacheValue | Error> => {
     const repoKey = this.#createRepoKey(repoId);
     const blobFilenameMap = this.#repoMap.get(repoKey);
     if (blobFilenameMap === undefined) {
       return new Error("Repository not found in cache");
     }
 
-    const cacheResult = blobFilenameMap.get(sha1);
+    const cacheResult = blobFilenameMap.get(fileId);
     if (cacheResult === undefined) {
       return new Error("File not found in cache");
     }
@@ -119,16 +126,16 @@ export class FileCache extends KeaDisposable implements IFileCache {
     };
   };
 
-  set = async (repoId: RepoId, sha1: string, data: string, headers: CacheResponseHeaders): Promise<vscode.Uri | Error> => {
+  set = async (repoId: RepoId, fileId: string, data: string, headers: CacheResponseHeaders): Promise<vscode.Uri | Error> => {
     const repoKey = this.#createRepoKey(repoId);
-    const nodeKey = { repoId, sha1 };
+    const nodeKey = { repoId, fileId };
 
     const linkedListNode: ILinkedListNode<NodeKey> = {
       key: nodeKey,
       next: null,
       prev: null,
     };
-    const fileUri = this.#createFileUri(repoId, sha1);
+    const fileUri = this.#createFileUri(repoId, fileId);
 
     this.#linkedList.add(linkedListNode);
 
@@ -140,7 +147,7 @@ export class FileCache extends KeaDisposable implements IFileCache {
     };
 
     const blobFilenameMap = this.#repoMap.get(repoKey) ?? new Map<string, FileCacheFullValue>();
-    blobFilenameMap.set(sha1, cacheValue);
+    blobFilenameMap.set(fileId, cacheValue);
 
     this.#repoMap.set(repoKey, blobFilenameMap);
 
@@ -170,16 +177,16 @@ export class FileCache extends KeaDisposable implements IFileCache {
       return;
     }
 
-    await this.invalidate(evictedKey.repoId, evictedKey.sha1);
+    await this.invalidate(evictedKey.repoId, evictedKey.fileId);
   };
 
-  invalidate = async (repoId: RepoId, sha1?: string): Promise<void> => {
-    if (sha1 === undefined) {
+  invalidate = async (repoId: RepoId, fileId?: string): Promise<void> => {
+    if (fileId === undefined) {
       await this.#removeRepoFiles(repoId);
       return;
     }
 
-    await this.#removeFile(repoId, sha1);
+    await this.#removeFile(repoId, fileId);
   };
 
   #removeRepoFiles = async (repoId: RepoId): Promise<void> => {
@@ -199,20 +206,20 @@ export class FileCache extends KeaDisposable implements IFileCache {
     this.#size -= blobFilenameMap.size;
   };
 
-  #removeFile = async (repoId: RepoId, sha1: string): Promise<void> => {
+  #removeFile = async (repoId: RepoId, fileId: string): Promise<void> => {
     const repoKey = this.#createRepoKey(repoId);
     const blobFilenameMap = this.#repoMap.get(repoKey);
     if (blobFilenameMap === undefined) {
       return;
     }
 
-    const cacheValue = blobFilenameMap.get(sha1);
+    const cacheValue = blobFilenameMap.get(fileId);
     if (cacheValue === undefined) {
       return;
     }
 
     this.#linkedList.remove(cacheValue.linkedListNode);
-    blobFilenameMap.delete(sha1);
+    blobFilenameMap.delete(fileId);
 
     try {
       await this.#fileSystem.delete(cacheValue.data, { recursive: false, useTrash: true });
