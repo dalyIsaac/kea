@@ -296,7 +296,7 @@ export class GitHubRepository extends KeaDisposable implements IKeaRepository {
         file_sha: sha1,
       });
 
-      return await this.#ctx.fileCache.set(this.repoId, sha1, result.data.content, getResultHeaders(result));
+      return await this.#ctx.fileCache.set(this.repoId, sha1, atob(result.data.content), getResultHeaders(result));
     } catch (error) {
       return new WrappedError(`Error fetching blob`, error);
     }

@@ -3,6 +3,7 @@ import { IKeaContext } from "../core/context";
 import { IKeaDisposable } from "../core/kea-disposable";
 import { createCheckoutPullRequest } from "./commands/checkout-pull-request";
 import { createOpenPullRequestCommand } from "./commands/open-pull-request";
+import { createShowFiles } from "./commands/show-files";
 import {
   createCollapsePullRequestTreeCommand,
   createRefreshPullRequestContentsCommand,
@@ -17,12 +18,14 @@ export const KEA_COMMANDS = {
   "kea.refreshPullRequestContents": createRefreshPullRequestContentsCommand,
   "kea.collapsePullRequestTree": createCollapsePullRequestTreeCommand,
   "kea.checkoutPullRequest": createCheckoutPullRequest,
+  "kea.showFiles": createShowFiles,
 } satisfies Record<string, CreateCommand>;
 
 export type KeaCommandMap = Record<keyof typeof KEA_COMMANDS, ReturnType<(typeof KEA_COMMANDS)[keyof typeof KEA_COMMANDS]>>;
 
 export interface VSCODE_COMMANDS {
-  "vscode.diff": [left: vscode.Uri, right: vscode.Uri, label: string, options: vscode.TextDocumentShowOptions];
+  "vscode.open": ["vscode.open", uri: vscode.Uri, options?: vscode.TextDocumentShowOptions, label?: string];
+  "vscode.diff": ["vscode.diff", left: vscode.Uri, right: vscode.Uri, title: string, options: vscode.TextDocumentShowOptions];
 }
 
 export interface KeaCommand<TCommand extends keyof typeof KEA_COMMANDS> {
@@ -45,28 +48,6 @@ export interface KeaCommand<TCommand extends keyof typeof KEA_COMMANDS> {
    * Arguments that the command handler should be invoked with.
    */
   args: Parameters<ReturnType<(typeof KEA_COMMANDS)[TCommand]>>;
-}
-
-export interface VscodeCommand<TCommand extends keyof VSCODE_COMMANDS> {
-  /**
-   * Title of the command, like `save`.
-   */
-  title: string;
-
-  /**
-   * The identifier of the actual command handler.
-   */
-  command: TCommand;
-
-  /**
-   * A tooltip for the command, when represented in the UI.
-   */
-  tooltip?: string | undefined;
-
-  /**
-   * Arguments that the command handler should be invoked with.
-   */
-  args: VSCODE_COMMANDS[TCommand];
 }
 
 export interface ICommandManager extends IKeaDisposable {

@@ -40,6 +40,7 @@ export class KeaContext extends KeaDisposable implements IKeaContext {
 
   constructor(extCtx: vscode.ExtensionContext) {
     super();
+
     this.apiCache = new ApiCache(MAX_API_CACHE_SIZE);
     this.fileCache = this._registerDisposable(new FileCache(extCtx, MAX_FILE_CACHE_SIZE));
 
