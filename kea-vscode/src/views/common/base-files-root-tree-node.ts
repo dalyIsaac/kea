@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { IKeaRepository } from "../../repository/kea-repository";
-import { CommitFile, FileComment } from "../../types/kea";
+import { Commit, CommitFile, FileComment } from "../../types/kea";
 import { IParentTreeNode } from "../tree-node";
 import { FileTreeNode } from "./file-tree-node";
 import { FolderTreeNode } from "./folder-tree-node";
@@ -18,12 +18,12 @@ export abstract class BaseFilesRootTreeNode implements IParentTreeNode<FilesRoot
 
   abstract getChildren(): Promise<FilesRootTreeNodeChild[]>;
 
-  protected _toTree = (files: CommitFile[], reviewComments: FileComment[]): FilesRootTreeNodeChild[] => {
+  protected _toTree = (files: CommitFile[], reviewComments: FileComment[], commit: Commit): FilesRootTreeNodeChild[] => {
     const sortedFiles = files.sort((a, b) => a.filename.localeCompare(b.filename));
     let roots: FilesRootTreeNodeChild[] = [];
 
     for (const entry of sortedFiles) {
-      roots = this.#fileToTree(roots, entry, reviewComments);
+      roots = this.#fileToTree(roots, entry, reviewComments, commit);
     }
 
     return roots;
@@ -34,16 +34,22 @@ export abstract class BaseFilesRootTreeNode implements IParentTreeNode<FilesRoot
    * @param roots All the root nodes of the tree - i.e., the folders and files at the top level.
    * @param fileToAdd The file to be added to the tree.
    * @param reviewComments All the review comments, including those for other files.
+   * @param commit The commit associated with the file.
    * @returns The updated tree with the new file added.
    */
-  #fileToTree = (roots: FilesRootTreeNodeChild[], fileToAdd: CommitFile, reviewComments: FileComment[]): FilesRootTreeNodeChild[] => {
+  #fileToTree = (
+    roots: FilesRootTreeNodeChild[],
+    fileToAdd: CommitFile,
+    reviewComments: FileComment[],
+    commit: Commit,
+  ): FilesRootTreeNodeChild[] => {
     const pathParts = fileToAdd.filename.split("/");
     const childrenOfParent = this.#getChildrenOfParent(roots, pathParts);
 
     const comments = reviewComments.filter((comment) => comment.path === fileToAdd.filename);
     const fileName = pathParts[pathParts.length - 1];
 
-    const fileNode = new FileTreeNode(this._repository.account.accountKey, this._repository.repoId, fileToAdd, comments);
+    const fileNode = new FileTreeNode(this._repository, fileToAdd, comments, commit);
 
     if (!childrenOfParent.some((node) => node instanceof FileTreeNode && node.fileName === fileName)) {
       childrenOfParent.push(fileNode);

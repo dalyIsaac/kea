@@ -3,19 +3,15 @@ import { IAccountKey } from "../../account/account";
 import { IKeaContext } from "../../core/context";
 import { Logger } from "../../core/logger";
 import { IKeaRepository } from "../../repository/kea-repository";
-import { FileStatus, RepoId } from "../../types/kea";
+import { KeaDiffTextDocumentProvider } from "../../text-document-content-providers/kea-diff-text-document-provider";
+import { FileRef, FileStatus, RepoId } from "../../types/kea";
 import { createVscodeCommand } from "../create-command";
-
-interface IShowFilesGitBlob {
-  fileSha: string;
-  filename: string;
-}
 
 export interface IShowFilesCommandArgs {
   accountKey: IAccountKey;
   repoId: RepoId;
-  oldFile?: IShowFilesGitBlob | undefined;
-  newFile: IShowFilesGitBlob;
+  oldFile?: FileRef | undefined;
+  newFile?: FileRef | undefined;
   status: FileStatus;
 }
 
@@ -37,40 +33,54 @@ class ShowFilesCommand {
   }
 
   async execute(): Promise<Error | void> {
-    const [oldFileUri, newFileUri] = await Promise.all([
-      this.#args.oldFile ? this.#getFileUri(this.#args.oldFile) : undefined,
-      this.#getFileUri(this.#args.newFile),
-    ]);
+    const [oldFileResult, newFileResult] = await Promise.all([this.#getFileUri(this.#args.oldFile), this.#getFileUri(this.#args.newFile)]);
 
-    if (oldFileUri instanceof Error) {
-      Logger.error("Error getting old file URI", oldFileUri);
-      vscode.window.showErrorMessage(`Error getting old file URI: ${oldFileUri.message}`);
+    if (oldFileResult instanceof Error) {
+      Logger.error("Error getting old file URI", oldFileResult);
+      vscode.window.showErrorMessage(`Error getting old file URI: ${oldFileResult.message}`);
       return;
     }
 
-    if (newFileUri instanceof Error) {
-      Logger.error("Error getting new file URI", newFileUri);
-      vscode.window.showErrorMessage(`Error getting new file URI: ${newFileUri.message}`);
+    if (newFileResult instanceof Error) {
+      Logger.error("Error getting new file URI", newFileResult);
+      vscode.window.showErrorMessage(`Error getting new file URI: ${newFileResult.message}`);
       return;
     }
 
     const options: vscode.TextDocumentShowOptions = {
       preview: true,
-      viewColumn: vscode.ViewColumn.Beside,
+      // viewColumn: vscode.ViewColumn.Beside,
     };
 
-    if (oldFileUri === undefined) {
-      await vscode.commands.executeCommand(...createVscodeCommand("vscode.open", newFileUri, options, this.#args.newFile.filename));
-    } else {
-      const label = `${this.#args.oldFile?.filename} ↔ ${this.#args.newFile.filename}`;
-      await vscode.commands.executeCommand(...createVscodeCommand("vscode.diff", oldFileUri, newFileUri, label, options));
+    if (oldFileResult === undefined && newFileResult !== undefined) {
+      await vscode.commands.executeCommand(...createVscodeCommand("vscode.open", newFileResult.uri, options, newFileResult.filename));
+      return;
     }
+
+    if (oldFileResult !== undefined && newFileResult === undefined) {
+      await vscode.commands.executeCommand(...createVscodeCommand("vscode.open", oldFileResult.uri, options, oldFileResult.filename));
+      return;
+    }
+
+    if (oldFileResult !== undefined && newFileResult !== undefined) {
+      const label = `${oldFileResult.filename} ↔ ${newFileResult.filename}`;
+      await vscode.commands.executeCommand(...createVscodeCommand("vscode.diff", oldFileResult.uri, newFileResult.uri, label, options));
+      return;
+    }
+
+    Logger.error("Both old and new file URIs are undefined");
+    vscode.window.showErrorMessage("Both old and new file URIs are undefined");
   }
 
-  #getFileUri = async (file: IShowFilesGitBlob): Promise<vscode.Uri | Error> => {
+  #getFileUri = async (file: FileRef | undefined): Promise<{ uri: vscode.Uri; filename: string } | undefined | Error> => {
+    if (file === undefined) {
+      Logger.debug("File reference is undefined");
+      return undefined;
+    }
+
     const fileCacheValue = await this.#ctx.fileCache.get(this.#args.repoId, file.fileSha);
     if (!(fileCacheValue instanceof Error)) {
-      return fileCacheValue.data;
+      return { uri: fileCacheValue.data, filename: file.filename };
     }
 
     const repository = this.#repository ?? this.#ctx.repositoryManager.getRepositoryById(this.#args.accountKey, this.#args.repoId);
@@ -79,6 +89,11 @@ class ShowFilesCommand {
     }
 
     this.#repository = repository;
-    return this.#repository.getBlobUri(file.fileSha);
+    const blobUri = await this.#repository.getBlobUri(file.fileSha);
+
+    if (blobUri instanceof Error) {
+      return blobUri;
+    }
+    return { uri: KeaDiffTextDocumentProvider.createKeaDiffUri(blobUri), filename: file.filename };
   };
 }

@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { Logger } from "../../../core/logger";
 import { IKeaRepository } from "../../../repository/kea-repository";
 import { PullRequestId } from "../../../types/kea";
 import { BaseFilesRootTreeNode, FilesRootTreeNodeChild } from "../../common/base-files-root-tree-node";
@@ -30,9 +31,10 @@ export class FilesRootTreeNode extends BaseFilesRootTreeNode {
   };
 
   getChildren = async (): Promise<FilesRootTreeNodeChild[]> => {
-    const [files, reviewComments] = await Promise.all([
+    const [files, reviewComments, pullRequestCommits] = await Promise.all([
       this._repository.getPullRequestFiles(this.pullId),
       this._repository.getPullRequestReviewComments(this.pullId),
+      this._repository.getPullRequestCommits(this.pullId),
     ]);
 
     if (files instanceof Error) {
@@ -40,11 +42,22 @@ export class FilesRootTreeNode extends BaseFilesRootTreeNode {
       return [];
     }
 
-    if (reviewComments instanceof Error) {
-      vscode.window.showErrorMessage(`Error fetching pull request review comments: ${reviewComments.message}`);
-      return this._toTree(files, []);
+    if (pullRequestCommits instanceof Error) {
+      vscode.window.showErrorMessage(`Error fetching pull request commits: ${pullRequestCommits.message}`);
+      return [];
     }
 
-    return this._toTree(files, reviewComments);
+    const lastCommit = pullRequestCommits.at(-1);
+    if (lastCommit === undefined) {
+      Logger.warn(`No commits found for pull request ${this.pullId.owner}/${this.pullId.repo}/${this.pullId.number}`);
+      return [];
+    }
+
+    if (reviewComments instanceof Error) {
+      vscode.window.showErrorMessage(`Error fetching pull request review comments: ${reviewComments.message}`);
+      return this._toTree(files, [], lastCommit);
+    }
+
+    return this._toTree(files, reviewComments, lastCommit);
   };
 }

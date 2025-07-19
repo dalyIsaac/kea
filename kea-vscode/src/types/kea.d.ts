@@ -83,6 +83,11 @@ export interface CommitFile {
   contentsUrl: string;
 }
 
+export interface FileRef {
+  fileSha: string;
+  filename: string;
+}
+
 export interface User {
   name?: string | null;
   login: string | null;
@@ -107,4 +112,8 @@ export interface Commit {
     deletions?: number | null;
   };
   url: string;
+  parents: Array<{
+    sha: string;
+    url: string;
+  }>;
 }

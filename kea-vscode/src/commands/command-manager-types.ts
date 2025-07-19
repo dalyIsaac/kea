@@ -25,7 +25,13 @@ export type KeaCommandMap = Record<keyof typeof KEA_COMMANDS, ReturnType<(typeof
 
 export interface VSCODE_COMMANDS {
   "vscode.open": ["vscode.open", uri: vscode.Uri, options?: vscode.TextDocumentShowOptions, label?: string];
-  "vscode.diff": ["vscode.diff", left: vscode.Uri, right: vscode.Uri, title: string, options: vscode.TextDocumentShowOptions];
+  "vscode.diff": [
+    "vscode.diff",
+    left: vscode.Uri | undefined,
+    right: vscode.Uri | undefined,
+    title: string,
+    options: vscode.TextDocumentShowOptions,
+  ];
 }
 
 export interface KeaCommand<TCommand extends keyof typeof KEA_COMMANDS> {

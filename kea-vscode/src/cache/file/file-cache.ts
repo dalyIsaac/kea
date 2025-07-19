@@ -31,6 +31,14 @@ export interface IFileCache {
   get: (repoId: RepoId, fileId: string) => Promise<FileCacheValue | Error>;
 
   /**
+   * Reads the file content from the cache.
+   * @param repoId The ID of the repository.
+   * @param fileId The file ID - either a commit hash + path, or a blob URL.
+   * @returns The file content as a Uint8Array, or an error if the operation fails.
+   */
+  readFile: (repoId: RepoId, fileId: string) => Promise<Uint8Array | Error>;
+
+  /**
    * Caches the file data and the headers for the given blob URL.
    * @param repoId The ID of the repository.
    * @param fileId The file ID - either a commit hash + path, or a blob URL.
@@ -124,6 +132,20 @@ export class FileCache extends KeaDisposable implements IFileCache {
       headers: cacheResult.headers,
       data: cacheResult.data,
     };
+  };
+
+  readFile = async (repoId: RepoId, fileId: string): Promise<Uint8Array | Error> => {
+    const cacheValue = await this.get(repoId, fileId);
+    if (cacheValue instanceof Error) {
+      return cacheValue;
+    }
+
+    try {
+      return await this.#fileSystem.readFile(cacheValue.data);
+    } catch (error) {
+      Logger.error("Error reading file content", error);
+      return new WrappedError("Error reading file content", error);
+    }
   };
 
   set = async (repoId: RepoId, fileId: string, data: string, headers: CacheResponseHeaders): Promise<vscode.Uri | Error> => {

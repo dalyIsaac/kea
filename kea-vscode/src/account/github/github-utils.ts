@@ -182,6 +182,10 @@ export const convertGitHubCommit = (commit: RestEndpointMethodTypes["pulls"]["li
       url: commit.commit.tree.url,
     },
   },
+  parents: commit.parents.map((parent) => ({
+    sha: parent.sha,
+    url: parent.url,
+  })),
   ...(commit.stats
     ? {
         stats: {
