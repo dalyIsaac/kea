@@ -6,4 +6,9 @@ export class WrappedError extends Error {
     this.name = "KeaError";
     this.inner = inner;
   }
+
+  override toString = (): string => {
+    const innerMessage = this.inner instanceof Error ? this.inner.message : String(this.inner);
+    return `${this.name}: ${this.message} (Inner: ${innerMessage})`;
+  };
 }
