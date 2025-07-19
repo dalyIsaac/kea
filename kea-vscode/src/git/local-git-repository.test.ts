@@ -1,9 +1,9 @@
 import * as assert from "assert";
-import * as fs from "fs";
-import * as path from "path";
-import * as os from "os";
 import { execFileSync } from "child_process";
-import { createApiCacheStub } from "../../test-utils";
+import * as fs from "fs";
+import * as os from "os";
+import * as path from "path";
+import { createApiCacheStub } from "../test-utils";
 import { LocalGitRepository } from "./local-git-repository";
 
 suite("LocalGitRepository", () => {
