@@ -248,6 +248,7 @@ export const createGitManagerStub = (props: Partial<IGitManager> = {}): IGitMana
   getRepositoryInfo: sinon.stub(),
   getGitRepository: sinon.stub(),
   getGitBranchForRepository: sinon.stub(),
+  getLocalGitRepository: sinon.stub(),
   onRepositoryStateChanged: sinon.stub(),
   dispose: sinon.stub(),
   ...props,

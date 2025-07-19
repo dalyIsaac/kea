@@ -24,6 +24,14 @@ export class PullRequestContentsProvider extends TreeNodeProvider<PullRequestTre
   constructor(ctx: IKeaContext) {
     super();
     this.#ctx = ctx;
+    
+    // Listen for git repository state changes to refresh commits tree
+    this._registerDisposable(
+      this.#ctx.gitManager.onRepositoryStateChanged(() => {
+        // Refresh the commits tree when git state changes (e.g., branch checkout)
+        this._onDidChangeTreeData.fire();
+      })
+    );
   }
 
   override _getRootChildren = async (): Promise<PullRequestTreeNode[]> => {
@@ -43,7 +51,7 @@ export class PullRequestContentsProvider extends TreeNodeProvider<PullRequestTre
 
       this.#commentsRootTreeNode = new CommentsRootTreeNode(repository, pullId, this);
       this.#filesRootTreeNode = new FilesRootTreeNode(repository, pullId);
-      this.#commitsRootTreeNode = new CommitsRootTreeNode(repository, pullId);
+      this.#commitsRootTreeNode = new CommitsRootTreeNode(repository, pullId, this.#ctx);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion

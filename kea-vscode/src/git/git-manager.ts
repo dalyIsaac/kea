@@ -6,6 +6,7 @@ import { Logger } from "../core/logger";
 import { WrappedError } from "../core/wrapped-error";
 import { IKeaRepository } from "../repository/kea-repository";
 import { Branch, GitApi, GitExtension, Repository } from "../types/git";
+import { ILocalGitRepository, LocalGitRepository } from "./local-git-repository";
 
 export interface RepoInfo {
   repository: IKeaRepository;
@@ -18,6 +19,7 @@ export interface IGitManager extends IKeaDisposable {
   getRepositoryInfo: (workspace: vscode.WorkspaceFolder) => Promise<RepoInfo | Error>;
   getGitRepository: (workspaceFolder: vscode.WorkspaceFolder) => Promise<Repository | Error>;
   getGitBranchForRepository: (workspaceFolder: vscode.WorkspaceFolder) => Promise<Branch | Error>;
+  getLocalGitRepository: (workspaceFolder: vscode.WorkspaceFolder) => Promise<ILocalGitRepository | Error>;
 
   onRepositoryStateChanged: vscode.Event<Repository>;
 }
@@ -27,6 +29,7 @@ export class GitManager extends KeaDisposable implements IGitManager {
   #gitApi: GitApi | undefined = undefined;
 
   #openRepos = new Map<vscode.Uri, Repository>();
+  #localGitRepos = new Map<vscode.Uri, ILocalGitRepository>();
 
   #onRepositoryStateChanged = new vscode.EventEmitter<Repository>();
   onRepositoryStateChanged = this.#onRepositoryStateChanged.event;
@@ -149,5 +152,26 @@ export class GitManager extends KeaDisposable implements IGitManager {
 
   #onRepositoryStateChange = (repo: Repository): void => {
     this.#onRepositoryStateChanged.fire(repo);
+  };
+
+  getLocalGitRepository = async (workspaceFolder: vscode.WorkspaceFolder): Promise<ILocalGitRepository | Error> => {
+    const cachedLocalRepo = this.#localGitRepos.get(workspaceFolder.uri);
+    if (cachedLocalRepo) {
+      return cachedLocalRepo;
+    }
+
+    const localRepo = new LocalGitRepository(workspaceFolder.uri.fsPath, this.#ctx.apiCache);
+    const isValid = await localRepo.validateRepository();
+    if (isValid instanceof Error) {
+      return new WrappedError(`Invalid Git repository at ${workspaceFolder.uri.fsPath}`, isValid);
+    }
+
+    if (!isValid) {
+      return new Error(`No valid Git repository found at ${workspaceFolder.uri.fsPath}`);
+    }
+
+    this.#localGitRepos.set(workspaceFolder.uri, localRepo);
+    this._registerDisposable(localRepo);
+    return localRepo;
   };
 }

@@ -1,5 +1,6 @@
 import * as assert from "assert";
 import * as vscode from "vscode";
+import { IKeaContext } from "../../../core/context";
 import { IKeaRepository } from "../../../repository/kea-repository";
 import { PullRequestId } from "../../../types/kea";
 import { CommitsRootTreeNode } from "./commits-root-tree-node";
@@ -10,10 +11,22 @@ suite("CommitsRootTreeNode", () => {
     getPullRequestCommits: async () => Promise.resolve([]),
   } as unknown as IKeaRepository;
   const mockPullId = { owner: "test", repo: "test", number: 123 } as PullRequestId;
+  const mockContext = {
+    gitManager: {
+      getLocalGitRepository: () => Promise.resolve(new Error("No local repo")),
+    },
+    pullRequestContents: {
+      treeViewProvider: {
+        refresh: () => {
+          // Mock refresh function
+        },
+      },
+    },
+  } as unknown as IKeaContext;
 
   test("should initialize with correct default collapsible state", () => {
     // Given/When
-    const commitsRootTreeNode = new CommitsRootTreeNode(mockRepository, mockPullId);
+    const commitsRootTreeNode = new CommitsRootTreeNode(mockRepository, mockPullId, mockContext);
 
     // Then
     assert.strictEqual(commitsRootTreeNode.collapsibleState, "collapsed");
@@ -21,7 +34,7 @@ suite("CommitsRootTreeNode", () => {
 
   test("getTreeItem should return TreeItem with correct properties", () => {
     // Given
-    const commitsRootTreeNode = new CommitsRootTreeNode(mockRepository, mockPullId);
+    const commitsRootTreeNode = new CommitsRootTreeNode(mockRepository, mockPullId, mockContext);
 
     // When
     const treeItem = commitsRootTreeNode.getTreeItem();
@@ -35,7 +48,7 @@ suite("CommitsRootTreeNode", () => {
 
   test("getTreeItem should respect custom collapsibleState", () => {
     // Given
-    const commitsRootTreeNode = new CommitsRootTreeNode(mockRepository, mockPullId);
+    const commitsRootTreeNode = new CommitsRootTreeNode(mockRepository, mockPullId, mockContext);
     commitsRootTreeNode.collapsibleState = "expanded";
 
     // When
@@ -47,7 +60,7 @@ suite("CommitsRootTreeNode", () => {
 
   test("getChildren should return empty array when repository returns empty commits", async () => {
     // Given
-    const commitsRootTreeNode = new CommitsRootTreeNode(mockRepository, mockPullId);
+    const commitsRootTreeNode = new CommitsRootTreeNode(mockRepository, mockPullId, mockContext);
 
     // When
     const children = await commitsRootTreeNode.getChildren();
@@ -62,7 +75,7 @@ suite("CommitsRootTreeNode", () => {
     const repoWithCommits = {
       getPullRequestCommits: async () => Promise.resolve([mockCommit]),
     } as unknown as IKeaRepository;
-    const commitsRootTreeNode = new CommitsRootTreeNode(repoWithCommits, mockPullId);
+    const commitsRootTreeNode = new CommitsRootTreeNode(repoWithCommits, mockPullId, mockContext);
 
     // When
     const children = await commitsRootTreeNode.getChildren();
@@ -78,7 +91,7 @@ suite("CommitsRootTreeNode", () => {
     const errorRepo = {
       getPullRequestCommits: async () => Promise.resolve(new Error("Test error")),
     } as unknown as IKeaRepository;
-    const commitsRootTreeNode = new CommitsRootTreeNode(errorRepo, mockPullId);
+    const commitsRootTreeNode = new CommitsRootTreeNode(errorRepo, mockPullId, mockContext);
 
     // When
     const children = await commitsRootTreeNode.getChildren();

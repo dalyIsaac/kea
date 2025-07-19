@@ -7,6 +7,19 @@ import { WrappedError } from "../core/wrapped-error";
 
 const execFileAsync = promisify(execFile);
 
+export interface BranchStatus {
+  ahead: number;
+  behind: number;
+  remoteBranch: string | null;
+}
+
+export interface LocalCommit {
+  sha: string;
+  message: string;
+  author: string;
+  date: Date;
+}
+
 export interface ILocalGitRepository {
   /**
    * Get the contents of a specific file at a given commit.
@@ -15,6 +28,31 @@ export interface ILocalGitRepository {
    * @returns The file contents as a string, or an Error if the operation fails.
    */
   getFileAtCommit(commitSha: string, filePath: string): Promise<string | Error>;
+
+  /**
+   * Get commits from the current branch.
+   * @param limit Maximum number of commits to retrieve (default: 50).
+   * @returns Array of commits from the current branch.
+   */
+  getBranchCommits(limit?: number): Promise<LocalCommit[] | Error>;
+
+  /**
+   * Get the ahead/behind status compared to the remote tracking branch.
+   * @returns Status showing commits ahead and behind the remote.
+   */
+  getBranchStatus(): Promise<BranchStatus | Error>;
+
+  /**
+   * Get the current branch name.
+   * @returns The name of the current branch.
+   */
+  getCurrentBranch(): Promise<string | Error>;
+
+  /**
+   * Get the current HEAD commit SHA.
+   * @returns The current HEAD commit SHA.
+   */
+  getCurrentCommit(): Promise<string | Error>;
 }
 
 /**
@@ -121,5 +159,101 @@ export class LocalGitRepository extends KeaDisposable implements ILocalGitReposi
       return false;
     }
     return true;
+  };
+
+  /**
+   * Get commits from the current branch.
+   */
+  getBranchCommits = async (limit = 50): Promise<LocalCommit[] | Error> => {
+    const result = await this.#executeGitCommand([
+      "log",
+      "--oneline",
+      "--format=%H|%s|%an|%ad",
+      "--date=iso",
+      `-${limit}`,
+    ]);
+
+    if (result instanceof Error) {
+      return new WrappedError("Failed to get branch commits", result);
+    }
+
+    const lines = result.trim().split("\n").filter((line) => line.trim());
+    const commits: LocalCommit[] = [];
+
+    for (const line of lines) {
+      const parts = line.split("|");
+      if (parts.length >= 4 && parts[0] && parts[1] && parts[2] && parts[3]) {
+        commits.push({
+          sha: parts[0],
+          message: parts[1],
+          author: parts[2],
+          date: new Date(parts[3]),
+        });
+      }
+    }
+
+    return commits;
+  };
+
+  /**
+   * Get the ahead/behind status compared to the remote tracking branch.
+   */
+  getBranchStatus = async (): Promise<BranchStatus | Error> => {
+    // First get the current branch
+    const currentBranch = await this.getCurrentBranch();
+    if (currentBranch instanceof Error) {
+      return currentBranch;
+    }
+
+    // Get the remote tracking branch
+    const remoteResult = await this.#executeGitCommand(["rev-parse", "--abbrev-ref", `${currentBranch}@{upstream}`]);
+    let remoteBranch: string | null = null;
+    if (!(remoteResult instanceof Error)) {
+      remoteBranch = remoteResult.trim();
+    }
+
+    // If no remote tracking branch, return zeros
+    if (!remoteBranch) {
+      return {
+        ahead: 0,
+        behind: 0,
+        remoteBranch: null,
+      };
+    }
+
+    // Get ahead/behind counts
+    const statusResult = await this.#executeGitCommand(["rev-list", "--left-right", "--count", `${remoteBranch}...HEAD`]);
+    if (statusResult instanceof Error) {
+      return new WrappedError("Failed to get branch status", statusResult);
+    }
+
+    const counts = statusResult.trim().split("\t");
+    if (counts.length !== 2 || !counts[0] || !counts[1]) {
+      return new Error("Unexpected git rev-list output format");
+    }
+
+    const behind = parseInt(counts[0], 10);
+    const ahead = parseInt(counts[1], 10);
+
+    if (isNaN(ahead) || isNaN(behind)) {
+      return new Error("Invalid ahead/behind counts");
+    }
+
+    return {
+      ahead,
+      behind,
+      remoteBranch,
+    };
+  };
+
+  /**
+   * Get the current branch name.
+   */
+  getCurrentBranch = async (): Promise<string | Error> => {
+    const result = await this.#executeGitCommand(["rev-parse", "--abbrev-ref", "HEAD"]);
+    if (result instanceof Error) {
+      return new WrappedError("Failed to get current branch", result);
+    }
+    return result.trim();
   };
 }
