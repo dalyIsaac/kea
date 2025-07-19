@@ -5,7 +5,7 @@ import { IKeaRepository } from "../../../repository/kea-repository";
 import { PullRequestId } from "../../../types/kea";
 import { CollapsibleState, getCollapsibleState, IParentTreeNode } from "../../tree-node";
 import { CommitTreeNode } from "./commit-tree-node";
-import { LocalCommitTreeNode } from "./local-commit-tree-node";
+import { LocalCommitTreeNode, LocalCommitTreeNodeChild } from "./local-commit-tree-node";
 
 /**
  * Provides information about the commits in the current pull request.

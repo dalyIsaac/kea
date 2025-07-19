@@ -20,6 +20,11 @@ export interface LocalCommit {
   date: Date;
 }
 
+export interface LocalCommitFile {
+  filename: string;
+  status: "A" | "M" | "D" | "R" | "C"; // Added, Modified, Deleted, Renamed, Copied
+}
+
 export interface ILocalGitRepository {
   /**
    * Get the contents of a specific file at a given commit.
@@ -53,6 +58,13 @@ export interface ILocalGitRepository {
    * @returns The current HEAD commit SHA.
    */
   getCurrentCommit(): Promise<string | Error>;
+
+  /**
+   * Get files changed in a specific commit.
+   * @param commitSha The commit SHA to get files for.
+   * @returns Array of files changed in the commit.
+   */
+  getCommitFiles(commitSha: string): Promise<LocalCommitFile[] | Error>;
 }
 
 /**
@@ -255,5 +267,50 @@ export class LocalGitRepository extends KeaDisposable implements ILocalGitReposi
       return new WrappedError("Failed to get current branch", result);
     }
     return result.trim();
+  };
+
+  /**
+   * Get files changed in a specific commit.
+   */
+  getCommitFiles = async (commitSha: string): Promise<LocalCommitFile[] | Error> => {
+    if (!commitSha) {
+      return new Error("commitSha is required");
+    }
+
+    // Validate commit SHA format (basic validation)
+    if (!/^[a-f0-9]{7,40}$/i.test(commitSha)) {
+      return new Error(`Invalid commit SHA format: ${commitSha}`);
+    }
+
+    // Use git diff-tree to get files changed in the commit
+    const result = await this.#executeGitCommand([
+      "diff-tree",
+      "--no-commit-id",
+      "--name-status",
+      "-r",
+      commitSha
+    ]);
+
+    if (result instanceof Error) {
+      return new WrappedError(`Failed to get files for commit ${commitSha}`, result);
+    }
+
+    const lines = result.trim().split("\n").filter((line) => line.trim());
+    const files: LocalCommitFile[] = [];
+
+    for (const line of lines) {
+      const parts = line.split("\t");
+      if (parts.length >= 2 && parts[0] && parts[1]) {
+        const status = parts[0] as "A" | "M" | "D" | "R" | "C";
+        const filename = parts[1];
+        
+        files.push({
+          status,
+          filename,
+        });
+      }
+    }
+
+    return files;
   };
 }
