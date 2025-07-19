@@ -5,7 +5,7 @@ import { IKeaContext } from "../core/context";
 import { Logger } from "../core/logger";
 import { createKeaContextStub } from "../test-utils";
 import { CommandManager } from "./command-manager";
-import { COMMANDS } from "./command-manager-types";
+import { KEA_COMMANDS } from "./command-manager-types";
 
 suite("CommandManager", () => {
   let sandbox: sinon.SinonSandbox;
@@ -21,13 +21,13 @@ suite("CommandManager", () => {
 
     // Create stub for each command creator function
     commandStubs = {};
-    Object.keys(COMMANDS).forEach((commandName) => {
+    Object.keys(KEA_COMMANDS).forEach((commandName) => {
       const commandStub = sandbox.stub().resolves();
       commandStubs[commandName] = commandStub;
 
       // Mock the command creation function to return our stub
       // @ts-expect-error - Using sinon to stub an object with string indices
-      sandbox.stub(COMMANDS, commandName).returns(() => commandStub);
+      sandbox.stub(KEA_COMMANDS, commandName).returns(() => commandStub);
     });
 
     // Stub VS Code's registerCommand and executeCommand functions
@@ -49,7 +49,7 @@ suite("CommandManager", () => {
     new CommandManager(contextStub);
 
     // Then
-    const commandNames = Object.keys(COMMANDS);
+    const commandNames = Object.keys(KEA_COMMANDS);
     assert.strictEqual(registerCommandStub.callCount, commandNames.length, `Should register ${commandNames.length} commands`);
 
     commandNames.forEach((commandName) => {
@@ -64,7 +64,7 @@ suite("CommandManager", () => {
 
     // Then - can't directly access private field, but we can test indirectly
     // by checking that commands were registered
-    assert.strictEqual(registerCommandStub.callCount, Object.keys(COMMANDS).length, "Should register all commands from COMMANDS");
+    assert.strictEqual(registerCommandStub.callCount, Object.keys(KEA_COMMANDS).length, "Should register all commands from COMMANDS");
   });
 
   test("executeCommand calls VS Code's executeCommand with correct parameters", async () => {
@@ -107,7 +107,7 @@ suite("CommandManager", () => {
     await commandManager.dispose();
 
     // Then
-    const commandCount = Object.keys(COMMANDS).length;
+    const commandCount = Object.keys(KEA_COMMANDS).length;
     assert.strictEqual(disposeSpy.callCount, commandCount, `Should dispose ${commandCount} registered commands`);
   });
 });

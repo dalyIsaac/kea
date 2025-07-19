@@ -7,6 +7,7 @@ import { ICommandManager } from "../commands/command-manager-types";
 import { ITreeDecorationManager, TreeDecorationManager } from "../decorations/tree-decoration-manager";
 import { GitManager, IGitManager } from "../git/git-manager";
 import { IRepositoryManager, RepositoryManager } from "../repository/repository-manager";
+import { KeaDiffTextDocumentProvider } from "../text-document-content-providers/kea-diff-text-document-provider";
 import { PullRequestContentsProvider } from "../views/pull-request-contents/pull-request-contents-provider";
 import { PullRequestListTreeProvider } from "../views/pull-request-list/pull-request-list-tree-provider";
 import { ITreeViewContainer, TreeViewContainer } from "../views/tree-view-container";
@@ -37,13 +38,15 @@ export class KeaContext extends KeaDisposable implements IKeaContext {
   fileCache: IFileCache;
   pullRequestListTree: ITreeViewContainer<PullRequestListTreeProvider>;
   pullRequestContents: ITreeViewContainer<PullRequestContentsProvider>;
+  diffTextDocumentProvider: vscode.TextDocumentContentProvider;
 
   constructor(extCtx: vscode.ExtensionContext) {
     super();
+
     this.apiCache = new ApiCache(MAX_API_CACHE_SIZE);
     this.fileCache = this._registerDisposable(new FileCache(extCtx, MAX_FILE_CACHE_SIZE));
 
-    this.accountManager = new AccountManager();
+    this.accountManager = new AccountManager(this);
     this.gitManager = this._registerDisposable(new GitManager(this));
     this.repositoryManager = new RepositoryManager();
 
@@ -54,6 +57,11 @@ export class KeaContext extends KeaDisposable implements IKeaContext {
 
     const prContentsProvider = this._registerDisposable(new PullRequestContentsProvider(this));
     this.pullRequestContents = this._registerDisposable(new TreeViewContainer("kea.pullRequestContents", prContentsProvider));
+
+    this.diffTextDocumentProvider = new KeaDiffTextDocumentProvider(this);
+    this._registerDisposable(
+      vscode.workspace.registerTextDocumentContentProvider(KeaDiffTextDocumentProvider.scheme, this.diffTextDocumentProvider),
+    );
 
     this.commandManager = this._registerDisposable(new CommandManager(this));
   }

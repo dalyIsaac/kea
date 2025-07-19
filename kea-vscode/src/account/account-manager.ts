@@ -1,3 +1,4 @@
+import { IKeaContext } from "../core/context";
 import { IAccount } from "./account";
 import { GITHUB_PROVIDER_ID, GitHubAccount } from "./github/github-account";
 
@@ -7,14 +8,19 @@ export interface IAccountManager {
 }
 
 export class AccountManager implements IAccountManager {
+  readonly #ctx: IKeaContext;
   #gitHubAccount: IAccount | undefined;
+
+  constructor(ctx: IKeaContext) {
+    this.#ctx = ctx;
+  }
 
   #getGitHubAccount = async (): Promise<IAccount | Error> => {
     if (this.#gitHubAccount) {
       return Promise.resolve(this.#gitHubAccount);
     }
 
-    const account = await GitHubAccount.create();
+    const account = await GitHubAccount.create(this.#ctx);
     if (account instanceof Error) {
       return account;
     }

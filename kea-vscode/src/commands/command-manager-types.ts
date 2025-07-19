@@ -1,7 +1,9 @@
+import * as vscode from "vscode";
 import { IKeaContext } from "../core/context";
 import { IKeaDisposable } from "../core/kea-disposable";
 import { createCheckoutPullRequest } from "./commands/checkout-pull-request";
 import { createOpenPullRequestCommand } from "./commands/open-pull-request";
+import { createShowFiles } from "./commands/show-files";
 import {
   createCollapsePullRequestTreeCommand,
   createRefreshPullRequestContentsCommand,
@@ -10,16 +12,53 @@ import {
 
 type CreateCommand = (ctx: IKeaContext) => unknown;
 
-export const COMMANDS = {
+export const KEA_COMMANDS = {
   "kea.openPullRequest": createOpenPullRequestCommand,
   "kea.refreshPullRequestList": createRefreshPullRequestListCommand,
   "kea.refreshPullRequestContents": createRefreshPullRequestContentsCommand,
   "kea.collapsePullRequestTree": createCollapsePullRequestTreeCommand,
   "kea.checkoutPullRequest": createCheckoutPullRequest,
+  "kea.showFiles": createShowFiles,
 } satisfies Record<string, CreateCommand>;
 
-export type CommandMap = Record<keyof typeof COMMANDS, ReturnType<(typeof COMMANDS)[keyof typeof COMMANDS]>>;
+export type KeaCommandMap = Record<keyof typeof KEA_COMMANDS, ReturnType<(typeof KEA_COMMANDS)[keyof typeof KEA_COMMANDS]>>;
+
+export interface VSCODE_COMMANDS {
+  "vscode.open": ["vscode.open", uri: vscode.Uri, options?: vscode.TextDocumentShowOptions, label?: string];
+  "vscode.diff": [
+    "vscode.diff",
+    left: vscode.Uri | undefined,
+    right: vscode.Uri | undefined,
+    title: string,
+    options: vscode.TextDocumentShowOptions,
+  ];
+}
+
+export interface KeaCommand<TCommand extends keyof typeof KEA_COMMANDS> {
+  /**
+   * Title of the command, like `save`.
+   */
+  title: string;
+
+  /**
+   * The identifier of the actual command handler.
+   */
+  command: TCommand;
+
+  /**
+   * A tooltip for the command, when represented in the UI.
+   */
+  tooltip?: string | undefined;
+
+  /**
+   * Arguments that the command handler should be invoked with.
+   */
+  args: Parameters<ReturnType<(typeof KEA_COMMANDS)[TCommand]>>;
+}
 
 export interface ICommandManager extends IKeaDisposable {
-  executeCommand: <T extends keyof typeof COMMANDS>(commandName: T, ...args: Parameters<(typeof COMMANDS)[T]>) => Thenable<void>;
+  executeCommand: <TCommand extends keyof typeof KEA_COMMANDS>(
+    commandName: TCommand,
+    ...args: Parameters<(typeof KEA_COMMANDS)[TCommand]>
+  ) => Thenable<void>;
 }

@@ -71,6 +71,7 @@ export type FileStatus = "added" | "removed" | "modified" | "renamed" | "copied"
 
 export interface CommitFile {
   filename: string;
+  previousFilename?: string | null;
   sha: string;
   status: FileStatus;
   additions: number;
@@ -80,6 +81,11 @@ export interface CommitFile {
   blobUrl: string;
   rawUrl: string;
   contentsUrl: string;
+}
+
+export interface FileRef {
+  fileSha: string;
+  filename: string;
 }
 
 export interface User {
@@ -106,4 +112,8 @@ export interface Commit {
     deletions?: number | null;
   };
   url: string;
+  parents: Array<{
+    sha: string;
+    url: string;
+  }>;
 }

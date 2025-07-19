@@ -1,4 +1,4 @@
-import { Endpoints, RequestParameters, Route } from "@octokit/types";
+import { Endpoints, OctokitResponse, RequestParameters, Route } from "@octokit/types";
 import * as vscode from "vscode";
 import { GitHubAccount } from "../../account/github/github-account";
 import {
@@ -10,8 +10,9 @@ import {
   convertGitHubPullRequestListItem,
   convertGitHubPullRequestReviewComment,
 } from "../../account/github/github-utils";
-import { IApiCache } from "../../cache/api/api-cache";
 import { CacheKey, isMethod } from "../../cache/api/api-cache-types";
+import { CacheResponseHeaders } from "../../cache/common/common-api-types";
+import { IKeaContext } from "../../core/context";
 import { KeaDisposable } from "../../core/kea-disposable";
 import { Logger } from "../../core/logger";
 import { WrappedError } from "../../core/wrapped-error";
@@ -32,7 +33,7 @@ export class GitHubRepository extends KeaDisposable implements IKeaRepository {
   account: GitHubAccount;
   remoteUrl: string;
   repoId: RepoId;
-  #cache: IApiCache;
+  #ctx: IKeaContext;
 
   #onDidChangeIssueComments: vscode.EventEmitter<IssueCommentsPayload> = this._registerDisposable(
     new vscode.EventEmitter<IssueCommentsPayload>(),
@@ -44,65 +45,17 @@ export class GitHubRepository extends KeaDisposable implements IKeaRepository {
   );
   onDidChangePullRequestReviewComments = this.#onDidChangePullRequestReviewComments.event;
 
-  constructor(remoteUrl: string, repoId: RepoId, account: GitHubAccount, cache: IApiCache) {
+  constructor(remoteUrl: string, repoId: RepoId, account: GitHubAccount, ctx: IKeaContext) {
     super();
     this.remoteUrl = remoteUrl;
     this.repoId = repoId;
     this.account = account;
-    this.#cache = cache;
+    this.#ctx = ctx;
   }
 
   override _dispose = () => {
-    this.#cache.invalidate(this.repoId.owner, this.repoId.repo);
+    this.#ctx.apiCache.invalidate(this.repoId.owner, this.repoId.repo);
     return Promise.resolve();
-  };
-
-  #generateKey = <R extends Route>(
-    route: keyof Endpoints | R,
-    options?: R extends keyof Endpoints ? Endpoints[R]["parameters"] : never,
-  ): CacheKey | Error => {
-    const [method, path] = route.split(" ");
-
-    if (typeof method !== "string" || typeof path !== "string") {
-      return new WrappedError(`Invalid route: ${route}`);
-    }
-
-    if (!isMethod(method)) {
-      return new WrappedError(`Invalid method: ${method}`);
-    }
-
-    if (options === undefined) {
-      return new WrappedError(`Invalid options: ${options}`);
-    }
-
-    if (!("owner" in options) || !("repo" in options)) {
-      return new WrappedError("Missing owner or repo in options");
-    }
-
-    const owner = options.owner;
-    const repo = options.repo;
-
-    const pathParts = path.split("/");
-    const templatedEndpoint = pathParts
-      .map((part) => {
-        const isTemplate = part.startsWith("{") && part.endsWith("}");
-        if (!isTemplate) {
-          return part;
-        }
-
-        const paramName = part.slice(1, -1) as keyof typeof options & string;
-        const paramValue = options[paramName];
-        if (paramValue === undefined) {
-          Logger.warn(`Missing parameter ${paramName} in options`);
-          return part;
-        }
-
-        return String(paramValue);
-      })
-      .join("/");
-
-    const cacheKey: CacheKey = [owner, repo, templatedEndpoint, method];
-    return cacheKey;
   };
 
   /**
@@ -113,21 +66,21 @@ export class GitHubRepository extends KeaDisposable implements IKeaRepository {
    * @throws Error if the octokit instance cannot be created, or if the request fails.
    * @returns The response data from the request.
    */
-  #request = async <R extends Route>(
+  #requestApi = async <R extends Route>(
     route: keyof Endpoints | R,
     options?: R extends keyof Endpoints ? Endpoints[R]["parameters"] & RequestParameters : never,
     forceRequest?: boolean,
   ): Promise<{ wasCached: boolean; data: R extends keyof Endpoints ? Endpoints[R]["response"]["data"] : never }> => {
     type RequestResult = R extends keyof Endpoints ? Endpoints[R]["response"] : never;
 
-    const cacheKey = this.#generateKey(route, options);
+    const cacheKey = generateApiCacheKey(route, options);
     if (cacheKey instanceof Error) {
       // We throw the error so that the caller can handle it.
       // eslint-disable-next-line no-restricted-syntax
       throw cacheKey;
     }
 
-    const cachedResult = this.#cache.get(...cacheKey);
+    const cachedResult = this.#ctx.apiCache.get(...cacheKey);
 
     if (forceRequest !== true) {
       if (cachedResult !== undefined) {
@@ -145,7 +98,6 @@ export class GitHubRepository extends KeaDisposable implements IKeaRepository {
       throw octokit;
     }
 
-    // const previousHeaders = this.#cache.getHeaders(cacheKey);
     const previousHeaders = cachedResult?.headers;
     const requestOptions = {
       ...options,
@@ -160,11 +112,7 @@ export class GitHubRepository extends KeaDisposable implements IKeaRepository {
 
     const fetchedResult = await octokit.request(route, requestOptions);
 
-    const resultHeaders = {
-      etag: fetchedResult.headers.etag,
-      lastModified: fetchedResult.headers["last-modified"],
-    };
-    this.#cache.set(...cacheKey, fetchedResult.data, resultHeaders);
+    this.#ctx.apiCache.set(...cacheKey, fetchedResult.data, getResultHeaders(fetchedResult));
     return {
       data: fetchedResult.data as RequestResult,
       wasCached: false,
@@ -173,7 +121,7 @@ export class GitHubRepository extends KeaDisposable implements IKeaRepository {
 
   getPullRequestList = async (forceRequest?: boolean): Promise<PullRequest[] | Error> => {
     try {
-      const { data } = await this.#request(
+      const { data } = await this.#requestApi(
         "GET /repos/{owner}/{repo}/pulls",
         {
           owner: this.repoId.owner,
@@ -194,7 +142,7 @@ export class GitHubRepository extends KeaDisposable implements IKeaRepository {
 
   getPullRequest = async (pullId: PullRequestId, forceRequest?: boolean): Promise<PullRequest | Error> => {
     try {
-      const { data } = await this.#request(
+      const { data } = await this.#requestApi(
         "GET /repos/{owner}/{repo}/pulls/{pull_number}",
         {
           owner: pullId.owner,
@@ -212,7 +160,7 @@ export class GitHubRepository extends KeaDisposable implements IKeaRepository {
 
   getIssueComments = async (issueId: IssueId, forceRequest?: boolean): Promise<IssueComment[] | Error> => {
     try {
-      const { data, wasCached } = await this.#request(
+      const { data, wasCached } = await this.#requestApi(
         "GET /repos/{owner}/{repo}/issues/{issue_number}/comments",
         {
           owner: issueId.owner,
@@ -235,7 +183,7 @@ export class GitHubRepository extends KeaDisposable implements IKeaRepository {
 
   getPullRequestReviewComments = async (pullId: PullRequestId, forceRequest?: boolean): Promise<PullRequestComment[] | Error> => {
     try {
-      const { data, wasCached } = await this.#request(
+      const { data, wasCached } = await this.#requestApi(
         "GET /repos/{owner}/{repo}/pulls/{pull_number}/comments",
         {
           owner: pullId.owner,
@@ -258,7 +206,7 @@ export class GitHubRepository extends KeaDisposable implements IKeaRepository {
 
   getPullRequestFiles = async (pullId: PullRequestId, forceRequest?: boolean): Promise<CommitFile[] | Error> => {
     try {
-      const { data } = await this.#request(
+      const { data } = await this.#requestApi(
         "GET /repos/{owner}/{repo}/pulls/{pull_number}/files",
         {
           owner: pullId.owner,
@@ -276,7 +224,7 @@ export class GitHubRepository extends KeaDisposable implements IKeaRepository {
 
   getPullRequestCommits = async (pullId: PullRequestId, forceRequest?: boolean): Promise<Commit[] | Error> => {
     try {
-      const { data } = await this.#request(
+      const { data } = await this.#requestApi(
         "GET /repos/{owner}/{repo}/pulls/{pull_number}/commits",
         {
           owner: pullId.owner,
@@ -294,7 +242,7 @@ export class GitHubRepository extends KeaDisposable implements IKeaRepository {
 
   getCommitFiles = async (commitSha: string, forceRequest?: boolean): Promise<CommitFile[] | Error> => {
     try {
-      const { data } = await this.#request(
+      const { data } = await this.#requestApi(
         "GET /repos/{owner}/{repo}/commits/{ref}",
         {
           owner: this.repoId.owner,
@@ -312,7 +260,7 @@ export class GitHubRepository extends KeaDisposable implements IKeaRepository {
 
   getCommitComments = async (commitSha: string, forceRequest?: boolean): Promise<CommitComment[] | Error> => {
     try {
-      const { data } = await this.#request(
+      const { data } = await this.#requestApi(
         "GET /repos/{owner}/{repo}/commits/{commit_sha}/comments",
         {
           owner: this.repoId.owner,
@@ -327,4 +275,82 @@ export class GitHubRepository extends KeaDisposable implements IKeaRepository {
       return new WrappedError(`Error fetching commit comments`, error);
     }
   };
+
+  getBlobUri = async (sha1: string, forceRequest?: boolean): Promise<vscode.Uri | Error> => {
+    if (forceRequest === true) {
+      const cachedUri = await this.#ctx.fileCache.get(this.repoId, sha1);
+      if (!(cachedUri instanceof Error)) {
+        return cachedUri.data;
+      }
+    }
+
+    try {
+      const octokit = await this.account.getOctokit();
+      if (octokit instanceof Error) {
+        return octokit;
+      }
+
+      const result = await octokit.request("GET /repos/{owner}/{repo}/git/blobs/{file_sha}", {
+        owner: this.repoId.owner,
+        repo: this.repoId.repo,
+        file_sha: sha1,
+      });
+
+      return await this.#ctx.fileCache.set(this.repoId, sha1, atob(result.data.content), getResultHeaders(result));
+    } catch (error) {
+      return new WrappedError(`Error fetching blob`, error);
+    }
+  };
 }
+
+const getResultHeaders = (response: OctokitResponse<unknown>): CacheResponseHeaders => ({
+  etag: response.headers.etag,
+  lastModified: response.headers["last-modified"],
+});
+
+const generateApiCacheKey = <R extends Route>(
+  route: keyof Endpoints | R,
+  options?: R extends keyof Endpoints ? Endpoints[R]["parameters"] : never,
+): CacheKey | Error => {
+  const [method, path] = route.split(" ");
+
+  if (typeof method !== "string" || typeof path !== "string") {
+    return new WrappedError(`Invalid route: ${route}`);
+  }
+
+  if (!isMethod(method)) {
+    return new WrappedError(`Invalid method: ${method}`);
+  }
+
+  if (options === undefined) {
+    return new WrappedError(`Invalid options: ${options}`);
+  }
+
+  if (!("owner" in options) || !("repo" in options)) {
+    return new WrappedError("Missing owner or repo in options");
+  }
+
+  const owner = options.owner;
+  const repo = options.repo;
+
+  const pathParts = path.split("/");
+  const templatedEndpoint = pathParts
+    .map((part) => {
+      const isTemplate = part.startsWith("{") && part.endsWith("}");
+      if (!isTemplate) {
+        return part;
+      }
+
+      const paramName = part.slice(1, -1) as keyof typeof options & string;
+      const paramValue = options[paramName];
+      if (paramValue === undefined) {
+        Logger.warn(`Missing parameter ${paramName} in options`);
+        return part;
+      }
+
+      return String(paramValue);
+    })
+    .join("/");
+
+  return [owner, repo, templatedEndpoint, method];
+};

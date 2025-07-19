@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import { IAccountKey } from "../../account/account";
 import { ICheckoutPullRequestCommandArgs } from "../../commands/commands/checkout-pull-request";
+import { createKeaCommand } from "../../commands/create-command";
 import { IKeaContext } from "../../core/context";
 import { trimLength } from "../../core/utils";
 import { PullRequest, PullRequestGitRef, PullRequestId } from "../../types/kea";
@@ -56,11 +57,12 @@ export class PullRequestListNode implements ITreeNode, ICheckoutPullRequestComma
       description,
       collapsibleState: getCollapsibleState(this.collapsibleState),
       contextValue: `pullRequest${isCheckedOut ? ":checkedout" : ""}`, // Add state to contextValue
-      command: {
-        command: "kea.openPullRequest",
+      command: createKeaCommand({
         title: "Open Pull Request",
-        arguments: [[this.accountKey, pullId]],
-      },
+        command: "kea.openPullRequest",
+        tooltip: "Open Pull Request",
+        args: [{ accountKey: this.accountKey, pullId }],
+      }),
       tooltip: `${head}...${base}${isCheckedOut ? " (Checked out)" : ""}`,
       iconPath: iconPath,
     };

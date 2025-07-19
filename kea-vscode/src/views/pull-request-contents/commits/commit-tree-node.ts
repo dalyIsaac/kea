@@ -49,9 +49,9 @@ export class CommitTreeNode extends BaseFilesRootTreeNode {
     if (comments instanceof Error) {
       vscode.window.showErrorMessage(`Error fetching commit comments: ${comments.message}`);
 
-      return this._toTree(files, []);
+      return this._toTree(files, [], this.commit);
     }
 
-    return this._toTree(files, comments);
+    return this._toTree(files, comments, this.commit);
   };
 }

@@ -1,6 +1,6 @@
 import { Octokit } from "@octokit/rest";
 import * as vscode from "vscode";
-import { IApiCache } from "../../cache/api/api-cache";
+import { IKeaContext } from "../../core/context";
 import { GitHubRepository } from "../../repository/github/github-repository";
 import { IKeaRepository } from "../../repository/kea-repository";
 import { IAccount, IAccountKey } from "../account";
@@ -11,11 +11,13 @@ export class GitHubAccount implements IAccount {
   static #scopes = ["user:email", "repo", "read:org"];
   static #hasRequestedUser = false;
 
-  #repositories = new Map<string, IKeaRepository>();
+  readonly #ctx: IKeaContext;
+  readonly #repositories = new Map<string, IKeaRepository>();
 
   accountKey: IAccountKey;
 
-  private constructor(accountId: string) {
+  private constructor(ctx: IKeaContext, accountId: string) {
+    this.#ctx = ctx;
     this.accountKey = {
       providerId: GITHUB_PROVIDER_ID,
       accountId,
@@ -35,7 +37,7 @@ export class GitHubAccount implements IAccount {
     });
   };
 
-  static create = async (): Promise<GitHubAccount | Error> => {
+  static create = async (ctx: IKeaContext): Promise<GitHubAccount | Error> => {
     const session = await vscode.authentication.getSession(GITHUB_PROVIDER_ID, this.#scopes);
 
     if (session === undefined) {
@@ -47,12 +49,12 @@ export class GitHubAccount implements IAccount {
       return new Error("No GitHub session found");
     }
 
-    return new GitHubAccount(session.account.id);
+    return new GitHubAccount(ctx, session.account.id);
   };
 
   isRepoForAccount = (repoUrl: string): boolean => repoUrl.includes("github.com");
 
-  tryCreateRepoForAccount = (repoUrl: string, cache: IApiCache): IKeaRepository | Error => {
+  tryCreateRepoForAccount = (repoUrl: string): IKeaRepository | Error => {
     if (!this.isRepoForAccount(repoUrl)) {
       return new Error("Not a GitHub repository URL");
     }
@@ -67,7 +69,7 @@ export class GitHubAccount implements IAccount {
       return repo;
     }
 
-    repo = new GitHubRepository(repoUrl, { owner, repo: repoName }, this, cache);
+    repo = new GitHubRepository(repoUrl, { owner, repo: repoName }, this, this.#ctx);
     this.#repositories.set(repoUrl, repo);
     return repo;
   };
