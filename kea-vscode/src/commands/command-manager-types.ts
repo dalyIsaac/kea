@@ -1,6 +1,7 @@
 import { IKeaContext } from "../core/context";
 import { IKeaDisposable } from "../core/kea-disposable";
 import { createCheckoutPullRequest } from "./commands/checkout-pull-request";
+import { createOpenCommitFileDiffCommand } from "./commands/open-commit-file-diff";
 import { createOpenPullRequestCommand } from "./commands/open-pull-request";
 import {
   createCollapsePullRequestTreeCommand,
@@ -16,6 +17,7 @@ export const COMMANDS = {
   "kea.refreshPullRequestContents": createRefreshPullRequestContentsCommand,
   "kea.collapsePullRequestTree": createCollapsePullRequestTreeCommand,
   "kea.checkoutPullRequest": createCheckoutPullRequest,
+  "kea.openCommitFileDiff": createOpenCommitFileDiffCommand,
 } satisfies Record<string, CreateCommand>;
 
 export type CommandMap = Record<keyof typeof COMMANDS, ReturnType<(typeof COMMANDS)[keyof typeof COMMANDS]>>;

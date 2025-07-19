@@ -40,6 +40,13 @@ export class FileTreeNode implements IParentTreeNode<ReviewCommentTreeNode> {
     treeItem.iconPath = this.#iconPath;
     treeItem.tooltip = this.#tooltip;
 
+    // Add command to open file diff when clicked
+    treeItem.command = {
+      command: "kea.openCommitFileDiff",
+      title: "Open File Diff",
+      arguments: [{ resourceUri: this.#resourceUri }],
+    };
+
     if (this.#comments.length > 0) {
       treeItem.description = `${this.#comments.length} comment${this.#comments.length > 1 ? "s" : ""}`;
     }

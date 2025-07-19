@@ -44,6 +44,12 @@
         "title": "Checkout Pull Request Branch",
         "category": "Kea",
         "icon": "$(git-pull-request)"
+      },
+      {
+        "command": "kea.openCommitFileDiff",
+        "title": "Open File Diff",
+        "category": "Kea",
+        "icon": "$(diff)"
       }
     ],
     "viewsContainers": {
@@ -91,6 +97,11 @@
         {
           "command": "kea.checkoutPullRequest",
           "when": "view == kea.pullRequestList",
+          "group": "navigation"
+        },
+        {
+          "command": "kea.openCommitFileDiff",
+          "when": "view == kea.pullRequestContents && viewItem == file",
           "group": "navigation"
         }
       ]

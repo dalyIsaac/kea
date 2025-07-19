@@ -306,6 +306,72 @@ suite("LocalGitRepository", () => {
     });
   });
 
+  suite("getBranchCommits", () => {
+    test("should return commits from current branch when repository has commits", async () => {
+      // Given Git is available and repository is initialized
+
+      // When getting branch commits
+      const result = await repository!.getBranchCommits(5);
+
+      // Then commits should be returned
+      assert.ok(!(result instanceof Error), `Expected array but got Error: ${result instanceof Error ? result.message : ""}`);
+      assert.ok(Array.isArray(result));
+      assert.ok(result.length > 0);
+      
+      // Verify commit structure
+      const firstCommit = result[0];
+      assert.ok(firstCommit, "First commit should exist");
+      assert.ok(firstCommit.sha);
+      assert.ok(firstCommit.message);
+      assert.ok(firstCommit.author);
+      assert.ok(firstCommit.date instanceof Date);
+    });
+
+    test("should limit commits when limit parameter is provided", async () => {
+      // Given Git is available and repository is initialized
+
+      // When getting limited number of commits
+      const result = await repository!.getBranchCommits(1);
+
+      // Then only the specified number of commits should be returned
+      assert.ok(!(result instanceof Error));
+      if (!(result instanceof Error)) {
+        assert.strictEqual(result.length, 1);
+      }
+    });
+  });
+
+  suite("getBranchStatus", () => {
+    test("should return branch status when repository has no remote", async () => {
+      // Given Git is available and repository is initialized without remote
+
+      // When getting branch status
+      const result = await repository!.getBranchStatus();
+
+      // Then status should indicate no remote tracking
+      assert.ok(!(result instanceof Error), `Expected status but got Error: ${result instanceof Error ? result.message : ""}`);
+      if (!(result instanceof Error)) {
+        assert.strictEqual(result.ahead, 0);
+        assert.strictEqual(result.behind, 0);
+        assert.strictEqual(result.remoteBranch, null);
+      }
+    });
+  });
+
+  suite("getCurrentBranch", () => {
+    test("should return current branch name when repository is initialized", async () => {
+      // Given Git is available and repository is initialized
+
+      // When getting current branch
+      const result = await repository!.getCurrentBranch();
+
+      // Then branch name should be returned
+      assert.ok(!(result instanceof Error), `Expected string but got Error: ${result instanceof Error ? result.message : ""}`);
+      assert.ok(typeof result === "string");
+      assert.ok(result.length > 0);
+    });
+  });
+
   suite("error handling", () => {
     test("should handle invalid repository path gracefully when executing git commands", async () => {
       // Given Git is available and an invalid repository path

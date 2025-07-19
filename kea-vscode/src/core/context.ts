@@ -4,6 +4,7 @@ import { ApiCache, IApiCache } from "../cache/api/api-cache";
 import { FileCache, IFileCache } from "../cache/file/file-cache";
 import { CommandManager } from "../commands/command-manager";
 import { ICommandManager } from "../commands/command-manager-types";
+import { CommitFileContentProvider } from "../core/commit-file-content-provider";
 import { ITreeDecorationManager, TreeDecorationManager } from "../decorations/tree-decoration-manager";
 import { GitManager, IGitManager } from "../git/git-manager";
 import { IRepositoryManager, RepositoryManager } from "../repository/repository-manager";
@@ -56,5 +57,11 @@ export class KeaContext extends KeaDisposable implements IKeaContext {
     this.pullRequestContents = this._registerDisposable(new TreeViewContainer("kea.pullRequestContents", prContentsProvider));
 
     this.commandManager = this._registerDisposable(new CommandManager(this));
+
+    // Register commit file content provider
+    const commitFileContentProvider = new CommitFileContentProvider(this);
+    this._registerDisposable(
+      vscode.workspace.registerTextDocumentContentProvider("kea-commit-file", commitFileContentProvider)
+    );
   }
 }
