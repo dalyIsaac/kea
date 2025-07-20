@@ -5,6 +5,12 @@ import { DECORATION_SCHEMES, parseDecorationPayload } from "./decoration-schemes
 
 export class FileGitDecorationProvider extends BaseTreeDecorationProvider {
   override provideFileDecoration = (uri: vscode.Uri, _token: vscode.CancellationToken): vscode.ProviderResult<vscode.FileDecoration> => {
+    // Only handle known decoration schemes, silently ignore others
+    const knownSchemes: string[] = Object.values(DECORATION_SCHEMES);
+    if (!knownSchemes.includes(uri.scheme)) {
+      return null;
+    }
+
     const payload = parseDecorationPayload(uri);
     if (payload instanceof Error) {
       Logger.error("Failed to parse decoration payload", payload);
