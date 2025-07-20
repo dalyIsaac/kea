@@ -1,7 +1,9 @@
 import * as assert from "assert";
 import * as sinon from "sinon";
 import * as vscode from "vscode";
+import { IKeaContext } from "../../../core/context";
 import { ILocalGitRepository, LocalCommit } from "../../../git/local-git-repository";
+import { createKeaContextStub } from "../../../test-utils";
 import { LocalFileTreeNode } from "./local-file-tree-node";
 
 suite("LocalFileTreeNode", () => {
@@ -9,6 +11,7 @@ suite("LocalFileTreeNode", () => {
   let mockLocalGitRepo: sinon.SinonStubbedInstance<ILocalGitRepository>;
   let testCommit: LocalCommit;
   let workspaceFolder: vscode.WorkspaceFolder;
+  let mockContext: IKeaContext;
 
   setup(() => {
     sandbox = sinon.createSandbox();
@@ -28,6 +31,8 @@ suite("LocalFileTreeNode", () => {
       name: "test-workspace",
       index: 0,
     };
+
+    mockContext = createKeaContextStub();
   });
 
   teardown(() => {
@@ -36,7 +41,7 @@ suite("LocalFileTreeNode", () => {
 
   test("should create a valid tree item with file icon for unknown status", () => {
     // Given
-    const node = new LocalFileTreeNode(mockLocalGitRepo, testCommit, workspaceFolder, "src/test.ts", "unknown");
+    const node = new LocalFileTreeNode(mockLocalGitRepo, testCommit, workspaceFolder, "src/test.ts", "unknown", mockContext);
 
     // When
     const treeItem = node.getTreeItem();
@@ -54,7 +59,7 @@ suite("LocalFileTreeNode", () => {
 
   test("should use correct icon for added files", () => {
     // Given
-    const node = new LocalFileTreeNode(mockLocalGitRepo, testCommit, workspaceFolder, "src/new-file.ts", "A");
+    const node = new LocalFileTreeNode(mockLocalGitRepo, testCommit, workspaceFolder, "src/new-file.ts", "A", mockContext);
 
     // When
     const treeItem = node.getTreeItem();
@@ -66,7 +71,7 @@ suite("LocalFileTreeNode", () => {
 
   test("should use correct icon for modified files", () => {
     // Given
-    const node = new LocalFileTreeNode(mockLocalGitRepo, testCommit, workspaceFolder, "src/modified-file.ts", "M");
+    const node = new LocalFileTreeNode(mockLocalGitRepo, testCommit, workspaceFolder, "src/modified-file.ts", "M", mockContext);
 
     // When
     const treeItem = node.getTreeItem();
@@ -78,7 +83,7 @@ suite("LocalFileTreeNode", () => {
 
   test("should use correct icon for deleted files", () => {
     // Given
-    const node = new LocalFileTreeNode(mockLocalGitRepo, testCommit, workspaceFolder, "src/deleted-file.ts", "D");
+    const node = new LocalFileTreeNode(mockLocalGitRepo, testCommit, workspaceFolder, "src/deleted-file.ts", "D", mockContext);
 
     // When
     const treeItem = node.getTreeItem();
@@ -90,7 +95,7 @@ suite("LocalFileTreeNode", () => {
 
   test("should use correct icon for renamed files", () => {
     // Given
-    const node = new LocalFileTreeNode(mockLocalGitRepo, testCommit, workspaceFolder, "src/renamed-file.ts", "R");
+    const node = new LocalFileTreeNode(mockLocalGitRepo, testCommit, workspaceFolder, "src/renamed-file.ts", "R", mockContext);
 
     // When
     const treeItem = node.getTreeItem();
@@ -102,7 +107,7 @@ suite("LocalFileTreeNode", () => {
 
   test("should use correct icon for copied files", () => {
     // Given
-    const node = new LocalFileTreeNode(mockLocalGitRepo, testCommit, workspaceFolder, "src/copied-file.ts", "C");
+    const node = new LocalFileTreeNode(mockLocalGitRepo, testCommit, workspaceFolder, "src/copied-file.ts", "C", mockContext);
 
     // When
     const treeItem = node.getTreeItem();
@@ -114,7 +119,7 @@ suite("LocalFileTreeNode", () => {
 
   test("should handle file names with multiple extensions", () => {
     // Given
-    const node = new LocalFileTreeNode(mockLocalGitRepo, testCommit, workspaceFolder, "src/test.spec.ts", "M");
+    const node = new LocalFileTreeNode(mockLocalGitRepo, testCommit, workspaceFolder, "src/test.spec.ts", "M", mockContext);
 
     // When
     const treeItem = node.getTreeItem();
@@ -126,7 +131,7 @@ suite("LocalFileTreeNode", () => {
 
   test("should handle files at root level", () => {
     // Given
-    const node = new LocalFileTreeNode(mockLocalGitRepo, testCommit, workspaceFolder, "README.md", "M");
+    const node = new LocalFileTreeNode(mockLocalGitRepo, testCommit, workspaceFolder, "README.md", "M", mockContext);
 
     // When
     const treeItem = node.getTreeItem();
@@ -139,7 +144,7 @@ suite("LocalFileTreeNode", () => {
 
   test("should set up command with correct arguments", () => {
     // Given
-    const node = new LocalFileTreeNode(mockLocalGitRepo, testCommit, workspaceFolder, "src/example.ts", "M");
+    const node = new LocalFileTreeNode(mockLocalGitRepo, testCommit, workspaceFolder, "src/example.ts", "M", mockContext);
 
     // When
     const treeItem = node.getTreeItem();
@@ -160,7 +165,7 @@ suite("LocalFileTreeNode", () => {
 
   test("should handle long status names for word-based statuses", () => {
     // Given
-    const node = new LocalFileTreeNode(mockLocalGitRepo, testCommit, workspaceFolder, "src/test.ts", "added");
+    const node = new LocalFileTreeNode(mockLocalGitRepo, testCommit, workspaceFolder, "src/test.ts", "added", mockContext);
 
     // When
     const treeItem = node.getTreeItem();

@@ -19,13 +19,13 @@ export interface IOpenCommitFileDiffCommandArgs {
 export const createOpenCommitFileDiffCommand =
   (ctx: IKeaContext) =>
   async (args?: IOpenCommitFileDiffCommandArgs): Promise<Error | void> => {
-    // Handle new local commit format.
+    // Handle local commit format (commit vs parent commit).
     if (args?.commitSha && args.filePath && args.workspacePath) {
       await handleLocalCommitFileDiff(args.commitSha, args.filePath, args.workspacePath);
       return;
     }
 
-    // Handle legacy resource URI format.
+    // Handle remote API format (commit vs workspace).
     if (!args?.resourceUri) {
       Logger.error("No resource URI or commit info provided for file diff command");
       return;
@@ -45,7 +45,6 @@ export const createOpenCommitFileDiffCommand =
     const { filePath } = payload.payload;
 
     try {
-      // Get workspace folder
       const workspaceFolders = vscode.workspace.workspaceFolders;
       if (!workspaceFolders || workspaceFolders.length === 0) {
         vscode.window.showErrorMessage("No workspace folder found");
@@ -58,7 +57,6 @@ export const createOpenCommitFileDiffCommand =
         return;
       }
 
-      // Get local git repository
       const localGitRepo = await ctx.gitManager.getLocalGitRepository(workspaceFolder);
       if (localGitRepo instanceof Error) {
         Logger.error("Failed to get local git repository", localGitRepo);
@@ -66,7 +64,6 @@ export const createOpenCommitFileDiffCommand =
         return;
       }
 
-      // Get current HEAD commit
       const currentCommit = await localGitRepo.getCurrentCommit();
       if (currentCommit instanceof Error) {
         Logger.error("Failed to get current commit", currentCommit);
@@ -74,7 +71,7 @@ export const createOpenCommitFileDiffCommand =
         return;
       }
 
-      await handleLocalCommitFileDiff(currentCommit, filePath, workspaceFolder.uri.fsPath);
+      await handleRemoteApiFileDiff(currentCommit, filePath, workspaceFolder.uri.fsPath);
       return;
     } catch (error) {
       Logger.error("Error opening commit file diff", error);
@@ -84,24 +81,19 @@ export const createOpenCommitFileDiffCommand =
 
 async function handleLocalCommitFileDiff(commitSha: string, filePath: string, workspacePath: string): Promise<void> {
   try {
-    // Create a LocalGitRepository instance.
     const localGitRepo = new LocalGitRepository(workspacePath, new ApiCache(100));
 
-    // Get the parent commit to show what changed in this commit.
     const parentCommit = await localGitRepo.getParentCommit(commitSha);
 
     let leftContent: string;
     let leftTitle: string;
 
     if (parentCommit instanceof Error) {
-      // This might be the first commit, show empty content.
       leftContent = "";
       leftTitle = "Initial";
     } else {
-      // Get file content at parent commit.
       const parentContent = await localGitRepo.getFileAtCommit(parentCommit, filePath);
       if (parentContent instanceof Error) {
-        // File didn't exist in parent commit, show empty content.
         leftContent = "";
         leftTitle = "New file";
       } else {
@@ -110,7 +102,6 @@ async function handleLocalCommitFileDiff(commitSha: string, filePath: string, wo
       }
     }
 
-    // Get file content at the commit we're viewing.
     const commitContent = await localGitRepo.getFileAtCommit(commitSha, filePath);
 
     if (commitContent instanceof Error) {
@@ -119,7 +110,6 @@ async function handleLocalCommitFileDiff(commitSha: string, filePath: string, wo
       return;
     }
 
-    // Create temporary files with proper extensions for syntax highlighting.
     const tempDir = path.join(os.tmpdir(), "kea-commit-files");
 
     try {
@@ -143,8 +133,16 @@ async function handleLocalCommitFileDiff(commitSha: string, filePath: string, wo
     const leftTempFileUri = vscode.Uri.file(leftTempFilePath);
     const rightTempFileUri = vscode.Uri.file(rightTempFilePath);
 
+    // Create URIs that represent the repository file paths for display purposes.
+    const repoFilePath = path.join(workspacePath, filePath);
+    const leftDisplayUri = vscode.Uri.file(repoFilePath).with({ 
+      fragment: `${leftTitle}`,
+    });
+    const rightDisplayUri = vscode.Uri.file(repoFilePath).with({ 
+      fragment: `${commitSha.substring(0, 7)}`,
+    });
+
     // Open diff editor with parent commit on the left and current commit on the right.
-    // Show the full file path in the title to indicate which file is being diffed.
     await vscode.commands.executeCommand(
       "vscode.diff",
       leftTempFileUri,
@@ -165,9 +163,65 @@ async function handleLocalCommitFileDiff(commitSha: string, filePath: string, wo
           // Ignore cleanup errors.
         }
       })();
-    }, 30000); // Clean up after 30 seconds.
+    }, 30000);
   } catch (error) {
     Logger.error("Error opening local commit file diff", error);
+    vscode.window.showErrorMessage("Failed to open file diff");
+  }
+}
+
+async function handleRemoteApiFileDiff(commitSha: string, filePath: string, workspacePath: string): Promise<void> {
+  try {
+    const localGitRepo = new LocalGitRepository(workspacePath, new ApiCache(100));
+
+    const commitContent = await localGitRepo.getFileAtCommit(commitSha, filePath);
+    if (commitContent instanceof Error) {
+      Logger.error(`Failed to get commit content for ${filePath} at ${commitSha}`, commitContent);
+      vscode.window.showErrorMessage(`Failed to read file at commit ${commitSha}: ${commitContent.message}`);
+      return;
+    }
+
+    const tempDir = path.join(os.tmpdir(), "kea-commit-files");
+
+    try {
+      await fs.mkdir(tempDir, { recursive: true });
+    } catch {
+      // Directory might already exist, ignore error.
+    }
+
+    const fileExtension = path.extname(filePath);
+    const baseName = path.basename(filePath, fileExtension);
+    const leftTempFileName = `${baseName}.${commitSha.substring(0, 7)}${fileExtension}`;
+    const leftTempFilePath = path.join(tempDir, leftTempFileName);
+
+    await fs.writeFile(leftTempFilePath, commitContent, "utf8");
+
+    const leftTempFileUri = vscode.Uri.file(leftTempFilePath);
+    const rightWorkspaceFileUri = vscode.Uri.file(path.join(workspacePath, filePath));
+
+    // Open diff editor with commit on the left and workspace file on the right.
+    await vscode.commands.executeCommand(
+      "vscode.diff",
+      leftTempFileUri,
+      rightWorkspaceFileUri,
+      `${filePath} (${commitSha.substring(0, 7)} ↔ Working Tree)`,
+      {
+        preview: true,
+      },
+    );
+
+    // Schedule cleanup of temporary files after a delay.
+    setTimeout(() => {
+      void (async () => {
+        try {
+          await fs.unlink(leftTempFilePath);
+        } catch {
+          // Ignore cleanup errors.
+        }
+      })();
+    }, 30000);
+  } catch (error) {
+    Logger.error("Error opening remote API file diff", error);
     vscode.window.showErrorMessage("Failed to open file diff");
   }
 }

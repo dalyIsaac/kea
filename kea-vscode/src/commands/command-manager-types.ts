@@ -1,3 +1,4 @@
+import * as vscode from "vscode";
 import { IKeaContext } from "../core/context";
 import { IKeaDisposable } from "../core/kea-disposable";
 import { createCheckoutPullRequest } from "./commands/checkout-pull-request";
@@ -23,5 +24,6 @@ export const COMMANDS = {
 export type CommandMap = Record<keyof typeof COMMANDS, ReturnType<(typeof COMMANDS)[keyof typeof COMMANDS]>>;
 
 export interface ICommandManager extends IKeaDisposable {
-  executeCommand: <T extends keyof typeof COMMANDS>(commandName: T, ...args: Parameters<(typeof COMMANDS)[T]>) => Thenable<void>;
+  executeCommand: <T extends keyof typeof COMMANDS>(commandName: T, ...args: unknown[]) => Thenable<void>;
+  getCommand: (commandName: keyof typeof COMMANDS, title: string, ...args: unknown[]) => vscode.Command;
 }

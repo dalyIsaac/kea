@@ -15,14 +15,16 @@ export class LocalCommitTreeNode implements IParentTreeNode<LocalCommitTreeNodeC
   #iconPath = new vscode.ThemeIcon("git-commit");
   #localGitRepo: ILocalGitRepository;
   #workspaceFolder: vscode.WorkspaceFolder;
+  #ctx: IKeaContext;
   
   commit: LocalCommit;
   collapsibleState: CollapsibleState = "collapsed";
 
-  constructor(localGitRepo: ILocalGitRepository, commit: LocalCommit, workspaceFolder: vscode.WorkspaceFolder, _ctx: IKeaContext) {
+  constructor(localGitRepo: ILocalGitRepository, commit: LocalCommit, workspaceFolder: vscode.WorkspaceFolder, ctx: IKeaContext) {
     this.#localGitRepo = localGitRepo;
     this.commit = commit;
     this.#workspaceFolder = workspaceFolder;
+    this.#ctx = ctx;
   }
 
   getTreeItem = (): vscode.TreeItem => {
@@ -83,7 +85,7 @@ export class LocalCommitTreeNode implements IParentTreeNode<LocalCommitTreeNodeC
     }
 
     const fileName = pathParts[pathParts.length - 1];
-    const fileNode = new LocalFileTreeNode(this.#localGitRepo, this.commit, this.#workspaceFolder, file.filename, file.status);
+    const fileNode = new LocalFileTreeNode(this.#localGitRepo, this.commit, this.#workspaceFolder, file.filename, file.status, this.#ctx);
 
     if (!parents.some((node) => node instanceof LocalFileTreeNode && node.fileName === fileName)) {
       parents.push(fileNode);

@@ -256,6 +256,7 @@ export const createGitManagerStub = (props: Partial<IGitManager> = {}): IGitMana
 
 export const createCommandManagerStub = (props: Partial<ICommandManager> = {}): ICommandManager => ({
   executeCommand: sinon.stub() as unknown as ICommandManager["executeCommand"],
+  getCommand: sinon.stub() as unknown as ICommandManager["getCommand"],
   dispose: sinon.stub(),
   ...props,
 });
