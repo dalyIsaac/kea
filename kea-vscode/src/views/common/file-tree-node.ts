@@ -11,9 +11,9 @@ import { ReviewCommentTreeNode } from "./review-comment-tree-node";
  */
 export class FileTreeNode implements IParentTreeNode<ReviewCommentTreeNode> {
   #contextValue = "file";
-  #iconPath = new vscode.ThemeIcon("file");
   #tooltip = "File";
   #resourceUri: vscode.Uri;
+  #fileUri: vscode.Uri;
   #ctx: IKeaContext | undefined;
 
   #comments: FileComment[];
@@ -32,15 +32,17 @@ export class FileTreeNode implements IParentTreeNode<ReviewCommentTreeNode> {
       fileStatus: file.status,
     });
 
+    // Create a file URI for icon purposes.
+    this.#fileUri = vscode.Uri.file(file.filename);
+
     this.#comments = comments;
     this.#ctx = ctx;
   }
 
   getTreeItem = (): vscode.TreeItem => {
     const treeItem = new vscode.TreeItem(this.fileName, getCollapsibleState(this.collapsibleState));
-    treeItem.resourceUri = this.#resourceUri;
+    treeItem.resourceUri = this.#fileUri;
     treeItem.contextValue = this.#contextValue;
-    treeItem.iconPath = this.#iconPath;
     treeItem.tooltip = this.#tooltip;
 
     if (this.#ctx) {

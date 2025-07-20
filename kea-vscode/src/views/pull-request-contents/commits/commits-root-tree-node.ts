@@ -70,12 +70,6 @@ export class CommitsRootTreeNode implements IParentTreeNode<CommitTreeNode | Loc
           parts.push(`↓${branchStatus.behind}`);
         }
         treeItem.description = parts.join(" ");
-        
-        // Refresh the tree to show the updated description
-        // Note: This is a fire-and-forget operation
-        setTimeout(() => {
-          this.#ctx.pullRequestContents.treeViewProvider.refresh();
-        }, 100);
       }
     } catch (error) {
       Logger.debug("Failed to get branch status for tree item description", error);
