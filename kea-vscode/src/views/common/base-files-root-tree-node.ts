@@ -1,11 +1,13 @@
 import * as vscode from "vscode";
 import { IKeaRepository } from "../../repository/kea-repository";
 import { CommitFile, FileComment } from "../../types/kea";
-import { IParentTreeNode } from "../tree-node";
+import { IParentTreeNode, ITreeNode } from "../tree-node";
+import { BaseFileTreeNode } from "./base-file-tree-node";
+import { BaseFolderTreeNode } from "./base-folder-tree-node";
 import { RemoteFileTreeNode } from "./remote-file-tree-node";
 import { RemoteFolderTreeNode } from "./remote-folder-tree-node";
 
-export type FilesRootTreeNodeChild = RemoteFileTreeNode | RemoteFolderTreeNode;
+export type FilesRootTreeNodeChild = BaseFileTreeNode | BaseFolderTreeNode<ITreeNode>;
 
 export abstract class BaseFilesRootTreeNode implements IParentTreeNode<FilesRootTreeNodeChild> {
   protected _repository: IKeaRepository;
