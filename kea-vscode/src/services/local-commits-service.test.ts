@@ -20,7 +20,7 @@ suite("LocalCommitsService", () => {
       gitManager: {
         getLocalGitRepository: sandbox.stub()
       }
-    } as IKeaContext;
+    } as unknown as IKeaContext;
     accountKey = { providerId: "github", accountId: "test-account" };
     repoId = { owner: "test-owner", repo: "test-repo" };
     service = new LocalCommitsService(mockContext, accountKey, repoId);

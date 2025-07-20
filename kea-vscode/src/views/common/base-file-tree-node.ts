@@ -47,7 +47,7 @@ export abstract class BaseFileTreeNode implements IParentTreeNode<ReviewCommentT
 
   protected createBaseTreeItem(): vscode.TreeItem {
     const treeItem = new vscode.TreeItem(this.fileName, getCollapsibleState(this.collapsibleState));
-    treeItem.resourceUri = this.#fileUri;
+    treeItem.resourceUri = this.fileUri;
     treeItem.contextValue = this.#contextValue;
     treeItem.tooltip = this.#tooltip;
 

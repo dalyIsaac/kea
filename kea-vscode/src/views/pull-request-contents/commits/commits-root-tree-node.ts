@@ -80,22 +80,33 @@ export class CommitsRootTreeNode implements IParentTreeNode<CommitTreeNode | Loc
   };
 
   getChildren = async (): Promise<Array<CommitTreeNode | LocalCommitTreeNode>> => {
-    // First try to get local commits if we're in a workspace
+    // Always get remote commits first for ahead/behind status and remote-only commits
+    const remoteCommits = await this.#repository.getPullRequestCommits(this.pullId);
+    if (remoteCommits instanceof Error) {
+      Logger.error("Error fetching pull request commits", remoteCommits);
+      vscode.window.showErrorMessage(`Error fetching pull request commits: ${remoteCommits.message}`);
+    }
+
+    // Try to get local commits if we're in a workspace
     const localCommits = await this.#getLocalCommits();
+    
+    // Combine local and remote commits, prioritizing local commits for commits that exist locally
+    const allCommits: Array<CommitTreeNode | LocalCommitTreeNode> = [];
+    
     if (localCommits && localCommits.length > 0) {
-      return localCommits;
+      allCommits.push(...localCommits);
+    }
+    
+    // Add remote commits that don't exist locally
+    if (!(remoteCommits instanceof Error)) {
+      const localCommitShas = new Set(localCommits?.map(c => c.commit.sha) ?? []);
+      const remoteOnlyCommits = remoteCommits
+        .filter(commit => !localCommitShas.has(commit.sha))
+        .map(commit => new CommitTreeNode(this.#repository, commit));
+      allCommits.push(...remoteOnlyCommits);
     }
 
-    // Fall back to remote commits from API
-    const commits = await this.#repository.getPullRequestCommits(this.pullId);
-
-    if (commits instanceof Error) {
-      Logger.error("Error fetching pull request commits", commits);
-      vscode.window.showErrorMessage(`Error fetching pull request commits: ${commits.message}`);
-      return [];
-    }
-
-    return commits.map((commit) => new CommitTreeNode(this.#repository, commit));
+    return allCommits;
   };
 
   #getLocalCommits = async (): Promise<LocalCommitTreeNode[] | null> => {
