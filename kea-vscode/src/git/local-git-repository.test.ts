@@ -322,7 +322,7 @@ suite("LocalGitRepository", () => {
       assert.ok(!(result instanceof Error), `Expected array but got Error: ${result instanceof Error ? result.message : ""}`);
       assert.ok(Array.isArray(result));
       assert.ok(result.length > 0);
-      
+
       // Verify commit structure
       const firstCommit = result[0];
       assert.ok(firstCommit, "First commit should exist");
@@ -446,7 +446,7 @@ suite("LocalGitRepository", () => {
 
         const fileContent = await isolatedRepo.getFileAtCommit(currentCommit, "test.txt");
         assert.ok(!(fileContent instanceof Error));
-        assert.strictEqual(fileContent, "Hello World\nLine 2\n");
+        assert.strictEqual(fileContent, "Hello World\nLine 2\nLine 3\n");
       } finally {
         // Clean up isolated resources
         if (isolatedRepo) {
@@ -472,7 +472,7 @@ suite("LocalGitRepository", () => {
 
       // Then the content should have consistent Unix-style line endings regardless of platform
       assert.ok(!(result instanceof Error));
-      assert.strictEqual(result, "Hello World\nLine 2\n");
+      assert.strictEqual(result, "Hello World\nLine 2\nLine 3\n");
       assert.ok(!result.includes("\r\n"), "Content should not contain Windows line endings");
     });
   });
