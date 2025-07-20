@@ -205,7 +205,7 @@ suite("LocalGitRepository", () => {
 
       // Then the file content should be returned successfully
       assert.ok(!(result instanceof Error), `Expected string but got Error: ${result instanceof Error ? result.message : ""}`);
-      assert.strictEqual(result, "Hello World\nLine 2\n");
+      assert.strictEqual(result, "Hello World\nLine 2\nLine 3\n");
     });
 
     test("should return error when given non-existent file", async () => {

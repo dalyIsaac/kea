@@ -63,7 +63,7 @@ suite("LocalCommitTreeNode", () => {
     assert.strictEqual(treeItem.label, "Test commit message");
     assert.strictEqual(
       treeItem.tooltip,
-      "Test commit message\n\nThis is the commit body.\n\nAuthor: Test Author\nDate: 1/1/2023, 12:00:00 PM\nSHA: abc123def456",
+      "Test commit message\n\nThis is the commit body.\n\nAuthor: Test Author\nDate: 1/1/2023, 11:00:00 PM\nSHA: abc123def456",
     );
     assert.strictEqual(treeItem.collapsibleState, vscode.TreeItemCollapsibleState.Collapsed);
     assert.strictEqual(treeItem.contextValue, "localCommit");
