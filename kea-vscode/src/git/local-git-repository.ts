@@ -8,11 +8,20 @@ import { WrappedError } from "../core/wrapped-error";
 const execFileAsync = promisify(execFile);
 
 export interface BranchStatus {
+  /**
+   * The number of commits the local branch is ahead of the remote tracking branch.
+   */
   ahead: number;
+
+  /**
+   * The number of commits the local branch is behind the remote tracking branch.
+   */
   behind: number;
+
+  /**
+   * The name of the remote tracking branch, or null if there is no remote tracking branch.
+   */
   remoteBranch: string | null;
-  /** Indicates whether the local branch has a remote tracking branch configured */
-  hasRemote: boolean;
 }
 
 export interface LocalCommit {
@@ -212,7 +221,10 @@ export class LocalGitRepository extends KeaDisposable implements ILocalGitReposi
       return new WrappedError(`Failed to get branch commits ahead of ${targetBranch}`, result);
     }
 
-    const lines = result.trim().split("\n").filter((line) => line.trim());
+    const lines = result
+      .trim()
+      .split("\n")
+      .filter((line) => line.trim());
     const commits: LocalCommit[] = [];
 
     for (const line of lines) {
@@ -234,19 +246,16 @@ export class LocalGitRepository extends KeaDisposable implements ILocalGitReposi
    * Get commits from the current branch.
    */
   getBranchCommits = async (limit = 50): Promise<LocalCommit[] | Error> => {
-    const result = await this.#executeGitCommand([
-      "log",
-      "--oneline",
-      "--format=%H|%s|%an|%ad",
-      "--date=iso",
-      `-${limit}`,
-    ]);
+    const result = await this.#executeGitCommand(["log", "--oneline", "--format=%H|%s|%an|%ad", "--date=iso", `-${limit}`]);
 
     if (result instanceof Error) {
       return new WrappedError("Failed to get branch commits", result);
     }
 
-    const lines = result.trim().split("\n").filter((line) => line.trim());
+    const lines = result
+      .trim()
+      .split("\n")
+      .filter((line) => line.trim());
     const commits: LocalCommit[] = [];
 
     for (const line of lines) {
@@ -288,7 +297,6 @@ export class LocalGitRepository extends KeaDisposable implements ILocalGitReposi
         ahead: 0,
         behind: 0,
         remoteBranch: null,
-        hasRemote: false,
       };
     }
 
@@ -314,7 +322,6 @@ export class LocalGitRepository extends KeaDisposable implements ILocalGitReposi
       ahead,
       behind,
       remoteBranch,
-      hasRemote: true,
     };
   };
 
@@ -343,19 +350,16 @@ export class LocalGitRepository extends KeaDisposable implements ILocalGitReposi
     }
 
     // Use git diff-tree to get files changed in the commit
-    const result = await this.#executeGitCommand([
-      "diff-tree",
-      "--no-commit-id",
-      "--name-status",
-      "-r",
-      commitSha
-    ]);
+    const result = await this.#executeGitCommand(["diff-tree", "--no-commit-id", "--name-status", "-r", commitSha]);
 
     if (result instanceof Error) {
       return new WrappedError(`Failed to get files for commit ${commitSha}`, result);
     }
 
-    const lines = result.trim().split("\n").filter((line) => line.trim());
+    const lines = result
+      .trim()
+      .split("\n")
+      .filter((line) => line.trim());
     const files: LocalCommitFile[] = [];
 
     for (const line of lines) {
@@ -363,7 +367,7 @@ export class LocalGitRepository extends KeaDisposable implements ILocalGitReposi
       if (parts.length >= 2 && parts[0] && parts[1]) {
         const status = parts[0] as "A" | "M" | "D" | "R" | "C";
         const filename = parts[1];
-        
+
         files.push({
           status,
           filename,
