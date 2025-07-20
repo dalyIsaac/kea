@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import { IKeaContext } from "../../../core/context";
 import { Logger } from "../../../core/logger";
 import { IKeaRepository } from "../../../repository/kea-repository";
+import { LocalCommitsService } from "../../../services/local-commits-service";
 import { PullRequest, PullRequestId } from "../../../types/kea";
 import { CollapsibleState, getCollapsibleState, IParentTreeNode } from "../../tree-node";
 import { LocalCommitTreeNode } from "../local-commit/local-commit-tree-node";
@@ -16,6 +17,7 @@ export class CommitsRootTreeNode implements IParentTreeNode<CommitTreeNode | Loc
   #repository: IKeaRepository;
   #ctx: IKeaContext;
   #pullRequest: PullRequest | undefined;
+  #localCommitsService: LocalCommitsService;
 
   pullId: PullRequestId;
   collapsibleState: CollapsibleState = "collapsed";
@@ -25,6 +27,7 @@ export class CommitsRootTreeNode implements IParentTreeNode<CommitTreeNode | Loc
     this.pullId = pullId;
     this.#ctx = ctx;
     this.#pullRequest = pullRequest;
+    this.#localCommitsService = new LocalCommitsService(ctx, repository.account.accountKey, repository.repoId);
   }
 
   getTreeItem = (): vscode.TreeItem => {
@@ -96,59 +99,6 @@ export class CommitsRootTreeNode implements IParentTreeNode<CommitTreeNode | Loc
   };
 
   #getLocalCommits = async (): Promise<LocalCommitTreeNode[] | null> => {
-    try {
-      const workspaceFolders = vscode.workspace.workspaceFolders;
-      if (!workspaceFolders || workspaceFolders.length === 0) {
-        return null;
-      }
-
-      const workspaceFolder = workspaceFolders[0];
-      if (!workspaceFolder) {
-        return null;
-      }
-
-      const localGitRepo = await this.#ctx.gitManager.getLocalGitRepository(workspaceFolder);
-      if (localGitRepo instanceof Error) {
-        Logger.debug("No local git repository available", localGitRepo);
-        return null;
-      }
-
-      let commits;
-
-      // If we have pull request info, get commits ahead of the base branch.
-      if (this.#pullRequest) {
-        const targetBranch = `origin/${this.#pullRequest.base.ref}`;
-        commits = await localGitRepo.getBranchCommitsAheadOf(targetBranch, 20);
-
-        // Fall back to regular branch commits if the ahead-of method fails.
-        if (commits instanceof Error) {
-          Logger.debug(`Failed to get commits ahead of ${targetBranch}, falling back to all branch commits`, commits);
-          commits = await localGitRepo.getBranchCommits(20);
-        }
-      } else {
-        // No pull request context, get all branch commits.
-        commits = await localGitRepo.getBranchCommits(20);
-      }
-
-      if (commits instanceof Error) {
-        Logger.debug("Failed to get local commits", commits);
-        return null;
-      }
-
-      return commits.map(
-        (commit) =>
-          new LocalCommitTreeNode(
-            localGitRepo,
-            commit,
-            workspaceFolder,
-            this.#ctx,
-            this.#repository.account.accountKey,
-            this.#repository.repoId,
-          ),
-      );
-    } catch (error) {
-      Logger.debug("Error getting local commits", error);
-      return null;
-    }
+    return this.#localCommitsService.getLocalCommits(this.#pullRequest);
   };
 }
