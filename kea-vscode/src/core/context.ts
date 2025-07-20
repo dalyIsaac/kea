@@ -58,10 +58,6 @@ export class KeaContext extends KeaDisposable implements IKeaContext {
 
     this.commandManager = this._registerDisposable(new CommandManager(this));
 
-    // Register commit file content provider
-    const commitFileContentProvider = new CommitFileContentProvider(this);
-    this._registerDisposable(
-      vscode.workspace.registerTextDocumentContentProvider("kea-commit-file", commitFileContentProvider)
-    );
+    this._registerDisposable(vscode.workspace.registerTextDocumentContentProvider("kea-commit-file", new CommitFileContentProvider(this)));
   }
 }
