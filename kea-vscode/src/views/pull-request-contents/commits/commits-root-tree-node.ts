@@ -6,12 +6,12 @@ import { LocalCommitsService } from "../../../services/local-commits-service";
 import { PullRequest, PullRequestId } from "../../../types/kea";
 import { CollapsibleState, getCollapsibleState, IParentTreeNode } from "../../tree-node";
 import { LocalCommitTreeNode } from "../local-commit/local-commit-tree-node";
-import { CommitTreeNode } from "./commit-tree-node";
+import { RemoteCommitTreeNode } from "./remote-commit-tree-node";
 
 /**
  * Provides information about the commits in the current pull request.
  */
-export class CommitsRootTreeNode implements IParentTreeNode<CommitTreeNode | LocalCommitTreeNode> {
+export class CommitsRootTreeNode implements IParentTreeNode<RemoteCommitTreeNode | LocalCommitTreeNode> {
   #contextValue = "commit";
   #iconPath = new vscode.ThemeIcon("git-commit");
   #repository: IKeaRepository;
@@ -79,7 +79,7 @@ export class CommitsRootTreeNode implements IParentTreeNode<CommitTreeNode | Loc
     }
   };
 
-  getChildren = async (): Promise<Array<CommitTreeNode | LocalCommitTreeNode>> => {
+  getChildren = async (): Promise<Array<RemoteCommitTreeNode | LocalCommitTreeNode>> => {
     // Always get remote commits first for ahead/behind status and remote-only commits
     const remoteCommits = await this.#repository.getPullRequestCommits(this.pullId);
     if (remoteCommits instanceof Error) {
@@ -89,20 +89,20 @@ export class CommitsRootTreeNode implements IParentTreeNode<CommitTreeNode | Loc
 
     // Try to get local commits if we're in a workspace
     const localCommits = await this.#getLocalCommits();
-    
+
     // Combine local and remote commits, prioritizing local commits for commits that exist locally
-    const allCommits: Array<CommitTreeNode | LocalCommitTreeNode> = [];
-    
+    const allCommits: Array<RemoteCommitTreeNode | LocalCommitTreeNode> = [];
+
     if (localCommits && localCommits.length > 0) {
       allCommits.push(...localCommits);
     }
-    
+
     // Add remote commits that don't exist locally
     if (!(remoteCommits instanceof Error)) {
-      const localCommitShas = new Set(localCommits?.map(c => c.commit.sha) ?? []);
+      const localCommitShas = new Set(localCommits?.map((c) => c.commit.sha) ?? []);
       const remoteOnlyCommits = remoteCommits
-        .filter(commit => !localCommitShas.has(commit.sha))
-        .map(commit => new CommitTreeNode(this.#repository, commit));
+        .filter((commit) => !localCommitShas.has(commit.sha))
+        .map((commit) => new RemoteCommitTreeNode(this.#repository, commit));
       allCommits.push(...remoteOnlyCommits);
     }
 

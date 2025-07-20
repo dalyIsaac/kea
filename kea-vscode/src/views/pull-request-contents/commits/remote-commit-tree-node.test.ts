@@ -9,7 +9,7 @@ import { FolderTreeNodeType, RemoteFolderTreeNode } from "../../common/remote-fo
 import { ReviewCommentTreeNode } from "../../common/review-comment-tree-node";
 import { RemoteCommitTreeNode } from "./remote-commit-tree-node";
 
-suite("RemoteCommitTreeNode", () => {
+suite("CommitTreeNode", () => {
   let sandbox: sinon.SinonSandbox;
   let mockRepository: sinon.SinonStubbedInstance<IKeaRepository>;
   let testCommit: Commit;

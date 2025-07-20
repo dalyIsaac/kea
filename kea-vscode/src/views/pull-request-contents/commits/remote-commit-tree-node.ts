@@ -7,7 +7,7 @@ import { CollapsibleState, getCollapsibleState } from "../../tree-node";
 /**
  * Provides information about a file or directory in a commit.
  */
-export class CommitTreeNode extends BaseFilesRootTreeNode {
+export class RemoteCommitTreeNode extends BaseFilesRootTreeNode {
   #contextValue = "commit";
   #iconPath = new vscode.ThemeIcon("cloud");
   commit: Commit;
