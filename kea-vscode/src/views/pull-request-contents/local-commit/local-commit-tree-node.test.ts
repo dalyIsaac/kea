@@ -2,9 +2,9 @@ import * as assert from "assert";
 import * as sinon from "sinon";
 import * as vscode from "vscode";
 import { IAccountKey } from "../../../account/account";
-import { RepoId } from "../../../types/kea";
-import { createAccountStub, createKeaContextStub, createRepositoryStub } from "../../../test-utils";
 import { ILocalGitRepository, LocalCommit, LocalCommitFile } from "../../../git/local-git-repository";
+import { createAccountStub, createKeaContextStub, createRepositoryStub } from "../../../test-utils";
+import { RepoId } from "../../../types/kea";
 import { LocalCommitTreeNode } from "./local-commit-tree-node";
 import { LocalFileTreeNode } from "./local-file-tree-node";
 import { LocalFolderTreeNode } from "./local-folder-tree-node";
@@ -20,7 +20,7 @@ suite("LocalCommitTreeNode", () => {
 
   setup(() => {
     sandbox = sinon.createSandbox();
-    
+
     mockLocalGitRepo = {
       getCommitFiles: sandbox.stub(),
     } as unknown as sinon.SinonStubbedInstance<ILocalGitRepository>;
@@ -39,10 +39,10 @@ suite("LocalCommitTreeNode", () => {
     };
 
     showErrorMessageStub = sandbox.stub(vscode.window, "showErrorMessage");
-    
+
     const accountStub = createAccountStub();
     accountKey = accountStub.accountKey;
-    
+
     const repoStub = createRepositoryStub();
     repoId = repoStub.repoId;
   });
@@ -61,7 +61,10 @@ suite("LocalCommitTreeNode", () => {
 
     // Then
     assert.strictEqual(treeItem.label, "Test commit message");
-    assert.strictEqual(treeItem.tooltip, "Test commit message\n\nThis is the commit body.\n\nAuthor: Test Author\nDate: 1/1/2023, 12:00:00 PM\nSHA: abc123def456");
+    assert.strictEqual(
+      treeItem.tooltip,
+      "Test commit message\n\nThis is the commit body.\n\nAuthor: Test Author\nDate: 1/1/2023, 12:00:00 PM\nSHA: abc123def456",
+    );
     assert.strictEqual(treeItem.collapsibleState, vscode.TreeItemCollapsibleState.Collapsed);
     assert.strictEqual(treeItem.contextValue, "localCommit");
     assert.deepStrictEqual(treeItem.iconPath, new vscode.ThemeIcon("git-commit"));
@@ -138,13 +141,17 @@ suite("LocalCommitTreeNode", () => {
     assert.strictEqual(file1Node.status, "A");
 
     // Check src/subfolder.
-    const subfolderNode = srcChildren.find((c) => c instanceof LocalFolderTreeNode && c.folderName === "subfolder") as LocalFolderTreeNode | undefined;
+    const subfolderNode = srcChildren.find((c) => c instanceof LocalFolderTreeNode && c.folderName === "subfolder") as
+      | LocalFolderTreeNode
+      | undefined;
     assert.ok(subfolderNode, "'src/subfolder' node not found");
     const subfolderChildren = subfolderNode.children;
     assert.strictEqual(subfolderChildren.length, 1, "'src/subfolder' should have 1 child ('file2.ts')");
 
     // Check src/subfolder/file2.ts.
-    const file2Node = subfolderChildren.find((c) => c instanceof LocalFileTreeNode && c.fileName === "file2.ts") as LocalFileTreeNode | undefined;
+    const file2Node = subfolderChildren.find((c) => c instanceof LocalFileTreeNode && c.fileName === "file2.ts") as
+      | LocalFileTreeNode
+      | undefined;
     assert.ok(file2Node, "'src/subfolder/file2.ts' node not found");
     assert.strictEqual(file2Node.filePath, "src/subfolder/file2.ts");
     assert.strictEqual(file2Node.status, "D");
@@ -171,7 +178,7 @@ suite("LocalCommitTreeNode", () => {
 
     assert.ok(srcFolder, "src folder should exist");
     assert.ok(testsFolder, "tests folder should exist");
-    
+
     assert.strictEqual(srcFolder.children.length, 1, "src folder should have 1 file");
     assert.strictEqual(testsFolder.children.length, 1, "tests folder should have 1 file");
   });

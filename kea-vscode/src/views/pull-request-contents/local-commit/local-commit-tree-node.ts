@@ -1,11 +1,11 @@
 import * as vscode from "vscode";
 import { IAccountKey } from "../../../account/account";
+import { IKeaContext } from "../../../core/context";
 import { ILocalGitRepository, LocalCommit } from "../../../git/local-git-repository";
 import { RepoId } from "../../../types/kea";
 import { CollapsibleState, getCollapsibleState, IParentTreeNode } from "../../tree-node";
 import { LocalFileTreeNode } from "./local-file-tree-node";
 import { LocalFolderTreeNode } from "./local-folder-tree-node";
-import { IKeaContext } from "../../../core/context";
 
 export type LocalCommitTreeNodeChild = LocalFileTreeNode | LocalFolderTreeNode;
 
@@ -20,11 +20,18 @@ export class LocalCommitTreeNode implements IParentTreeNode<LocalCommitTreeNodeC
   #ctx: IKeaContext;
   #accountKey: IAccountKey;
   #repoId: RepoId;
-  
+
   commit: LocalCommit;
   collapsibleState: CollapsibleState = "collapsed";
 
-  constructor(localGitRepo: ILocalGitRepository, commit: LocalCommit, workspaceFolder: vscode.WorkspaceFolder, ctx: IKeaContext, accountKey: IAccountKey, repoId: RepoId) {
+  constructor(
+    localGitRepo: ILocalGitRepository,
+    commit: LocalCommit,
+    workspaceFolder: vscode.WorkspaceFolder,
+    ctx: IKeaContext,
+    accountKey: IAccountKey,
+    repoId: RepoId,
+  ) {
     this.#localGitRepo = localGitRepo;
     this.commit = commit;
     this.#workspaceFolder = workspaceFolder;
@@ -47,7 +54,7 @@ export class LocalCommitTreeNode implements IParentTreeNode<LocalCommitTreeNodeC
     treeItem.iconPath = this.#iconPath;
     treeItem.tooltip = `${this.commit.message}\n\nAuthor: ${this.commit.author}\nDate: ${this.commit.date.toLocaleString()}\nSHA: ${this.commit.sha}`;
     treeItem.description = this.commit.sha.substring(0, 7);
-    
+
     return treeItem;
   };
 
@@ -91,7 +98,16 @@ export class LocalCommitTreeNode implements IParentTreeNode<LocalCommitTreeNodeC
     }
 
     const fileName = pathParts[pathParts.length - 1];
-    const fileNode = new LocalFileTreeNode(this.#localGitRepo, this.commit, this.#workspaceFolder, file.filename, file.status, this.#ctx, this.#accountKey, this.#repoId);
+    const fileNode = new LocalFileTreeNode(
+      this.#localGitRepo,
+      this.commit,
+      this.#workspaceFolder,
+      file.filename,
+      file.status,
+      this.#ctx,
+      this.#accountKey,
+      this.#repoId,
+    );
 
     if (!parents.some((node) => node instanceof LocalFileTreeNode && node.fileName === fileName)) {
       parents.push(fileNode);

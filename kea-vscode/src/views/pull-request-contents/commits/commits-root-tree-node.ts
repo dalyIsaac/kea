@@ -4,8 +4,8 @@ import { Logger } from "../../../core/logger";
 import { IKeaRepository } from "../../../repository/kea-repository";
 import { PullRequest, PullRequestId } from "../../../types/kea";
 import { CollapsibleState, getCollapsibleState, IParentTreeNode } from "../../tree-node";
+import { LocalCommitTreeNode } from "../local-commit/local-commit-tree-node";
 import { CommitTreeNode } from "./commit-tree-node";
-import { LocalCommitTreeNode } from "./local-commit-tree-node";
 
 /**
  * Provides information about the commits in the current pull request.
@@ -31,10 +31,10 @@ export class CommitsRootTreeNode implements IParentTreeNode<CommitTreeNode | Loc
     const treeItem = new vscode.TreeItem("Commits", getCollapsibleState(this.collapsibleState));
     treeItem.contextValue = this.#contextValue;
     treeItem.iconPath = this.#iconPath;
-    
+
     // Add description in the background (don't await to avoid blocking the tree)
     void this.#addBranchStatusDescription(treeItem);
-    
+
     return treeItem;
   };
 
@@ -114,12 +114,12 @@ export class CommitsRootTreeNode implements IParentTreeNode<CommitTreeNode | Loc
       }
 
       let commits;
-      
+
       // If we have pull request info, get commits ahead of the base branch.
       if (this.#pullRequest) {
         const targetBranch = `origin/${this.#pullRequest.base.ref}`;
         commits = await localGitRepo.getBranchCommitsAheadOf(targetBranch, 20);
-        
+
         // Fall back to regular branch commits if the ahead-of method fails.
         if (commits instanceof Error) {
           Logger.debug(`Failed to get commits ahead of ${targetBranch}, falling back to all branch commits`, commits);
@@ -135,7 +135,17 @@ export class CommitsRootTreeNode implements IParentTreeNode<CommitTreeNode | Loc
         return null;
       }
 
-      return commits.map((commit) => new LocalCommitTreeNode(localGitRepo, commit, workspaceFolder, this.#ctx, this.#repository.account.accountKey, this.#repository.repoId));
+      return commits.map(
+        (commit) =>
+          new LocalCommitTreeNode(
+            localGitRepo,
+            commit,
+            workspaceFolder,
+            this.#ctx,
+            this.#repository.account.accountKey,
+            this.#repository.repoId,
+          ),
+      );
     } catch (error) {
       Logger.debug("Error getting local commits", error);
       return null;
