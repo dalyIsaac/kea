@@ -105,22 +105,13 @@ async function handleLocalCommitFileDiff(commitSha: string, filePath: string, wo
       fragment: leftTitle,
     });
 
-    const rightUri = vscode.Uri.from({
-      scheme: "kea-commit-file", 
-      path: repoFilePath,
-      query: JSON.stringify({
-        commitSha,
-        filePath,
-        workspacePath,
-      }),
-      fragment: commitSha.substring(0, 7),
-    });
+    const rightWorkspaceFileUri = vscode.Uri.file(repoFilePath);
 
     await vscode.commands.executeCommand(
       "vscode.diff",
       leftUri,
-      rightUri,
-      `${filePath} (${leftTitle} ↔ ${commitSha.substring(0, 7)})`,
+      rightWorkspaceFileUri,
+      `${filePath} (${leftTitle} ↔ Working Tree)`,
       {
         preview: true,
       },
@@ -133,17 +124,32 @@ async function handleLocalCommitFileDiff(commitSha: string, filePath: string, wo
 
 async function handleRemoteApiFileDiff(commitSha: string, filePath: string, workspacePath: string): Promise<void> {
   try {
+    const localGitRepo = new LocalGitRepository(workspacePath, new ApiCache(100));
+
+    const parentCommit = await localGitRepo.getParentCommit(commitSha);
+
+    let leftTitle: string;
+    let leftCommitSha: string;
+
+    if (parentCommit instanceof Error) {
+      leftTitle = "Initial";
+      leftCommitSha = "0000000000000000000000000000000000000000";
+    } else {
+      leftTitle = parentCommit.substring(0, 7);
+      leftCommitSha = parentCommit;
+    }
+
     const repoFilePath = path.join(workspacePath, filePath);
     
     const leftUri = vscode.Uri.from({
       scheme: "kea-commit-file",
       path: repoFilePath,
       query: JSON.stringify({
-        commitSha,
+        commitSha: leftCommitSha,
         filePath,
         workspacePath,
       }),
-      fragment: commitSha.substring(0, 7),
+      fragment: leftTitle,
     });
 
     const rightWorkspaceFileUri = vscode.Uri.file(repoFilePath);
@@ -152,7 +158,7 @@ async function handleRemoteApiFileDiff(commitSha: string, filePath: string, work
       "vscode.diff",
       leftUri,
       rightWorkspaceFileUri,
-      `${filePath} (${commitSha.substring(0, 7)} ↔ Working Tree)`,
+      `${filePath} (${leftTitle} ↔ Working Tree)`,
       {
         preview: true,
       },

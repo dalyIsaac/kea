@@ -1,8 +1,12 @@
 import * as vscode from "vscode";
 import { IKeaRepository } from "../../../repository/kea-repository";
-import { Commit } from "../../../types/kea";
+import { Commit, CommitFile, FileComment } from "../../../types/kea";
+import { BaseFileTreeNode } from "../../common/base-file-tree-node";
 import { BaseFilesRootTreeNode, FilesRootTreeNodeChild } from "../../common/base-files-root-tree-node";
-import { CollapsibleState, getCollapsibleState } from "../../tree-node";
+import { BaseFolderTreeNode } from "../../common/base-folder-tree-node";
+import { CollapsibleState, getCollapsibleState, ITreeNode } from "../../tree-node";
+import { RemoteFileTreeNode } from "./remote-file-tree-node";
+import { RemoteFolderTreeNode } from "./remote-folder-tree-node";
 
 /**
  * Provides information about a file or directory in a commit.
@@ -17,6 +21,14 @@ export class RemoteCommitTreeNode extends BaseFilesRootTreeNode {
   constructor(repository: IKeaRepository, commit: Commit) {
     super(repository);
     this.commit = commit;
+  }
+
+  protected createFileNode(file: CommitFile, comments: FileComment[]): BaseFileTreeNode {
+    return new RemoteFileTreeNode(this._repository.account.accountKey, this._repository.repoId, file, comments);
+  }
+
+  protected createFolderNode(folderPath: string): BaseFolderTreeNode<any> {
+    return new RemoteFolderTreeNode(folderPath);
   }
 
   getTreeItem = (): vscode.TreeItem => {

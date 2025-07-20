@@ -94,7 +94,9 @@ export class CommitsRootTreeNode implements IParentTreeNode<RemoteCommitTreeNode
     const allCommits: Array<RemoteCommitTreeNode | LocalCommitTreeNode> = [];
 
     if (localCommits && localCommits.length > 0) {
-      allCommits.push(...localCommits);
+      // Sort local commits by date (newest first)
+      const sortedLocalCommits = [...localCommits].sort((a, b) => b.commit.date.getTime() - a.commit.date.getTime());
+      allCommits.push(...sortedLocalCommits);
     }
 
     // Add remote commits that don't exist locally

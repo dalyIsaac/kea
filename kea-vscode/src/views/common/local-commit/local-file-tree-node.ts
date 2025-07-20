@@ -2,8 +2,9 @@ import * as path from "path";
 import * as vscode from "vscode";
 import { IAccountKey } from "../../../account/account";
 import { IKeaContext } from "../../../core/context";
+import { createGitDecorationUri } from "../../../decorations/decoration-schemes";
 import { ILocalGitRepository, LocalCommit } from "../../../git/local-git-repository";
-import { FileComment, RepoId } from "../../../types/kea";
+import { FileComment, FileStatus, RepoId } from "../../../types/kea";
 import { BaseFileTreeNode } from "../base-file-tree-node";
 
 /**
@@ -14,6 +15,7 @@ export class LocalFileTreeNode extends BaseFileTreeNode {
   #commit: LocalCommit;
   #workspaceFolder: vscode.WorkspaceFolder;
   #ctx: IKeaContext;
+  #decorationUri: vscode.Uri;
 
   filePath: string;
   status: string;
@@ -25,8 +27,8 @@ export class LocalFileTreeNode extends BaseFileTreeNode {
     filePath: string,
     status: string,
     ctx: IKeaContext,
-    _accountKey: IAccountKey,
-    _repoId: RepoId,
+    accountKey: IAccountKey,
+    repoId: RepoId,
     comments: FileComment[] = [],
   ) {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -41,6 +43,13 @@ export class LocalFileTreeNode extends BaseFileTreeNode {
     this.#ctx = ctx;
     this.filePath = filePath;
     this.status = status;
+
+    this.#decorationUri = createGitDecorationUri({
+      accountKey,
+      filePath,
+      repoId,
+      fileStatus: status as FileStatus,
+    });
   }
 
   getTreeItem = (): vscode.TreeItem => {
@@ -55,6 +64,7 @@ export class LocalFileTreeNode extends BaseFileTreeNode {
     });
 
     treeItem.description = this.status;
+    treeItem.resourceUri = this.#decorationUri;
 
     return treeItem;
   };

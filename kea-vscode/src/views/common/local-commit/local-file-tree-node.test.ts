@@ -48,7 +48,7 @@ suite("LocalFileTreeNode", () => {
     sandbox.restore();
   });
 
-  test("should create a valid tree item with file icon for unknown status", () => {
+  test("should create a valid tree item with language-specific icon", () => {
     // Given
     const node = new LocalFileTreeNode(mockLocalGitRepo, testCommit, workspaceFolder, "src/test.ts", "unknown", mockContext, accountKey, repoId);
 
@@ -60,13 +60,14 @@ suite("LocalFileTreeNode", () => {
     assert.strictEqual(treeItem.tooltip, "src/test.ts (unknown)");
     assert.strictEqual(treeItem.collapsibleState, vscode.TreeItemCollapsibleState.None);
     assert.strictEqual(treeItem.contextValue, "localFile");
-    assert.deepStrictEqual(treeItem.iconPath, new vscode.ThemeIcon("file"));
+    // The icon should be determined by VS Code based on file extension via resourceUri
+    assert.ok(treeItem.resourceUri);
     assert.strictEqual(treeItem.description, "unknown");
     assert.ok(treeItem.command, "Tree item should have a command");
     assert.strictEqual(treeItem.command.command, "kea.openCommitFileDiff");
   });
 
-  test("should use correct icon for added files", () => {
+  test("should include status in description for all file types", () => {
     // Given
     const node = new LocalFileTreeNode(mockLocalGitRepo, testCommit, workspaceFolder, "src/new-file.ts", "A", mockContext, accountKey, repoId);
 
@@ -74,11 +75,12 @@ suite("LocalFileTreeNode", () => {
     const treeItem = node.getTreeItem();
 
     // Then
-    assert.deepStrictEqual(treeItem.iconPath, new vscode.ThemeIcon("diff-added"));
+    // The icon should be determined by VS Code based on file extension via resourceUri
+    assert.ok(treeItem.resourceUri);
     assert.strictEqual(treeItem.description, "A");
   });
 
-  test("should use correct icon for modified files", () => {
+  test("should include status in description for modified files", () => {
     // Given
     const node = new LocalFileTreeNode(mockLocalGitRepo, testCommit, workspaceFolder, "src/modified-file.ts", "M", mockContext, accountKey, repoId);
 
@@ -86,11 +88,12 @@ suite("LocalFileTreeNode", () => {
     const treeItem = node.getTreeItem();
 
     // Then
-    assert.deepStrictEqual(treeItem.iconPath, new vscode.ThemeIcon("diff-modified"));
+    // The icon should be determined by VS Code based on file extension via resourceUri
+    assert.ok(treeItem.resourceUri);
     assert.strictEqual(treeItem.description, "M");
   });
 
-  test("should use correct icon for deleted files", () => {
+  test("should include status in description for deleted files", () => {
     // Given
     const node = new LocalFileTreeNode(mockLocalGitRepo, testCommit, workspaceFolder, "src/deleted-file.ts", "D", mockContext, accountKey, repoId);
 
@@ -98,11 +101,12 @@ suite("LocalFileTreeNode", () => {
     const treeItem = node.getTreeItem();
 
     // Then
-    assert.deepStrictEqual(treeItem.iconPath, new vscode.ThemeIcon("diff-removed"));
+    // The icon should be determined by VS Code based on file extension via resourceUri
+    assert.ok(treeItem.resourceUri);
     assert.strictEqual(treeItem.description, "D");
   });
 
-  test("should use correct icon for renamed files", () => {
+  test("should include status in description for renamed files", () => {
     // Given
     const node = new LocalFileTreeNode(mockLocalGitRepo, testCommit, workspaceFolder, "src/renamed-file.ts", "R", mockContext, accountKey, repoId);
 
@@ -110,11 +114,12 @@ suite("LocalFileTreeNode", () => {
     const treeItem = node.getTreeItem();
 
     // Then
-    assert.deepStrictEqual(treeItem.iconPath, new vscode.ThemeIcon("diff-renamed"));
+    // The icon should be determined by VS Code based on file extension via resourceUri
+    assert.ok(treeItem.resourceUri);
     assert.strictEqual(treeItem.description, "R");
   });
 
-  test("should use correct icon for copied files", () => {
+  test("should include status in description for copied files", () => {
     // Given
     const node = new LocalFileTreeNode(mockLocalGitRepo, testCommit, workspaceFolder, "src/copied-file.ts", "C", mockContext, accountKey, repoId);
 
@@ -122,7 +127,8 @@ suite("LocalFileTreeNode", () => {
     const treeItem = node.getTreeItem();
 
     // Then
-    assert.deepStrictEqual(treeItem.iconPath, new vscode.ThemeIcon("files"));
+    // The icon should be determined by VS Code based on file extension via resourceUri
+    assert.ok(treeItem.resourceUri);
     assert.strictEqual(treeItem.description, "C");
   });
 
