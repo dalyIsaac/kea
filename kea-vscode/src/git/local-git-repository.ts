@@ -11,6 +11,8 @@ export interface BranchStatus {
   ahead: number;
   behind: number;
   remoteBranch: string | null;
+  /** Indicates whether the local branch has a remote tracking branch configured */
+  hasRemote: boolean;
 }
 
 export interface LocalCommit {
@@ -264,6 +266,7 @@ export class LocalGitRepository extends KeaDisposable implements ILocalGitReposi
 
   /**
    * Get the ahead/behind status compared to the remote tracking branch.
+   * Returns status with hasRemote=false if no remote tracking branch is configured.
    */
   getBranchStatus = async (): Promise<BranchStatus | Error> => {
     // First get the current branch
@@ -279,12 +282,13 @@ export class LocalGitRepository extends KeaDisposable implements ILocalGitReposi
       remoteBranch = remoteResult.trim();
     }
 
-    // If no remote tracking branch, return zeros
+    // If no remote tracking branch, return clear indication
     if (!remoteBranch) {
       return {
         ahead: 0,
         behind: 0,
         remoteBranch: null,
+        hasRemote: false,
       };
     }
 
@@ -310,6 +314,7 @@ export class LocalGitRepository extends KeaDisposable implements ILocalGitReposi
       ahead,
       behind,
       remoteBranch,
+      hasRemote: true,
     };
   };
 

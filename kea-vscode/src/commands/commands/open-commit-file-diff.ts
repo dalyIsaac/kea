@@ -17,13 +17,11 @@ export interface IOpenCommitFileDiffCommandArgs {
 export const createOpenCommitFileDiffCommand =
   (ctx: IKeaContext) =>
   async (args?: IOpenCommitFileDiffCommandArgs): Promise<Error | void> => {
-    // Handle local commit format (commit vs parent commit).
     if (args?.commitSha && args.filePath && args.workspacePath) {
       await handleLocalCommitFileDiff(args.commitSha, args.filePath, args.workspacePath);
       return;
     }
 
-    // Handle remote API format (commit vs workspace).
     if (!args?.resourceUri) {
       Logger.error("No resource URI or commit info provided for file diff command");
       return;
@@ -88,13 +86,12 @@ async function handleLocalCommitFileDiff(commitSha: string, filePath: string, wo
 
     if (parentCommit instanceof Error) {
       leftTitle = "Initial";
-      leftCommitSha = "0000000000000000000000000000000000000000"; // Use null SHA for initial state
+      leftCommitSha = "0000000000000000000000000000000000000000";
     } else {
       leftTitle = parentCommit.substring(0, 7);
       leftCommitSha = parentCommit;
     }
 
-    // Create URIs using the custom content provider scheme with repository file paths.
     const repoFilePath = path.join(workspacePath, filePath);
     
     const leftUri = vscode.Uri.from({
@@ -119,7 +116,6 @@ async function handleLocalCommitFileDiff(commitSha: string, filePath: string, wo
       fragment: commitSha.substring(0, 7),
     });
 
-    // Open diff editor with parent commit on the left and current commit on the right.
     await vscode.commands.executeCommand(
       "vscode.diff",
       leftUri,
@@ -137,7 +133,6 @@ async function handleLocalCommitFileDiff(commitSha: string, filePath: string, wo
 
 async function handleRemoteApiFileDiff(commitSha: string, filePath: string, workspacePath: string): Promise<void> {
   try {
-    // Create URI using the custom content provider scheme for the commit.
     const repoFilePath = path.join(workspacePath, filePath);
     
     const leftUri = vscode.Uri.from({
@@ -153,7 +148,6 @@ async function handleRemoteApiFileDiff(commitSha: string, filePath: string, work
 
     const rightWorkspaceFileUri = vscode.Uri.file(repoFilePath);
 
-    // Open diff editor with commit on the left and workspace file on the right.
     await vscode.commands.executeCommand(
       "vscode.diff",
       leftUri,

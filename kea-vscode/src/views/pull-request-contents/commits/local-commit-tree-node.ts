@@ -1,5 +1,7 @@
 import * as vscode from "vscode";
+import { IAccountKey } from "../../../account/account";
 import { ILocalGitRepository, LocalCommit } from "../../../git/local-git-repository";
+import { RepoId } from "../../../types/kea";
 import { CollapsibleState, getCollapsibleState, IParentTreeNode } from "../../tree-node";
 import { LocalFileTreeNode } from "./local-file-tree-node";
 import { LocalFolderTreeNode } from "./local-folder-tree-node";
@@ -16,15 +18,19 @@ export class LocalCommitTreeNode implements IParentTreeNode<LocalCommitTreeNodeC
   #localGitRepo: ILocalGitRepository;
   #workspaceFolder: vscode.WorkspaceFolder;
   #ctx: IKeaContext;
+  #accountKey: IAccountKey;
+  #repoId: RepoId;
   
   commit: LocalCommit;
   collapsibleState: CollapsibleState = "collapsed";
 
-  constructor(localGitRepo: ILocalGitRepository, commit: LocalCommit, workspaceFolder: vscode.WorkspaceFolder, ctx: IKeaContext) {
+  constructor(localGitRepo: ILocalGitRepository, commit: LocalCommit, workspaceFolder: vscode.WorkspaceFolder, ctx: IKeaContext, accountKey: IAccountKey, repoId: RepoId) {
     this.#localGitRepo = localGitRepo;
     this.commit = commit;
     this.#workspaceFolder = workspaceFolder;
     this.#ctx = ctx;
+    this.#accountKey = accountKey;
+    this.#repoId = repoId;
   }
 
   getTreeItem = (): vscode.TreeItem => {
@@ -85,7 +91,7 @@ export class LocalCommitTreeNode implements IParentTreeNode<LocalCommitTreeNodeC
     }
 
     const fileName = pathParts[pathParts.length - 1];
-    const fileNode = new LocalFileTreeNode(this.#localGitRepo, this.commit, this.#workspaceFolder, file.filename, file.status, this.#ctx);
+    const fileNode = new LocalFileTreeNode(this.#localGitRepo, this.commit, this.#workspaceFolder, file.filename, file.status, this.#ctx, this.#accountKey, this.#repoId);
 
     if (!parents.some((node) => node instanceof LocalFileTreeNode && node.fileName === fileName)) {
       parents.push(fileNode);

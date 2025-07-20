@@ -84,6 +84,11 @@ suite("LocalGitRepository", () => {
       execFileSync(gitExecutable, ["add", "."], { cwd: dir, stdio: "ignore", timeout: 5000 });
       execFileSync(gitExecutable, ["commit", "-m", "Initial commit"], { cwd: dir, stdio: "ignore", timeout: 10000 });
 
+      // Create a second commit to ensure repository has multiple commits
+      fs.writeFileSync(testFilePath, "Hello World\nLine 2\nLine 3\n", { encoding: "utf8" });
+      execFileSync(gitExecutable, ["add", "test.txt"], { cwd: dir, stdio: "ignore", timeout: 5000 });
+      execFileSync(gitExecutable, ["commit", "-m", "Second commit"], { cwd: dir, stdio: "ignore", timeout: 10000 });
+
       return true;
     } catch (error) {
       console.warn(`Failed to create test repository: ${error instanceof Error ? error.message : "Unknown error"}`);

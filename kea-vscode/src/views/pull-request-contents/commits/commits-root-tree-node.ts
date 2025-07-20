@@ -141,7 +141,7 @@ export class CommitsRootTreeNode implements IParentTreeNode<CommitTreeNode | Loc
         return null;
       }
 
-      return commits.map((commit) => new LocalCommitTreeNode(localGitRepo, commit, workspaceFolder, this.#ctx));
+      return commits.map((commit) => new LocalCommitTreeNode(localGitRepo, commit, workspaceFolder, this.#ctx, this.#repository.account.accountKey, this.#repository.repoId));
     } catch (error) {
       Logger.debug("Error getting local commits", error);
       return null;

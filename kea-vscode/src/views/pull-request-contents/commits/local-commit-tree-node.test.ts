@@ -1,7 +1,9 @@
 import * as assert from "assert";
 import * as sinon from "sinon";
 import * as vscode from "vscode";
-import { createKeaContextStub } from "../../../test-utils";
+import { IAccountKey } from "../../../account/account";
+import { RepoId } from "../../../types/kea";
+import { createAccountStub, createKeaContextStub, createRepositoryStub } from "../../../test-utils";
 import { ILocalGitRepository, LocalCommit, LocalCommitFile } from "../../../git/local-git-repository";
 import { LocalCommitTreeNode } from "./local-commit-tree-node";
 import { LocalFileTreeNode } from "./local-file-tree-node";
@@ -13,11 +15,12 @@ suite("LocalCommitTreeNode", () => {
   let testCommit: LocalCommit;
   let workspaceFolder: vscode.WorkspaceFolder;
   let showErrorMessageStub: sinon.SinonStub;
+  let accountKey: IAccountKey;
+  let repoId: RepoId;
 
   setup(() => {
     sandbox = sinon.createSandbox();
     
-    // Create mock local git repository.
     mockLocalGitRepo = {
       getCommitFiles: sandbox.stub(),
     } as unknown as sinon.SinonStubbedInstance<ILocalGitRepository>;
@@ -36,6 +39,12 @@ suite("LocalCommitTreeNode", () => {
     };
 
     showErrorMessageStub = sandbox.stub(vscode.window, "showErrorMessage");
+    
+    const accountStub = createAccountStub();
+    accountKey = accountStub.accountKey;
+    
+    const repoStub = createRepositoryStub();
+    repoId = repoStub.repoId;
   });
 
   teardown(() => {
@@ -45,7 +54,7 @@ suite("LocalCommitTreeNode", () => {
   test("should create a valid tree item", () => {
     // Given
     const ctx = createKeaContextStub();
-    const node = new LocalCommitTreeNode(mockLocalGitRepo, testCommit, workspaceFolder, ctx);
+    const node = new LocalCommitTreeNode(mockLocalGitRepo, testCommit, workspaceFolder, ctx, accountKey, repoId);
 
     // When
     const treeItem = node.getTreeItem();
@@ -66,7 +75,7 @@ suite("LocalCommitTreeNode", () => {
       ...testCommit,
       message: "",
     };
-    const node = new LocalCommitTreeNode(mockLocalGitRepo, emptyCommit, workspaceFolder, ctx);
+    const node = new LocalCommitTreeNode(mockLocalGitRepo, emptyCommit, workspaceFolder, ctx, accountKey, repoId);
 
     // When
     const treeItem = node.getTreeItem();
@@ -80,7 +89,7 @@ suite("LocalCommitTreeNode", () => {
     const ctx = createKeaContextStub();
     const error = new Error("Failed to get commit files");
     mockLocalGitRepo.getCommitFiles.resolves(error);
-    const node = new LocalCommitTreeNode(mockLocalGitRepo, testCommit, workspaceFolder, ctx);
+    const node = new LocalCommitTreeNode(mockLocalGitRepo, testCommit, workspaceFolder, ctx, accountKey, repoId);
 
     // When
     const children = await node.getChildren();
@@ -101,7 +110,7 @@ suite("LocalCommitTreeNode", () => {
       { filename: "src/subfolder/file2.ts", status: "D" },
     ];
     mockLocalGitRepo.getCommitFiles.resolves(files);
-    const node = new LocalCommitTreeNode(mockLocalGitRepo, testCommit, workspaceFolder, ctx);
+    const node = new LocalCommitTreeNode(mockLocalGitRepo, testCommit, workspaceFolder, ctx, accountKey, repoId);
 
     // When
     const children = await node.getChildren();
@@ -149,7 +158,7 @@ suite("LocalCommitTreeNode", () => {
       { filename: "tests/test.ts", status: "A" },
     ];
     mockLocalGitRepo.getCommitFiles.resolves(files);
-    const node = new LocalCommitTreeNode(mockLocalGitRepo, testCommit, workspaceFolder, ctx);
+    const node = new LocalCommitTreeNode(mockLocalGitRepo, testCommit, workspaceFolder, ctx, accountKey, repoId);
 
     // When
     const children = await node.getChildren();

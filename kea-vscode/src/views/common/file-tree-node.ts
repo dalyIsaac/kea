@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import { IAccountKey } from "../../account/account";
+import { IKeaContext } from "../../core/context";
 import { createGitDecorationUri } from "../../decorations/decoration-schemes";
 import { CommitFile, FileComment, RepoId } from "../../types/kea";
 import { CollapsibleState, getCollapsibleState, IParentTreeNode } from "../tree-node";
@@ -13,13 +14,14 @@ export class FileTreeNode implements IParentTreeNode<ReviewCommentTreeNode> {
   #iconPath = new vscode.ThemeIcon("file");
   #tooltip = "File";
   #resourceUri: vscode.Uri;
+  #ctx: IKeaContext | undefined;
 
   #comments: FileComment[];
   fileName: string;
 
   collapsibleState: CollapsibleState;
 
-  constructor(accountKey: IAccountKey, repoId: RepoId, file: CommitFile, comments: FileComment[]) {
+  constructor(accountKey: IAccountKey, repoId: RepoId, file: CommitFile, comments: FileComment[], ctx?: IKeaContext) {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     this.fileName = file.filename.split("/").pop()!;
     this.collapsibleState = comments.length > 0 ? "collapsed" : "none";
@@ -31,6 +33,7 @@ export class FileTreeNode implements IParentTreeNode<ReviewCommentTreeNode> {
     });
 
     this.#comments = comments;
+    this.#ctx = ctx;
   }
 
   getTreeItem = (): vscode.TreeItem => {
@@ -40,12 +43,19 @@ export class FileTreeNode implements IParentTreeNode<ReviewCommentTreeNode> {
     treeItem.iconPath = this.#iconPath;
     treeItem.tooltip = this.#tooltip;
 
-    // Add command to open file diff when clicked
-    treeItem.command = {
-      command: "kea.openCommitFileDiff",
-      title: "Open File Diff",
-      arguments: [{ resourceUri: this.#resourceUri }],
-    };
+    if (this.#ctx) {
+      treeItem.command = this.#ctx.commandManager.getCommand(
+        "kea.openCommitFileDiff",
+        "Open File Diff",
+        { resourceUri: this.#resourceUri }
+      );
+    } else {
+      treeItem.command = {
+        command: "kea.openCommitFileDiff",
+        title: "Open File Diff",
+        arguments: [{ resourceUri: this.#resourceUri }],
+      };
+    }
 
     if (this.#comments.length > 0) {
       treeItem.description = `${this.#comments.length} comment${this.#comments.length > 1 ? "s" : ""}`;

@@ -24,6 +24,6 @@ export const COMMANDS = {
 export type CommandMap = Record<keyof typeof COMMANDS, ReturnType<(typeof COMMANDS)[keyof typeof COMMANDS]>>;
 
 export interface ICommandManager extends IKeaDisposable {
-  executeCommand: <T extends keyof typeof COMMANDS>(commandName: T, ...args: unknown[]) => Thenable<void>;
+  executeCommand: (commandName: keyof typeof COMMANDS, ...args: unknown[]) => Thenable<void>;
   getCommand: (commandName: keyof typeof COMMANDS, title: string, ...args: unknown[]) => vscode.Command;
 }
