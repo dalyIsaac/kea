@@ -1,7 +1,7 @@
 import * as assert from "assert";
 import * as vscode from "vscode";
 import { FileTreeNodeType } from "./file-tree-node";
-import { FolderTreeNode, FolderTreeNodeType } from "./folder-tree-node";
+import { FolderTreeNode } from "./folder-tree-node";
 
 suite("FolderTreeNode", () => {
   test("constructor should extract folder name from path", () => {

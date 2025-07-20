@@ -113,22 +113,25 @@ suite("CommitTreeNode", () => {
     assert.strictEqual(srcChildren.length, 2, "'src' folder should have 2 children ('file1.ts', 'folder')");
 
     // Then: Check src/file1.ts
-    const file1Node = srcChildren.find((c: any) => c instanceof RemoteFileTreeNode && c.fileName === "file1.ts") as FileTreeNodeType | undefined;
+    const file1Node = srcChildren.find((c) => c instanceof RemoteFileTreeNode && c.fileName === "file1.ts");
     assert.ok(file1Node, "'src/file1.ts' node not found");
+    assert.ok(file1Node instanceof RemoteFileTreeNode);
     const file1Comments = file1Node.getChildren();
     assert.strictEqual(file1Comments.length, 1, "file1.ts should have 1 comment");
     assert.ok(file1Comments[0] instanceof ReviewCommentTreeNode, "file1 comment should be ReviewCommentTreeNode");
     assert.strictEqual(file1Comments[0].comment.body, "Comment 1");
 
     // Then: Check src/folder
-    const folderNode = srcChildren.find((c: any) => c instanceof RemoteFolderTreeNode && c.folderName === "folder") as FolderTreeNodeType | undefined;
+    const folderNode = srcChildren.find((c) => c instanceof RemoteFolderTreeNode && c.folderName === "folder");
     assert.ok(folderNode, "'src/folder' node not found");
+    assert.ok(folderNode instanceof RemoteFolderTreeNode);
     const folderChildren = folderNode.getChildren();
     assert.strictEqual(folderChildren.length, 1, "'src/folder' should have 1 child ('file2.ts')");
 
     // Then: Check src/folder/file2.ts
-    const file2Node = folderChildren.find((c: any) => c instanceof RemoteFileTreeNode && c.fileName === "file2.ts") as FileTreeNodeType | undefined;
+    const file2Node = folderChildren.find((c) => c instanceof RemoteFileTreeNode && c.fileName === "file2.ts");
     assert.ok(file2Node, "'src/folder/file2.ts' node not found");
+    assert.ok(file2Node instanceof RemoteFileTreeNode);
     const file2Comments = file2Node.getChildren();
     assert.strictEqual(file2Comments.length, 0, "file2.ts should have 0 comments");
   });
@@ -172,7 +175,7 @@ suite("CommitTreeNode", () => {
 
     assert.strictEqual(children.length, 1, "Should have one file node despite comment error");
     assert.ok(children[0] instanceof RemoteFileTreeNode, "Child should be a RemoteFileTreeNode");
-    const fileNode = children[0] as FileTreeNodeType;
+    const fileNode = children[0];
     assert.strictEqual(fileNode.fileName, "file.ts");
     const fileComments = fileNode.getChildren();
     assert.strictEqual(fileComments.length, 0, "File node should have no comments");

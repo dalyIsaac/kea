@@ -3,7 +3,7 @@ import * as vscode from "vscode";
 import { IAccountKey } from "../../../account/account";
 import { IKeaContext } from "../../../core/context";
 import { ILocalGitRepository, LocalCommit } from "../../../git/local-git-repository";
-import { CommitFile, FileComment, RepoId } from "../../../types/kea";
+import { FileComment, RepoId } from "../../../types/kea";
 import { BaseFileTreeNode } from "../../common/base-file-tree-node";
 
 /**

@@ -2,8 +2,8 @@ import * as assert from "assert";
 import * as vscode from "vscode";
 import { createFileStub, createPullRequestCommentStub, createRepositoryStub } from "../../../test-utils";
 import { PullRequestId } from "../../../types/kea";
-import { FileTreeNodeType, RemoteFileTreeNode } from "../../common/file-tree-node";
-import { FolderTreeNodeType, RemoteFolderTreeNode } from "../../common/folder-tree-node";
+import { RemoteFileTreeNode } from "../../common/file-tree-node";
+import { RemoteFolderTreeNode } from "../../common/folder-tree-node";
 import { ReviewCommentTreeNode } from "../../common/review-comment-tree-node";
 import { FilesRootTreeNode } from "./files-root-tree-node";
 
@@ -98,13 +98,13 @@ suite("FilesRootTreeNode", () => {
     assert.strictEqual(readmeTreeItem.label, "README.md");
     assert.ok(readme instanceof RemoteFileTreeNode);
 
-    const src = children[1] as FolderTreeNodeType;
+    const src = children[1] as RemoteFolderTreeNode;
     const srcTreeItem = src.getTreeItem();
     assert.strictEqual(srcTreeItem.label, "src");
     assert.ok(src instanceof RemoteFolderTreeNode);
     assert.strictEqual(src.children.length, 2);
 
-    const components = src.children[0] as FolderTreeNodeType;
+    const components = src.children[0] as RemoteFolderTreeNode;
     const componentsTreeItem = components.getTreeItem();
     assert.strictEqual(componentsTreeItem.label, "components");
     assert.ok(components instanceof RemoteFolderTreeNode);
@@ -120,7 +120,7 @@ suite("FilesRootTreeNode", () => {
     assert.strictEqual(modalTreeItem.label, "Modal.tsx");
     assert.ok(modal instanceof RemoteFileTreeNode);
 
-    const utils = src.children[1] as FolderTreeNodeType;
+    const utils = src.children[1] as RemoteFolderTreeNode;
     const utilsTreeItem = utils.getTreeItem();
     assert.strictEqual(utilsTreeItem.label, "utils");
     assert.ok(utils instanceof RemoteFolderTreeNode);

@@ -4,8 +4,7 @@ import * as vscode from "vscode";
 import { IAccountKey } from "../account/account";
 import { IKeaContext } from "../core/context";
 import { ILocalGitRepository, LocalCommit } from "../git/local-git-repository";
-import { createPullRequestStub } from "../test-utils";
-import { PullRequest, RepoId } from "../types/kea";
+import { RepoId } from "../types/kea";
 import { LocalCommitsService } from "./local-commits-service";
 
 suite("LocalCommitsService", () => {
@@ -21,7 +20,7 @@ suite("LocalCommitsService", () => {
       gitManager: {
         getLocalGitRepository: sandbox.stub()
       }
-    } as any;
+    } as IKeaContext;
     accountKey = { providerId: "github", accountId: "test-account" };
     repoId = { owner: "test-owner", repo: "test-repo" };
     service = new LocalCommitsService(mockContext, accountKey, repoId);
