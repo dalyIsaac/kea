@@ -4,10 +4,10 @@ import * as vscode from "vscode";
 import { IKeaRepository } from "../../../repository/kea-repository";
 import { createCommitCommentStub, createCommitStub, createFileStub, createRepositoryStub, createUserStub } from "../../../test-utils";
 import { Commit, CommitComment, CommitFile } from "../../../types/kea";
-import { FileTreeNodeType, RemoteFileTreeNode } from "../../common/remote-file-tree-node";
-import { FolderTreeNodeType, RemoteFolderTreeNode } from "../../common/remote-folder-tree-node";
+import { RemoteCommitTreeNode } from "../../common/remote-commit/remote-commit-tree-node";
+import { RemoteFileTreeNode } from "../../common/remote-commit/remote-file-tree-node";
+import { RemoteFolderTreeNode } from "../../common/remote-commit/remote-folder-tree-node";
 import { ReviewCommentTreeNode } from "../../common/review-comment-tree-node";
-import { RemoteCommitTreeNode } from "./remote-commit-tree-node";
 
 suite("CommitTreeNode", () => {
   let sandbox: sinon.SinonSandbox;
@@ -99,7 +99,7 @@ suite("CommitTreeNode", () => {
     assert.strictEqual(children.length, 2, "Should have one folder ('src') and one file ('README.md') at the root");
 
     // Then: Check README.md file node
-    const readmeNode = children.find((c) => c instanceof RemoteFileTreeNode && c.fileName === "README.md") as FileTreeNodeType | undefined;
+    const readmeNode = children.find((c) => c instanceof RemoteFileTreeNode && c.fileName === "README.md");
     assert.ok(readmeNode, "README.md node not found");
     const readmeComments = readmeNode.getChildren();
     assert.strictEqual(readmeComments.length, 1, "README.md should have 1 comment");
@@ -107,9 +107,7 @@ suite("CommitTreeNode", () => {
     assert.strictEqual(readmeComments[0].comment.body, "Comment 2");
 
     // Then: Check src folder node
-    const srcFolderNode = children.find((c) => c instanceof RemoteFolderTreeNode && c.folderName === "src") as
-      | FolderTreeNodeType
-      | undefined;
+    const srcFolderNode = children.find((c) => c instanceof RemoteFolderTreeNode && c.folderName === "src");
     assert.ok(srcFolderNode, "'src' folder node not found");
     const srcChildren = srcFolderNode.getChildren();
     assert.strictEqual(srcChildren.length, 2, "'src' folder should have 2 children ('file1.ts', 'folder')");

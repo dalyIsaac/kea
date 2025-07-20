@@ -1,9 +1,9 @@
 import * as assert from "assert";
-import { IAccountKey } from "../../account/account";
-import { createFileStub, createPullRequestCommentStub } from "../../test-utils";
-import { PullRequestComment, RepoId } from "../../types/kea";
-import { FileTreeNode } from "./remote-file-tree-node";
-import { ReviewCommentTreeNode } from "./review-comment-tree-node";
+import { IAccountKey } from "../../../account/account";
+import { createFileStub, createPullRequestCommentStub } from "../../../test-utils";
+import { PullRequestComment, RepoId } from "../../../types/kea";
+import { ReviewCommentTreeNode } from "../../common/review-comment-tree-node";
+import { RemoteFileTreeNode } from "./remote-file-tree-node";
 
 suite("FileTreeNode", () => {
   const accountKey: IAccountKey = {
@@ -23,7 +23,7 @@ suite("FileTreeNode", () => {
     const comments: PullRequestComment[] = [];
 
     // When
-    const fileTreeNode = new FileTreeNode(accountKey, repoId, file, comments);
+    const fileTreeNode = new RemoteFileTreeNode(accountKey, repoId, file, comments);
     const treeItem = fileTreeNode.getTreeItem();
 
     // Then
@@ -40,7 +40,7 @@ suite("FileTreeNode", () => {
 
     // When - with single comment
     const singleComment: PullRequestComment[] = [createPullRequestCommentStub({ createdAt: new Date("2023-01-01") })];
-    const singleCommentNode = new FileTreeNode(accountKey, repoId, file, singleComment);
+    const singleCommentNode = new RemoteFileTreeNode(accountKey, repoId, file, singleComment);
     const singleCommentTreeItem = singleCommentNode.getTreeItem();
 
     // Then
@@ -51,7 +51,7 @@ suite("FileTreeNode", () => {
       createPullRequestCommentStub({ createdAt: new Date("2023-01-01") }),
       createPullRequestCommentStub({ createdAt: new Date("2023-01-02") }),
     ];
-    const multipleCommentsNode = new FileTreeNode(accountKey, repoId, file, multipleComments);
+    const multipleCommentsNode = new RemoteFileTreeNode(accountKey, repoId, file, multipleComments);
     const multipleCommentsTreeItem = multipleCommentsNode.getTreeItem();
 
     // Then
@@ -70,7 +70,7 @@ suite("FileTreeNode", () => {
     ];
 
     // When
-    const fileTreeNode = new FileTreeNode(accountKey, repoId, file, comments);
+    const fileTreeNode = new RemoteFileTreeNode(accountKey, repoId, file, comments);
 
     // Then
     const children = fileTreeNode.getChildren();

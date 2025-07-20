@@ -4,12 +4,12 @@ import * as vscode from "vscode";
 import { IKeaRepository } from "../../../repository/kea-repository";
 import { createCommitCommentStub, createCommitStub, createFileStub, createRepositoryStub, createUserStub } from "../../../test-utils";
 import { Commit, CommitComment, CommitFile } from "../../../types/kea";
-import { RemoteCommitTreeNode } from "../../common/remote-commit/remote-commit-tree-node";
-import { RemoteFileTreeNode } from "../../common/remote-commit/remote-file-tree-node";
-import { RemoteFolderTreeNode } from "../../common/remote-commit/remote-folder-tree-node";
 import { ReviewCommentTreeNode } from "../../common/review-comment-tree-node";
+import { RemoteCommitTreeNode } from "./remote-commit-tree-node";
+import { RemoteFileTreeNode } from "./remote-file-tree-node";
+import { RemoteFolderTreeNode } from "./remote-folder-tree-node";
 
-suite("RemoteCommitTreeNode", () => {
+suite("CommitTreeNode", () => {
   let sandbox: sinon.SinonSandbox;
   let mockRepository: sinon.SinonStubbedInstance<IKeaRepository>;
   let testCommit: Commit;

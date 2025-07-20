@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { BaseFolderTreeNode } from "../../common/base-folder-tree-node";
+import { BaseFolderTreeNode } from "../base-folder-tree-node";
 import { LocalFileTreeNode } from "./local-file-tree-node";
 
 /**

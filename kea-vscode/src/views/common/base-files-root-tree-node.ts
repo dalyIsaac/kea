@@ -4,8 +4,8 @@ import { CommitFile, FileComment } from "../../types/kea";
 import { IParentTreeNode, ITreeNode } from "../tree-node";
 import { BaseFileTreeNode } from "./base-file-tree-node";
 import { BaseFolderTreeNode } from "./base-folder-tree-node";
-import { RemoteFileTreeNode } from "./remote-file-tree-node";
-import { RemoteFolderTreeNode } from "./remote-folder-tree-node";
+import { RemoteFileTreeNode } from "./remote-commit/remote-file-tree-node";
+import { RemoteFolderTreeNode } from "./remote-commit/remote-folder-tree-node";
 
 export type FilesRootTreeNodeChild = BaseFileTreeNode | BaseFolderTreeNode<ITreeNode>;
 

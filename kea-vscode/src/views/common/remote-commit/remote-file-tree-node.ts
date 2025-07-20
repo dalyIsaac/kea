@@ -1,9 +1,9 @@
 import * as vscode from "vscode";
-import { IAccountKey } from "../../account/account";
-import { IKeaContext } from "../../core/context";
-import { createGitDecorationUri } from "../../decorations/decoration-schemes";
-import { CommitFile, FileComment, RepoId } from "../../types/kea";
-import { BaseFileTreeNode } from "./base-file-tree-node";
+import { IAccountKey } from "../../../account/account";
+import { IKeaContext } from "../../../core/context";
+import { createGitDecorationUri } from "../../../decorations/decoration-schemes";
+import { CommitFile, FileComment, RepoId } from "../../../types/kea";
+import { BaseFileTreeNode } from "../../common/base-file-tree-node";
 
 /**
  * Tree item representing a remote file.
@@ -15,7 +15,7 @@ export class RemoteFileTreeNode extends BaseFileTreeNode {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const fileName = file.filename.split("/").pop()!;
     const fileUri = vscode.Uri.file(file.filename);
-    
+
     super(fileName, fileUri, comments, "file", ctx);
 
     this.#resourceUri = createGitDecorationUri({
@@ -30,11 +30,7 @@ export class RemoteFileTreeNode extends BaseFileTreeNode {
     const treeItem = this.createBaseTreeItem();
 
     if (this.ctx) {
-      treeItem.command = this.ctx.commandManager.getCommand(
-        "kea.openCommitFileDiff",
-        "Open File Diff",
-        { resourceUri: this.#resourceUri }
-      );
+      treeItem.command = this.ctx.commandManager.getCommand("kea.openCommitFileDiff", "Open File Diff", { resourceUri: this.#resourceUri });
     } else {
       treeItem.command = {
         command: "kea.openCommitFileDiff",
@@ -46,7 +42,3 @@ export class RemoteFileTreeNode extends BaseFileTreeNode {
     return treeItem;
   };
 }
-
-// Maintain backward compatibility
-export const FileTreeNode = RemoteFileTreeNode;
-export type FileTreeNodeType = RemoteFileTreeNode;

@@ -4,9 +4,9 @@ import { Logger } from "../../../core/logger";
 import { IKeaRepository } from "../../../repository/kea-repository";
 import { LocalCommitsService } from "../../../services/local-commits-service";
 import { PullRequest, PullRequestId } from "../../../types/kea";
+import { LocalCommitTreeNode } from "../../common/local-commit/local-commit-tree-node";
+import { RemoteCommitTreeNode } from "../../common/remote-commit/remote-commit-tree-node";
 import { CollapsibleState, getCollapsibleState, IParentTreeNode } from "../../tree-node";
-import { LocalCommitTreeNode } from "../local-commit/local-commit-tree-node";
-import { RemoteCommitTreeNode } from "./remote-commit-tree-node";
 
 /**
  * Provides information about the commits in the current pull request.

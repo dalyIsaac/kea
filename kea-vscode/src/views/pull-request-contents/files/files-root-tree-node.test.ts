@@ -2,8 +2,8 @@ import * as assert from "assert";
 import * as vscode from "vscode";
 import { createFileStub, createPullRequestCommentStub, createRepositoryStub } from "../../../test-utils";
 import { PullRequestId } from "../../../types/kea";
-import { RemoteFileTreeNode } from "../../common/remote-file-tree-node";
-import { RemoteFolderTreeNode } from "../../common/remote-folder-tree-node";
+import { RemoteFileTreeNode } from "../../common/remote-commit/remote-file-tree-node";
+import { RemoteFolderTreeNode } from "../../common/remote-commit/remote-folder-tree-node";
 import { ReviewCommentTreeNode } from "../../common/review-comment-tree-node";
 import { FilesRootTreeNode } from "./files-root-tree-node";
 

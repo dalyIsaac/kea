@@ -4,7 +4,7 @@ import { IKeaContext } from "../core/context";
 import { Logger } from "../core/logger";
 import { LocalCommit } from "../git/local-git-repository";
 import { PullRequest, RepoId } from "../types/kea";
-import { LocalCommitTreeNode } from "../views/pull-request-contents/local-commit/local-commit-tree-node";
+import { LocalCommitTreeNode } from "../views/common/local-commit/local-commit-tree-node";
 
 /**
  * Service for handling local Git repository integration and commit retrieval.
@@ -67,15 +67,7 @@ export class LocalCommitsService {
 
       // Convert local commits to tree nodes.
       return commits.map(
-        (commit: LocalCommit) =>
-          new LocalCommitTreeNode(
-            localGitRepo,
-            commit,
-            workspaceFolder,
-            this.#ctx,
-            this.#accountKey,
-            this.#repoId,
-          ),
+        (commit: LocalCommit) => new LocalCommitTreeNode(localGitRepo, commit, workspaceFolder, this.#ctx, this.#accountKey, this.#repoId),
       );
     } catch (error) {
       Logger.debug("Error in getLocalCommits", error);
