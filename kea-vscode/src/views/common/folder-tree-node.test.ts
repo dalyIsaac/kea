@@ -1,7 +1,7 @@
 import * as assert from "assert";
 import * as vscode from "vscode";
-import { FileTreeNode } from "./file-tree-node";
-import { FolderTreeNode } from "./folder-tree-node";
+import { FileTreeNodeType } from "./file-tree-node";
+import { FolderTreeNode, FolderTreeNodeType } from "./folder-tree-node";
 
 suite("FolderTreeNode", () => {
   test("constructor should extract folder name from path", () => {
@@ -64,7 +64,7 @@ suite("FolderTreeNode", () => {
 
     // Mock children
     const childFolder = new FolderTreeNode("src/utils/helpers");
-    const childFile = {} as FileTreeNode; // We only need the reference, not the implementation
+    const childFile = {} as FileTreeNodeType; // We only need the reference, not the implementation
     folderTreeNode.children = [childFolder, childFile];
 
     // When

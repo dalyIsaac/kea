@@ -2,8 +2,8 @@ import * as assert from "assert";
 import * as vscode from "vscode";
 import { createFileStub, createPullRequestCommentStub, createRepositoryStub } from "../../../test-utils";
 import { PullRequestId } from "../../../types/kea";
-import { FileTreeNode } from "../../common/file-tree-node";
-import { FolderTreeNode } from "../../common/folder-tree-node";
+import { FileTreeNodeType, RemoteFileTreeNode } from "../../common/file-tree-node";
+import { FolderTreeNodeType, RemoteFolderTreeNode } from "../../common/folder-tree-node";
 import { ReviewCommentTreeNode } from "../../common/review-comment-tree-node";
 import { FilesRootTreeNode } from "./files-root-tree-node";
 
@@ -70,7 +70,7 @@ suite("FilesRootTreeNode", () => {
     const readme = children[0]!;
     const readmeTreeItem = readme.getTreeItem();
     assert.strictEqual(readmeTreeItem.label, "README.md");
-    assert.ok(readme instanceof FileTreeNode);
+    assert.ok(readme instanceof RemoteFileTreeNode);
   });
 
   test("Returns a tree structure for files", async () => {
@@ -96,40 +96,40 @@ suite("FilesRootTreeNode", () => {
     const readme = children[0]!;
     const readmeTreeItem = readme.getTreeItem();
     assert.strictEqual(readmeTreeItem.label, "README.md");
-    assert.ok(readme instanceof FileTreeNode);
+    assert.ok(readme instanceof RemoteFileTreeNode);
 
-    const src = children[1] as FolderTreeNode;
+    const src = children[1] as FolderTreeNodeType;
     const srcTreeItem = src.getTreeItem();
     assert.strictEqual(srcTreeItem.label, "src");
-    assert.ok(src instanceof FolderTreeNode);
+    assert.ok(src instanceof RemoteFolderTreeNode);
     assert.strictEqual(src.children.length, 2);
 
-    const components = src.children[0] as FolderTreeNode;
+    const components = src.children[0] as FolderTreeNodeType;
     const componentsTreeItem = components.getTreeItem();
     assert.strictEqual(componentsTreeItem.label, "components");
-    assert.ok(components instanceof FolderTreeNode);
+    assert.ok(components instanceof RemoteFolderTreeNode);
     assert.strictEqual(components.children.length, 2);
 
     const button = components.children[0]!;
     const buttonTreeItem = button.getTreeItem();
     assert.strictEqual(buttonTreeItem.label, "Button.tsx");
-    assert.ok(button instanceof FileTreeNode);
+    assert.ok(button instanceof RemoteFileTreeNode);
 
     const modal = components.children[1]!;
     const modalTreeItem = modal.getTreeItem();
     assert.strictEqual(modalTreeItem.label, "Modal.tsx");
-    assert.ok(modal instanceof FileTreeNode);
+    assert.ok(modal instanceof RemoteFileTreeNode);
 
-    const utils = src.children[1] as FolderTreeNode;
+    const utils = src.children[1] as FolderTreeNodeType;
     const utilsTreeItem = utils.getTreeItem();
     assert.strictEqual(utilsTreeItem.label, "utils");
-    assert.ok(utils instanceof FolderTreeNode);
+    assert.ok(utils instanceof RemoteFolderTreeNode);
     assert.strictEqual(utils.children.length, 1);
 
     const helpers = utils.children[0]!;
     const helpersTreeItem = helpers.getTreeItem();
     assert.strictEqual(helpersTreeItem.label, "helpers.ts");
-    assert.ok(helpers instanceof FileTreeNode);
+    assert.ok(helpers instanceof RemoteFileTreeNode);
   });
 
   test("Returns a single file with multiple review comments", async () => {
@@ -153,7 +153,7 @@ suite("FilesRootTreeNode", () => {
     const readme = children[0]!;
     const readmeTreeItem = readme.getTreeItem();
     assert.strictEqual(readmeTreeItem.label, "README.md");
-    assert.ok(readme instanceof FileTreeNode);
+    assert.ok(readme instanceof RemoteFileTreeNode);
 
     const reviewComments = readme.getChildren();
     assert.strictEqual(reviewComments.length, 2);

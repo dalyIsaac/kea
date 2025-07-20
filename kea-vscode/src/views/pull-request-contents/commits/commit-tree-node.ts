@@ -9,7 +9,7 @@ import { CollapsibleState, getCollapsibleState } from "../../tree-node";
  */
 export class CommitTreeNode extends BaseFilesRootTreeNode {
   #contextValue = "commit";
-  #iconPath = new vscode.ThemeIcon("git-commit");
+  #iconPath = new vscode.ThemeIcon("cloud");
   commit: Commit;
 
   collapsibleState: CollapsibleState = "collapsed";

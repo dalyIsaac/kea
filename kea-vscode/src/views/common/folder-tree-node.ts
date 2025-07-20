@@ -1,33 +1,20 @@
 import * as vscode from "vscode";
-import { CollapsibleState, getCollapsibleState, IParentTreeNode } from "../tree-node";
-import { FileTreeNode } from "./file-tree-node";
+import { BaseFolderTreeNode } from "./base-folder-tree-node";
+import { RemoteFileTreeNode } from "./file-tree-node";
 
 /**
- * Tree item representing a folder.
+ * Tree item representing a remote folder.
  */
-export class FolderTreeNode implements IParentTreeNode<FileTreeNode | FolderTreeNode> {
-  #contextValue = "folder";
-  #iconPath = new vscode.ThemeIcon("folder");
-  #tooltip = "Folder";
-  folderName: string;
-
-  collapsibleState: CollapsibleState = "collapsed";
-
-  children: Array<FileTreeNode | FolderTreeNode>;
-
+export class RemoteFolderTreeNode extends BaseFolderTreeNode<RemoteFileTreeNode | RemoteFolderTreeNode> {
   constructor(folderPath: string) {
-    this.folderName = folderPath.split("/").pop() ?? folderPath;
-
-    this.children = [];
+    super(folderPath, "folder");
   }
 
   getTreeItem = (): vscode.TreeItem => {
-    const treeItem = new vscode.TreeItem(this.folderName, getCollapsibleState(this.collapsibleState));
-    treeItem.contextValue = this.#contextValue;
-    treeItem.iconPath = this.#iconPath;
-    treeItem.tooltip = this.#tooltip;
-    return treeItem;
+    return this.createBaseTreeItem();
   };
-
-  getChildren = (): Array<FileTreeNode | FolderTreeNode> => this.children;
 }
+
+// Maintain backward compatibility
+export const FolderTreeNode = RemoteFolderTreeNode;
+export type FolderTreeNodeType = RemoteFolderTreeNode;

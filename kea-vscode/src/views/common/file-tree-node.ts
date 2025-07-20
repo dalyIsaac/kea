@@ -3,50 +3,34 @@ import { IAccountKey } from "../../account/account";
 import { IKeaContext } from "../../core/context";
 import { createGitDecorationUri } from "../../decorations/decoration-schemes";
 import { CommitFile, FileComment, RepoId } from "../../types/kea";
-import { CollapsibleState, getCollapsibleState, IParentTreeNode } from "../tree-node";
-import { ReviewCommentTreeNode } from "./review-comment-tree-node";
+import { BaseFileTreeNode } from "./base-file-tree-node";
 
 /**
- * Tree item representing a file.
+ * Tree item representing a remote file.
  */
-export class FileTreeNode implements IParentTreeNode<ReviewCommentTreeNode> {
-  #contextValue = "file";
-  #tooltip = "File";
+export class RemoteFileTreeNode extends BaseFileTreeNode {
   #resourceUri: vscode.Uri;
-  #fileUri: vscode.Uri;
-  #ctx: IKeaContext | undefined;
-
-  #comments: FileComment[];
-  fileName: string;
-
-  collapsibleState: CollapsibleState;
 
   constructor(accountKey: IAccountKey, repoId: RepoId, file: CommitFile, comments: FileComment[], ctx?: IKeaContext) {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    this.fileName = file.filename.split("/").pop()!;
-    this.collapsibleState = comments.length > 0 ? "collapsed" : "none";
+    const fileName = file.filename.split("/").pop()!;
+    const fileUri = vscode.Uri.file(file.filename);
+    
+    super(fileName, fileUri, comments, "file", ctx);
+
     this.#resourceUri = createGitDecorationUri({
       accountKey,
       filePath: file.filename,
       repoId,
       fileStatus: file.status,
     });
-
-    // Create a file URI for icon purposes.
-    this.#fileUri = vscode.Uri.file(file.filename);
-
-    this.#comments = comments;
-    this.#ctx = ctx;
   }
 
   getTreeItem = (): vscode.TreeItem => {
-    const treeItem = new vscode.TreeItem(this.fileName, getCollapsibleState(this.collapsibleState));
-    treeItem.resourceUri = this.#fileUri;
-    treeItem.contextValue = this.#contextValue;
-    treeItem.tooltip = this.#tooltip;
+    const treeItem = this.createBaseTreeItem();
 
-    if (this.#ctx) {
-      treeItem.command = this.#ctx.commandManager.getCommand(
+    if (this.ctx) {
+      treeItem.command = this.ctx.commandManager.getCommand(
         "kea.openCommitFileDiff",
         "Open File Diff",
         { resourceUri: this.#resourceUri }
@@ -59,15 +43,10 @@ export class FileTreeNode implements IParentTreeNode<ReviewCommentTreeNode> {
       };
     }
 
-    if (this.#comments.length > 0) {
-      treeItem.description = `${this.#comments.length} comment${this.#comments.length > 1 ? "s" : ""}`;
-    }
-
     return treeItem;
   };
-
-  getChildren = (): ReviewCommentTreeNode[] => {
-    const commentItems = this.#comments.map((comment) => new ReviewCommentTreeNode(comment));
-    return commentItems.sort((a, b) => a.comment.createdAt.getTime() - b.comment.createdAt.getTime());
-  };
 }
+
+// Maintain backward compatibility
+export const FileTreeNode = RemoteFileTreeNode;
+export type FileTreeNodeType = RemoteFileTreeNode;

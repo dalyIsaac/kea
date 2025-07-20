@@ -4,12 +4,12 @@ import { IAccountKey } from "../../../account/account";
 import { IKeaContext } from "../../../core/context";
 import { ILocalGitRepository, LocalCommit } from "../../../git/local-git-repository";
 import { CommitFile, FileComment, RepoId } from "../../../types/kea";
-import { FileTreeNode } from "../../common/file-tree-node";
+import { BaseFileTreeNode } from "../../common/base-file-tree-node";
 
 /**
- * Represents a file in a local commit tree, extending FileTreeNode functionality.
+ * Represents a file in a local commit tree, extending BaseFileTreeNode functionality.
  */
-export class LocalFileTreeNode extends FileTreeNode {
+export class LocalFileTreeNode extends BaseFileTreeNode {
   #localGitRepo: ILocalGitRepository;
   #commit: LocalCommit;
   #workspaceFolder: vscode.WorkspaceFolder;
@@ -18,21 +18,22 @@ export class LocalFileTreeNode extends FileTreeNode {
   filePath: string;
   status: string;
   
-  constructor(localGitRepo: ILocalGitRepository, commit: LocalCommit, workspaceFolder: vscode.WorkspaceFolder, filePath: string, status: string, ctx: IKeaContext, accountKey: IAccountKey, repoId: RepoId) {
-    const commitFile: CommitFile = {
-      filename: filePath,
-      sha: commit.sha,
-      status: status as CommitFile['status'],
-      additions: 0,
-      deletions: 0,
-      changes: 0,
-      patch: null,
-      blobUrl: '',
-      rawUrl: '',
-      contentsUrl: ''
-    };
+  constructor(
+    localGitRepo: ILocalGitRepository, 
+    commit: LocalCommit, 
+    workspaceFolder: vscode.WorkspaceFolder, 
+    filePath: string, 
+    status: string, 
+    ctx: IKeaContext, 
+    _accountKey: IAccountKey, 
+    _repoId: RepoId,
+    comments: FileComment[] = []
+  ) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const fileName = filePath.split("/").pop()!;
+    const fileUri = vscode.Uri.file(path.join(workspaceFolder.uri.fsPath, filePath));
     
-    super(accountKey, repoId, commitFile, [] as FileComment[], ctx);
+    super(fileName, fileUri, comments, "localFile", ctx);
     
     this.#localGitRepo = localGitRepo;
     this.#commit = commit;
@@ -42,11 +43,8 @@ export class LocalFileTreeNode extends FileTreeNode {
     this.status = status;
   }
   
-  override getTreeItem = (): vscode.TreeItem => {
-    const treeItem = new vscode.TreeItem(this.fileName, vscode.TreeItemCollapsibleState.None);
-    treeItem.resourceUri = vscode.Uri.file(path.join(this.#workspaceFolder.uri.fsPath, this.filePath));
-    treeItem.contextValue = "localFile";
-    treeItem.iconPath = new vscode.ThemeIcon("file");
+  getTreeItem = (): vscode.TreeItem => {
+    const treeItem = this.createBaseTreeItem();
     treeItem.tooltip = `${this.filePath} (${this.status})`;
     
     treeItem.command = this.#ctx.commandManager.getCommand(

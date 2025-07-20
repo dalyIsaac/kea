@@ -14,7 +14,7 @@ export type LocalCommitTreeNodeChild = LocalFileTreeNode | LocalFolderTreeNode;
  */
 export class LocalCommitTreeNode implements IParentTreeNode<LocalCommitTreeNodeChild> {
   #contextValue = "localCommit";
-  #iconPath = new vscode.ThemeIcon("git-commit");
+  #iconPath = new vscode.ThemeIcon("git-branch");
   #localGitRepo: ILocalGitRepository;
   #workspaceFolder: vscode.WorkspaceFolder;
   #ctx: IKeaContext;

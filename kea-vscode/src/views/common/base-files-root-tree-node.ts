@@ -2,10 +2,10 @@ import * as vscode from "vscode";
 import { IKeaRepository } from "../../repository/kea-repository";
 import { CommitFile, FileComment } from "../../types/kea";
 import { IParentTreeNode } from "../tree-node";
-import { FileTreeNode } from "./file-tree-node";
-import { FolderTreeNode } from "./folder-tree-node";
+import { RemoteFileTreeNode } from "./file-tree-node";
+import { RemoteFolderTreeNode } from "./folder-tree-node";
 
-export type FilesRootTreeNodeChild = FileTreeNode | FolderTreeNode;
+export type FilesRootTreeNodeChild = RemoteFileTreeNode | RemoteFolderTreeNode;
 
 export abstract class BaseFilesRootTreeNode implements IParentTreeNode<FilesRootTreeNodeChild> {
   protected _repository: IKeaRepository;
@@ -37,20 +37,20 @@ export abstract class BaseFilesRootTreeNode implements IParentTreeNode<FilesRoot
       const folderName = pathParts[idx];
       const folderPath = pathParts.slice(0, idx + 1).join("/");
 
-      let folderNode = parents.find((node) => node instanceof FolderTreeNode && node.folderName === folderName);
+      let folderNode = parents.find((node) => node instanceof RemoteFolderTreeNode && node.folderName === folderName);
       if (folderNode === undefined) {
-        folderNode = new FolderTreeNode(folderPath);
+        folderNode = new RemoteFolderTreeNode(folderPath);
         parents.push(folderNode);
       }
 
-      parents = (folderNode as FolderTreeNode).children;
+      parents = (folderNode as RemoteFolderTreeNode).children;
     }
 
     const comments = reviewComments.filter((comment) => comment.path === file.filename);
     const fileName = pathParts[pathParts.length - 1];
-    const fileNode = new FileTreeNode(this._repository.account.accountKey, this._repository.repoId, file, comments);
+    const fileNode = new RemoteFileTreeNode(this._repository.account.accountKey, this._repository.repoId, file, comments);
 
-    if (!parents.some((node) => node instanceof FileTreeNode && node.fileName === fileName)) {
+    if (!parents.some((node) => node instanceof RemoteFileTreeNode && node.fileName === fileName)) {
       parents.push(fileNode);
     }
 
