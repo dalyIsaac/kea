@@ -6,7 +6,7 @@ import { BaseFilesRootTreeNode, FilesRootTreeNodeChild } from "../../common/base
 import { BaseFolderTreeNode } from "../../common/base-folder-tree-node";
 import { RemoteFileTreeNode } from "../../common/remote-commit/remote-file-tree-node";
 import { RemoteFolderTreeNode } from "../../common/remote-commit/remote-folder-tree-node";
-import { CollapsibleState, getCollapsibleState, ITreeNode } from "../../tree-node";
+import { CollapsibleState, getCollapsibleState } from "../../tree-node";
 
 /**
  * Parent tree item for files.
@@ -29,8 +29,8 @@ export class FilesRootTreeNode extends BaseFilesRootTreeNode {
     return new RemoteFileTreeNode(this._repository.account.accountKey, this._repository.repoId, file, comments);
   }
 
-  protected createFolderNode(folderPath: string): BaseFolderTreeNode<any> {
-    return new RemoteFolderTreeNode(folderPath);
+  protected createFolderNode(folderPath: string): BaseFolderTreeNode<FilesRootTreeNodeChild> {
+    return new RemoteFolderTreeNode(folderPath) as BaseFolderTreeNode<FilesRootTreeNodeChild>;
   }
 
   getTreeItem = (): vscode.TreeItem => {

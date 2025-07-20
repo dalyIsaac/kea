@@ -4,7 +4,7 @@ import { Commit, CommitFile, FileComment } from "../../../types/kea";
 import { BaseFileTreeNode } from "../../common/base-file-tree-node";
 import { BaseFilesRootTreeNode, FilesRootTreeNodeChild } from "../../common/base-files-root-tree-node";
 import { BaseFolderTreeNode } from "../../common/base-folder-tree-node";
-import { CollapsibleState, getCollapsibleState, ITreeNode } from "../../tree-node";
+import { CollapsibleState, getCollapsibleState } from "../../tree-node";
 import { RemoteFileTreeNode } from "./remote-file-tree-node";
 import { RemoteFolderTreeNode } from "./remote-folder-tree-node";
 
@@ -27,8 +27,8 @@ export class RemoteCommitTreeNode extends BaseFilesRootTreeNode {
     return new RemoteFileTreeNode(this._repository.account.accountKey, this._repository.repoId, file, comments);
   }
 
-  protected createFolderNode(folderPath: string): BaseFolderTreeNode<any> {
-    return new RemoteFolderTreeNode(folderPath);
+  protected createFolderNode(folderPath: string): BaseFolderTreeNode<FilesRootTreeNodeChild> {
+    return new RemoteFolderTreeNode(folderPath) as BaseFolderTreeNode<FilesRootTreeNodeChild>;
   }
 
   getTreeItem = (): vscode.TreeItem => {

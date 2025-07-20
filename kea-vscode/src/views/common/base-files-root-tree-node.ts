@@ -1,11 +1,11 @@
 import * as vscode from "vscode";
 import { IKeaRepository } from "../../repository/kea-repository";
 import { CommitFile, FileComment } from "../../types/kea";
-import { IParentTreeNode, ITreeNode } from "../tree-node";
+import { IParentTreeNode } from "../tree-node";
 import { BaseFileTreeNode } from "./base-file-tree-node";
 import { BaseFolderTreeNode } from "./base-folder-tree-node";
 
-export type FilesRootTreeNodeChild = BaseFileTreeNode | BaseFolderTreeNode<any>;
+export type FilesRootTreeNodeChild = BaseFileTreeNode | BaseFolderTreeNode<FilesRootTreeNodeChild>;
 
 export abstract class BaseFilesRootTreeNode implements IParentTreeNode<FilesRootTreeNodeChild> {
   protected _repository: IKeaRepository;
@@ -20,7 +20,7 @@ export abstract class BaseFilesRootTreeNode implements IParentTreeNode<FilesRoot
 
   protected abstract createFileNode(file: CommitFile, comments: FileComment[]): BaseFileTreeNode;
 
-  protected abstract createFolderNode(folderPath: string): BaseFolderTreeNode<any>;
+  protected abstract createFolderNode(folderPath: string): BaseFolderTreeNode<FilesRootTreeNodeChild>;
 
   protected _toTree = (files: CommitFile[], reviewComments: FileComment[]): FilesRootTreeNodeChild[] => {
     const sortedFiles = files.sort((a, b) => a.filename.localeCompare(b.filename));
@@ -42,14 +42,14 @@ export abstract class BaseFilesRootTreeNode implements IParentTreeNode<FilesRoot
       const folderPath = pathParts.slice(0, idx + 1).join("/");
 
       let folderNode = parents.find((node) => {
-        return node instanceof BaseFolderTreeNode && (node as BaseFolderTreeNode<any>).folderName === folderName;
+        return node instanceof BaseFolderTreeNode && node.folderName === folderName;
       });
       if (folderNode === undefined) {
         folderNode = this.createFolderNode(folderPath);
         parents.push(folderNode);
       }
 
-      parents = (folderNode as BaseFolderTreeNode<any>).children;
+      parents = (folderNode as BaseFolderTreeNode<FilesRootTreeNodeChild>).children;
     }
 
     const comments = reviewComments.filter((comment) => comment.path === file.filename);
