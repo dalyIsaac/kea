@@ -3,6 +3,7 @@ import { ILocalGitRepository, LocalCommit } from "../../../git/local-git-reposit
 import { CollapsibleState, getCollapsibleState, IParentTreeNode } from "../../tree-node";
 import { LocalFileTreeNode } from "./local-file-tree-node";
 import { LocalFolderTreeNode } from "./local-folder-tree-node";
+import { IKeaContext } from "../../../core/context";
 
 export type LocalCommitTreeNodeChild = LocalFileTreeNode | LocalFolderTreeNode;
 
@@ -18,7 +19,7 @@ export class LocalCommitTreeNode implements IParentTreeNode<LocalCommitTreeNodeC
   commit: LocalCommit;
   collapsibleState: CollapsibleState = "collapsed";
 
-  constructor(localGitRepo: ILocalGitRepository, commit: LocalCommit, workspaceFolder: vscode.WorkspaceFolder) {
+  constructor(localGitRepo: ILocalGitRepository, commit: LocalCommit, workspaceFolder: vscode.WorkspaceFolder, _ctx: IKeaContext) {
     this.#localGitRepo = localGitRepo;
     this.commit = commit;
     this.#workspaceFolder = workspaceFolder;

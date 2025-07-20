@@ -5,7 +5,7 @@ import { IKeaRepository } from "../../../repository/kea-repository";
 import { PullRequest, PullRequestId } from "../../../types/kea";
 import { CollapsibleState, getCollapsibleState, IParentTreeNode } from "../../tree-node";
 import { CommitTreeNode } from "./commit-tree-node";
-import { LocalCommitTreeNode, LocalCommitTreeNodeChild } from "./local-commit-tree-node";
+import { LocalCommitTreeNode } from "./local-commit-tree-node";
 
 /**
  * Provides information about the commits in the current pull request.
@@ -141,7 +141,7 @@ export class CommitsRootTreeNode implements IParentTreeNode<CommitTreeNode | Loc
         return null;
       }
 
-      return commits.map((commit) => new LocalCommitTreeNode(localGitRepo, commit, workspaceFolder));
+      return commits.map((commit) => new LocalCommitTreeNode(localGitRepo, commit, workspaceFolder, this.#ctx));
     } catch (error) {
       Logger.debug("Error getting local commits", error);
       return null;

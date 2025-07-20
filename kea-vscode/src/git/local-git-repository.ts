@@ -40,7 +40,7 @@ export interface ILocalGitRepository {
    * @param limit Maximum number of commits to retrieve (default: 50).
    * @returns Array of commits from the current branch that are ahead of the target branch.
    */
-  getBranchCommitsAheadOf(targetBranch: string, limit = 50): Promise<LocalCommit[] | Error>;
+  getBranchCommitsAheadOf(targetBranch: string, limit?: number): Promise<LocalCommit[] | Error>;
 
   /**
    * Get commits from the current branch.

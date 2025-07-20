@@ -1,9 +1,12 @@
 import * as vscode from "vscode";
 import * as path from "path";
+import * as os from "os";
+import * as fs from "fs/promises";
 import { IKeaContext } from "../../core/context";
 import { Logger } from "../../core/logger";
 import { parseDecorationPayload, DECORATION_SCHEMES } from "../../decorations/decoration-schemes";
-import { LocalGitRepository } from "../../git/local-git-repository";
+import { LocalGitRepository, ILocalGitRepository } from "../../git/local-git-repository";
+import { ApiCache } from "../../cache/api/api-cache";
 
 export interface IOpenCommitFileDiffCommandArgs {
   resourceUri?: vscode.Uri;
@@ -11,18 +14,19 @@ export interface IOpenCommitFileDiffCommandArgs {
   commitSha?: string;
   filePath?: string;
   workspacePath?: string;
-  localGitRepo?: any; // ILocalGitRepository - avoiding circular import
+  localGitRepo?: ILocalGitRepository;
 }
 
 export const createOpenCommitFileDiffCommand =
   (ctx: IKeaContext) =>
   async (args?: IOpenCommitFileDiffCommandArgs): Promise<Error | void> => {
-    // Handle new local commit format
-    if (args?.commitSha && args?.filePath && args?.workspacePath) {
-      return await handleLocalCommitFileDiff(args.commitSha, args.filePath, args.workspacePath);
+    // Handle new local commit format.
+    if (args?.commitSha && args.filePath && args.workspacePath) {
+      await handleLocalCommitFileDiff(args.commitSha, args.filePath, args.workspacePath);
+      return;
     }
     
-    // Handle legacy resource URI format
+    // Handle legacy resource URI format.
     if (!args?.resourceUri) {
       Logger.error("No resource URI or commit info provided for file diff command");
       return;
@@ -71,7 +75,8 @@ export const createOpenCommitFileDiffCommand =
         return;
       }
 
-      return await handleLocalCommitFileDiff(currentCommit, filePath, workspaceFolder.uri.fsPath);
+      await handleLocalCommitFileDiff(currentCommit, filePath, workspaceFolder.uri.fsPath);
+      return;
     } catch (error) {
       Logger.error("Error opening commit file diff", error);
       vscode.window.showErrorMessage("Failed to open file diff");
@@ -80,12 +85,8 @@ export const createOpenCommitFileDiffCommand =
 
 async function handleLocalCommitFileDiff(commitSha: string, filePath: string, workspacePath: string): Promise<void> {
   try {
-    // Create URIs for diff.
-    const workspaceFilePath = path.join(workspacePath, filePath);
-    const workspaceFileUri = vscode.Uri.file(workspaceFilePath);
-    
     // Create a LocalGitRepository instance.
-    const localGitRepo = new LocalGitRepository(workspacePath, vscode.workspace.getConfiguration().get("kea.apiCache") || {});
+    const localGitRepo = new LocalGitRepository(workspacePath, new ApiCache(100));
     
     // Get the parent commit to show what changed in this commit.
     const parentCommit = await localGitRepo.getParentCommit(commitSha);
@@ -120,12 +121,11 @@ async function handleLocalCommitFileDiff(commitSha: string, filePath: string, wo
     }
 
     // Create temporary files with proper extensions for syntax highlighting.
-    const tempDir = path.join(require('os').tmpdir(), 'kea-commit-files');
-    const fs = require('fs').promises;
+    const tempDir = path.join(os.tmpdir(), 'kea-commit-files');
     
     try {
       await fs.mkdir(tempDir, { recursive: true });
-    } catch (error) {
+    } catch {
       // Directory might already exist, ignore error.
     }
     
@@ -145,24 +145,27 @@ async function handleLocalCommitFileDiff(commitSha: string, filePath: string, wo
     const rightTempFileUri = vscode.Uri.file(rightTempFilePath);
     
     // Open diff editor with parent commit on the left and current commit on the right.
+    // Show the full file path in the title to indicate which file is being diffed.
     await vscode.commands.executeCommand(
       "vscode.diff",
       leftTempFileUri,
       rightTempFileUri,
-      `${path.basename(filePath)} (${leftTitle} ↔ ${commitSha.substring(0, 7)})`,
+      `${filePath} (${leftTitle} ↔ ${commitSha.substring(0, 7)})`,
       {
         preview: true,
       }
     );
     
     // Schedule cleanup of temporary files after a delay.
-    setTimeout(async () => {
-      try {
-        await fs.unlink(leftTempFilePath);
-        await fs.unlink(rightTempFilePath);
-      } catch (error) {
-        // Ignore cleanup errors.
-      }
+    setTimeout(() => {
+      void (async () => {
+        try {
+          await fs.unlink(leftTempFilePath);
+          await fs.unlink(rightTempFilePath);
+        } catch {
+          // Ignore cleanup errors.
+        }
+      })();
     }, 30000); // Clean up after 30 seconds.
     
   } catch (error) {

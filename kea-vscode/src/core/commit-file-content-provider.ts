@@ -26,29 +26,29 @@ export class CommitFileContentProvider implements vscode.TextDocumentContentProv
 
       Logger.debug(`Parsed query - commitSha: ${commitSha}, filePath: ${filePath}, workspacePath: ${workspacePath}`);
 
-      // Validate inputs
+      // Validate inputs.
       if (!commitSha || !filePath || !workspacePath) {
         const error = `Missing required parameters: commitSha=${commitSha}, filePath=${filePath}, workspacePath=${workspacePath}`;
         Logger.error(error);
-        return `// Error: ${error}`;
+        return "";
       }
 
-      // Create a local git repository instance
+      // Create a local git repository instance.
       const localGitRepo = new LocalGitRepository(workspacePath, this.#ctx.apiCache);
       
-      // Get file content at the specified commit
+      // Get file content at the specified commit.
       const fileContent = await localGitRepo.getFileAtCommit(commitSha, filePath);
       
       if (fileContent instanceof Error) {
         Logger.warn(`Failed to get file content for ${filePath} at commit ${commitSha}`, fileContent);
-        return `// Failed to load file content: ${fileContent.message}`;
+        return "";
       }
 
       Logger.debug(`Successfully retrieved ${fileContent.length} characters for ${filePath} at commit ${commitSha}`);
       return fileContent;
     } catch (error) {
       Logger.error("Error providing commit file content", error);
-      return `// Error loading file content: ${error instanceof Error ? error.message : "Unknown error"}`;
+      return "";
     }
   }
 }

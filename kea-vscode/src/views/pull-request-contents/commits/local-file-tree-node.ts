@@ -6,14 +6,13 @@ import { ILocalGitRepository, LocalCommit } from "../../../git/local-git-reposit
  */
 export class LocalFileTreeNode {
   #contextValue = "localFile";
-  #iconPath = new vscode.ThemeIcon("file");
+  #localGitRepo: ILocalGitRepository;
+  #commit: LocalCommit;
+  #workspaceFolder: vscode.WorkspaceFolder;
   
   fileName: string;
   filePath: string;
   status: string;
-  #localGitRepo: ILocalGitRepository;
-  #commit: LocalCommit;
-  #workspaceFolder: vscode.WorkspaceFolder;
   
   constructor(localGitRepo: ILocalGitRepository, commit: LocalCommit, workspaceFolder: vscode.WorkspaceFolder, filePath: string, status: string) {
     this.#localGitRepo = localGitRepo;
@@ -25,10 +24,32 @@ export class LocalFileTreeNode {
     this.fileName = filePath.split("/").pop()!;
   }
   
+  #getIconPath = (): vscode.ThemeIcon => {
+    switch (this.status) {
+      case "A":
+      case "added":
+        return new vscode.ThemeIcon("diff-added");
+      case "M":
+      case "modified":
+        return new vscode.ThemeIcon("diff-modified");
+      case "D":
+      case "removed":
+        return new vscode.ThemeIcon("diff-removed");
+      case "R":
+      case "renamed":
+        return new vscode.ThemeIcon("diff-renamed");
+      case "C":
+      case "copied":
+        return new vscode.ThemeIcon("files");
+      default:
+        return new vscode.ThemeIcon("file");
+    }
+  };
+  
   getTreeItem = (): vscode.TreeItem => {
     const treeItem = new vscode.TreeItem(this.fileName, vscode.TreeItemCollapsibleState.None);
     treeItem.contextValue = this.#contextValue;
-    treeItem.iconPath = this.#iconPath;
+    treeItem.iconPath = this.#getIconPath();
     treeItem.tooltip = `${this.filePath} (${this.status})`;
     
     // Add command to open file diff when clicked.
