@@ -2,7 +2,7 @@ import * as assert from "assert";
 import { IAccountKey } from "../../account/account";
 import { createFileStub, createPullRequestCommentStub } from "../../test-utils";
 import { PullRequestComment, RepoId } from "../../types/kea";
-import { FileTreeNode } from "./file-tree-node";
+import { FileTreeNode } from "./remote-file-tree-node";
 import { ReviewCommentTreeNode } from "./review-comment-tree-node";
 
 suite("FileTreeNode", () => {

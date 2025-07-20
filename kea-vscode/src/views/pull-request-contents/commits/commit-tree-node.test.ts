@@ -4,8 +4,8 @@ import * as vscode from "vscode";
 import { IKeaRepository } from "../../../repository/kea-repository";
 import { createCommitCommentStub, createCommitStub, createFileStub, createRepositoryStub, createUserStub } from "../../../test-utils";
 import { Commit, CommitComment, CommitFile } from "../../../types/kea";
-import { FileTreeNodeType, RemoteFileTreeNode } from "../../common/file-tree-node";
-import { FolderTreeNodeType, RemoteFolderTreeNode } from "../../common/folder-tree-node";
+import { FileTreeNodeType, RemoteFileTreeNode } from "../../common/remote-file-tree-node";
+import { FolderTreeNodeType, RemoteFolderTreeNode } from "../../common/remote-folder-tree-node";
 import { ReviewCommentTreeNode } from "../../common/review-comment-tree-node";
 import { CommitTreeNode } from "./commit-tree-node";
 
@@ -107,7 +107,9 @@ suite("CommitTreeNode", () => {
     assert.strictEqual(readmeComments[0].comment.body, "Comment 2");
 
     // Then: Check src folder node
-    const srcFolderNode = children.find((c) => c instanceof RemoteFolderTreeNode && c.folderName === "src") as FolderTreeNodeType | undefined;
+    const srcFolderNode = children.find((c) => c instanceof RemoteFolderTreeNode && c.folderName === "src") as
+      | FolderTreeNodeType
+      | undefined;
     assert.ok(srcFolderNode, "'src' folder node not found");
     const srcChildren = srcFolderNode.getChildren();
     assert.strictEqual(srcChildren.length, 2, "'src' folder should have 2 children ('file1.ts', 'folder')");

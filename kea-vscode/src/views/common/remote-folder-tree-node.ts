@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { BaseFolderTreeNode } from "./base-folder-tree-node";
-import { RemoteFileTreeNode } from "./file-tree-node";
+import { RemoteFileTreeNode } from "./remote-file-tree-node";
 
 /**
  * Tree item representing a remote folder.

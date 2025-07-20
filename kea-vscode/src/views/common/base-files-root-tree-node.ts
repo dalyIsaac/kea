@@ -2,8 +2,8 @@ import * as vscode from "vscode";
 import { IKeaRepository } from "../../repository/kea-repository";
 import { CommitFile, FileComment } from "../../types/kea";
 import { IParentTreeNode } from "../tree-node";
-import { RemoteFileTreeNode } from "./file-tree-node";
-import { RemoteFolderTreeNode } from "./folder-tree-node";
+import { RemoteFileTreeNode } from "./remote-file-tree-node";
+import { RemoteFolderTreeNode } from "./remote-folder-tree-node";
 
 export type FilesRootTreeNodeChild = RemoteFileTreeNode | RemoteFolderTreeNode;
 
