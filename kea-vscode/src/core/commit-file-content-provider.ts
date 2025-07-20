@@ -18,8 +18,20 @@ export class CommitFileContentProvider implements vscode.TextDocumentContentProv
 
   async provideTextDocumentContent(uri: vscode.Uri, _token: vscode.CancellationToken): Promise<string> {
     try {
+      // Log that the provider is being called
+      Logger.debug(`CommitFileContentProvider called for URI: ${uri.toString()}`);
+      
       const query = JSON.parse(uri.query) as CommitFileQuery;
       const { commitSha, filePath, workspacePath } = query;
+
+      Logger.debug(`Parsed query - commitSha: ${commitSha}, filePath: ${filePath}, workspacePath: ${workspacePath}`);
+
+      // Validate inputs
+      if (!commitSha || !filePath || !workspacePath) {
+        const error = `Missing required parameters: commitSha=${commitSha}, filePath=${filePath}, workspacePath=${workspacePath}`;
+        Logger.error(error);
+        return `// Error: ${error}`;
+      }
 
       // Create a local git repository instance
       const localGitRepo = new LocalGitRepository(workspacePath, this.#ctx.apiCache);
@@ -32,6 +44,7 @@ export class CommitFileContentProvider implements vscode.TextDocumentContentProv
         return `// Failed to load file content: ${fileContent.message}`;
       }
 
+      Logger.debug(`Successfully retrieved ${fileContent.length} characters for ${filePath} at commit ${commitSha}`);
       return fileContent;
     } catch (error) {
       Logger.error("Error providing commit file content", error);
