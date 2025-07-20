@@ -40,7 +40,7 @@ export class PullRequestContentsProvider extends TreeNodeProvider<PullRequestTre
       return Promise.resolve([]);
     }
 
-    const { repository, pullId } = this.#pullInfo;
+    const { repository, pullId, pullRequest } = this.#pullInfo;
 
     if (
       !isSamePullRequest(this.#commentsRootTreeNode?.pullId, pullId) ||
@@ -51,7 +51,7 @@ export class PullRequestContentsProvider extends TreeNodeProvider<PullRequestTre
 
       this.#commentsRootTreeNode = new CommentsRootTreeNode(repository, pullId, this);
       this.#filesRootTreeNode = new FilesRootTreeNode(repository, pullId);
-      this.#commitsRootTreeNode = new CommitsRootTreeNode(repository, pullId, this.#ctx);
+      this.#commitsRootTreeNode = new CommitsRootTreeNode(repository, pullId, this.#ctx, pullRequest);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion

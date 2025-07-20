@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import { IKeaContext } from "../../../core/context";
 import { Logger } from "../../../core/logger";
 import { IKeaRepository } from "../../../repository/kea-repository";
-import { PullRequestId } from "../../../types/kea";
+import { PullRequest, PullRequestId } from "../../../types/kea";
 import { CollapsibleState, getCollapsibleState, IParentTreeNode } from "../../tree-node";
 import { CommitTreeNode } from "./commit-tree-node";
 import { LocalCommitTreeNode, LocalCommitTreeNodeChild } from "./local-commit-tree-node";
@@ -15,14 +15,16 @@ export class CommitsRootTreeNode implements IParentTreeNode<CommitTreeNode | Loc
   #iconPath = new vscode.ThemeIcon("git-commit");
   #repository: IKeaRepository;
   #ctx: IKeaContext;
+  #pullRequest: PullRequest | undefined;
 
   pullId: PullRequestId;
   collapsibleState: CollapsibleState = "collapsed";
 
-  constructor(repository: IKeaRepository, pullId: PullRequestId, ctx: IKeaContext) {
+  constructor(repository: IKeaRepository, pullId: PullRequestId, ctx: IKeaContext, pullRequest?: PullRequest) {
     this.#repository = repository;
     this.pullId = pullId;
     this.#ctx = ctx;
+    this.#pullRequest = pullRequest;
   }
 
   getTreeItem = (): vscode.TreeItem => {
@@ -117,7 +119,23 @@ export class CommitsRootTreeNode implements IParentTreeNode<CommitTreeNode | Loc
         return null;
       }
 
-      const commits = await localGitRepo.getBranchCommits(20);
+      let commits;
+      
+      // If we have pull request info, get commits ahead of the base branch.
+      if (this.#pullRequest) {
+        const targetBranch = `origin/${this.#pullRequest.base.ref}`;
+        commits = await localGitRepo.getBranchCommitsAheadOf(targetBranch, 20);
+        
+        // Fall back to regular branch commits if the ahead-of method fails.
+        if (commits instanceof Error) {
+          Logger.debug(`Failed to get commits ahead of ${targetBranch}, falling back to all branch commits`, commits);
+          commits = await localGitRepo.getBranchCommits(20);
+        }
+      } else {
+        // No pull request context, get all branch commits.
+        commits = await localGitRepo.getBranchCommits(20);
+      }
+
       if (commits instanceof Error) {
         Logger.debug("Failed to get local commits", commits);
         return null;

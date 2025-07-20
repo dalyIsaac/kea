@@ -80,12 +80,37 @@ export const createOpenCommitFileDiffCommand =
 
 async function handleLocalCommitFileDiff(commitSha: string, filePath: string, workspacePath: string): Promise<void> {
   try {
-    // Create URIs for diff
+    // Create URIs for diff.
     const workspaceFilePath = path.join(workspacePath, filePath);
     const workspaceFileUri = vscode.Uri.file(workspaceFilePath);
     
-    // Instead of using a custom content provider, create a temporary file with the commit content
+    // Create a LocalGitRepository instance.
     const localGitRepo = new LocalGitRepository(workspacePath, vscode.workspace.getConfiguration().get("kea.apiCache") || {});
+    
+    // Get the parent commit to show what changed in this commit.
+    const parentCommit = await localGitRepo.getParentCommit(commitSha);
+    
+    let leftContent: string;
+    let leftTitle: string;
+    
+    if (parentCommit instanceof Error) {
+      // This might be the first commit, show empty content.
+      leftContent = "";
+      leftTitle = "Initial";
+    } else {
+      // Get file content at parent commit.
+      const parentContent = await localGitRepo.getFileAtCommit(parentCommit, filePath);
+      if (parentContent instanceof Error) {
+        // File didn't exist in parent commit, show empty content.
+        leftContent = "";
+        leftTitle = "New file";
+      } else {
+        leftContent = parentContent;
+        leftTitle = parentCommit.substring(0, 7);
+      }
+    }
+    
+    // Get file content at the commit we're viewing.
     const commitContent = await localGitRepo.getFileAtCommit(commitSha, filePath);
     
     if (commitContent instanceof Error) {
@@ -94,53 +119,51 @@ async function handleLocalCommitFileDiff(commitSha: string, filePath: string, wo
       return;
     }
 
-    // Create a temporary file with the commit content
+    // Create temporary files with proper extensions for syntax highlighting.
     const tempDir = path.join(require('os').tmpdir(), 'kea-commit-files');
     const fs = require('fs').promises;
     
     try {
       await fs.mkdir(tempDir, { recursive: true });
     } catch (error) {
-      // Directory might already exist, ignore error
+      // Directory might already exist, ignore error.
     }
     
-    const tempFileName = `${path.basename(filePath)}.${commitSha.substring(0, 7)}.tmp`;
-    const tempFilePath = path.join(tempDir, tempFileName);
+    const fileExtension = path.extname(filePath);
+    const baseName = path.basename(filePath, fileExtension);
     
-    await fs.writeFile(tempFilePath, commitContent, 'utf8');
-    const tempFileUri = vscode.Uri.file(tempFilePath);
+    const leftTempFileName = `${baseName}.${leftTitle}${fileExtension}`;
+    const rightTempFileName = `${baseName}.${commitSha.substring(0, 7)}${fileExtension}`;
     
-    // Check if workspace file exists
-    let rightUri = workspaceFileUri;
-    try {
-      await vscode.workspace.fs.stat(workspaceFileUri);
-    } catch {
-      // File doesn't exist in working tree, show empty file
-      rightUri = vscode.Uri.from({
-        scheme: "untitled",
-        path: filePath,
-      });
-    }
-
-    // Open diff editor with temporary file on the left and workspace file on the right
+    const leftTempFilePath = path.join(tempDir, leftTempFileName);
+    const rightTempFilePath = path.join(tempDir, rightTempFileName);
+    
+    await fs.writeFile(leftTempFilePath, leftContent, 'utf8');
+    await fs.writeFile(rightTempFilePath, commitContent, 'utf8');
+    
+    const leftTempFileUri = vscode.Uri.file(leftTempFilePath);
+    const rightTempFileUri = vscode.Uri.file(rightTempFilePath);
+    
+    // Open diff editor with parent commit on the left and current commit on the right.
     await vscode.commands.executeCommand(
       "vscode.diff",
-      tempFileUri,
-      rightUri,
-      `${path.basename(filePath)} (${commitSha.substring(0, 7)} ↔ Working Tree)`,
+      leftTempFileUri,
+      rightTempFileUri,
+      `${path.basename(filePath)} (${leftTitle} ↔ ${commitSha.substring(0, 7)})`,
       {
         preview: true,
       }
     );
     
-    // Schedule cleanup of temporary file after a delay
+    // Schedule cleanup of temporary files after a delay.
     setTimeout(async () => {
       try {
-        await fs.unlink(tempFilePath);
+        await fs.unlink(leftTempFilePath);
+        await fs.unlink(rightTempFilePath);
       } catch (error) {
-        // Ignore cleanup errors
+        // Ignore cleanup errors.
       }
-    }, 30000); // Clean up after 30 seconds
+    }, 30000); // Clean up after 30 seconds.
     
   } catch (error) {
     Logger.error("Error opening local commit file diff", error);

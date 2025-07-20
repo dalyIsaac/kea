@@ -1,79 +1,8 @@
 import * as vscode from "vscode";
 import { ILocalGitRepository, LocalCommit } from "../../../git/local-git-repository";
 import { CollapsibleState, getCollapsibleState, IParentTreeNode } from "../../tree-node";
-
-// Create a simplified local file tree node for local commits
-export class LocalFileTreeNode {
-  #contextValue = "localFile";
-  #iconPath = new vscode.ThemeIcon("file");
-  
-  fileName: string;
-  filePath: string;
-  status: string;
-  #localGitRepo: ILocalGitRepository;
-  #commit: LocalCommit;
-  #workspaceFolder: vscode.WorkspaceFolder;
-  
-  constructor(localGitRepo: ILocalGitRepository, commit: LocalCommit, workspaceFolder: vscode.WorkspaceFolder, filePath: string, status: string) {
-    this.#localGitRepo = localGitRepo;
-    this.#commit = commit;
-    this.#workspaceFolder = workspaceFolder;
-    this.filePath = filePath;
-    this.status = status;
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    this.fileName = filePath.split("/").pop()!;
-  }
-  
-  getTreeItem = (): vscode.TreeItem => {
-    const treeItem = new vscode.TreeItem(this.fileName, vscode.TreeItemCollapsibleState.None);
-    treeItem.contextValue = this.#contextValue;
-    treeItem.iconPath = this.#iconPath;
-    treeItem.tooltip = `${this.filePath} (${this.status})`;
-    
-    // Add command to open file diff when clicked
-    treeItem.command = {
-      command: "kea.openCommitFileDiff",
-      title: "Open File Diff",
-      arguments: [{
-        commitSha: this.#commit.sha,
-        filePath: this.filePath,
-        workspacePath: this.#workspaceFolder.uri.fsPath,
-        localGitRepo: this.#localGitRepo,
-      }],
-    };
-    
-    // Show status in description
-    treeItem.description = this.status;
-    
-    return treeItem;
-  };
-}
-
-// Create a simple local folder tree node for local commits
-export class LocalFolderTreeNode implements IParentTreeNode<LocalFileTreeNode | LocalFolderTreeNode> {
-  #contextValue = "localFolder";
-  #iconPath = new vscode.ThemeIcon("folder");
-  #tooltip = "Folder";
-  folderName: string;
-
-  collapsibleState: CollapsibleState = "collapsed";
-  children: Array<LocalFileTreeNode | LocalFolderTreeNode>;
-
-  constructor(folderPath: string) {
-    this.folderName = folderPath.split("/").pop() ?? folderPath;
-    this.children = [];
-  }
-
-  getTreeItem = (): vscode.TreeItem => {
-    const treeItem = new vscode.TreeItem(this.folderName, getCollapsibleState(this.collapsibleState));
-    treeItem.contextValue = this.#contextValue;
-    treeItem.iconPath = this.#iconPath;
-    treeItem.tooltip = this.#tooltip;
-    return treeItem;
-  };
-
-  getChildren = (): Array<LocalFileTreeNode | LocalFolderTreeNode> => this.children;
-}
+import { LocalFileTreeNode } from "./local-file-tree-node";
+import { LocalFolderTreeNode } from "./local-folder-tree-node";
 
 export type LocalCommitTreeNodeChild = LocalFileTreeNode | LocalFolderTreeNode;
 

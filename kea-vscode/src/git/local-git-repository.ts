@@ -35,6 +35,14 @@ export interface ILocalGitRepository {
   getFileAtCommit(commitSha: string, filePath: string): Promise<string | Error>;
 
   /**
+   * Get commits from the current branch that are ahead of the target branch.
+   * @param targetBranch The target branch to compare against (e.g., 'main', 'origin/main').
+   * @param limit Maximum number of commits to retrieve (default: 50).
+   * @returns Array of commits from the current branch that are ahead of the target branch.
+   */
+  getBranchCommitsAheadOf(targetBranch: string, limit = 50): Promise<LocalCommit[] | Error>;
+
+  /**
    * Get commits from the current branch.
    * @param limit Maximum number of commits to retrieve (default: 50).
    * @returns Array of commits from the current branch.
@@ -65,6 +73,13 @@ export interface ILocalGitRepository {
    * @returns Array of files changed in the commit.
    */
   getCommitFiles(commitSha: string): Promise<LocalCommitFile[] | Error>;
+
+  /**
+   * Get the parent commit SHA for a given commit.
+   * @param commitSha The commit SHA to get the parent for.
+   * @returns The parent commit SHA, or an Error if the operation fails.
+   */
+  getParentCommit(commitSha: string): Promise<string | Error>;
 }
 
 /**
@@ -171,6 +186,46 @@ export class LocalGitRepository extends KeaDisposable implements ILocalGitReposi
       return false;
     }
     return true;
+  };
+
+  /**
+   * Get commits from the current branch that are ahead of the target branch.
+   */
+  getBranchCommitsAheadOf = async (targetBranch: string, limit = 50): Promise<LocalCommit[] | Error> => {
+    if (!targetBranch) {
+      return new Error("targetBranch is required");
+    }
+
+    // Use git log with range to get commits ahead of target branch
+    const result = await this.#executeGitCommand([
+      "log",
+      "--oneline",
+      "--format=%H|%s|%an|%ad",
+      "--date=iso",
+      `-${limit}`,
+      `${targetBranch}..HEAD`,
+    ]);
+
+    if (result instanceof Error) {
+      return new WrappedError(`Failed to get branch commits ahead of ${targetBranch}`, result);
+    }
+
+    const lines = result.trim().split("\n").filter((line) => line.trim());
+    const commits: LocalCommit[] = [];
+
+    for (const line of lines) {
+      const parts = line.split("|");
+      if (parts.length >= 4 && parts[0] && parts[1] && parts[2] && parts[3]) {
+        commits.push({
+          sha: parts[0],
+          message: parts[1],
+          author: parts[2],
+          date: new Date(parts[3]),
+        });
+      }
+    }
+
+    return commits;
   };
 
   /**
@@ -312,5 +367,28 @@ export class LocalGitRepository extends KeaDisposable implements ILocalGitReposi
     }
 
     return files;
+  };
+
+  /**
+   * Get the parent commit SHA for a given commit.
+   * @param commitSha The commit SHA to get the parent for.
+   * @returns The parent commit SHA, or an Error if the operation fails.
+   */
+  getParentCommit = async (commitSha: string): Promise<string | Error> => {
+    if (!commitSha) {
+      return new Error("commitSha is required");
+    }
+
+    // Validate commit SHA format (basic validation)
+    if (!/^[a-f0-9]{7,40}$/i.test(commitSha)) {
+      return new Error(`Invalid commit SHA format: ${commitSha}`);
+    }
+
+    const result = await this.#executeGitCommand(["rev-parse", `${commitSha}^`]);
+    if (result instanceof Error) {
+      return new WrappedError(`Failed to get parent commit for ${commitSha}`, result);
+    }
+
+    return result.trim();
   };
 }
