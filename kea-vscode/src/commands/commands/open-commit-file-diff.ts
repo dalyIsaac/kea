@@ -3,6 +3,7 @@ import * as path from "path";
 import { IKeaContext } from "../../core/context";
 import { Logger } from "../../core/logger";
 import { parseDecorationPayload, DECORATION_SCHEMES } from "../../decorations/decoration-schemes";
+import { LocalGitRepository } from "../../git/local-git-repository";
 
 export interface IOpenCommitFileDiffCommandArgs {
   resourceUri?: vscode.Uri;
@@ -83,17 +84,32 @@ async function handleLocalCommitFileDiff(commitSha: string, filePath: string, wo
     const workspaceFilePath = path.join(workspacePath, filePath);
     const workspaceFileUri = vscode.Uri.file(workspaceFilePath);
     
-    // Create a virtual URI for the commit version of the file
-    const commitFileUri = vscode.Uri.from({
-      scheme: "kea-commit-file",
-      path: filePath,
-      query: JSON.stringify({
-        commitSha: commitSha,
-        filePath: filePath,
-        workspacePath: workspacePath,
-      }),
-    });
+    // Instead of using a custom content provider, create a temporary file with the commit content
+    const localGitRepo = new LocalGitRepository(workspacePath, vscode.workspace.getConfiguration().get("kea.apiCache") || {});
+    const commitContent = await localGitRepo.getFileAtCommit(commitSha, filePath);
+    
+    if (commitContent instanceof Error) {
+      Logger.error(`Failed to get commit content for ${filePath} at ${commitSha}`, commitContent);
+      vscode.window.showErrorMessage(`Failed to read file at commit ${commitSha}: ${commitContent.message}`);
+      return;
+    }
 
+    // Create a temporary file with the commit content
+    const tempDir = path.join(require('os').tmpdir(), 'kea-commit-files');
+    const fs = require('fs').promises;
+    
+    try {
+      await fs.mkdir(tempDir, { recursive: true });
+    } catch (error) {
+      // Directory might already exist, ignore error
+    }
+    
+    const tempFileName = `${path.basename(filePath)}.${commitSha.substring(0, 7)}.tmp`;
+    const tempFilePath = path.join(tempDir, tempFileName);
+    
+    await fs.writeFile(tempFilePath, commitContent, 'utf8');
+    const tempFileUri = vscode.Uri.file(tempFilePath);
+    
     // Check if workspace file exists
     let rightUri = workspaceFileUri;
     try {
@@ -106,16 +122,26 @@ async function handleLocalCommitFileDiff(commitSha: string, filePath: string, wo
       });
     }
 
-    // Open diff editor
+    // Open diff editor with temporary file on the left and workspace file on the right
     await vscode.commands.executeCommand(
       "vscode.diff",
-      commitFileUri,
+      tempFileUri,
       rightUri,
       `${path.basename(filePath)} (${commitSha.substring(0, 7)} ↔ Working Tree)`,
       {
         preview: true,
       }
     );
+    
+    // Schedule cleanup of temporary file after a delay
+    setTimeout(async () => {
+      try {
+        await fs.unlink(tempFilePath);
+      } catch (error) {
+        // Ignore cleanup errors
+      }
+    }, 30000); // Clean up after 30 seconds
+    
   } catch (error) {
     Logger.error("Error opening local commit file diff", error);
     vscode.window.showErrorMessage("Failed to open file diff");
