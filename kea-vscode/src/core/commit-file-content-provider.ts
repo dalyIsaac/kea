@@ -36,6 +36,12 @@ export class CommitFileContentProvider implements vscode.TextDocumentContentProv
       // Create a local git repository instance.
       const localGitRepo = new LocalGitRepository(workspacePath, this.#ctx.apiCache);
       
+      // Handle initial commit case (null SHA).
+      if (commitSha === "0000000000000000000000000000000000000000") {
+        Logger.debug(`Returning empty content for initial commit state`);
+        return "";
+      }
+      
       // Get file content at the specified commit.
       const fileContent = await localGitRepo.getFileAtCommit(commitSha, filePath);
       
