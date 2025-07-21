@@ -41,15 +41,15 @@ export abstract class BaseFilesRootTreeNode implements IParentTreeNode<FilesRoot
       const folderName = pathParts[idx];
       const folderPath = pathParts.slice(0, idx + 1).join("/");
 
-      let folderNode = parents.find((node) => {
-        return node instanceof BaseFolderTreeNode && node.folderName === folderName;
-      });
+      let folderNode = parents.find((node) => node instanceof BaseFolderTreeNode && node.folderName === folderName) as
+        | BaseFolderTreeNode<FilesRootTreeNodeChild>
+        | undefined;
       if (folderNode === undefined) {
         folderNode = this.createFolderNode(folderPath);
         parents.push(folderNode);
       }
 
-      parents = (folderNode as BaseFolderTreeNode<FilesRootTreeNodeChild>).children;
+      parents = folderNode.children;
     }
 
     const comments = reviewComments.filter((comment) => comment.path === file.filename);
