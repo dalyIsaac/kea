@@ -105,13 +105,22 @@ async function handleLocalCommitFileDiff(commitSha: string, filePath: string, wo
       fragment: leftTitle,
     });
 
-    const rightWorkspaceFileUri = vscode.Uri.file(repoFilePath);
+    const rightUri = vscode.Uri.from({
+      scheme: "kea-commit-file",
+      path: repoFilePath,
+      query: JSON.stringify({
+        commitSha: commitSha,
+        filePath,
+        workspacePath,
+      }),
+      fragment: commitSha.substring(0, 7),
+    });
 
     await vscode.commands.executeCommand(
       "vscode.diff",
       leftUri,
-      rightWorkspaceFileUri,
-      `${filePath} (${leftTitle} ↔ Working Tree)`,
+      rightUri,
+      `${filePath} (${leftTitle} ↔ ${commitSha.substring(0, 7)})`,
       {
         preview: true,
       },
@@ -152,13 +161,22 @@ async function handleRemoteApiFileDiff(commitSha: string, filePath: string, work
       fragment: leftTitle,
     });
 
-    const rightWorkspaceFileUri = vscode.Uri.file(repoFilePath);
+    const rightUri = vscode.Uri.from({
+      scheme: "kea-commit-file",
+      path: repoFilePath,
+      query: JSON.stringify({
+        commitSha: commitSha,
+        filePath,
+        workspacePath,
+      }),
+      fragment: commitSha.substring(0, 7),
+    });
 
     await vscode.commands.executeCommand(
       "vscode.diff",
       leftUri,
-      rightWorkspaceFileUri,
-      `${filePath} (${leftTitle} ↔ Working Tree)`,
+      rightUri,
+      `${filePath} (${leftTitle} ↔ ${commitSha.substring(0, 7)})`,
       {
         preview: true,
       },

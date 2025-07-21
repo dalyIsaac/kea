@@ -39,6 +39,8 @@ export class RemoteFileTreeNode extends BaseFileTreeNode {
       };
     }
 
+    treeItem.resourceUri = this.#resourceUri;
+
     return treeItem;
   };
 }

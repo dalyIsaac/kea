@@ -77,7 +77,8 @@ suite("LocalCommitsService", () => {
       getCurrentBranch: sandbox.stub(),
       getCurrentCommit: sandbox.stub(),
       getBranchStatus: sandbox.stub(),
-      getParentCommit: sandbox.stub()
+      getParentCommit: sandbox.stub(),
+      getCommitsForPullRequest: sandbox.stub().resolves(localCommits)
     };
     
     (mockContext.gitManager.getLocalGitRepository as sinon.SinonStub).resolves(localGitRepo);

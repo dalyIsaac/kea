@@ -79,6 +79,14 @@ export interface ILocalGitRepository {
   getCurrentCommit(): Promise<string | Error>;
 
   /**
+   * Get commits for a pull request context, trying ahead-of first, then fallback to regular branch commits.
+   * @param pullRequestBaseBranch The base branch of the pull request (e.g., 'main').
+   * @param limit Maximum number of commits to retrieve (default: 20).
+   * @returns Array of commits, prioritizing commits ahead of the base branch.
+   */
+  getCommitsForPullRequest(pullRequestBaseBranch?: string, limit?: number): Promise<LocalCommit[] | Error>;
+
+  /**
    * Get files changed in a specific commit.
    * @param commitSha The commit SHA to get files for.
    * @returns Array of files changed in the commit.
@@ -185,6 +193,27 @@ export class LocalGitRepository extends KeaDisposable implements ILocalGitReposi
       return result;
     }
     return result.trim();
+  };
+
+  /**
+   * Get commits for a pull request context, trying ahead-of first, then fallback to regular branch commits.
+   */
+  getCommitsForPullRequest = async (pullRequestBaseBranch?: string, limit = 20): Promise<LocalCommit[] | Error> => {
+    if (pullRequestBaseBranch) {
+      const targetBranch = `origin/${pullRequestBaseBranch}`;
+      const commits = await this.getBranchCommitsAheadOf(targetBranch, limit);
+
+      // Fall back to regular branch commits if the ahead-of method fails.
+      if (commits instanceof Error) {
+        Logger.debug(`Failed to get commits ahead of ${targetBranch}, falling back to all branch commits`, commits);
+        return this.getBranchCommits(limit);
+      }
+
+      return commits;
+    } else {
+      // No pull request context, get all branch commits.
+      return this.getBranchCommits(limit);
+    }
   };
 
   /**

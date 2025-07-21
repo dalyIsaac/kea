@@ -37,6 +37,13 @@ suite("LocalFileTreeNode", () => {
 
     mockContext = createKeaContextStub();
     
+    // Configure the command manager to return a proper command
+    (mockContext.commandManager.getCommand as sinon.SinonStub).returns({
+      command: "kea.openCommitFileDiff",
+      title: "Open File Diff",
+      arguments: [{}]
+    });
+    
     const accountStub = createAccountStub();
     accountKey = accountStub.accountKey;
     

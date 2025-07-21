@@ -43,22 +43,7 @@ export class LocalCommitsService {
         return null;
       }
 
-      let commits;
-
-      // If we have pull request info, get commits ahead of the base branch.
-      if (pullRequest) {
-        const targetBranch = `origin/${pullRequest.base.ref}`;
-        commits = await localGitRepo.getBranchCommitsAheadOf(targetBranch, 20);
-
-        // Fall back to regular branch commits if the ahead-of method fails.
-        if (commits instanceof Error) {
-          Logger.debug(`Failed to get commits ahead of ${targetBranch}, falling back to all branch commits`, commits);
-          commits = await localGitRepo.getBranchCommits(20);
-        }
-      } else {
-        // No pull request context, get all branch commits.
-        commits = await localGitRepo.getBranchCommits(20);
-      }
+      const commits = await localGitRepo.getCommitsForPullRequest(pullRequest?.base.ref, 20);
 
       if (commits instanceof Error) {
         Logger.debug("Failed to get local commits", commits);
