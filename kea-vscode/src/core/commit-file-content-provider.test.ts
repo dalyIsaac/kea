@@ -6,12 +6,10 @@ import { createKeaContextStub } from "../test-utils";
 import { LocalGitRepository } from "../git/local-git-repository";
 
 const setupStubs = () => {
-  const sandbox = sinon.createSandbox();
   const mockContext = createKeaContextStub();
   const provider = new CommitFileContentProvider(mockContext);
 
   return {
-    sandbox,
     mockContext,
     provider,
   };
@@ -21,10 +19,10 @@ suite("CommitFileContentProvider", () => {
 
   test("should provide file content from commit", async () => {
     // Given
-    const { sandbox, provider } = setupStubs();
+    const { provider } = setupStubs();
     
     // Mock LocalGitRepository.
-    const mockGetFileAtCommit = sandbox.stub(LocalGitRepository.prototype, "getFileAtCommit").resolves("file content from commit");
+    const mockGetFileAtCommit = sinon.stub(LocalGitRepository.prototype, "getFileAtCommit").resolves("file content from commit");
     
     const uri = vscode.Uri.from({
       scheme: "kea-commit-file",
@@ -41,16 +39,18 @@ suite("CommitFileContentProvider", () => {
 
     // Then
     assert.strictEqual(result, "file content from commit");
-    sinon.assert.calledOnceWithExactly(mockGetFileAtCommit, "abc123", "test.txt");
-    sandbox.restore();
+    assert.ok(mockGetFileAtCommit.calledOnceWithExactly("abc123", "test.txt"));
+    
+    // Cleanup
+    mockGetFileAtCommit.restore();
   });
 
   test("should return empty string when git operation fails", async () => {
     // Given
-    const { sandbox, provider } = setupStubs();
+    const { provider } = setupStubs();
     
     // Mock LocalGitRepository to return error.
-    sandbox.stub(LocalGitRepository.prototype, "getFileAtCommit").resolves(new Error("Git error"));
+    const mockGetFileAtCommit = sinon.stub(LocalGitRepository.prototype, "getFileAtCommit").resolves(new Error("Git error"));
     
     const uri = vscode.Uri.from({
       scheme: "kea-commit-file",
@@ -67,6 +67,9 @@ suite("CommitFileContentProvider", () => {
 
     // Then
     assert.strictEqual(result, "");
+    
+    // Cleanup
+    mockGetFileAtCommit.restore();
   });
 
   test("should return empty string for missing required parameters", async () => {
@@ -130,9 +133,9 @@ suite("CommitFileContentProvider", () => {
 
   test("should pass correct parameters to LocalGitRepository", async () => {
     // Given
-    const { sandbox, provider } = setupStubs();
+    const { provider } = setupStubs();
     
-    const mockGetFileAtCommit = sandbox.stub(LocalGitRepository.prototype, "getFileAtCommit").resolves("content");
+    const mockGetFileAtCommit = sinon.stub(LocalGitRepository.prototype, "getFileAtCommit").resolves("content");
     
     const uri = vscode.Uri.from({
       scheme: "kea-commit-file",
@@ -148,7 +151,9 @@ suite("CommitFileContentProvider", () => {
     await provider.provideTextDocumentContent(uri, new vscode.CancellationTokenSource().token);
 
     // Then
-    sinon.assert.calledOnceWithExactly(mockGetFileAtCommit, "def456789", "src/components/Button.tsx");
-    sandbox.restore();
+    assert.ok(mockGetFileAtCommit.calledOnceWithExactly("def456789", "src/components/Button.tsx"));
+    
+    // Cleanup
+    mockGetFileAtCommit.restore();
   });
 });
