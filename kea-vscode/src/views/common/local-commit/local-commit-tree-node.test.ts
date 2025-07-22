@@ -9,50 +9,50 @@ import { LocalCommitTreeNode } from "./local-commit-tree-node";
 import { LocalFileTreeNode } from "./local-file-tree-node";
 import { LocalFolderTreeNode } from "./local-folder-tree-node";
 
+const setupStubs = () => {
+  const sandbox = sinon.createSandbox();
+
+  const mockLocalGitRepo: sinon.SinonStubbedInstance<ILocalGitRepository> = {
+    getCommitFiles: sandbox.stub(),
+  } as unknown as sinon.SinonStubbedInstance<ILocalGitRepository>;
+
+  const testCommit: LocalCommit = {
+    sha: "abc123def456",
+    message: "Test commit message\n\nThis is the commit body.",
+    author: "Test Author",
+    date: new Date("2023-01-01T12:00:00Z"),
+  };
+
+  const workspaceFolder: vscode.WorkspaceFolder = {
+    uri: vscode.Uri.file("/test/workspace"),
+    name: "test-workspace",
+    index: 0,
+  };
+
+  const showErrorMessageStub = sandbox.stub(vscode.window, "showErrorMessage");
+
+  const accountStub = createAccountStub();
+  const accountKey = accountStub.accountKey;
+
+  const repoStub = createRemoteRepositoryStub();
+  const repoId = repoStub.repoId;
+
+  return {
+    sandbox,
+    mockLocalGitRepo,
+    testCommit,
+    workspaceFolder,
+    showErrorMessageStub,
+    accountKey,
+    repoId,
+  };
+};
+
 suite("LocalCommitTreeNode", () => {
-  let sandbox: sinon.SinonSandbox;
-  let mockLocalGitRepo: sinon.SinonStubbedInstance<ILocalGitRepository>;
-  let testCommit: LocalCommit;
-  let workspaceFolder: vscode.WorkspaceFolder;
-  let showErrorMessageStub: sinon.SinonStub;
-  let accountKey: IAccountKey;
-  let repoId: RepoId;
-
-  setup(() => {
-    sandbox = sinon.createSandbox();
-
-    mockLocalGitRepo = {
-      getCommitFiles: sandbox.stub(),
-    } as unknown as sinon.SinonStubbedInstance<ILocalGitRepository>;
-
-    testCommit = {
-      sha: "abc123def456",
-      message: "Test commit message\n\nThis is the commit body.",
-      author: "Test Author",
-      date: new Date("2023-01-01T12:00:00Z"),
-    };
-
-    workspaceFolder = {
-      uri: vscode.Uri.file("/test/workspace"),
-      name: "test-workspace",
-      index: 0,
-    };
-
-    showErrorMessageStub = sandbox.stub(vscode.window, "showErrorMessage");
-
-    const accountStub = createAccountStub();
-    accountKey = accountStub.accountKey;
-
-    const repoStub = createRemoteRepositoryStub();
-    repoId = repoStub.repoId;
-  });
-
-  teardown(() => {
-    sandbox.restore();
-  });
 
   test("should create a valid tree item", () => {
     // Given
+    const { mockLocalGitRepo, testCommit, workspaceFolder, accountKey, repoId } = setupStubs();
     const ctx = createKeaContextStub();
     const node = new LocalCommitTreeNode(mockLocalGitRepo, testCommit, workspaceFolder, ctx, accountKey, repoId);
 
@@ -73,10 +73,13 @@ suite("LocalCommitTreeNode", () => {
 
   test("should handle empty commit message", () => {
     // Given
+    const { mockLocalGitRepo, workspaceFolder, accountKey, repoId } = setupStubs();
     const ctx = createKeaContextStub();
     const emptyCommit: LocalCommit = {
-      ...testCommit,
+      sha: "abc123def456",
       message: "",
+      author: "Test Author",
+      date: new Date("2023-01-01T12:00:00Z"),
     };
     const node = new LocalCommitTreeNode(mockLocalGitRepo, emptyCommit, workspaceFolder, ctx, accountKey, repoId);
 
@@ -89,6 +92,7 @@ suite("LocalCommitTreeNode", () => {
 
   test("should return empty array when getCommitFiles fails", async () => {
     // Given
+    const { mockLocalGitRepo, testCommit, workspaceFolder, accountKey, repoId, showErrorMessageStub, sandbox } = setupStubs();
     const ctx = createKeaContextStub();
     const error = new Error("Failed to get commit files");
     mockLocalGitRepo.getCommitFiles.resolves(error);
@@ -102,10 +106,12 @@ suite("LocalCommitTreeNode", () => {
     sinon.assert.calledOnce(showErrorMessageStub);
     assert.deepStrictEqual(showErrorMessageStub.getCall(0).args, [`Error fetching commit files: ${error.message}`]);
     assert.deepStrictEqual(children, []);
+    sandbox.restore();
   });
 
   test("should create file tree from commit files", async () => {
     // Given
+    const { mockLocalGitRepo, testCommit, workspaceFolder, accountKey, repoId, sandbox } = setupStubs();
     const ctx = createKeaContextStub();
     const files: LocalCommitFile[] = [
       { filePath: "README.md", status: "M" },
@@ -155,10 +161,12 @@ suite("LocalCommitTreeNode", () => {
     assert.ok(file2Node, "'src/subfolder/file2.ts' node not found");
     assert.strictEqual(file2Node.filePath, "src/subfolder/file2.ts");
     assert.strictEqual(file2Node.status, "D");
+    sandbox.restore();
   });
 
   test("should handle duplicate file names in different folders", async () => {
     // Given
+    const { mockLocalGitRepo, testCommit, workspaceFolder, accountKey, repoId, sandbox } = setupStubs();
     const ctx = createKeaContextStub();
     const files: LocalCommitFile[] = [
       { filePath: "src/test.ts", status: "M" },
@@ -181,5 +189,6 @@ suite("LocalCommitTreeNode", () => {
 
     assert.strictEqual(srcFolder.children.length, 1, "src folder should have 1 file");
     assert.strictEqual(testsFolder.children.length, 1, "tests folder should have 1 file");
+    sandbox.restore();
   });
 });

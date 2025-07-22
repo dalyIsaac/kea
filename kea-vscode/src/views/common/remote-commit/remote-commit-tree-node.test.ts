@@ -16,38 +16,38 @@ import { RemoteCommitTreeNode } from "./remote-commit-tree-node";
 import { RemoteFileTreeNode } from "./remote-file-tree-node";
 import { RemoteFolderTreeNode } from "./remote-folder-tree-node";
 
-suite("CommitTreeNode", () => {
-  let sandbox: sinon.SinonSandbox;
-  let mockRepository: sinon.SinonStubbedInstance<IRepository>;
-  let testCommit: Commit;
-  let showErrorMessageStub: sinon.SinonStub;
+const setupStubs = () => {
+  const sandbox = sinon.createSandbox();
+  const mockRepository = createRemoteRepositoryStub() as sinon.SinonStubbedInstance<IRepository>;
+
+  const testCommit = createCommitStub({
+    sha: "test-sha",
+    commit: {
+      author: createUserStub(),
+      committer: createUserStub(),
+      message: "Test commit title\n\nThis is the commit body.",
+      commentCount: 0,
+      tree: { sha: "tree-sha", url: "tree-url" },
+    },
+  });
 
   const ctx = createKeaContextStub();
+  const showErrorMessageStub = sandbox.stub(vscode.window, "showErrorMessage");
 
-  setup(() => {
-    sandbox = sinon.createSandbox();
-    mockRepository = createRemoteRepositoryStub() as sinon.SinonStubbedInstance<IRepository>;
+  return {
+    sandbox,
+    mockRepository,
+    testCommit,
+    ctx,
+    showErrorMessageStub,
+  };
+};
 
-    testCommit = createCommitStub({
-      sha: "test-sha",
-      commit: {
-        author: createUserStub(),
-        committer: createUserStub(),
-        message: "Test commit title\n\nThis is the commit body.",
-        commentCount: 0,
-        tree: { sha: "tree-sha", url: "tree-url" },
-      },
-    });
-
-    showErrorMessageStub = sandbox.stub(vscode.window, "showErrorMessage");
-  });
-
-  teardown(() => {
-    sandbox.restore();
-  });
+suite("CommitTreeNode", () => {
 
   test("constructor and getTreeItem should create a valid tree item", () => {
     // Given
+    const { testCommit, mockRepository, ctx } = setupStubs();
     const node = new RemoteCommitTreeNode(ctx, mockRepository, testCommit);
 
     // When
@@ -63,6 +63,7 @@ suite("CommitTreeNode", () => {
 
   test("getTreeItem should handle empty commit message", () => {
     // Given
+    const { mockRepository, ctx } = setupStubs();
     // Provide all required nested properties when overriding commit
     const emptyMessageCommit = createCommitStub({
       commit: {
@@ -85,6 +86,7 @@ suite("CommitTreeNode", () => {
 
   test("getChildren should return file and folder nodes with comments", async () => {
     // Given
+    const { mockRepository, testCommit, ctx } = setupStubs();
     const files: CommitFile[] = [
       createFileStub({ filename: "src/file1.ts" }),
       createFileStub({ filename: "src/folder/file2.ts" }),
@@ -147,6 +149,7 @@ suite("CommitTreeNode", () => {
 
   test("getChildren should handle error fetching files", async () => {
     // Given
+    const { mockRepository, testCommit, ctx, showErrorMessageStub } = setupStubs();
     const error = new Error("Failed to fetch files");
     mockRepository.getCommitFiles.resolves(error);
     mockRepository.getCommitComments.resolves([]);
@@ -166,6 +169,7 @@ suite("CommitTreeNode", () => {
 
   test("getChildren should handle error fetching comments", async () => {
     // Given
+    const { mockRepository, testCommit, ctx, showErrorMessageStub } = setupStubs();
     const files: CommitFile[] = [createFileStub({ filename: "file.ts" })];
     const error = new Error("Failed to fetch comments");
     mockRepository.getCommitFiles.resolves(files);

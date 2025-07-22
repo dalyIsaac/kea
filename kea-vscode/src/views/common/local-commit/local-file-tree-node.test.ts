@@ -8,52 +8,51 @@ import { createAccountStub, createKeaContextStub, createRemoteRepositoryStub } f
 import { FileComment, RepoId } from "../../../types/kea";
 import { LocalFileTreeNode } from "./local-file-tree-node";
 
+const setupStubs = () => {
+  const sandbox = sinon.createSandbox();
+
+  const ctx = createKeaContextStub();
+
+  const repoStub = createRemoteRepositoryStub();
+  const repoId = repoStub.repoId;
+
+  const localGitRepo = {} as sinon.SinonStubbedInstance<ILocalGitRepository>;
+
+  const testCommit: LocalCommit = {
+    sha: "abc123def456",
+    message: "Test commit message",
+    author: "Test Author",
+    date: new Date("2023-01-01T12:00:00Z"),
+  };
+
+  const accountStub = createAccountStub();
+  const accountKey = accountStub.accountKey;
+
+  const comments: FileComment[] = [];
+
+  // Configure the command manager to return a proper command
+  (ctx.commandManager.getCommand as sinon.SinonStub).returns({
+    command: "kea.openCommitFileDiff",
+    title: "Open File Diff",
+    arguments: [{}],
+  });
+
+  return {
+    sandbox,
+    ctx,
+    repoId,
+    localGitRepo,
+    testCommit,
+    accountKey,
+    comments,
+  };
+};
+
 suite("LocalFileTreeNode", () => {
-  let sandbox: sinon.SinonSandbox;
-
-  let ctx: IKeaContext;
-  let repoId: RepoId;
-  let localGitRepo: sinon.SinonStubbedInstance<ILocalGitRepository>;
-  let testCommit: LocalCommit;
-  let accountKey: IAccountKey;
-  let comments: FileComment[];
-
-  setup(() => {
-    sandbox = sinon.createSandbox();
-
-    ctx = createKeaContextStub();
-
-    const repoStub = createRemoteRepositoryStub();
-    repoId = repoStub.repoId;
-
-    localGitRepo = {} as sinon.SinonStubbedInstance<ILocalGitRepository>;
-
-    testCommit = {
-      sha: "abc123def456",
-      message: "Test commit message",
-      author: "Test Author",
-      date: new Date("2023-01-01T12:00:00Z"),
-    };
-
-    const accountStub = createAccountStub();
-    accountKey = accountStub.accountKey;
-
-    comments = [];
-
-    // Configure the command manager to return a proper command
-    (ctx.commandManager.getCommand as sinon.SinonStub).returns({
-      command: "kea.openCommitFileDiff",
-      title: "Open File Diff",
-      arguments: [{}],
-    });
-  });
-
-  teardown(() => {
-    sandbox.restore();
-  });
 
   test("should create a valid tree item with language-specific icon", () => {
     // Given
+    const { ctx, repoId, localGitRepo, testCommit, accountKey, comments, sandbox } = setupStubs();
     const commitFile: LocalCommitFile = { filePath: "src/test.ts", status: "M" };
     const node = new LocalFileTreeNode(ctx, repoId, localGitRepo, testCommit, commitFile, accountKey, comments);
 
@@ -70,6 +69,7 @@ suite("LocalFileTreeNode", () => {
     assert.strictEqual(treeItem.description, "unknown");
     assert.ok(treeItem.command, "Tree item should have a command");
     assert.strictEqual(treeItem.command.command, "kea.openCommitFileDiff");
+    sandbox.restore();
   });
 
   test("should include status in description for all file types", () => {
