@@ -16,7 +16,6 @@ class TestTreeDecorationProvider extends BaseTreeDecorationProvider {
 }
 
 suite("TreeDecorationManager", () => {
-  let sandbox: sinon.SinonSandbox;
 
   const createTestProvider = () => new TestTreeDecorationProvider();
 
@@ -43,13 +42,23 @@ suite("TreeDecorationManager", () => {
     return { accountKey, repoId, pullId, repository, eventFirers };
   };
 
-  setup(() => {
-    sandbox = sinon.createSandbox();
-  });
+const setupStubs = () => {
+  const sandbox = sinon.createSandbox();
+  const mockScheme = "test-scheme";
+  const mockUri = vscode.Uri.parse(`${mockScheme}:/test/path`);
+  const mockEvent = new vscode.EventEmitter<vscode.Uri | vscode.Uri[]>();
+  const mockDisposable = { dispose: sandbox.stub() };
 
-  teardown(() => {
-    sandbox.restore();
-  });
+  return {
+    sandbox,
+    mockScheme,
+    mockUri,
+    mockEvent,
+    mockDisposable,
+  };
+};
+
+suite("TreeDecorationManager", () => {
 
   test("registerProviders adds providers and registers them with vscode", () => {
     // Given

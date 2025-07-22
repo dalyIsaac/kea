@@ -5,35 +5,34 @@ import { createKeaContextStub, createRemoteRepositoryStub, createWorkspaceFolder
 import { PullRequestListTreeProvider } from "./pull-request-list-tree-provider";
 import { RepoTreeNode } from "./repo-tree-node";
 
+const setupStubs = () => {
+  const sandbox = sinon.createSandbox();
+  const contextStub = createKeaContextStub();
+
+  // Create a stub for the EventEmitter.fire method
+  const eventEmitterStub = { fire: sinon.stub() };
+
+  // Use prototype replacement to avoid issues with the original method
+  sandbox.stub(Logger, "error"); // Stub Logger.error method
+
+  // Create the tree provider first
+  const treeProvider = new PullRequestListTreeProvider(contextStub);
+
+  // Then replace its _onDidChangeTreeData after instantiation
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+  (treeProvider as any)._onDidChangeTreeData = eventEmitterStub;
+  const fireStub = eventEmitterStub.fire;
+
+  return {
+    sandbox,
+    contextStub,
+    treeProvider,
+    eventEmitterStub,
+    fireStub,
+  };
+};
+
 suite("PullRequestListTreeProvider", () => {
-  let sandbox: sinon.SinonSandbox;
-  let contextStub: ReturnType<typeof createKeaContextStub>;
-  let treeProvider: PullRequestListTreeProvider;
-  let fireStub: sinon.SinonStub;
-  let eventEmitterStub: { fire: sinon.SinonStub };
-
-  setup(() => {
-    sandbox = sinon.createSandbox();
-    contextStub = createKeaContextStub();
-
-    // Create a stub for the EventEmitter.fire method
-    eventEmitterStub = { fire: sinon.stub() };
-
-    // Use prototype replacement to avoid issues with the original method
-    sandbox.stub(Logger, "error"); // Stub Logger.error method
-
-    // Create the tree provider first
-    treeProvider = new PullRequestListTreeProvider(contextStub);
-
-    // Then replace its _onDidChangeTreeData after instantiation
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-    (treeProvider as any)._onDidChangeTreeData = eventEmitterStub;
-    fireStub = eventEmitterStub.fire;
-  });
-
-  teardown(() => {
-    sandbox.restore();
-  });
 
   test("should register repository state change listener on initialization", () => {
     // Then

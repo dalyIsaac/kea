@@ -8,33 +8,32 @@ import { createKeaContextStub, createRemoteRepositoryStub } from "../../test-uti
 import { PullRequestId } from "../../types/kea";
 import { createOpenPullRequestCommand } from "./open-pull-request";
 
+const setupStubs = () => {
+  const sandbox = sinon.createSandbox();
+
+  const contextStub = createKeaContextStub();
+  const repositoryStub = createRemoteRepositoryStub();
+  const accountKey: IAccountKey = { providerId: "provider", accountId: "acc" };
+  const pullId: PullRequestId = { owner: "owner", repo: "repo", number: 123 };
+
+  const loggerErrorStub = sandbox.stub(Logger, "error");
+  const showQuickPickStub = sandbox.stub(vscode.window, "showQuickPick");
+
+  // Stub container's treeViewProvider.openPullRequest
+  (contextStub.pullRequestContents.treeViewProvider.openPullRequest as sinon.SinonStub) = sinon.stub();
+
+  return {
+    sandbox,
+    contextStub,
+    repositoryStub,
+    accountKey,
+    pullId,
+    loggerErrorStub,
+    showQuickPickStub,
+  };
+};
+
 suite("open-pull-request", () => {
-  let sandbox: sinon.SinonSandbox;
-  let contextStub: ReturnType<typeof createKeaContextStub>;
-  let repositoryStub: ReturnType<typeof createRemoteRepositoryStub>;
-  let accountKey: IAccountKey;
-  let pullId: PullRequestId;
-  let loggerErrorStub: sinon.SinonStub;
-  let showQuickPickStub: sinon.SinonStub;
-
-  setup(() => {
-    sandbox = sinon.createSandbox();
-
-    contextStub = createKeaContextStub();
-    repositoryStub = createRemoteRepositoryStub();
-    accountKey = { providerId: "provider", accountId: "acc" };
-    pullId = { owner: "owner", repo: "repo", number: 123 };
-
-    loggerErrorStub = sandbox.stub(Logger, "error");
-    showQuickPickStub = sandbox.stub(vscode.window, "showQuickPick");
-
-    // Stub container's treeViewProvider.openPullRequest
-    (contextStub.pullRequestContents.treeViewProvider.openPullRequest as sinon.SinonStub) = sinon.stub();
-  });
-
-  teardown(() => {
-    sandbox.restore();
-  });
 
   test("should open pull request when args are provided", async () => {
     // Given

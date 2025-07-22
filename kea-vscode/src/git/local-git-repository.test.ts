@@ -9,8 +9,6 @@ import { createApiCacheStub } from "../test-utils";
 import { LocalGitRepository } from "./local-git-repository";
 
 suite("LocalGitRepository", () => {
-  let tempDir: string;
-  let repository: LocalGitRepository | undefined;
 
   /**
    * Cross-platform Git executable detection with fallback options.
@@ -100,28 +98,32 @@ suite("LocalGitRepository", () => {
     throw new Error("Git is not available on this system. Skipping tests that require Git.");
   }
 
-  setup(() => {
-    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "kea-git-test-"));
+  const setupStubs = () => {
+    const testTempDir = fs.mkdtempSync(path.join(os.tmpdir(), "kea-git-test-"));
     const cache = createApiCacheStub();
 
-    const repoCreated = createTestRepository(tempDir);
-    if (repoCreated) {
-      repository = new LocalGitRepository(tempDir, cache);
-      return;
+    const repoCreated = createTestRepository(testTempDir);
+    if (!repoCreated) {
+      throw new Error("Test repository creation failed - Git-dependent tests will be skipped");
     }
 
-    throw new Error("Test repository creation failed - Git-dependent tests will be skipped");
-  });
+    const testRepository = new LocalGitRepository(testTempDir, cache);
 
-  teardown(async () => {
-    if (repository) {
-      await repository.dispose();
-      repository = undefined;
+    return {
+      testTempDir,
+      cache,
+      testRepository,
+    };
+  };
+
+  const cleanupStubs = async (stubs: { testTempDir: string; testRepository: LocalGitRepository }) => {
+    if (stubs.testRepository) {
+      await stubs.testRepository.dispose();
     }
-    if (fs.existsSync(tempDir)) {
-      fs.rmSync(tempDir, { recursive: true, force: true });
+    if (fs.existsSync(stubs.testTempDir)) {
+      fs.rmSync(stubs.testTempDir, { recursive: true, force: true });
     }
-  });
+  };
 
   suite("constructor", () => {
     test("should create instance when given a repository path and cache", async () => {

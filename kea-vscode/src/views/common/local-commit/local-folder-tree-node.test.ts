@@ -3,16 +3,15 @@ import * as sinon from "sinon";
 import * as vscode from "vscode";
 import { LocalFolderTreeNode } from "./local-folder-tree-node";
 
+const setupStubs = () => {
+  const sandbox = sinon.createSandbox();
+
+  return {
+    sandbox,
+  };
+};
+
 suite("LocalFolderTreeNode", () => {
-  let sandbox: sinon.SinonSandbox;
-
-  setup(() => {
-    sandbox = sinon.createSandbox();
-  });
-
-  teardown(() => {
-    sandbox.restore();
-  });
 
   test("should create a valid tree item for folder", () => {
     // Given
@@ -93,9 +92,11 @@ suite("LocalFolderTreeNode", () => {
 
   test("should have collapsed state by default", () => {
     // Given
+    const { sandbox } = setupStubs();
     const node = new LocalFolderTreeNode("src");
 
     // Then
     assert.strictEqual(node.collapsibleState, "collapsed");
+    sandbox.restore();
   });
 });

@@ -5,31 +5,31 @@ import { createKeaContextStub } from "../../test-utils";
 import { LocalGitRepository } from "../../git/local-git-repository";
 import { createOpenCommitFileDiffCommand, IOpenCommitFileDiffCommandArgs } from "./open-commit-file-diff";
 
+const setupStubs = () => {
+  const sandbox = sinon.createSandbox();
+  const executeCommandStub = sandbox.stub(vscode.commands, "executeCommand");
+  const showErrorMessageStub = sandbox.stub(vscode.window, "showErrorMessage");
+  const workspaceFoldersStub = sandbox.stub(vscode.workspace, "workspaceFolders").value([
+    {
+      uri: vscode.Uri.file("/test/workspace"),
+      name: "test-workspace",
+      index: 0,
+    },
+  ]);
+
+  return {
+    sandbox,
+    executeCommandStub,
+    showErrorMessageStub,
+    workspaceFoldersStub,
+  };
+};
+
 suite("OpenCommitFileDiffCommand", () => {
-  let sandbox: sinon.SinonSandbox;
-  let executeCommandStub: sinon.SinonStub;
-  let showErrorMessageStub: sinon.SinonStub;
-  let workspaceFoldersStub: sinon.SinonStub;
-
-  setup(() => {
-    sandbox = sinon.createSandbox();
-    executeCommandStub = sandbox.stub(vscode.commands, "executeCommand");
-    showErrorMessageStub = sandbox.stub(vscode.window, "showErrorMessage");
-    workspaceFoldersStub = sandbox.stub(vscode.workspace, "workspaceFolders").value([
-      {
-        uri: vscode.Uri.file("/test/workspace"),
-        name: "test-workspace",
-        index: 0,
-      },
-    ]);
-  });
-
-  teardown(() => {
-    sandbox.restore();
-  });
 
   test("should handle local commit format successfully", async () => {
     // Given
+    const { sandbox, executeCommandStub } = setupStubs();
     const ctx = createKeaContextStub();
     const command = createOpenCommitFileDiffCommand(ctx);
     const args: IOpenCommitFileDiffCommandArgs = {
