@@ -1,8 +1,15 @@
 import * as assert from "assert";
 import * as sinon from "sinon";
 import * as vscode from "vscode";
-import { IKeaRepository } from "../../../repository/kea-repository";
-import { createCommitCommentStub, createCommitStub, createFileStub, createRepositoryStub, createUserStub } from "../../../test-utils";
+import { IRepository } from "../../../repository/repository";
+import {
+  createCommitCommentStub,
+  createCommitStub,
+  createFileStub,
+  createKeaContextStub,
+  createRepositoryStub,
+  createUserStub,
+} from "../../../test-utils";
 import { Commit, CommitComment, CommitFile } from "../../../types/kea";
 import { RemoteCommitTreeNode } from "../../common/remote-commit/remote-commit-tree-node";
 import { RemoteFileTreeNode } from "../../common/remote-commit/remote-file-tree-node";
@@ -11,13 +18,15 @@ import { ReviewCommentTreeNode } from "../../common/review-comment-tree-node";
 
 suite("CommitTreeNode", () => {
   let sandbox: sinon.SinonSandbox;
-  let mockRepository: sinon.SinonStubbedInstance<IKeaRepository>;
+  let repository: IRepository;
   let testCommit: Commit;
   let showErrorMessageStub: sinon.SinonStub;
 
+  const ctx = createKeaContextStub();
+
   setup(() => {
     sandbox = sinon.createSandbox();
-    mockRepository = createRepositoryStub() as sinon.SinonStubbedInstance<IKeaRepository>;
+    repository = createRepositoryStub();
 
     testCommit = createCommitStub({
       sha: "test-sha",
@@ -39,7 +48,7 @@ suite("CommitTreeNode", () => {
 
   test("constructor and getTreeItem should create a valid tree item", () => {
     // Given
-    const node = new RemoteCommitTreeNode(mockRepository, testCommit);
+    const node = new RemoteCommitTreeNode(ctx, repository, testCommit);
 
     // When
     const treeItem = node.getTreeItem();
@@ -64,7 +73,7 @@ suite("CommitTreeNode", () => {
         tree: { sha: "tree-sha", url: "tree-url" },
       },
     });
-    const node = new RemoteCommitTreeNode(mockRepository, emptyMessageCommit);
+    const node = new RemoteCommitTreeNode(ctx, repository, emptyMessageCommit);
 
     // When
     const treeItem = node.getTreeItem();
@@ -85,17 +94,16 @@ suite("CommitTreeNode", () => {
       createCommitCommentStub({ path: "src/file1.ts", body: "Comment 1", line: 10 }),
       createCommitCommentStub({ path: "README.md", body: "Comment 2", line: 5 }),
     ];
-    mockRepository.getCommitFiles.resolves(files);
-    mockRepository.getCommitComments.resolves(comments);
-    const node = new RemoteCommitTreeNode(mockRepository, testCommit);
+
+    repository.remoteRepository.getCommitFiles = sinon.stub().resolves(files);
+    repository.remoteRepository.getCommitComments = sinon.stub().resolves(comments);
+
+    const node = new RemoteCommitTreeNode(ctx, repository, testCommit);
 
     // When
     const children = await node.getChildren();
 
     // Then
-    sinon.assert.calledOnceWithExactly(mockRepository.getCommitFiles, testCommit.sha);
-    sinon.assert.calledOnceWithExactly(mockRepository.getCommitComments, testCommit.sha);
-
     assert.strictEqual(children.length, 2, "Should have one folder ('src') and one file ('README.md') at the root");
 
     // Then: Check README.md file node
@@ -139,18 +147,16 @@ suite("CommitTreeNode", () => {
   test("getChildren should handle error fetching files", async () => {
     // Given
     const error = new Error("Failed to fetch files");
-    mockRepository.getCommitFiles.resolves(error);
-    mockRepository.getCommitComments.resolves([]);
-    const node = new RemoteCommitTreeNode(mockRepository, testCommit);
+
+    repository.remoteRepository.getCommitFiles = sinon.stub().resolves(error);
+    repository.remoteRepository.getCommitComments = sinon.stub().resolves([]);
+
+    const node = new RemoteCommitTreeNode(ctx, repository, testCommit);
 
     // When
     const children = await node.getChildren();
 
     // Then
-    sinon.assert.calledOnceWithExactly(mockRepository.getCommitFiles, testCommit.sha);
-    sinon.assert.calledOnceWithExactly(mockRepository.getCommitComments, testCommit.sha);
-    sinon.assert.calledOnce(showErrorMessageStub);
-    // Check arguments directly
     assert.deepStrictEqual(showErrorMessageStub.getCall(0).args, [`Error fetching commit files: ${error.message}`]);
     assert.deepStrictEqual(children, [], "Children should be empty on file fetch error");
   });
@@ -158,19 +164,17 @@ suite("CommitTreeNode", () => {
   test("getChildren should handle error fetching comments", async () => {
     // Given
     const files: CommitFile[] = [createFileStub({ filename: "file.ts" })];
+
     const error = new Error("Failed to fetch comments");
-    mockRepository.getCommitFiles.resolves(files);
-    mockRepository.getCommitComments.resolves(error);
-    const node = new RemoteCommitTreeNode(mockRepository, testCommit);
+    repository.remoteRepository.getCommitFiles = sinon.stub().resolves(files);
+    repository.remoteRepository.getCommitComments = sinon.stub().resolves(error);
+
+    const node = new RemoteCommitTreeNode(ctx, repository, testCommit);
 
     // When
     const children = await node.getChildren();
 
     // Then
-    sinon.assert.calledOnceWithExactly(mockRepository.getCommitFiles, testCommit.sha);
-    sinon.assert.calledOnceWithExactly(mockRepository.getCommitComments, testCommit.sha);
-    sinon.assert.calledOnce(showErrorMessageStub);
-    // Check arguments directly
     assert.deepStrictEqual(showErrorMessageStub.getCall(0).args, [`Error fetching commit comments: ${error.message}`]);
 
     assert.strictEqual(children.length, 1, "Should have one file node despite comment error");

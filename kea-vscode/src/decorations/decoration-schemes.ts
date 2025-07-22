@@ -3,23 +3,40 @@ import { IAccountKey } from "../account/account";
 import { WrappedError } from "../core/wrapped-error";
 import { FileStatus, PullRequestId, RepoId } from "../types/kea";
 
-export const DECORATION_SCHEMES = {
-  files: "kea-files" as const,
-  commentsRoot: "kea-comments-root" as const,
-} satisfies Record<string, string>;
+type ParsedDecorationData =
+  | { type: "keaRemoteFiles"; payload: PullRequestFileDecorationPayload }
+  | { type: "keaLocalFiles"; payload: LocalFileDecorationPayload }
+  | { type: "keaCommentsRoot"; payload: PullRequestCommentsRootDecorationPayload };
 
-interface PullRequestFileDecorationPayload {
-  accountKey: IAccountKey;
-  repoId: RepoId;
+type DecorationScheme = ParsedDecorationData["type"];
+
+export const DECORATION_SCHEMES = {
+  remoteFiles: "keaRemoteFiles",
+  localFiles: "keaLocalFiles",
+  commentsRoot: "keaCommentsRoot",
+} satisfies Record<string, DecorationScheme>;
+
+interface LocalFileDecorationPayload {
   filePath: string;
   fileStatus: FileStatus;
 }
 
-export const createGitDecorationUri = (payload: PullRequestFileDecorationPayload): vscode.Uri =>
+interface PullRequestFileDecorationPayload extends LocalFileDecorationPayload {
+  accountKey: IAccountKey;
+  repoId: RepoId;
+}
+
+const createDecorationUri = (scheme: DecorationScheme, payload: ParsedDecorationData["payload"]): vscode.Uri =>
   vscode.Uri.from({
-    scheme: DECORATION_SCHEMES.files,
+    scheme,
     query: JSON.stringify(payload),
   });
+
+export const createLocalFileDecorationUri = (payload: LocalFileDecorationPayload): vscode.Uri =>
+  createDecorationUri("keaLocalFiles", payload);
+
+export const createRemoteFileDecorationUri = (payload: PullRequestFileDecorationPayload): vscode.Uri =>
+  createDecorationUri("keaRemoteFiles", payload);
 
 interface PullRequestCommentsRootDecorationPayload {
   accountKey: IAccountKey;
@@ -27,14 +44,7 @@ interface PullRequestCommentsRootDecorationPayload {
 }
 
 export const createCommentsRootDecorationUri = (payload: PullRequestCommentsRootDecorationPayload): vscode.Uri =>
-  vscode.Uri.from({
-    scheme: DECORATION_SCHEMES.commentsRoot,
-    query: JSON.stringify(payload),
-  });
-
-type ParsedDecorationData =
-  | { type: typeof DECORATION_SCHEMES.files; payload: PullRequestFileDecorationPayload }
-  | { type: typeof DECORATION_SCHEMES.commentsRoot; payload: PullRequestCommentsRootDecorationPayload };
+  createDecorationUri("keaCommentsRoot", payload);
 
 export const parseDecorationPayload = (uri: vscode.Uri): ParsedDecorationData | Error => {
   let payload: ParsedDecorationData["payload"];
@@ -44,13 +54,15 @@ export const parseDecorationPayload = (uri: vscode.Uri): ParsedDecorationData | 
     return new WrappedError("Failed to parse decoration payload", error);
   }
 
-  const type = uri.scheme;
+  const type = uri.scheme as DecorationScheme;
   switch (type) {
-    case DECORATION_SCHEMES.files:
-      return { type: DECORATION_SCHEMES.files, payload: payload as PullRequestFileDecorationPayload };
-    case DECORATION_SCHEMES.commentsRoot:
-      return { type: DECORATION_SCHEMES.commentsRoot, payload: payload as PullRequestCommentsRootDecorationPayload };
+    case "keaRemoteFiles":
+      return { type: "keaRemoteFiles", payload: payload as PullRequestFileDecorationPayload };
+    case "keaLocalFiles":
+      return { type: "keaLocalFiles", payload: payload as LocalFileDecorationPayload };
+    case "keaCommentsRoot":
+      return { type: "keaCommentsRoot", payload: payload as PullRequestCommentsRootDecorationPayload };
     default:
-      return new Error(`Unknown decoration scheme: ${type}`);
+      return new Error(`Unknown decoration scheme: ${type as string}`);
   }
 };

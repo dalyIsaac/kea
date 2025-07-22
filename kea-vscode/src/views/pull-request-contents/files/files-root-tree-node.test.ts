@@ -1,23 +1,47 @@
 import * as assert from "assert";
 import * as vscode from "vscode";
-import { createFileStub, createPullRequestCommentStub, createRepositoryStub } from "../../../test-utils";
-import { PullRequestId } from "../../../types/kea";
+import {
+  createFileStub,
+  createKeaContextStub,
+  createPullRequestCommentStub,
+  createRemoteRepositoryStub,
+  createRepositoryStub,
+} from "../../../test-utils";
+import { CommitFile, PullRequestComment, PullRequestId } from "../../../types/kea";
 import { RemoteFileTreeNode } from "../../common/remote-commit/remote-file-tree-node";
 import { RemoteFolderTreeNode } from "../../common/remote-commit/remote-folder-tree-node";
 import { ReviewCommentTreeNode } from "../../common/review-comment-tree-node";
 import { FilesRootTreeNode } from "./files-root-tree-node";
 
-suite("FilesRootTreeNode", () => {
-  const pullId: PullRequestId = { owner: "owner", repo: "repo", number: 1 };
+const createStubs = (
+  remoteRepoStubs: {
+    getPullRequestFiles?: CommitFile[] | Error;
+    getPullRequestReviewComments?: PullRequestComment[] | Error;
+  } = {},
+) => {
+  const remoteRepository = createRemoteRepositoryStub({
+    getPullRequestFiles: (_id) => Promise.resolve(remoteRepoStubs.getPullRequestFiles ?? []),
+    getPullRequestReviewComments: (_id) => Promise.resolve(remoteRepoStubs.getPullRequestReviewComments ?? []),
+  });
 
+  const repository = createRepositoryStub({ remoteRepository });
+
+  const pullId: PullRequestId = { owner: "owner", repo: "repo", number: 1 };
+  const ctx = createKeaContextStub();
+
+  return { ctx, repository, pullId, remoteRepository };
+};
+
+suite("FilesRootTreeNode", () => {
   test("Returns an empty array when the files API call fails", async () => {
     // Given
-    const repository = createRepositoryStub({
-      getPullRequestFiles: (_id) => Promise.resolve(new Error("API call failed")),
+    const { ctx, repository, pullId } = createStubs({
+      getPullRequestFiles: new Error("API call failed"),
+      getPullRequestReviewComments: [],
     });
 
     // When
-    const filesRootTreeNode = new FilesRootTreeNode(repository, pullId);
+    const filesRootTreeNode = new FilesRootTreeNode(ctx, repository, pullId);
     const children = await filesRootTreeNode.getChildren();
 
     // Then
@@ -26,13 +50,13 @@ suite("FilesRootTreeNode", () => {
 
   test("Continues to return an empty array when the review comments API call fails", async () => {
     // Given
-    const repository = createRepositoryStub({
-      getPullRequestFiles: (_id) => Promise.resolve([createFileStub({ filename: "README.md" })]),
-      getPullRequestReviewComments: (_id) => Promise.resolve(new Error("API call failed")),
+    const { ctx, repository, pullId } = createStubs({
+      getPullRequestFiles: [createFileStub({ filename: "README.md" })],
+      getPullRequestReviewComments: new Error("API call failed"),
     });
 
     // When
-    const filesRootTreeNode = new FilesRootTreeNode(repository, pullId);
+    const filesRootTreeNode = new FilesRootTreeNode(ctx, repository, pullId);
     const children = await filesRootTreeNode.getChildren();
 
     // Then
@@ -41,12 +65,10 @@ suite("FilesRootTreeNode", () => {
 
   test("Returns an empty array when there are no files", async () => {
     // Given
-    const repository = createRepositoryStub({
-      getPullRequestFiles: (_id) => Promise.resolve([]),
-    });
+    const { ctx, repository, pullId } = createStubs();
 
     // When
-    const filesRootTreeNode = new FilesRootTreeNode(repository, pullId);
+    const filesRootTreeNode = new FilesRootTreeNode(ctx, repository, pullId);
     const children = await filesRootTreeNode.getChildren();
 
     // Then
@@ -55,13 +77,13 @@ suite("FilesRootTreeNode", () => {
 
   test("Returns a single file when there is one file", async () => {
     // Given
-    const repository = createRepositoryStub({
-      getPullRequestFiles: (_id) => Promise.resolve([createFileStub({ filename: "README.md" })]),
-      getPullRequestReviewComments: (_id) => Promise.resolve([]),
+    const { ctx, repository, pullId } = createStubs({
+      getPullRequestFiles: [createFileStub({ filename: "README.md" })],
+      getPullRequestReviewComments: [],
     });
 
     // When
-    const filesRootTreeNode = new FilesRootTreeNode(repository, pullId);
+    const filesRootTreeNode = new FilesRootTreeNode(ctx, repository, pullId);
     const children = await filesRootTreeNode.getChildren();
 
     // Then
@@ -75,19 +97,18 @@ suite("FilesRootTreeNode", () => {
 
   test("Returns a tree structure for files", async () => {
     // Given
-    const repository = createRepositoryStub({
-      getPullRequestFiles: (_id) =>
-        Promise.resolve([
-          createFileStub({ filename: "src/components/Button.tsx" }),
-          createFileStub({ filename: "src/components/Modal.tsx" }),
-          createFileStub({ filename: "src/utils/helpers.ts" }),
-          createFileStub({ filename: "README.md" }),
-        ]),
-      getPullRequestReviewComments: (_id) => Promise.resolve([]),
+    const { ctx, repository, pullId } = createStubs({
+      getPullRequestFiles: [
+        createFileStub({ filename: "src/components/Button.tsx" }),
+        createFileStub({ filename: "src/components/Modal.tsx" }),
+        createFileStub({ filename: "src/utils/helpers.ts" }),
+        createFileStub({ filename: "README.md" }),
+      ],
+      getPullRequestReviewComments: [],
     });
 
     // When
-    const filesRootTreeNode = new FilesRootTreeNode(repository, pullId);
+    const filesRootTreeNode = new FilesRootTreeNode(ctx, repository, pullId);
     const children = await filesRootTreeNode.getChildren();
 
     // Then
@@ -134,18 +155,17 @@ suite("FilesRootTreeNode", () => {
 
   test("Returns a single file with multiple review comments", async () => {
     // Given
-    const repository = createRepositoryStub({
-      getPullRequestFiles: (_id) => Promise.resolve([createFileStub({ filename: "README.md" })]),
-      getPullRequestReviewComments: (_id) =>
-        Promise.resolve([
-          createPullRequestCommentStub({ body: "Comment 1", path: "README.md" }),
-          createPullRequestCommentStub({ body: "Comment 2", path: "README.md" }),
-          createPullRequestCommentStub({ body: "Comment 3", path: "not-readme.md" }),
-        ]),
+    const { ctx, repository, pullId } = createStubs({
+      getPullRequestFiles: [createFileStub({ filename: "README.md" })],
+      getPullRequestReviewComments: [
+        createPullRequestCommentStub({ body: "Comment 1", path: "README.md" }),
+        createPullRequestCommentStub({ body: "Comment 2", path: "README.md" }),
+        createPullRequestCommentStub({ body: "Comment 3", path: "not-readme.md" }),
+      ],
     });
 
     // When
-    const filesRootTreeNode = new FilesRootTreeNode(repository, pullId);
+    const filesRootTreeNode = new FilesRootTreeNode(ctx, repository, pullId);
     const children = await filesRootTreeNode.getChildren();
 
     // Then
@@ -163,10 +183,8 @@ suite("FilesRootTreeNode", () => {
 
   test("getTreeItem should return TreeItem with correct properties", () => {
     // Given
-    const repository = createRepositoryStub({
-      getPullRequestFiles: (_id) => Promise.resolve([]),
-    });
-    const filesRootTreeNode = new FilesRootTreeNode(repository, pullId);
+    const { ctx, repository, pullId } = createStubs();
+    const filesRootTreeNode = new FilesRootTreeNode(ctx, repository, pullId);
 
     // When
     const treeItem = filesRootTreeNode.getTreeItem();
@@ -181,10 +199,8 @@ suite("FilesRootTreeNode", () => {
 
   test("getTreeItem should respect custom collapsibleState", () => {
     // Given
-    const repository = createRepositoryStub({
-      getPullRequestFiles: (_id) => Promise.resolve([]),
-    });
-    const filesRootTreeNode = new FilesRootTreeNode(repository, pullId);
+    const { ctx, repository, pullId } = createStubs();
+    const filesRootTreeNode = new FilesRootTreeNode(ctx, repository, pullId);
     filesRootTreeNode.collapsibleState = "expanded";
 
     // When

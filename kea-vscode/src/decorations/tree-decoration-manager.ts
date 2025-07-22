@@ -1,12 +1,12 @@
 import * as vscode from "vscode";
 import { disposeAll, IKeaDisposable, KeaDisposable } from "../core/kea-disposable";
-import { IKeaRepository, IssueCommentsPayload } from "../repository/kea-repository";
+import { IRepository, IssueCommentsPayload } from "../repository/repository";
 import { BaseTreeDecorationProvider } from "./base-tree-decoration-provider";
 import { createCommentsRootDecorationUri } from "./decoration-schemes";
 
 export interface ITreeDecorationManager extends IKeaDisposable {
   registerProviders: (...providers: BaseTreeDecorationProvider[]) => void;
-  updateListeners: (...repositories: IKeaRepository[]) => void;
+  updateListeners: (...repositories: IRepository[]) => void;
 }
 
 export class TreeDecorationManager extends KeaDisposable implements ITreeDecorationManager {
@@ -22,7 +22,7 @@ export class TreeDecorationManager extends KeaDisposable implements ITreeDecorat
     }
   };
 
-  updateListeners = (...repositories: IKeaRepository[]): void => {
+  updateListeners = (...repositories: IRepository[]): void => {
     disposeAll(this.#repositoryListeners);
 
     this.#repositoryListeners = [];
@@ -36,7 +36,7 @@ export class TreeDecorationManager extends KeaDisposable implements ITreeDecorat
     }
   };
 
-  #onDidChangeIssueComments = (repository: IKeaRepository, payload: IssueCommentsPayload): void => {
+  #onDidChangeIssueComments = (repository: IRepository, payload: IssueCommentsPayload): void => {
     if (payload.comments instanceof Error) {
       return;
     }

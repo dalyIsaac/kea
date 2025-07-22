@@ -1,5 +1,6 @@
+import * as vscode from "vscode";
 import { IApiCache } from "../cache/api/api-cache";
-import { IKeaRepository } from "../repository/kea-repository";
+import { IRepository } from "../repository/repository";
 
 export interface IAccountKey {
   providerId: string;
@@ -9,5 +10,5 @@ export interface IAccountKey {
 export interface IAccount {
   accountKey: IAccountKey;
   isRepoForAccount: (repoUrl: string) => boolean;
-  tryCreateRepoForAccount: (repoUrl: string, cache: IApiCache) => IKeaRepository | Error;
+  createRepositoryForAccount: (repoUrl: string, workspaceFolder: vscode.WorkspaceFolder, cache: IApiCache) => IRepository | Error;
 }

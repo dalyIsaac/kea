@@ -1,8 +1,7 @@
 import * as vscode from "vscode";
 import { IKeaContext } from "../../../core/context";
 import { Logger } from "../../../core/logger";
-import { IKeaRepository } from "../../../repository/kea-repository";
-import { LocalCommitsService } from "../../../services/local-commits-service";
+import { IRepository } from "../../../repository/repository";
 import { PullRequest, PullRequestId } from "../../../types/kea";
 import { LocalCommitTreeNode } from "../../common/local-commit/local-commit-tree-node";
 import { RemoteCommitTreeNode } from "../../common/remote-commit/remote-commit-tree-node";
@@ -14,20 +13,18 @@ import { CollapsibleState, getCollapsibleState, IParentTreeNode } from "../../tr
 export class CommitsRootTreeNode implements IParentTreeNode<RemoteCommitTreeNode | LocalCommitTreeNode> {
   #contextValue = "commit";
   #iconPath = new vscode.ThemeIcon("git-commit");
-  #repository: IKeaRepository;
+  #repository: IRepository;
   #ctx: IKeaContext;
   #pullRequest: PullRequest | undefined;
-  #localCommitsService: LocalCommitsService;
 
   pullId: PullRequestId;
   collapsibleState: CollapsibleState = "collapsed";
 
-  constructor(repository: IKeaRepository, pullId: PullRequestId, ctx: IKeaContext, pullRequest?: PullRequest) {
+  constructor(repository: IRepository, pullId: PullRequestId, ctx: IKeaContext, pullRequest?: PullRequest) {
     this.#repository = repository;
     this.pullId = pullId;
     this.#ctx = ctx;
     this.#pullRequest = pullRequest;
-    this.#localCommitsService = new LocalCommitsService(ctx, repository.account.accountKey, repository.repoId);
   }
 
   getTreeItem = (): vscode.TreeItem => {
@@ -81,7 +78,7 @@ export class CommitsRootTreeNode implements IParentTreeNode<RemoteCommitTreeNode
 
   getChildren = async (): Promise<Array<RemoteCommitTreeNode | LocalCommitTreeNode>> => {
     // Always get remote commits first for ahead/behind status and remote-only commits
-    const remoteCommits = await this.#repository.getPullRequestCommits(this.pullId);
+    const remoteCommits = await this.#repository.remoteRepository.getPullRequestCommits(this.pullId);
     if (remoteCommits instanceof Error) {
       Logger.error("Error fetching pull request commits", remoteCommits);
       vscode.window.showErrorMessage(`Error fetching pull request commits: ${remoteCommits.message}`);
@@ -103,7 +100,7 @@ export class CommitsRootTreeNode implements IParentTreeNode<RemoteCommitTreeNode
       const localCommitShas = new Set(localCommits?.map((c) => c.commit.sha) ?? []);
       const remoteOnlyCommits = remoteCommits
         .filter((commit) => !localCommitShas.has(commit.sha))
-        .map((commit) => new RemoteCommitTreeNode(this.#repository, commit));
+        .map((commit) => new RemoteCommitTreeNode(this.#ctx, this.#repository, commit));
       allCommits.push(...remoteOnlyCommits);
     }
 
@@ -111,6 +108,12 @@ export class CommitsRootTreeNode implements IParentTreeNode<RemoteCommitTreeNode
   };
 
   #getLocalCommits = async (): Promise<LocalCommitTreeNode[] | null> => {
-    return this.#localCommitsService.getLocalCommits(this.#pullRequest);
+    const localCommits = await this.#repository.localRepository.getCommitsForPullRequest(this.#pullRequest?.base.ref);
+    if (localCommits instanceof Error) {
+      Logger.error("Error fetching local commits for pull request", localCommits);
+      return null;
+    }
+
+    return localCommits.map((commit) => new LocalCommitTreeNode(this.#ctx, this.#repository, commit));
   };
 }

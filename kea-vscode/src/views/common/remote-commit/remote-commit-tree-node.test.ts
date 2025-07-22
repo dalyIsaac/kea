@@ -1,8 +1,15 @@
 import * as assert from "assert";
 import * as sinon from "sinon";
 import * as vscode from "vscode";
-import { IKeaRepository } from "../../../repository/kea-repository";
-import { createCommitCommentStub, createCommitStub, createFileStub, createRepositoryStub, createUserStub } from "../../../test-utils";
+import { IRepository } from "../../../repository/repository";
+import {
+  createCommitCommentStub,
+  createCommitStub,
+  createFileStub,
+  createKeaContextStub,
+  createRemoteRepositoryStub,
+  createUserStub,
+} from "../../../test-utils";
 import { Commit, CommitComment, CommitFile } from "../../../types/kea";
 import { ReviewCommentTreeNode } from "../../common/review-comment-tree-node";
 import { RemoteCommitTreeNode } from "./remote-commit-tree-node";
@@ -11,13 +18,15 @@ import { RemoteFolderTreeNode } from "./remote-folder-tree-node";
 
 suite("CommitTreeNode", () => {
   let sandbox: sinon.SinonSandbox;
-  let mockRepository: sinon.SinonStubbedInstance<IKeaRepository>;
+  let mockRepository: sinon.SinonStubbedInstance<IRepository>;
   let testCommit: Commit;
   let showErrorMessageStub: sinon.SinonStub;
 
+  const ctx = createKeaContextStub();
+
   setup(() => {
     sandbox = sinon.createSandbox();
-    mockRepository = createRepositoryStub() as sinon.SinonStubbedInstance<IKeaRepository>;
+    mockRepository = createRemoteRepositoryStub() as sinon.SinonStubbedInstance<IRepository>;
 
     testCommit = createCommitStub({
       sha: "test-sha",
@@ -39,7 +48,7 @@ suite("CommitTreeNode", () => {
 
   test("constructor and getTreeItem should create a valid tree item", () => {
     // Given
-    const node = new RemoteCommitTreeNode(mockRepository, testCommit);
+    const node = new RemoteCommitTreeNode(ctx, mockRepository, testCommit);
 
     // When
     const treeItem = node.getTreeItem();
@@ -64,7 +73,7 @@ suite("CommitTreeNode", () => {
         tree: { sha: "tree-sha", url: "tree-url" },
       },
     });
-    const node = new RemoteCommitTreeNode(mockRepository, emptyMessageCommit);
+    const node = new RemoteCommitTreeNode(ctx, mockRepository, emptyMessageCommit);
 
     // When
     const treeItem = node.getTreeItem();
@@ -87,7 +96,7 @@ suite("CommitTreeNode", () => {
     ];
     mockRepository.getCommitFiles.resolves(files);
     mockRepository.getCommitComments.resolves(comments);
-    const node = new RemoteCommitTreeNode(mockRepository, testCommit);
+    const node = new RemoteCommitTreeNode(ctx, mockRepository, testCommit);
 
     // When
     const children = await node.getChildren();
@@ -141,7 +150,7 @@ suite("CommitTreeNode", () => {
     const error = new Error("Failed to fetch files");
     mockRepository.getCommitFiles.resolves(error);
     mockRepository.getCommitComments.resolves([]);
-    const node = new RemoteCommitTreeNode(mockRepository, testCommit);
+    const node = new RemoteCommitTreeNode(ctx, mockRepository, testCommit);
 
     // When
     const children = await node.getChildren();
@@ -161,7 +170,7 @@ suite("CommitTreeNode", () => {
     const error = new Error("Failed to fetch comments");
     mockRepository.getCommitFiles.resolves(files);
     mockRepository.getCommitComments.resolves(error);
-    const node = new RemoteCommitTreeNode(mockRepository, testCommit);
+    const node = new RemoteCommitTreeNode(ctx, mockRepository, testCommit);
 
     // When
     const children = await node.getChildren();

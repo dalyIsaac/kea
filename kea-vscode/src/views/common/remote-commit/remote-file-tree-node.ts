@@ -1,27 +1,27 @@
 import * as vscode from "vscode";
-import { IAccountKey } from "../../../account/account";
 import { IKeaContext } from "../../../core/context";
-import { createGitDecorationUri } from "../../../decorations/decoration-schemes";
-import { CommitFile, FileComment, RepoId } from "../../../types/kea";
+import { createRemoteFileDecorationUri } from "../../../decorations/decoration-schemes";
+import { IRemoteRepository } from "../../../repository/remote-repository";
+import { CommitFile, FileComment } from "../../../types/kea";
 import { BaseFileTreeNode } from "../../common/base-file-tree-node";
 
 /**
  * Tree item representing a remote file.
  */
 export class RemoteFileTreeNode extends BaseFileTreeNode {
-  #resourceUri: vscode.Uri;
+  #decorationUri: vscode.Uri;
 
-  constructor(accountKey: IAccountKey, repoId: RepoId, file: CommitFile, comments: FileComment[], ctx?: IKeaContext) {
+  constructor(ctx: IKeaContext, remoteRepo: IRemoteRepository, file: CommitFile, comments: FileComment[]) {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const fileName = file.filename.split("/").pop()!;
     const fileUri = vscode.Uri.file(file.filename);
 
-    super(fileName, fileUri, comments, "file", ctx);
+    super(ctx, fileName, fileUri, comments, "file", file.status);
 
-    this.#resourceUri = createGitDecorationUri({
-      accountKey,
+    this.#decorationUri = createRemoteFileDecorationUri({
+      accountKey: remoteRepo.account.accountKey,
       filePath: file.filename,
-      repoId,
+      repoId: remoteRepo.repoId,
       fileStatus: file.status,
     });
   }
@@ -29,17 +29,11 @@ export class RemoteFileTreeNode extends BaseFileTreeNode {
   getTreeItem = (): vscode.TreeItem => {
     const treeItem = this.createBaseTreeItem();
 
-    if (this.ctx) {
-      treeItem.command = this.ctx.commandManager.getCommand("kea.openCommitFileDiff", "Open File Diff", { resourceUri: this.#resourceUri });
-    } else {
-      treeItem.command = {
-        command: "kea.openCommitFileDiff",
-        title: "Open File Diff",
-        arguments: [{ resourceUri: this.#resourceUri }],
-      };
-    }
+    treeItem.command = this._ctx.commandManager.getCommand("kea.openCommitFileDiff", "Open File Diff", {
+      resourceUri: this.#decorationUri,
+    });
 
-    treeItem.resourceUri = this.#resourceUri;
+    treeItem.resourceUri = this.#decorationUri;
 
     return treeItem;
   };

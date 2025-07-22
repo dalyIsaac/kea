@@ -1,9 +1,10 @@
 import * as assert from "assert";
 import * as vscode from "vscode";
-import { IssueCommentsPayload, PullRequestReviewCommentsPayload } from "../../../repository/kea-repository";
+import { IRemoteRepository, IssueCommentsPayload, PullRequestReviewCommentsPayload } from "../../../repository/remote-repository";
 import {
   createIssueCommentStub,
   createPullRequestCommentStub,
+  createRemoteRepositoryStub,
   createRepositoryStub,
   createTreeNodeProviderStub,
   stubEvents,
@@ -13,16 +14,39 @@ import { CommentTreeNode } from "../../common/comment-tree-node";
 import { ReviewCommentTreeNode } from "../../common/review-comment-tree-node";
 import { CommentsRootTreeNode } from "./comments-root-tree-node";
 
-suite("CommentsRootTreeNode", () => {
-  const pullId: PullRequestId = { owner: "owner", repo: "repo", number: 1 };
+const createStubs = (
+  stubs: { getIssueComments?: IssueComment[] | Error; getPullRequestReviewComments?: PullRequestComment[] | Error } = {},
+) => {
+  const remoteRepository = createRemoteRepositoryStub({
+    getIssueComments: (_id: PullRequestId) => Promise.resolve(stubs.getIssueComments ?? []),
+    getPullRequestReviewComments: (_id: PullRequestId) => Promise.resolve(stubs.getPullRequestReviewComments ?? []),
+  });
 
+  const repository = createRepositoryStub({ remoteRepository });
+
+  const pullId: PullRequestId = { owner: "owner", repo: "repo", number: 1 };
+  const treeNodeProvider = createTreeNodeProviderStub();
+
+  return { repository, pullId, treeNodeProvider };
+};
+
+const createStubsWithEvents = (
+  stubs: { getIssueComments?: IssueComment[] | Error; getPullRequestReviewComments?: PullRequestComment[] | Error } = {},
+  eventNames: Array<keyof IRemoteRepository>,
+) => {
+  const { repository, pullId, treeNodeProvider } = createStubs(stubs);
+  const { eventFirers } = stubEvents(repository.remoteRepository, eventNames);
+
+  return { repository, pullId, treeNodeProvider, eventFirers };
+};
+
+suite("CommentsRootTreeNode", () => {
   test("Returns an empty array when both API calls fail", async () => {
     // Given
-    const repository = createRepositoryStub({
-      getIssueComments: (_id) => Promise.resolve(new Error("Issue comments API call failed")),
-      getPullRequestReviewComments: (_id) => Promise.resolve(new Error("Review comments API call failed")),
+    const { repository, treeNodeProvider, pullId } = createStubs({
+      getIssueComments: new Error("Issue comments API call failed"),
+      getPullRequestReviewComments: new Error("Review comments API call failed"),
     });
-    const treeNodeProvider = createTreeNodeProviderStub();
 
     // When
     const commentsRootTreeNode = new CommentsRootTreeNode(repository, pullId, treeNodeProvider);
@@ -34,11 +58,7 @@ suite("CommentsRootTreeNode", () => {
 
   test("Returns an empty array when both API calls return empty arrays", async () => {
     // Given
-    const repository = createRepositoryStub({
-      getIssueComments: (_id) => Promise.resolve<IssueComment[]>([]),
-      getPullRequestReviewComments: (_id) => Promise.resolve<PullRequestComment[]>([]),
-    });
-    const treeNodeProvider = createTreeNodeProviderStub();
+    const { repository, pullId, treeNodeProvider } = createStubs();
 
     // When
     const commentsRootTreeNode = new CommentsRootTreeNode(repository, pullId, treeNodeProvider);
@@ -55,11 +75,10 @@ suite("CommentsRootTreeNode", () => {
       createIssueCommentStub({ id: 2, body: "Test issue comment 2" }),
     ];
 
-    const repository = createRepositoryStub({
-      getIssueComments: (_id) => Promise.resolve<IssueComment[]>(issueComments),
-      getPullRequestReviewComments: (_id) => Promise.resolve(new Error("Review comments API call failed")),
+    const { repository, pullId, treeNodeProvider } = createStubs({
+      getIssueComments: issueComments,
+      getPullRequestReviewComments: new Error("Review comments API call failed"),
     });
-    const treeNodeProvider = createTreeNodeProviderStub();
 
     // When
     const commentsRootTreeNode = new CommentsRootTreeNode(repository, pullId, treeNodeProvider);
@@ -78,11 +97,10 @@ suite("CommentsRootTreeNode", () => {
       createPullRequestCommentStub({ id: 2, body: "Test review comment 2" }),
     ];
 
-    const repository = createRepositoryStub({
-      getIssueComments: (_id) => Promise.resolve(new Error("Issue comments API call failed")),
-      getPullRequestReviewComments: (_id) => Promise.resolve<PullRequestComment[]>(reviewComments),
+    const { repository, pullId, treeNodeProvider } = createStubs({
+      getIssueComments: new Error("Issue comments API call failed"),
+      getPullRequestReviewComments: reviewComments,
     });
-    const treeNodeProvider = createTreeNodeProviderStub();
 
     // When
     const commentsRootTreeNode = new CommentsRootTreeNode(repository, pullId, treeNodeProvider);
@@ -106,11 +124,10 @@ suite("CommentsRootTreeNode", () => {
       createPullRequestCommentStub({ id: 4, body: "Test review comment 2", createdAt: new Date("2022-01-04") }),
     ];
 
-    const repository = createRepositoryStub({
-      getIssueComments: (_id) => Promise.resolve<IssueComment[]>(issueComments),
-      getPullRequestReviewComments: (_id) => Promise.resolve<PullRequestComment[]>(reviewComments),
+    const { repository, pullId, treeNodeProvider } = createStubs({
+      getIssueComments: issueComments,
+      getPullRequestReviewComments: reviewComments,
     });
-    const treeNodeProvider = createTreeNodeProviderStub();
 
     // When
     const commentsRootTreeNode = new CommentsRootTreeNode(repository, pullId, treeNodeProvider);
@@ -133,9 +150,9 @@ suite("CommentsRootTreeNode", () => {
 
   test("Collapsible state is not updated when the issue comments errors", () => {
     // Given
+    const { repository, pullId, treeNodeProvider, eventFirers } = createStubsWithEvents({}, ["onDidChangeIssueComments"]);
     const payload: IssueCommentsPayload = { issueId: pullId, comments: new Error("Something went wrong") };
-    const { stub: repository, eventFirers } = stubEvents(createRepositoryStub(), ["onDidChangeIssueComments"] as const);
-    const treeNodeProvider = createTreeNodeProviderStub();
+
     const commentsRootTreeNode = new CommentsRootTreeNode(repository, pullId, treeNodeProvider);
 
     // When
@@ -147,9 +164,9 @@ suite("CommentsRootTreeNode", () => {
 
   test("Collapsible state is updated when the issue comments are empty", () => {
     // Given
+    const { repository, pullId, treeNodeProvider, eventFirers } = createStubsWithEvents({}, ["onDidChangeIssueComments"]);
     const payload: IssueCommentsPayload = { issueId: pullId, comments: [] };
-    const { stub: repository, eventFirers } = stubEvents(createRepositoryStub(), ["onDidChangeIssueComments"] as const);
-    const treeNodeProvider = createTreeNodeProviderStub();
+
     const commentsRootTreeNode = new CommentsRootTreeNode(repository, pullId, treeNodeProvider);
 
     // When
@@ -161,9 +178,9 @@ suite("CommentsRootTreeNode", () => {
 
   test("Collapsible state is updated when the issue comments are not empty", () => {
     // Given
+    const { repository, eventFirers, treeNodeProvider, pullId } = createStubsWithEvents({}, ["onDidChangeIssueComments"]);
     const payload: IssueCommentsPayload = { issueId: pullId, comments: [createIssueCommentStub()] };
-    const { stub: repository, eventFirers } = stubEvents(createRepositoryStub(), ["onDidChangeIssueComments"] as const);
-    const treeNodeProvider = createTreeNodeProviderStub();
+
     const commentsRootTreeNode = new CommentsRootTreeNode(repository, pullId, treeNodeProvider);
 
     // When
@@ -176,9 +193,9 @@ suite("CommentsRootTreeNode", () => {
 
   test("Previously set collapsible state is not overridden when the issue comments are not empty", () => {
     // Given
+    const { repository, pullId, treeNodeProvider, eventFirers } = createStubsWithEvents({}, ["onDidChangeIssueComments"]);
     const payload: IssueCommentsPayload = { issueId: pullId, comments: [createIssueCommentStub()] };
-    const { stub: repository, eventFirers } = stubEvents(createRepositoryStub(), ["onDidChangeIssueComments"] as const);
-    const treeNodeProvider = createTreeNodeProviderStub();
+
     const commentsRootTreeNode = new CommentsRootTreeNode(repository, pullId, treeNodeProvider);
     commentsRootTreeNode.collapsibleState = "expanded";
 
@@ -192,8 +209,8 @@ suite("CommentsRootTreeNode", () => {
   test("Doesn't do anything for a different pull request", () => {
     // Given
     const payload: IssueCommentsPayload = { issueId: { owner: "owner", repo: "repo", number: 99 }, comments: [createIssueCommentStub()] };
-    const { stub: repository, eventFirers } = stubEvents(createRepositoryStub(), ["onDidChangeIssueComments"] as const);
-    const treeNodeProvider = createTreeNodeProviderStub();
+    const { repository, pullId, treeNodeProvider, eventFirers } = createStubsWithEvents({}, ["onDidChangeIssueComments"]);
+
     const commentsRootTreeNode = new CommentsRootTreeNode(repository, pullId, treeNodeProvider);
     commentsRootTreeNode.collapsibleState = "expanded";
 
@@ -206,9 +223,9 @@ suite("CommentsRootTreeNode", () => {
 
   test("Collapsible state is updated when review comments are not empty", () => {
     // Given
+    const { repository, pullId, treeNodeProvider, eventFirers } = createStubsWithEvents({}, ["onDidChangePullRequestReviewComments"]);
     const payload: PullRequestReviewCommentsPayload = { pullId, comments: [createPullRequestCommentStub()] };
-    const { stub: repository, eventFirers } = stubEvents(createRepositoryStub(), ["onDidChangePullRequestReviewComments"] as const);
-    const treeNodeProvider = createTreeNodeProviderStub();
+
     const commentsRootTreeNode = new CommentsRootTreeNode(repository, pullId, treeNodeProvider);
 
     // When
@@ -221,8 +238,7 @@ suite("CommentsRootTreeNode", () => {
 
   test("getTreeItem should return TreeItem with correct properties", () => {
     // Given
-    const repository = createRepositoryStub();
-    const treeNodeProvider = createTreeNodeProviderStub();
+    const { repository, pullId, treeNodeProvider } = createStubs();
     const commentsRootTreeNode = new CommentsRootTreeNode(repository, pullId, treeNodeProvider);
 
     // When
@@ -241,8 +257,8 @@ suite("CommentsRootTreeNode", () => {
 
   test("getTreeItem should respect custom collapsibleState", () => {
     // Given
-    const repository = createRepositoryStub();
-    const treeNodeProvider = createTreeNodeProviderStub();
+    const { repository, pullId, treeNodeProvider } = createStubs();
+
     const commentsRootTreeNode = new CommentsRootTreeNode(repository, pullId, treeNodeProvider);
     commentsRootTreeNode.collapsibleState = "expanded";
 
@@ -255,9 +271,9 @@ suite("CommentsRootTreeNode", () => {
 
   test("getTreeItem should set description with singular form for one comment", () => {
     // Given
+    const { repository, pullId, treeNodeProvider, eventFirers } = createStubsWithEvents({}, ["onDidChangeIssueComments"]);
     const payload: IssueCommentsPayload = { issueId: pullId, comments: [createIssueCommentStub()] };
-    const { stub: repository, eventFirers } = stubEvents(createRepositoryStub(), ["onDidChangeIssueComments"] as const);
-    const treeNodeProvider = createTreeNodeProviderStub();
+
     const commentsRootTreeNode = new CommentsRootTreeNode(repository, pullId, treeNodeProvider);
 
     // When
@@ -270,6 +286,11 @@ suite("CommentsRootTreeNode", () => {
 
   test("getTreeItem should set description with plural form for multiple comments", () => {
     // Given
+    const { repository, pullId, treeNodeProvider, eventFirers } = createStubsWithEvents({}, [
+      "onDidChangeIssueComments",
+      "onDidChangePullRequestReviewComments",
+    ]);
+
     const issuePayload: IssueCommentsPayload = {
       issueId: pullId,
       comments: [createIssueCommentStub(), createIssueCommentStub()],
@@ -279,11 +300,6 @@ suite("CommentsRootTreeNode", () => {
       comments: [createPullRequestCommentStub()],
     };
 
-    const { stub: repository, eventFirers } = stubEvents(createRepositoryStub(), [
-      "onDidChangeIssueComments",
-      "onDidChangePullRequestReviewComments",
-    ] as const);
-    const treeNodeProvider = createTreeNodeProviderStub();
     const commentsRootTreeNode = new CommentsRootTreeNode(repository, pullId, treeNodeProvider);
 
     // When

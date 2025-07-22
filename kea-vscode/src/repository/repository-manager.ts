@@ -1,26 +1,26 @@
 import { IAccountKey } from "../account/account";
 import { RepoId } from "../types/kea";
-import { IKeaRepository } from "./kea-repository";
+import { IRepository } from "./repository";
 
 export interface IRepositoryManager {
-  addRepository: (repo: IKeaRepository) => void;
-  getRepositoryById: (accountKey: IAccountKey, repoId: RepoId) => IKeaRepository | Error;
+  addRepository: (repo: IRepository) => void;
+  getRepositoryById: (accountKey: IAccountKey, repoId: RepoId) => IRepository | Error;
 }
 
 export class RepositoryManager implements IRepositoryManager {
-  #repos = new Map<string, IKeaRepository>();
+  #repos = new Map<string, IRepository>();
 
-  addRepository = (repository: IKeaRepository): void => {
+  addRepository = (repository: IRepository): void => {
     this.#repos.set(
       repoIdToString({
-        accountKey: repository.account.accountKey,
-        repoId: repository.repoId,
+        accountKey: repository.remoteRepository.account.accountKey,
+        repoId: repository.remoteRepository.repoId,
       }),
       repository,
     );
   };
 
-  getRepositoryById = (accountKey: IAccountKey, repoId: RepoId): IKeaRepository | Error =>
+  getRepositoryById = (accountKey: IAccountKey, repoId: RepoId): IRepository | Error =>
     this.#repos.get(repoIdToString({ accountKey, repoId })) ?? new Error(`Repository not found: ${repoId.owner}/${repoId.repo}`);
 }
 

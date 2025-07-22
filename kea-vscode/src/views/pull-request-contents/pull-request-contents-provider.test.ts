@@ -1,12 +1,13 @@
 import * as assert from "assert";
 import * as vscode from "vscode";
 import { IKeaContext } from "../../core/context";
-import { IKeaRepository } from "../../repository/kea-repository";
+import { IRemoteRepository } from "../../repository/remote-repository";
 import { RepositoryManager } from "../../repository/repository-manager";
 import {
   assertArrayContentsEqual,
   createKeaContextStub,
   createPullRequestStub,
+  createRemoteRepositoryStub,
   createRepositoryStub,
   createWorkspaceFolderStub,
 } from "../../test-utils";
@@ -18,17 +19,18 @@ import { CommitsRootTreeNode } from "./commits/commits-root-tree-node";
 import { FilesRootTreeNode } from "./files/files-root-tree-node";
 import { PullRequestContentsProvider, PullRequestTreeNode } from "./pull-request-contents-provider";
 
-const createGetChildrenStubs = async (getPullRequest?: IKeaRepository["getPullRequest"]) => {
+const createGetChildrenStubs = async (getPullRequest?: IRemoteRepository["getPullRequest"]) => {
   const repoId: RepoId = { owner: "owner", repo: "repo" };
   const pullId: PullRequestId = { ...repoId, number: 1 };
 
   const pullRequest = createPullRequestStub({ number: pullId.number });
-  const repository = createRepositoryStub({
+  const remoteRepository = createRemoteRepositoryStub({
     repoId,
     getPullRequest:
       getPullRequest ??
       ((id) => (id.number === pullId.number ? Promise.resolve(pullRequest) : Promise.resolve(new Error("Pull request not found")))),
   });
+  const repository = createRepositoryStub({ remoteRepository });
 
   const repositoryManager = new RepositoryManager();
   repositoryManager.addRepository(repository);
@@ -38,11 +40,11 @@ const createGetChildrenStubs = async (getPullRequest?: IKeaRepository["getPullRe
   });
 
   const provider = new PullRequestContentsProvider(ctx);
-  await provider.openPullRequest(repository.account.accountKey, pullId);
+  await provider.openPullRequest(remoteRepository.account.accountKey, pullId);
 
   return {
     repoId,
-    repository,
+    repository: remoteRepository,
     provider,
     pullId,
     ctx,

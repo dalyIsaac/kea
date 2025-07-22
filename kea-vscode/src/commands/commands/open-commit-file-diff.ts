@@ -1,6 +1,5 @@
 import * as path from "path";
 import * as vscode from "vscode";
-import { ApiCache } from "../../cache/api/api-cache";
 import { IKeaContext } from "../../core/context";
 import { Logger } from "../../core/logger";
 import { DECORATION_SCHEMES, parseDecorationPayload } from "../../decorations/decoration-schemes";
@@ -33,7 +32,7 @@ export const createOpenCommitFileDiffCommand =
       return;
     }
 
-    if (payload.type !== DECORATION_SCHEMES.files) {
+    if (payload.type !== DECORATION_SCHEMES.localFiles && payload.type !== DECORATION_SCHEMES.remoteFiles) {
       Logger.error("Invalid decoration scheme for file diff command");
       return;
     }
@@ -77,7 +76,7 @@ export const createOpenCommitFileDiffCommand =
 
 async function handleLocalCommitFileDiff(commitSha: string, filePath: string, workspacePath: string): Promise<void> {
   try {
-    const localGitRepo = new LocalGitRepository(workspacePath, new ApiCache(100));
+    const localGitRepo = new LocalGitRepository(workspacePath);
 
     const parentCommit = await localGitRepo.getParentCommit(commitSha);
 
@@ -93,7 +92,7 @@ async function handleLocalCommitFileDiff(commitSha: string, filePath: string, wo
     }
 
     const repoFilePath = path.join(workspacePath, filePath);
-    
+
     const leftUri = vscode.Uri.from({
       scheme: "kea-commit-file",
       path: repoFilePath,
@@ -116,15 +115,9 @@ async function handleLocalCommitFileDiff(commitSha: string, filePath: string, wo
       fragment: commitSha.substring(0, 7),
     });
 
-    await vscode.commands.executeCommand(
-      "vscode.diff",
-      leftUri,
-      rightUri,
-      `${filePath} (${leftTitle} ↔ ${commitSha.substring(0, 7)})`,
-      {
-        preview: true,
-      },
-    );
+    await vscode.commands.executeCommand("vscode.diff", leftUri, rightUri, `${filePath} (${leftTitle} ↔ ${commitSha.substring(0, 7)})`, {
+      preview: true,
+    });
   } catch (error) {
     Logger.error("Error opening local commit file diff", error);
     vscode.window.showErrorMessage("Failed to open file diff");
@@ -133,7 +126,7 @@ async function handleLocalCommitFileDiff(commitSha: string, filePath: string, wo
 
 async function handleRemoteApiFileDiff(commitSha: string, filePath: string, workspacePath: string): Promise<void> {
   try {
-    const localGitRepo = new LocalGitRepository(workspacePath, new ApiCache(100));
+    const localGitRepo = new LocalGitRepository(workspacePath);
 
     const parentCommit = await localGitRepo.getParentCommit(commitSha);
 
@@ -149,7 +142,7 @@ async function handleRemoteApiFileDiff(commitSha: string, filePath: string, work
     }
 
     const repoFilePath = path.join(workspacePath, filePath);
-    
+
     const leftUri = vscode.Uri.from({
       scheme: "kea-commit-file",
       path: repoFilePath,
@@ -172,15 +165,9 @@ async function handleRemoteApiFileDiff(commitSha: string, filePath: string, work
       fragment: commitSha.substring(0, 7),
     });
 
-    await vscode.commands.executeCommand(
-      "vscode.diff",
-      leftUri,
-      rightUri,
-      `${filePath} (${leftTitle} ↔ ${commitSha.substring(0, 7)})`,
-      {
-        preview: true,
-      },
-    );
+    await vscode.commands.executeCommand("vscode.diff", leftUri, rightUri, `${filePath} (${leftTitle} ↔ ${commitSha.substring(0, 7)})`, {
+      preview: true,
+    });
   } catch (error) {
     Logger.error("Error opening remote API file diff", error);
     vscode.window.showErrorMessage("Failed to open file diff");

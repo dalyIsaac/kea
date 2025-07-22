@@ -1,10 +1,9 @@
 import * as path from "path";
 import * as vscode from "vscode";
-import { IAccountKey } from "../../../account/account";
 import { IKeaContext } from "../../../core/context";
-import { createGitDecorationUri } from "../../../decorations/decoration-schemes";
-import { ILocalGitRepository, LocalCommit } from "../../../git/local-git-repository";
-import { FileComment, FileStatus, RepoId } from "../../../types/kea";
+import { createLocalFileDecorationUri } from "../../../decorations/decoration-schemes";
+import { ILocalGitRepository, LocalCommit, LocalCommitFile } from "../../../git/local-git-repository";
+import { FileComment } from "../../../types/kea";
 import { BaseFileTreeNode } from "../base-file-tree-node";
 
 /**
@@ -13,57 +12,37 @@ import { BaseFileTreeNode } from "../base-file-tree-node";
 export class LocalFileTreeNode extends BaseFileTreeNode {
   #localGitRepo: ILocalGitRepository;
   #commit: LocalCommit;
-  #workspaceFolder: vscode.WorkspaceFolder;
-  #ctx: IKeaContext;
   #decorationUri: vscode.Uri;
+  #file: LocalCommitFile;
 
-  filePath: string;
-  status: string;
-
-  constructor(
-    localGitRepo: ILocalGitRepository,
-    commit: LocalCommit,
-    workspaceFolder: vscode.WorkspaceFolder,
-    filePath: string,
-    status: string,
-    ctx: IKeaContext,
-    accountKey: IAccountKey,
-    repoId: RepoId,
-    comments: FileComment[] = [],
-  ) {
+  constructor(ctx: IKeaContext, localGitRepo: ILocalGitRepository, commit: LocalCommit, file: LocalCommitFile, comments: FileComment[]) {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const fileName = filePath.split("/").pop()!;
-    const fileUri = vscode.Uri.file(path.join(workspaceFolder.uri.fsPath, filePath));
+    const fileName = file.filePath.split("/").pop()!;
+    const fileUri = vscode.Uri.file(path.join(localGitRepo.path, file.filePath));
 
-    super(fileName, fileUri, comments, "localFile", ctx);
+    super(ctx, fileName, fileUri, comments, "localFile", file.status);
 
     this.#localGitRepo = localGitRepo;
     this.#commit = commit;
-    this.#workspaceFolder = workspaceFolder;
-    this.#ctx = ctx;
-    this.filePath = filePath;
-    this.status = status;
+    this.#file = file;
 
-    this.#decorationUri = createGitDecorationUri({
-      accountKey,
-      filePath,
-      repoId,
-      fileStatus: status as FileStatus,
+    this.#decorationUri = createLocalFileDecorationUri({
+      filePath: file.filePath,
+      fileStatus: file.status,
     });
   }
 
   getTreeItem = (): vscode.TreeItem => {
     const treeItem = this.createBaseTreeItem();
-    treeItem.tooltip = `${this.filePath} (${this.status})`;
 
-    treeItem.command = this.#ctx.commandManager.getCommand("kea.openCommitFileDiff", "Open File Diff", {
+    treeItem.command = this._ctx.commandManager.getCommand("kea.openCommitFileDiff", "Open File Diff", {
       commitSha: this.#commit.sha,
-      filePath: this.filePath,
-      workspacePath: this.#workspaceFolder.uri.fsPath,
+      filePath: this.#file.filePath,
+      workspacePath: this.#localGitRepo.path,
       localGitRepo: this.#localGitRepo,
     });
 
-    treeItem.description = this.status;
+    treeItem.description = this.#file.status;
     treeItem.resourceUri = this.#decorationUri;
 
     return treeItem;

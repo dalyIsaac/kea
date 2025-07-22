@@ -6,7 +6,7 @@ import {
   createAccountStub,
   createKeaContextStub,
   createPullRequestStub,
-  createRepositoryStub,
+  createRemoteRepositoryStub,
   createWorkspaceFolderStub,
 } from "../test-utils";
 import { PullRequest } from "../types/kea";
@@ -15,8 +15,8 @@ import { createPullRequestListQuickPick } from "./pull-request-list-picks";
 suite("pull-request-list-picks", () => {
   let sandbox: sinon.SinonSandbox;
   let contextStub: ReturnType<typeof createKeaContextStub>;
-  let repositoryStub1: ReturnType<typeof createRepositoryStub>;
-  let repositoryStub2: ReturnType<typeof createRepositoryStub>;
+  let repositoryStub1: ReturnType<typeof createRemoteRepositoryStub>;
+  let repositoryStub2: ReturnType<typeof createRemoteRepositoryStub>;
   let workspaceFolder1: vscode.WorkspaceFolder;
   let workspaceFolder2: vscode.WorkspaceFolder;
   let pullRequest1: PullRequest;
@@ -41,9 +41,9 @@ suite("pull-request-list-picks", () => {
       index: 1,
     });
 
-    repositoryStub1 = createRepositoryStub();
+    repositoryStub1 = createRemoteRepositoryStub();
     // Create a second repository with a different account
-    repositoryStub2 = createRepositoryStub({
+    repositoryStub2 = createRemoteRepositoryStub({
       account: createAccountStub({
         accountKey: {
           providerId: "providerId2",

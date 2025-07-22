@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
-import { IKeaRepository } from "../../../repository/kea-repository";
+import { IKeaContext } from "../../../core/context";
+import { IRepository } from "../../../repository/repository";
 import { CommitFile, FileComment, PullRequestId } from "../../../types/kea";
 import { BaseFileTreeNode } from "../../common/base-file-tree-node";
 import { BaseFilesRootTreeNode, FilesRootTreeNodeChild } from "../../common/base-files-root-tree-node";
@@ -20,13 +21,13 @@ export class FilesRootTreeNode extends BaseFilesRootTreeNode {
   pullId: PullRequestId;
   collapsibleState: CollapsibleState = "collapsed";
 
-  constructor(repository: IKeaRepository, id: PullRequestId) {
-    super(repository);
+  constructor(ctx: IKeaContext, repository: IRepository, id: PullRequestId) {
+    super(ctx, repository);
     this.pullId = id;
   }
 
   protected createFileNode(file: CommitFile, comments: FileComment[]): BaseFileTreeNode {
-    return new RemoteFileTreeNode(this._repository.account.accountKey, this._repository.repoId, file, comments);
+    return new RemoteFileTreeNode(this._ctx, this._repository.remoteRepository, file, comments);
   }
 
   protected createFolderNode(folderPath: string): BaseFolderTreeNode<FilesRootTreeNodeChild> {
@@ -43,14 +44,16 @@ export class FilesRootTreeNode extends BaseFilesRootTreeNode {
 
   getChildren = async (): Promise<FilesRootTreeNodeChild[]> => {
     const [files, reviewComments] = await Promise.all([
-      this._repository.getPullRequestFiles(this.pullId),
-      this._repository.getPullRequestReviewComments(this.pullId),
+      this._repository.remoteRepository.getPullRequestFiles(this.pullId),
+      this._repository.remoteRepository.getPullRequestReviewComments(this.pullId),
     ]);
 
     if (files instanceof Error) {
       vscode.window.showErrorMessage(`Error fetching pull request files: ${files.message}`);
       return [];
     }
+
+    // TODO: This should try get the local files first, and try merging with remote files if they exist and are up to date.
 
     if (reviewComments instanceof Error) {
       vscode.window.showErrorMessage(`Error fetching pull request review comments: ${reviewComments.message}`);

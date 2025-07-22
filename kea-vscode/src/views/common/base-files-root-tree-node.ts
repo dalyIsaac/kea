@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
-import { IKeaRepository } from "../../repository/kea-repository";
+import { IKeaContext } from "../../core/context";
+import { IRepository } from "../../repository/repository";
 import { CommitFile, FileComment } from "../../types/kea";
 import { IParentTreeNode } from "../tree-node";
 import { BaseFileTreeNode } from "./base-file-tree-node";
@@ -8,9 +9,11 @@ import { BaseFolderTreeNode } from "./base-folder-tree-node";
 export type FilesRootTreeNodeChild = BaseFileTreeNode | BaseFolderTreeNode<FilesRootTreeNodeChild>;
 
 export abstract class BaseFilesRootTreeNode implements IParentTreeNode<FilesRootTreeNodeChild> {
-  protected _repository: IKeaRepository;
+  protected _ctx: IKeaContext;
+  protected _repository: IRepository;
 
-  protected constructor(repository: IKeaRepository) {
+  protected constructor(ctx: IKeaContext, repository: IRepository) {
+    this._ctx = ctx;
     this._repository = repository;
   }
 

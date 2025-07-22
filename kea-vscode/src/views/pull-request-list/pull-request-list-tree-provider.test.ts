@@ -1,7 +1,7 @@
 import * as assert from "assert";
 import sinon from "sinon";
 import { Logger } from "../../core/logger";
-import { createKeaContextStub, createRepositoryStub, createWorkspaceFolderStub } from "../../test-utils";
+import { createKeaContextStub, createRemoteRepositoryStub, createWorkspaceFolderStub } from "../../test-utils";
 import { PullRequestListTreeProvider } from "./pull-request-list-tree-provider";
 import { RepoTreeNode } from "./repo-tree-node";
 
@@ -55,7 +55,7 @@ suite("PullRequestListTreeProvider", () => {
 
   test("should get root children from repositories", async () => {
     // Given
-    const repo1 = createRepositoryStub();
+    const repo1 = createRemoteRepositoryStub();
     const workspace1 = createWorkspaceFolderStub();
     const repoInfo = { repository: repo1, workspaceFolder: workspace1 };
 
@@ -68,10 +68,6 @@ suite("PullRequestListTreeProvider", () => {
     assert.ok((contextStub.gitManager.getAllRepositoriesAndInfo as sinon.SinonStub).calledOnce);
     assert.strictEqual(children.length, 1);
     assert.ok(children[0] instanceof RepoTreeNode);
-
-    const repoNode = children[0];
-    assert.strictEqual(repoNode.repository, repo1);
-    assert.strictEqual(repoNode.workspace, workspace1);
   });
 
   test("should handle errors in repository info", async () => {

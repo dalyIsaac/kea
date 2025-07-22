@@ -2,15 +2,15 @@ import * as assert from "assert";
 import sinon from "sinon";
 import * as vscode from "vscode";
 import { formatDate } from "../core/utils";
-import { createKeaContextStub, createPullRequestStub, createRepositoryStub, createWorkspaceFolderStub } from "../test-utils";
+import { createKeaContextStub, createPullRequestStub, createRemoteRepositoryStub, createWorkspaceFolderStub } from "../test-utils";
 import { PullRequest } from "../types/kea";
 import { createPullRequestBranchPicks } from "./pull-request-branch-picks";
 
 suite("pull-request-branch-picks", () => {
   let sandbox: sinon.SinonSandbox;
   let contextStub: ReturnType<typeof createKeaContextStub>;
-  let repositoryStub1: ReturnType<typeof createRepositoryStub>;
-  let repositoryStub2: ReturnType<typeof createRepositoryStub>;
+  let repositoryStub1: ReturnType<typeof createRemoteRepositoryStub>;
+  let repositoryStub2: ReturnType<typeof createRemoteRepositoryStub>;
   let workspaceFolder1: vscode.WorkspaceFolder;
   let workspaceFolder2: vscode.WorkspaceFolder;
   let pullRequest1: PullRequest;
@@ -35,8 +35,8 @@ suite("pull-request-branch-picks", () => {
       index: 1,
     });
 
-    repositoryStub1 = createRepositoryStub();
-    repositoryStub2 = createRepositoryStub();
+    repositoryStub1 = createRemoteRepositoryStub();
+    repositoryStub2 = createRemoteRepositoryStub();
 
     // Create test pull requests with different timestamps
     const today = new Date();

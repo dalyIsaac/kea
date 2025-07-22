@@ -26,9 +26,9 @@ import {
   PullRequestId,
   RepoId,
 } from "../../types/kea";
-import { IKeaRepository, IssueCommentsPayload, PullRequestReviewCommentsPayload } from "../kea-repository";
+import { IRemoteRepository, IssueCommentsPayload, PullRequestReviewCommentsPayload } from "../remote-repository";
 
-export class GitHubRepository extends KeaDisposable implements IKeaRepository {
+export class GitHubRepository extends KeaDisposable implements IRemoteRepository {
   account: GitHubAccount;
   remoteUrl: string;
   repoId: RepoId;

@@ -17,48 +17,43 @@ export class FileGitDecorationProvider extends BaseTreeDecorationProvider {
       return null;
     }
 
-    if (payload.type !== DECORATION_SCHEMES.files) {
+    if (payload.type !== DECORATION_SCHEMES.localFiles && payload.type !== DECORATION_SCHEMES.remoteFiles) {
       return null;
     }
 
     const { fileStatus } = payload.payload;
 
     let color: vscode.ThemeColor | undefined;
-    let statusChar: string | undefined;
 
     switch (fileStatus) {
-      case "added":
+      case "A":
         color = new vscode.ThemeColor("gitDecoration.addedResourceForeground");
-        statusChar = "A";
         break;
-      case "modified":
+      case "M":
         color = new vscode.ThemeColor("gitDecoration.modifiedResourceForeground");
-        statusChar = "M";
         break;
-      case "removed":
+      case "D":
         color = new vscode.ThemeColor("gitDecoration.deletedResourceForeground");
-        statusChar = "D";
         break;
-      case "renamed":
+      case "R":
         color = new vscode.ThemeColor("gitDecoration.renamedResourceForeground");
-        statusChar = "R";
         break;
-      case "copied":
+      case "C":
         color = new vscode.ThemeColor("gitDecoration.copiedResourceForeground");
-        statusChar = "C";
         break;
-      case "changed":
-        color = new vscode.ThemeColor("gitDecoration.changedResourceForeground");
-        statusChar = "C";
-        break;
-      case "unchanged":
+      case "U":
         color = new vscode.ThemeColor("gitDecoration.untrackedResourceForeground");
-        statusChar = "U";
+        break;
+      case "T":
+        color = new vscode.ThemeColor("gitDecoration.ignoredResourceForeground");
+        break;
+      case " ":
+        color = new vscode.ThemeColor("gitDecoration.unmodifiedResourceForeground");
         break;
     }
 
     return {
-      badge: statusChar,
+      badge: fileStatus,
       color,
     };
   };

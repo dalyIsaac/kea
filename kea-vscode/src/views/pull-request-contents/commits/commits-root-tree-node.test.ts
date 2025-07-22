@@ -1,7 +1,7 @@
 import * as assert from "assert";
 import * as vscode from "vscode";
 import { IKeaContext } from "../../../core/context";
-import { IKeaRepository } from "../../../repository/kea-repository";
+import { IRepository } from "../../../repository/repository";
 import { PullRequestId } from "../../../types/kea";
 import { CommitsRootTreeNode } from "./commits-root-tree-node";
 
@@ -9,7 +9,7 @@ suite("CommitsRootTreeNode", () => {
   // Mock repository and pull request ID for tests
   const mockRepository = {
     getPullRequestCommits: async () => Promise.resolve([]),
-  } as unknown as IKeaRepository;
+  } as unknown as IRepository;
   const mockPullId = { owner: "test", repo: "test", number: 123 } as PullRequestId;
   const mockContext = {
     gitManager: {
@@ -74,7 +74,7 @@ suite("CommitsRootTreeNode", () => {
     const mockCommit = { sha: "abc123", commit: { message: "Test commit" } };
     const repoWithCommits = {
       getPullRequestCommits: async () => Promise.resolve([mockCommit]),
-    } as unknown as IKeaRepository;
+    } as unknown as IRepository;
     const commitsRootTreeNode = new CommitsRootTreeNode(repoWithCommits, mockPullId, mockContext);
 
     // When
@@ -90,7 +90,7 @@ suite("CommitsRootTreeNode", () => {
     // Given
     const errorRepo = {
       getPullRequestCommits: async () => Promise.resolve(new Error("Test error")),
-    } as unknown as IKeaRepository;
+    } as unknown as IRepository;
     const commitsRootTreeNode = new CommitsRootTreeNode(errorRepo, mockPullId, mockContext);
 
     // When

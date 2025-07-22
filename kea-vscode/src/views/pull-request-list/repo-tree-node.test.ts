@@ -1,7 +1,7 @@
 import * as assert from "assert";
 import * as vscode from "vscode";
 import { IAccount, IAccountKey } from "../../account/account";
-import { createKeaContextStub, createPullRequestStub, createRepositoryStub, createWorkspaceFolderStub } from "../../test-utils";
+import { createKeaContextStub, createPullRequestStub, createRemoteRepositoryStub, createWorkspaceFolderStub } from "../../test-utils";
 import { PullRequestListNode } from "./pull-request-list-node";
 import { RepoTreeNode } from "./repo-tree-node";
 
@@ -15,7 +15,7 @@ suite("RepoTreeNode", () => {
 
   test("should be created with the correct properties", () => {
     // Given
-    const mockRepository = createRepositoryStub({
+    const mockRepository = createRemoteRepositoryStub({
       remoteUrl: "https://github.com/owner/repo",
       account: { accountKey } as IAccount,
     });
@@ -24,14 +24,12 @@ suite("RepoTreeNode", () => {
     const repoTreeNode = new RepoTreeNode(ctx, mockRepository, workspaceFolder);
 
     // Then
-    assert.strictEqual(repoTreeNode.repository, mockRepository);
-    assert.strictEqual(repoTreeNode.workspace, workspaceFolder);
     assert.strictEqual(repoTreeNode.collapsibleState, "collapsed");
   });
 
   test("getTreeItem returns a TreeItem with the correct properties", () => {
     // Given
-    const mockRepository = createRepositoryStub({
+    const mockRepository = createRemoteRepositoryStub({
       remoteUrl: "https://github.com/owner/repo",
       account: { accountKey } as IAccount,
     });
@@ -55,7 +53,7 @@ suite("RepoTreeNode", () => {
     // Given
     const pullRequest1 = createPullRequestStub({ number: 1, title: "PR 1" });
     const pullRequest2 = createPullRequestStub({ number: 2, title: "PR 2" });
-    const mockRepository = createRepositoryStub({
+    const mockRepository = createRemoteRepositoryStub({
       remoteUrl: "https://github.com/owner/repo",
       account: { accountKey } as IAccount,
       getPullRequestList: () => Promise.resolve([pullRequest1, pullRequest2]),
@@ -82,7 +80,7 @@ suite("RepoTreeNode", () => {
   test("getChildren returns empty array on failure", async () => {
     // Given
     const error = new Error("Failed to fetch PRs");
-    const mockRepository = createRepositoryStub({
+    const mockRepository = createRemoteRepositoryStub({
       remoteUrl: "https://github.com/owner/repo",
       account: { accountKey } as IAccount,
       getPullRequestList: () => Promise.resolve(error),

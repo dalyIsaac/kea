@@ -1,8 +1,9 @@
 import { Octokit } from "@octokit/rest";
 import * as vscode from "vscode";
 import { IApiCache } from "../../cache/api/api-cache";
+import { LocalGitRepository } from "../../git/local-git-repository";
 import { GitHubRepository } from "../../repository/github/github-repository";
-import { IKeaRepository } from "../../repository/kea-repository";
+import { IRepository, Repository } from "../../repository/repository";
 import { IAccount, IAccountKey } from "../account";
 
 export const GITHUB_PROVIDER_ID = "github";
@@ -11,7 +12,7 @@ export class GitHubAccount implements IAccount {
   static #scopes = ["user:email", "repo", "read:org"];
   static #hasRequestedUser = false;
 
-  #repositories = new Map<string, IKeaRepository>();
+  #repositories = new Map<string, IRepository>();
 
   accountKey: IAccountKey;
 
@@ -52,7 +53,7 @@ export class GitHubAccount implements IAccount {
 
   isRepoForAccount = (repoUrl: string): boolean => repoUrl.includes("github.com");
 
-  tryCreateRepoForAccount = (repoUrl: string, cache: IApiCache): IKeaRepository | Error => {
+  createRepositoryForAccount = (repoUrl: string, workspaceFolder: vscode.WorkspaceFolder, cache: IApiCache): IRepository | Error => {
     if (!this.isRepoForAccount(repoUrl)) {
       return new Error("Not a GitHub repository URL");
     }
@@ -67,7 +68,7 @@ export class GitHubAccount implements IAccount {
       return repo;
     }
 
-    repo = new GitHubRepository(repoUrl, { owner, repo: repoName }, this, cache);
+    repo = new Repository(new GitHubRepository(repoUrl, { owner, repo: repoName }, this, cache), new LocalGitRepository(workspaceFolder));
     this.#repositories.set(repoUrl, repo);
     return repo;
   };

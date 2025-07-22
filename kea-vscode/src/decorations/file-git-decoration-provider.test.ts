@@ -41,31 +41,31 @@ suite("FileGitDecorationProvider", () => {
     expected: { badge: string; colorTheme: string };
   }> = [
     {
-      status: "added",
+      status: "A",
       expected: { badge: "A", colorTheme: "gitDecoration.addedResourceForeground" },
     },
     {
-      status: "modified",
+      status: "M",
       expected: { badge: "M", colorTheme: "gitDecoration.modifiedResourceForeground" },
     },
     {
-      status: "removed",
+      status: "D",
       expected: { badge: "D", colorTheme: "gitDecoration.deletedResourceForeground" },
     },
     {
-      status: "renamed",
+      status: "R",
       expected: { badge: "R", colorTheme: "gitDecoration.renamedResourceForeground" },
     },
     {
-      status: "copied",
+      status: "C",
       expected: { badge: "C", colorTheme: "gitDecoration.copiedResourceForeground" },
     },
     {
-      status: "changed",
-      expected: { badge: "C", colorTheme: "gitDecoration.changedResourceForeground" },
+      status: "T",
+      expected: { badge: "T", colorTheme: "gitDecoration.ignoredResourceForeground" },
     },
     {
-      status: "unchanged",
+      status: "U",
       expected: { badge: "U", colorTheme: "gitDecoration.untrackedResourceForeground" },
     },
   ];

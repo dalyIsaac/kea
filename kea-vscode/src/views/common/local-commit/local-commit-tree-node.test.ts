@@ -3,7 +3,7 @@ import * as sinon from "sinon";
 import * as vscode from "vscode";
 import { IAccountKey } from "../../../account/account";
 import { ILocalGitRepository, LocalCommit, LocalCommitFile } from "../../../git/local-git-repository";
-import { createAccountStub, createKeaContextStub, createRepositoryStub } from "../../../test-utils";
+import { createAccountStub, createKeaContextStub, createRemoteRepositoryStub } from "../../../test-utils";
 import { RepoId } from "../../../types/kea";
 import { LocalCommitTreeNode } from "./local-commit-tree-node";
 import { LocalFileTreeNode } from "./local-file-tree-node";
@@ -43,7 +43,7 @@ suite("LocalCommitTreeNode", () => {
     const accountStub = createAccountStub();
     accountKey = accountStub.accountKey;
 
-    const repoStub = createRepositoryStub();
+    const repoStub = createRemoteRepositoryStub();
     repoId = repoStub.repoId;
   });
 
@@ -108,9 +108,9 @@ suite("LocalCommitTreeNode", () => {
     // Given
     const ctx = createKeaContextStub();
     const files: LocalCommitFile[] = [
-      { filename: "README.md", status: "M" },
-      { filename: "src/file1.ts", status: "A" },
-      { filename: "src/subfolder/file2.ts", status: "D" },
+      { filePath: "README.md", status: "M" },
+      { filePath: "src/file1.ts", status: "A" },
+      { filePath: "src/subfolder/file2.ts", status: "D" },
     ];
     mockLocalGitRepo.getCommitFiles.resolves(files);
     const node = new LocalCommitTreeNode(mockLocalGitRepo, testCommit, workspaceFolder, ctx, accountKey, repoId);
@@ -161,8 +161,8 @@ suite("LocalCommitTreeNode", () => {
     // Given
     const ctx = createKeaContextStub();
     const files: LocalCommitFile[] = [
-      { filename: "src/test.ts", status: "M" },
-      { filename: "tests/test.ts", status: "A" },
+      { filePath: "src/test.ts", status: "M" },
+      { filePath: "tests/test.ts", status: "A" },
     ];
     mockLocalGitRepo.getCommitFiles.resolves(files);
     const node = new LocalCommitTreeNode(mockLocalGitRepo, testCommit, workspaceFolder, ctx, accountKey, repoId);

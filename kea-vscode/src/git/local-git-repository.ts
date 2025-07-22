@@ -1,9 +1,10 @@
 import { execFile } from "child_process";
 import { promisify } from "util";
-import { IApiCache } from "../cache/api/api-cache";
+import * as vscode from "vscode";
 import { KeaDisposable } from "../core/kea-disposable";
 import { Logger } from "../core/logger";
 import { WrappedError } from "../core/wrapped-error";
+import { FileStatus } from "../types/kea";
 
 const execFileAsync = promisify(execFile);
 
@@ -32,11 +33,21 @@ export interface LocalCommit {
 }
 
 export interface LocalCommitFile {
-  filename: string;
-  status: "A" | "M" | "D" | "R" | "C"; // Added, Modified, Deleted, Renamed, Copied
+  filePath: string;
+  status: FileStatus;
 }
 
 export interface ILocalGitRepository {
+  /**
+   * The workspace folder associated with this local Git repository.
+   */
+  get workspaceFolder(): vscode.WorkspaceFolder;
+
+  /**
+   * The path to the local Git repository.
+   */
+  get path(): string;
+
   /**
    * Get the contents of a specific file at a given commit.
    * @param commitSha The commit SHA to retrieve the file from.
@@ -106,12 +117,12 @@ export interface ILocalGitRepository {
  * This allows for operations that don't require GitHub API access.
  */
 export class LocalGitRepository extends KeaDisposable implements ILocalGitRepository {
-  #repositoryPath: string;
+  #workspaceFolder: vscode.WorkspaceFolder;
   #gitExecutable: string;
 
-  constructor(repositoryPath: string, _cache: IApiCache) {
+  constructor(workspaceFolder: vscode.WorkspaceFolder) {
     super();
-    this.#repositoryPath = repositoryPath;
+    this.#workspaceFolder = workspaceFolder;
     this.#gitExecutable = this.#detectGitExecutable();
   }
 
@@ -125,14 +136,16 @@ export class LocalGitRepository extends KeaDisposable implements ILocalGitReposi
   };
 
   /**
-   * Execute a Git command in the repository directory
+   * Execute a Git command in the repository directory.
+   * @param args The command arguments to pass to the Git executable.
+   * @return The command output as a string, or an Error if the command fails.
    */
   #executeGitCommand = async (args: string[]): Promise<string | Error> => {
     try {
-      Logger.debug(`Executing git command: ${this.#gitExecutable} ${args.join(" ")} in ${this.#repositoryPath}`);
+      Logger.debug(`Executing git command: ${this.#gitExecutable} ${args.join(" ")} in ${this.path}`);
 
       const { stdout, stderr } = await execFileAsync(this.#gitExecutable, args, {
-        cwd: this.#repositoryPath,
+        cwd: this.path,
         encoding: "utf8",
         // Set a reasonable timeout to avoid hanging.
         timeout: 30_000,
@@ -151,7 +164,21 @@ export class LocalGitRepository extends KeaDisposable implements ILocalGitReposi
   };
 
   /**
-   * Get the contents of a specific file at a given commit.
+   * {@inheritdoc ILocalGitRepository.workspaceFolder}
+   */
+  get workspaceFolder(): vscode.WorkspaceFolder {
+    return this.#workspaceFolder;
+  }
+
+  /**
+   * {@inheritdoc ILocalGitRepository.path}
+   */
+  get path(): string {
+    return this.#workspaceFolder.uri.path;
+  }
+
+  /**
+   * {@inheritdoc ILocalGitRepository.getFileAtCommit}
    */
   getFileAtCommit = async (commitSha: string, filePath: string): Promise<string | Error> => {
     if (!commitSha || !filePath) {
@@ -177,7 +204,7 @@ export class LocalGitRepository extends KeaDisposable implements ILocalGitReposi
   };
 
   /**
-   * Validate that the repository path contains a valid Git repository.
+   * {@inheritdoc ILocalGitRepository.getBranchCommitsAheadOf}
    */
   validateRepository = async (): Promise<boolean | Error> => {
     const result = await this.#executeGitCommand(["rev-parse", "--git-dir"]);
@@ -185,7 +212,7 @@ export class LocalGitRepository extends KeaDisposable implements ILocalGitReposi
   };
 
   /**
-   * Get the current HEAD commit SHA.
+   * {@inheritdoc ILocalGitRepository.getFileAtCommit}
    */
   getCurrentCommit = async (): Promise<string | Error> => {
     const result = await this.#executeGitCommand(["rev-parse", "HEAD"]);
@@ -196,28 +223,28 @@ export class LocalGitRepository extends KeaDisposable implements ILocalGitReposi
   };
 
   /**
-   * Get commits for a pull request context, trying ahead-of first, then fallback to regular branch commits.
+   * {@inheritdoc ILocalGitRepository.getCommitsForPullRequest}
    */
   getCommitsForPullRequest = async (pullRequestBaseBranch?: string, limit = 20): Promise<LocalCommit[] | Error> => {
-    if (pullRequestBaseBranch) {
-      const targetBranch = `origin/${pullRequestBaseBranch}`;
-      const commits = await this.getBranchCommitsAheadOf(targetBranch, limit);
-
-      // Fall back to regular branch commits if the ahead-of method fails.
-      if (commits instanceof Error) {
-        Logger.debug(`Failed to get commits ahead of ${targetBranch}, falling back to all branch commits`, commits);
-        return this.getBranchCommits(limit);
-      }
-
-      return commits;
-    } else {
+    if (pullRequestBaseBranch === undefined) {
       // No pull request context, get all branch commits.
       return this.getBranchCommits(limit);
     }
+
+    const targetBranch = `origin/${pullRequestBaseBranch}`;
+    const commits = await this.getBranchCommitsAheadOf(targetBranch, limit);
+
+    // Fall back to regular branch commits if the ahead-of method fails.
+    if (commits instanceof Error) {
+      Logger.debug(`Failed to get commits ahead of ${targetBranch}, falling back to all branch commits`, commits);
+      return this.getBranchCommits(limit);
+    }
+
+    return commits;
   };
 
   /**
-   * Check if a commit exists in the repository.
+   * {@inheritdoc ILocalGitRepository.getCurrentCommit}
    */
   commitExists = async (commitSha: string): Promise<boolean | Error> => {
     const result = await this.#executeGitCommand(["cat-file", "-e", commitSha]);
@@ -225,11 +252,12 @@ export class LocalGitRepository extends KeaDisposable implements ILocalGitReposi
       // If the command fails, the commit doesn't exist
       return false;
     }
+
     return true;
   };
 
   /**
-   * Get commits from the current branch that are ahead of the target branch.
+   * {@inheritdoc ILocalGitRepository.getCommitFiles}
    */
   getBranchCommitsAheadOf = async (targetBranch: string, limit = 50): Promise<LocalCommit[] | Error> => {
     if (!targetBranch) {
@@ -272,7 +300,7 @@ export class LocalGitRepository extends KeaDisposable implements ILocalGitReposi
   };
 
   /**
-   * Get commits from the current branch.
+   * {@inheritdoc ILocalGitRepository.getBranchCommits}
    */
   getBranchCommits = async (limit = 50): Promise<LocalCommit[] | Error> => {
     const result = await this.#executeGitCommand(["log", "--oneline", "--format=%H|%s|%an|%ad", "--date=iso", `-${limit}`]);
@@ -303,8 +331,7 @@ export class LocalGitRepository extends KeaDisposable implements ILocalGitReposi
   };
 
   /**
-   * Get the ahead/behind status compared to the remote tracking branch.
-   * Returns status with hasRemote=false if no remote tracking branch is configured.
+   * {@inheritdoc ILocalGitRepository.getBranchStatus}
    */
   getBranchStatus = async (): Promise<BranchStatus | Error> => {
     // First get the current branch
@@ -355,7 +382,7 @@ export class LocalGitRepository extends KeaDisposable implements ILocalGitReposi
   };
 
   /**
-   * Get the current branch name.
+   * {@inheritdoc ILocalGitRepository.getCurrentBranch}
    */
   getCurrentBranch = async (): Promise<string | Error> => {
     const result = await this.#executeGitCommand(["rev-parse", "--abbrev-ref", "HEAD"]);
@@ -366,7 +393,7 @@ export class LocalGitRepository extends KeaDisposable implements ILocalGitReposi
   };
 
   /**
-   * Get files changed in a specific commit.
+   * {@inheritdoc ILocalGitRepository.getCommitFiles}
    */
   getCommitFiles = async (commitSha: string): Promise<LocalCommitFile[] | Error> => {
     if (!commitSha) {
@@ -394,12 +421,12 @@ export class LocalGitRepository extends KeaDisposable implements ILocalGitReposi
     for (const line of lines) {
       const parts = line.split("\t");
       if (parts.length >= 2 && parts[0] && parts[1]) {
-        const status = parts[0] as "A" | "M" | "D" | "R" | "C";
-        const filename = parts[1];
+        const status = parts[0] as FileStatus;
+        const filePath = parts[1];
 
         files.push({
           status,
-          filename,
+          filePath,
         });
       }
     }
@@ -408,9 +435,7 @@ export class LocalGitRepository extends KeaDisposable implements ILocalGitReposi
   };
 
   /**
-   * Get the parent commit SHA for a given commit.
-   * @param commitSha The commit SHA to get the parent for.
-   * @returns The parent commit SHA, or an Error if the operation fails.
+   * {@inheritdoc ILocalGitRepository.getParentCommit}
    */
   getParentCommit = async (commitSha: string): Promise<string | Error> => {
     if (!commitSha) {

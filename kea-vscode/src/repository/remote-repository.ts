@@ -1,7 +1,6 @@
 import * as vscode from "vscode";
 import { IAccount } from "../account/account";
 import { IKeaDisposable } from "../core/kea-disposable";
-import { LocalCommitsService } from "../services/local-commits-service";
 import {
   Commit,
   CommitComment,
@@ -24,11 +23,10 @@ export interface PullRequestReviewCommentsPayload {
   comments: PullRequestComment[] | Error;
 }
 
-export interface IKeaRepository extends IKeaDisposable {
+export interface IRemoteRepository extends IKeaDisposable {
   account: IAccount;
   repoId: RepoId;
   remoteUrl: string;
-  localCommitsService?: LocalCommitsService;
 
   getPullRequestList: (forceRequest?: boolean) => Promise<PullRequest[] | Error>;
   getPullRequest: (pullId: PullRequestId, forceRequest?: boolean) => Promise<PullRequest | Error>;

@@ -4,14 +4,14 @@ import * as vscode from "vscode";
 import { IAccountKey } from "../../account/account";
 import { Logger } from "../../core/logger";
 import * as quickPickUtils from "../../quick-picks/pull-request-list-picks";
-import { createKeaContextStub, createRepositoryStub } from "../../test-utils";
+import { createKeaContextStub, createRemoteRepositoryStub } from "../../test-utils";
 import { PullRequestId } from "../../types/kea";
 import { createOpenPullRequestCommand } from "./open-pull-request";
 
 suite("open-pull-request", () => {
   let sandbox: sinon.SinonSandbox;
   let contextStub: ReturnType<typeof createKeaContextStub>;
-  let repositoryStub: ReturnType<typeof createRepositoryStub>;
+  let repositoryStub: ReturnType<typeof createRemoteRepositoryStub>;
   let accountKey: IAccountKey;
   let pullId: PullRequestId;
   let loggerErrorStub: sinon.SinonStub;
@@ -21,7 +21,7 @@ suite("open-pull-request", () => {
     sandbox = sinon.createSandbox();
 
     contextStub = createKeaContextStub();
-    repositoryStub = createRepositoryStub();
+    repositoryStub = createRemoteRepositoryStub();
     accountKey = { providerId: "provider", accountId: "acc" };
     pullId = { owner: "owner", repo: "repo", number: 123 };
 

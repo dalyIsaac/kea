@@ -10,7 +10,9 @@ import { ICommandManager } from "./commands/command-manager-types";
 import { IKeaContext } from "./core/context";
 import { ITreeDecorationManager } from "./decorations/tree-decoration-manager";
 import { IGitManager } from "./git/git-manager";
-import { IKeaRepository } from "./repository/kea-repository";
+import { ILocalGitRepository } from "./git/local-git-repository";
+import { IRemoteRepository } from "./repository/remote-repository";
+import { IRepository } from "./repository/repository";
 import { IRepositoryManager } from "./repository/repository-manager";
 import { Commit, CommitComment, CommitFile, IssueComment, PullRequest, PullRequestComment, PullRequestGitRef, User } from "./types/kea";
 import { PullRequestContentsProvider } from "./views/pull-request-contents/pull-request-contents-provider";
@@ -60,7 +62,7 @@ export const createAccountStub = (props: Partial<IAccount> = {}): IAccount => ({
     accountId: "accountId",
   },
   isRepoForAccount: sinon.stub(),
-  tryCreateRepoForAccount: sinon.stub(),
+  createRepositoryForAccount: sinon.stub(),
   ...props,
 });
 
@@ -71,7 +73,7 @@ export const createUserStub = (props: Partial<User> = {}): User => ({
   ...props,
 });
 
-export const createRepositoryStub = (props: Partial<IKeaRepository> = {}): IKeaRepository => ({
+export const createRemoteRepositoryStub = (props: Partial<IRemoteRepository> = {}): IRemoteRepository => ({
   account: createAccountStub(),
   remoteUrl: "remoteUrl",
   repoId: {
@@ -88,6 +90,28 @@ export const createRepositoryStub = (props: Partial<IKeaRepository> = {}): IKeaR
   getCommitComments: sinon.stub(),
   onDidChangeIssueComments: sinon.stub(),
   onDidChangePullRequestReviewComments: sinon.stub(),
+  dispose: sinon.stub(),
+  ...props,
+});
+
+export const createLocalRepositoryStub = (props: Partial<ILocalGitRepository> = {}): ILocalGitRepository => ({
+  workspaceFolder: createWorkspaceFolderStub(),
+  path: "path/to/repo",
+  getFileAtCommit: sinon.stub(),
+  getBranchCommitsAheadOf: sinon.stub(),
+  getBranchCommits: sinon.stub(),
+  getBranchStatus: sinon.stub(),
+  getCurrentBranch: sinon.stub(),
+  getCurrentCommit: sinon.stub(),
+  getCommitsForPullRequest: sinon.stub(),
+  getCommitFiles: sinon.stub(),
+  getParentCommit: sinon.stub(),
+  ...props,
+});
+
+export const createRepositoryStub = (props: Partial<IRepository> = {}): IRepository => ({
+  remoteRepository: createRemoteRepositoryStub(),
+  localRepository: createLocalRepositoryStub(),
   dispose: sinon.stub(),
   ...props,
 });
@@ -124,7 +148,7 @@ export const createPullRequestStub = (props: Partial<PullRequest> = {}): PullReq
 
 export const createFileStub = (props: Partial<CommitFile> = {}): CommitFile => ({
   filename: "filename",
-  status: "unchanged",
+  status: "U",
   sha: "sha",
   additions: 0,
   deletions: 0,

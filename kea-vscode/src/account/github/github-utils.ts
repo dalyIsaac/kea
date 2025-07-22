@@ -151,12 +151,36 @@ export const convertGitHubPullRequestReviewComment = (
 });
 
 /**
+ * Converts an Octokit Pull Request File status to our internal CommitFile status.
+ */
+export const convertGitHubFileStatus = (
+  status: RestEndpointMethodTypes["pulls"]["listFiles"]["response"]["data"][number]["status"],
+): CommitFile["status"] => {
+  switch (status) {
+    case "added":
+      return "A";
+    case "modified":
+      return "M";
+    case "removed":
+      return "D";
+    case "renamed":
+      return "R";
+    case "copied":
+      return "C";
+    case "changed":
+      return "T";
+    case "unchanged":
+      return " ";
+  }
+};
+
+/**
  * Converts an Octokit Pull Request File response to our internal PullRequestFile type.
  */
 export const convertGitHubFile = (file: RestEndpointMethodTypes["pulls"]["listFiles"]["response"]["data"][number]): CommitFile => ({
   filename: file.filename,
   sha: file.sha,
-  status: file.status,
+  status: convertGitHubFileStatus(file.status),
   additions: file.additions,
   deletions: file.deletions,
   changes: file.changes,

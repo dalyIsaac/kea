@@ -1,8 +1,8 @@
 import * as assert from "assert";
 import * as sinon from "sinon";
 import * as vscode from "vscode";
-import { IssueCommentsPayload } from "../repository/kea-repository";
-import { createAccountStub, createIssueCommentStub, createRepositoryStub, stubEvents } from "../test-utils";
+import { IssueCommentsPayload } from "../repository/repository";
+import { createAccountStub, createIssueCommentStub, createRemoteRepositoryStub, stubEvents } from "../test-utils";
 import { BaseTreeDecorationProvider } from "./base-tree-decoration-provider";
 import { createCommentsRootDecorationUri } from "./decoration-schemes";
 import { TreeDecorationManager } from "./tree-decoration-manager";
@@ -21,7 +21,7 @@ suite("TreeDecorationManager", () => {
   const createTestProvider = () => new TestTreeDecorationProvider();
 
   const createRepoWithEventStub = (stub = sinon.stub()) => {
-    const repo = createRepositoryStub();
+    const repo = createRemoteRepositoryStub();
     repo.onDidChangeIssueComments = stub;
     return repo;
   };
@@ -33,7 +33,7 @@ suite("TreeDecorationManager", () => {
 
     // Create repository with event emitters
     const { stub: repository, eventFirers } = stubEvents(
-      createRepositoryStub({
+      createRemoteRepositoryStub({
         account: createAccountStub({ accountKey }),
         repoId,
       }),

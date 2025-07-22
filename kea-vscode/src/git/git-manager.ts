@@ -4,12 +4,12 @@ import { IKeaContext } from "../core/context";
 import { IKeaDisposable, KeaDisposable } from "../core/kea-disposable";
 import { Logger } from "../core/logger";
 import { WrappedError } from "../core/wrapped-error";
-import { IKeaRepository } from "../repository/kea-repository";
+import { IRepository } from "../repository/repository";
 import { Branch, GitApi, GitExtension, Repository } from "../types/git";
 import { ILocalGitRepository, LocalGitRepository } from "./local-git-repository";
 
 export interface RepoInfo {
-  repository: IKeaRepository;
+  repository: IRepository;
   workspaceFolder: vscode.WorkspaceFolder;
   account: IAccount;
 }
@@ -95,7 +95,7 @@ export class GitManager extends KeaDisposable implements IGitManager {
         continue;
       }
 
-      const repo = account.tryCreateRepoForAccount(repoUrl, this.#ctx.apiCache);
+      const repo = account.createRepositoryForAccount(repoUrl, this.#ctx.apiCache);
       if (repo instanceof Error) {
         Logger.error(`Error creating repository for account`, repo);
         continue;
@@ -160,7 +160,7 @@ export class GitManager extends KeaDisposable implements IGitManager {
       return cachedLocalRepo;
     }
 
-    const localRepo = new LocalGitRepository(workspaceFolder.uri.fsPath, this.#ctx.apiCache);
+    const localRepo = new LocalGitRepository(workspaceFolder);
     const isValid = await localRepo.validateRepository();
     if (isValid instanceof Error) {
       return new WrappedError(`Invalid Git repository at ${workspaceFolder.uri.fsPath}`, isValid);
