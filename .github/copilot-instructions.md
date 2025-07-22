@@ -10,3 +10,4 @@ This is a TypeScript-based repository for a Visual Studio Code extension to prov
 - End comments with a period
 - Write tests in the form "Given <context>, when <action>, then <expected result>"
 - Test names should be descriptive and follow the format: `should ...`
+- Write tests with a `const setupStubs = () => { ... }` pattern to create reusable test data - don't use `setup` or `beforeEach` for stubs
