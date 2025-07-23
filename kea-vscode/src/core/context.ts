@@ -45,8 +45,8 @@ export class KeaContext extends KeaDisposable implements IKeaContext {
     this.fileCache = this._registerDisposable(new FileCache(extCtx, MAX_FILE_CACHE_SIZE));
 
     this.accountManager = new AccountManager();
-    this.gitManager = this._registerDisposable(new GitManager(this));
-    this.repositoryManager = new RepositoryManager();
+    this.gitManager = new GitManager();
+    this.repositoryManager = this._registerDisposable(new RepositoryManager(this));
 
     this.treeDecorationManager = this._registerDisposable(new TreeDecorationManager());
 

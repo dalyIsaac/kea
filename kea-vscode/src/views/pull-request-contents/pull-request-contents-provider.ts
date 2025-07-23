@@ -27,7 +27,7 @@ export class PullRequestContentsProvider extends TreeNodeProvider<PullRequestTre
 
     // Listen for git repository state changes to refresh commits tree
     this._registerDisposable(
-      this.#ctx.gitManager.onRepositoryStateChanged(() => {
+      this.#ctx.repositoryManager.onRepositoryStateChanged(() => {
         // Refresh the commits tree when git state changes (e.g., branch checkout)
         this._onDidChangeTreeData.fire();
       }),

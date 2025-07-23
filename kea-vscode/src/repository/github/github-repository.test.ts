@@ -4,7 +4,7 @@ import { GitHubAccount } from "../../account/github/github-account";
 import { ICacheValue } from "../../cache/common/common-api-types";
 import { createAccountStub, createApiCacheStub, stubEvents } from "../../test-utils";
 import { IssueId, PullRequestId, RepoId } from "../../types/kea";
-import { IssueCommentsPayload, PullRequestReviewCommentsPayload } from "../repository";
+import { IssueCommentsPayload, PullRequestReviewCommentsPayload } from "../remote-repository";
 import { GitHubRepository } from "./github-repository";
 
 suite("GitHubRepository", () => {

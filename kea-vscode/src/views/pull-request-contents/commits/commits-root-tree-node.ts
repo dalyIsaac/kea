@@ -51,12 +51,7 @@ export class CommitsRootTreeNode implements IParentTreeNode<RemoteCommitTreeNode
         return;
       }
 
-      const localGitRepo = await this.#ctx.gitManager.getLocalGitRepository(workspaceFolder);
-      if (localGitRepo instanceof Error) {
-        return;
-      }
-
-      const branchStatus = await localGitRepo.getBranchStatus();
+      const branchStatus = await this.#repository.localRepository.getBranchStatus();
       if (branchStatus instanceof Error) {
         return;
       }

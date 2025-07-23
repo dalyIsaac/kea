@@ -1,9 +1,5 @@
 import { Octokit } from "@octokit/rest";
 import * as vscode from "vscode";
-import { IApiCache } from "../../cache/api/api-cache";
-import { LocalGitRepository } from "../../git/local-git-repository";
-import { GitHubRepository } from "../../repository/github/github-repository";
-import { IRepository, Repository } from "../../repository/repository";
 import { IAccount, IAccountKey } from "../account";
 
 export const GITHUB_PROVIDER_ID = "github";
@@ -11,8 +7,6 @@ export const GITHUB_PROVIDER_ID = "github";
 export class GitHubAccount implements IAccount {
   static #scopes = ["user:email", "repo", "read:org"];
   static #hasRequestedUser = false;
-
-  #repositories = new Map<string, IRepository>();
 
   accountKey: IAccountKey;
 
@@ -52,24 +46,4 @@ export class GitHubAccount implements IAccount {
   };
 
   isRepoForAccount = (repoUrl: string): boolean => repoUrl.includes("github.com");
-
-  createRepositoryForAccount = (repoUrl: string, workspaceFolder: vscode.WorkspaceFolder, cache: IApiCache): IRepository | Error => {
-    if (!this.isRepoForAccount(repoUrl)) {
-      return new Error("Not a GitHub repository URL");
-    }
-
-    const [owner, repoName] = repoUrl.replace(".git", "").split("/").slice(-2);
-    if (owner === undefined || repoName === undefined) {
-      return new Error("Expected to find owner and repo name in URL");
-    }
-
-    let repo = this.#repositories.get(repoUrl);
-    if (repo !== undefined) {
-      return repo;
-    }
-
-    repo = new Repository(new GitHubRepository(repoUrl, { owner, repo: repoName }, this, cache), new LocalGitRepository(workspaceFolder));
-    this.#repositories.set(repoUrl, repo);
-    return repo;
-  };
 }

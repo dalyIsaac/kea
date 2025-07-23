@@ -39,14 +39,14 @@ suite("checkout-pull-request", () => {
   test("should checkout branch when args are provided", async () => {
     // Given
     const args: ICheckoutPullRequestCommandArgs = { pullRequestHead, workspaceFolder };
-    (contextStub.gitManager.getGitRepository as sinon.SinonStub).resolves(repositoryStub);
+    (contextStub.gitManager.getRepository as sinon.SinonStub).resolves(repositoryStub);
 
     // When
     const command = createCheckoutPullRequest(contextStub);
     await command(args);
 
     // Then
-    assert.ok((contextStub.gitManager.getGitRepository as sinon.SinonStub).calledOnceWithExactly(workspaceFolder));
+    assert.ok((contextStub.gitManager.getRepository as sinon.SinonStub).calledOnceWithExactly(workspaceFolder));
     assert.ok((repositoryStub.checkout as sinon.SinonStub).calledOnceWithExactly("feature-branch"));
     assert.ok(loggerInfoStub.calledOnceWith("Checked out branch feature-branch"));
   });
@@ -57,7 +57,7 @@ suite("checkout-pull-request", () => {
     const quickPickItem = { pullRequestHead, workspaceFolder, label: "PR #1" };
     showQuickPickStub.resolves(quickPickItem);
     sandbox.stub(quickPickUtils, "createPullRequestBranchPicks").resolves([]);
-    (contextStub.gitManager.getGitRepository as sinon.SinonStub).resolves(repositoryStub);
+    (contextStub.gitManager.getRepository as sinon.SinonStub).resolves(repositoryStub);
 
     // When
     const command = createCheckoutPullRequest(contextStub);
@@ -65,7 +65,7 @@ suite("checkout-pull-request", () => {
 
     // Then
     assert.ok(showQuickPickStub.calledOnce);
-    assert.ok((contextStub.gitManager.getGitRepository as sinon.SinonStub).calledOnceWithExactly(workspaceFolder));
+    assert.ok((contextStub.gitManager.getRepository as sinon.SinonStub).calledOnceWithExactly(workspaceFolder));
     assert.ok((repositoryStub.checkout as sinon.SinonStub).calledOnceWithExactly("feature-branch"));
     assert.ok(loggerInfoStub.calledOnceWith("Checked out branch feature-branch"));
   });
@@ -82,21 +82,21 @@ suite("checkout-pull-request", () => {
 
     // Then
     assert.ok(showQuickPickStub.calledOnce);
-    assert.ok((contextStub.gitManager.getGitRepository as sinon.SinonStub).notCalled);
+    assert.ok((contextStub.gitManager.getRepository as sinon.SinonStub).notCalled);
   });
 
   test("should log error if git repository is not found", async () => {
     // Given
     const args: ICheckoutPullRequestCommandArgs = { pullRequestHead, workspaceFolder };
     const error = new Error("Git repo not found");
-    (contextStub.gitManager.getGitRepository as sinon.SinonStub).resolves(error);
+    (contextStub.gitManager.getRepository as sinon.SinonStub).resolves(error);
 
     // When
     const command = createCheckoutPullRequest(contextStub);
     await command(args);
 
     // Then
-    assert.ok((contextStub.gitManager.getGitRepository as sinon.SinonStub).calledOnceWithExactly(workspaceFolder));
+    assert.ok((contextStub.gitManager.getRepository as sinon.SinonStub).calledOnceWithExactly(workspaceFolder));
     assert.ok(loggerErrorStub.calledOnceWith("Error getting repository", error));
   });
 
@@ -107,14 +107,14 @@ suite("checkout-pull-request", () => {
 
     // Override the default stub with one that rejects
     repositoryStub.checkout = sandbox.stub().rejects(checkoutError);
-    (contextStub.gitManager.getGitRepository as sinon.SinonStub).resolves(repositoryStub);
+    (contextStub.gitManager.getRepository as sinon.SinonStub).resolves(repositoryStub);
 
     // When
     const command = createCheckoutPullRequest(contextStub);
     await command(args);
 
     // Then
-    assert.ok((contextStub.gitManager.getGitRepository as sinon.SinonStub).calledOnceWithExactly(workspaceFolder));
+    assert.ok((contextStub.gitManager.getRepository as sinon.SinonStub).calledOnceWithExactly(workspaceFolder));
     assert.ok((repositoryStub.checkout as sinon.SinonStub).calledOnceWithExactly("feature-branch"));
     assert.ok(showErrorMessageStub.calledOnceWith("Failed to checkout branch feature-branch: Checkout failed"));
   });
@@ -130,14 +130,14 @@ suite("checkout-pull-request", () => {
       throw checkoutError;
     };
 
-    (contextStub.gitManager.getGitRepository as sinon.SinonStub).resolves(repositoryStub);
+    (contextStub.gitManager.getRepository as sinon.SinonStub).resolves(repositoryStub);
 
     // When
     const command = createCheckoutPullRequest(contextStub);
     await command(args);
 
     // Then
-    assert.ok((contextStub.gitManager.getGitRepository as sinon.SinonStub).calledOnceWithExactly(workspaceFolder));
+    assert.ok((contextStub.gitManager.getRepository as sinon.SinonStub).calledOnceWithExactly(workspaceFolder));
     assert.ok(showErrorMessageStub.calledOnce, "showErrorMessage should be called once");
     assert.strictEqual(showErrorMessageStub.getCall(0).args[0], "Failed to checkout branch feature-branch: Unknown error");
   });

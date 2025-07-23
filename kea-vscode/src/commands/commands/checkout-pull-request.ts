@@ -31,7 +31,7 @@ export const createCheckoutPullRequest =
     const branchName = args.pullRequestHead.ref;
     const workspaceFolder = args.workspaceFolder;
 
-    const repository = await ctx.gitManager.getGitRepository(workspaceFolder);
+    const repository = await ctx.gitManager.getRepository(workspaceFolder);
     if (repository instanceof Error) {
       Logger.error("Error getting repository", repository);
       return;

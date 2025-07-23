@@ -1,17 +1,19 @@
 import * as assert from "assert";
+import sinon from "sinon";
 import * as vscode from "vscode";
 import { IKeaContext } from "../../core/context";
 import { IRemoteRepository } from "../../repository/remote-repository";
+import { IRepository } from "../../repository/repository";
 import { RepositoryManager } from "../../repository/repository-manager";
 import {
   assertArrayContentsEqual,
   createKeaContextStub,
   createPullRequestStub,
   createRemoteRepositoryStub,
+  createRepositoryManagerStub,
   createRepositoryStub,
-  createWorkspaceFolderStub,
 } from "../../test-utils";
-import { PullRequestId, RepoId } from "../../types/kea";
+import { PullRequest, PullRequestId, RepoId } from "../../types/kea";
 import { PullRequestListNode } from "../pull-request-list/pull-request-list-node";
 import { CollapsibleState, ITreeNode } from "../tree-node";
 import { CommentsRootTreeNode } from "./comments/comments-root-tree-node";
@@ -19,7 +21,7 @@ import { CommitsRootTreeNode } from "./commits/commits-root-tree-node";
 import { FilesRootTreeNode } from "./files/files-root-tree-node";
 import { PullRequestContentsProvider, PullRequestTreeNode } from "./pull-request-contents-provider";
 
-const createGetChildrenStubs = async (getPullRequest?: IRemoteRepository["getPullRequest"]) => {
+const createStubs = async (stubs: { getPullRequest?: IRemoteRepository["getPullRequest"] } = {}) => {
   const repoId: RepoId = { owner: "owner", repo: "repo" };
   const pullId: PullRequestId = { ...repoId, number: 1 };
 
@@ -27,13 +29,14 @@ const createGetChildrenStubs = async (getPullRequest?: IRemoteRepository["getPul
   const remoteRepository = createRemoteRepositoryStub({
     repoId,
     getPullRequest:
-      getPullRequest ??
+      stubs.getPullRequest ??
       ((id) => (id.number === pullId.number ? Promise.resolve(pullRequest) : Promise.resolve(new Error("Pull request not found")))),
   });
   const repository = createRepositoryStub({ remoteRepository });
 
-  const repositoryManager = new RepositoryManager();
-  repositoryManager.addRepository(repository);
+  const repositoryManager = createRepositoryManagerStub({
+    getRepositoryById: sinon.stub().returns(repository),
+  });
 
   const ctx = createKeaContextStub({
     repositoryManager,
@@ -44,7 +47,7 @@ const createGetChildrenStubs = async (getPullRequest?: IRemoteRepository["getPul
 
   return {
     repoId,
-    repository: remoteRepository,
+    repository,
     provider,
     pullId,
     ctx,
@@ -54,8 +57,9 @@ const createGetChildrenStubs = async (getPullRequest?: IRemoteRepository["getPul
 suite("PullRequestContentsProvider", () => {
   test("getChildren returns an empty array when the pull request is not open", async () => {
     // Given
-    const repositoryManager = new RepositoryManager();
-    const ctx = createKeaContextStub({ repositoryManager });
+    const ctx = createKeaContextStub();
+    const repositoryManager = new RepositoryManager(ctx);
+    ctx.repositoryManager = repositoryManager;
     const provider = new PullRequestContentsProvider(ctx);
 
     // When
@@ -67,7 +71,7 @@ suite("PullRequestContentsProvider", () => {
 
   test("getChildren returns the root children when the pull request is open", async () => {
     // Given
-    const { provider } = await createGetChildrenStubs();
+    const { provider } = await createStubs();
 
     // When
     const result = await provider.getChildren();
@@ -84,23 +88,24 @@ suite("PullRequestContentsProvider", () => {
     label: string;
     override collapsibleState: CollapsibleState;
 
-    constructor(ctx: IKeaContext, label: string, collapsibleState: CollapsibleState) {
-      super(ctx, { accountId: "", providerId: "" }, createPullRequestStub(), createWorkspaceFolderStub());
+    constructor(ctx: IKeaContext, label: string, collapsibleState: CollapsibleState, pullRequest: PullRequest, repository: IRepository) {
+      super(pullRequest, repository);
       this.#ctx = ctx;
       this.label = label;
       this.collapsibleState = collapsibleState;
     }
 
     getChildren = (): SuccessTestTreeNode[] => {
-      return [new SuccessTestTreeNode(this.#ctx, "Child 1", "none")];
+      return [new SuccessTestTreeNode(this.#ctx, "Child 1", "none", this._pullRequest, this._repository)];
     };
   }
 
   test("getChildren returns the children of the given element", async () => {
     // Given
-    const { provider, ctx } = await createGetChildrenStubs();
+    const { provider, ctx, repository } = await createStubs();
+    const pullRequest = createPullRequestStub();
 
-    const element = new SuccessTestTreeNode(ctx, "Parent", "collapsed") as unknown as PullRequestTreeNode;
+    const element = new SuccessTestTreeNode(ctx, "Parent", "collapsed", pullRequest, repository) as unknown as PullRequestTreeNode;
 
     // When
     const children = await provider.getChildren(element);
@@ -113,7 +118,7 @@ suite("PullRequestContentsProvider", () => {
 
   test("getChildren fails for a non-parent tree item", async () => {
     // Given
-    const { provider } = await createGetChildrenStubs();
+    const { provider } = await createStubs();
 
     class NonParentTreeNode implements ITreeNode {
       getTreeItem = (): vscode.TreeItem => new vscode.TreeItem("Non-parent", vscode.TreeItemCollapsibleState.None);
@@ -130,7 +135,7 @@ suite("PullRequestContentsProvider", () => {
 
   test("refresh calls onDidChangeTreeData and doesn't clear cache", async () => {
     // Given
-    const { provider, ctx } = await createGetChildrenStubs();
+    const { provider, ctx } = await createStubs();
 
     let eventFired = false;
     provider.onDidChangeTreeData(() => {
@@ -147,10 +152,10 @@ suite("PullRequestContentsProvider", () => {
 
   test("openPullRequest updates the pull request info", async () => {
     // Given
-    const { provider, repository, pullId } = await createGetChildrenStubs();
+    const { provider, repository, pullId } = await createStubs();
 
     // When
-    const result = await provider.openPullRequest(repository.account.accountKey, pullId);
+    const result = await provider.openPullRequest(repository.remoteRepository.account.accountKey, pullId);
     const firstChildren = await provider.getChildren();
     const secondChildren = await provider.getChildren();
 
@@ -170,12 +175,12 @@ suite("PullRequestContentsProvider", () => {
       return Promise.resolve(new Error("Pull request not found"));
     };
 
-    const { provider, repository, pullId } = await createGetChildrenStubs(getPullRequest);
+    const { provider, repository, pullId } = await createStubs({ getPullRequest });
 
     // When
-    const result = await provider.openPullRequest(repository.account.accountKey, pullId);
+    const result = await provider.openPullRequest(repository.remoteRepository.account.accountKey, pullId);
     const firstChildren = await provider.getChildren();
-    const result2 = await provider.openPullRequest(repository.account.accountKey, { ...pullId, number: 2 });
+    const result2 = await provider.openPullRequest(repository.remoteRepository.account.accountKey, { ...pullId, number: 2 });
     const secondChildren = await provider.getChildren();
 
     // Then
@@ -191,7 +196,7 @@ suite("PullRequestContentsProvider", () => {
 
   test("openPullRequest fails when the repository is not found", async () => {
     // Given
-    const { provider, pullId } = await createGetChildrenStubs();
+    const { provider, pullId } = await createStubs({ getPullRequest: sinon.stub().resolves(new Error("Repository not found")) });
 
     // When
     const result = await provider.openPullRequest({ providerId: "invalid-provider-id", accountId: "invalid-account-id" }, pullId);
@@ -202,12 +207,12 @@ suite("PullRequestContentsProvider", () => {
 
   test("openPullRequest fails when the pull request is not found", async () => {
     // Given
-    const { provider, repository } = await createGetChildrenStubs();
+    const { provider, repository } = await createStubs();
 
     const invalidPullId: PullRequestId = { ...repository.repoId, number: 9999 };
 
     // When
-    const result = await provider.openPullRequest(repository.account.accountKey, invalidPullId);
+    const result = await provider.openPullRequest(repository.remoteRepository.account.accountKey, invalidPullId);
 
     // Then
     assert.strictEqual(result, false);
@@ -215,7 +220,7 @@ suite("PullRequestContentsProvider", () => {
 
   test("openPullRequest sets treeView.description", async () => {
     // Given
-    const { ctx, pullId } = await createGetChildrenStubs();
+    const { ctx, pullId } = await createStubs();
 
     // Then
     const defaultPr = createPullRequestStub();

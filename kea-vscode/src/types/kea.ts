@@ -3,6 +3,8 @@ export interface RepoId {
   repo: string;
 }
 
+export const isEqualRepoId = (a: RepoId, b: RepoId): boolean => a.owner === b.owner && a.repo === b.repo;
+
 export interface IssueId extends RepoId {
   number: number;
 }

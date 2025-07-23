@@ -1,5 +1,4 @@
 import { IKeaContext } from "../../core/context";
-import { Logger } from "../../core/logger";
 import { TreeNodeProvider } from "../tree-node-provider";
 import { PullRequestListNode } from "./pull-request-list-node";
 import { RepoTreeNode } from "./repo-tree-node";
@@ -16,28 +15,17 @@ export class PullRequestListTreeProvider extends TreeNodeProvider<PullRequestLis
     super();
     this.#ctx = ctx;
 
-    this._registerDisposable(this.#ctx.gitManager.onRepositoryStateChanged(this.#onRepositoryStateChanged));
+    this._registerDisposable(this.#ctx.repositoryManager.onRepositoryStateChanged(this.#onRepositoryStateChanged));
   }
 
   #onRepositoryStateChanged = (): void => {
     this._onDidChangeTreeData.fire();
   };
 
-  override _getRootChildren = async (): Promise<PullRequestListTreeNode[]> => {
-    const allRepoInfo = await this.#ctx.gitManager.getAllRepositoriesAndInfo();
+  override _getRootChildren = (): Promise<PullRequestListTreeNode[]> => {
+    const rootItems = this.#ctx.repositoryManager.getAllRepositories().map((repo) => new RepoTreeNode(repo));
 
-    const rootItems: PullRequestListTreeNode[] = [];
-    for (const repoInfo of allRepoInfo) {
-      if (repoInfo instanceof Error) {
-        Logger.error(`Error creating RepoTreeNode: ${repoInfo.message}`);
-        continue;
-      }
-
-      const { repository, workspaceFolder: workspace } = repoInfo;
-      const rootItem = new RepoTreeNode(this.#ctx, repository.remoteRepository, workspace);
-      rootItems.push(rootItem);
-    }
-    return rootItems;
+    return Promise.resolve(rootItems);
   };
 
   override _invalidateCache = (): void => {

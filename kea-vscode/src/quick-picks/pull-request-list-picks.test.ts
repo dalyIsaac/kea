@@ -102,7 +102,7 @@ suite("pull-request-list-picks", () => {
 
   test("should return pull request list picks sorted by updatedAt", async () => {
     // Given - deliberate unsorted order in the repository responses
-    (contextStub.gitManager.getAllRepositoriesAndInfo as sinon.SinonStub).resolves([
+    (contextStub.gitManager.getAllRepositories as sinon.SinonStub).resolves([
       {
         repository: repositoryStub1,
         workspaceFolder: workspaceFolder1,
@@ -153,7 +153,7 @@ suite("pull-request-list-picks", () => {
     // Prefix with underscore to indicate intentionally unused
     const _loggerErrorStub = sandbox.stub(console, "error");
 
-    (contextStub.gitManager.getAllRepositoriesAndInfo as sinon.SinonStub).resolves([
+    (contextStub.gitManager.getAllRepositories as sinon.SinonStub).resolves([
       {
         repository: repositoryStub1,
         workspaceFolder: workspaceFolder1,
@@ -178,7 +178,7 @@ suite("pull-request-list-picks", () => {
     // Given
     const error = new Error("Failed to fetch pull requests");
 
-    (contextStub.gitManager.getAllRepositoriesAndInfo as sinon.SinonStub).resolves([
+    (contextStub.gitManager.getAllRepositories as sinon.SinonStub).resolves([
       {
         repository: repositoryStub1,
         workspaceFolder: workspaceFolder1,
@@ -206,7 +206,7 @@ suite("pull-request-list-picks", () => {
 
   test("should return empty array when no pull requests are found", async () => {
     // Given
-    (contextStub.gitManager.getAllRepositoriesAndInfo as sinon.SinonStub).resolves([]);
+    (contextStub.gitManager.getAllRepositories as sinon.SinonStub).resolves([]);
 
     // When
     const result = await createPullRequestListQuickPick(contextStub);

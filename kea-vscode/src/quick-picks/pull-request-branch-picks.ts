@@ -9,7 +9,7 @@ import { PullRequest } from "../types/kea";
 interface PullRequestBranchQuickPickItem extends vscode.QuickPickItem, ICheckoutPullRequestCommandArgs {}
 
 export const createPullRequestBranchPicks = async (ctx: IKeaContext): Promise<PullRequestBranchQuickPickItem[]> => {
-  const allRepos = await ctx.gitManager.getAllRepositoriesAndInfo();
+  const allRepos = await ctx.gitManager.getAllRepositories();
 
   const nestedPullRequests = await Promise.all(
     allRepos.map(async (repoInfo) => {

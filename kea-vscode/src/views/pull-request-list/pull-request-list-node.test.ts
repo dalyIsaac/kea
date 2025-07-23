@@ -3,42 +3,51 @@ import sinon from "sinon";
 import * as vscode from "vscode";
 import { IAccountKey } from "../../account/account";
 import {
-  createGitManagerStub,
-  createKeaContextStub,
+  createAccountStub,
+  createLocalRepositoryStub,
   createPullRequestStub,
+  createRemoteRepositoryStub,
+  createRepositoryStub,
   createUserStub,
-  createWorkspaceFolderStub,
 } from "../../test-utils";
-import { Branch, RefType } from "../../types/git";
 import { PullRequestId } from "../../types/kea";
 import { PullRequestListNode } from "./pull-request-list-node";
 
-suite("PullRequestListNode", () => {
+const createStubs = (
+  stubs: {
+    currentBranch?: string;
+  } = {},
+) => {
   const accountKey: IAccountKey = {
     providerId: "github",
     accountId: "accountId",
   };
 
-  // Use the gitManager stub in the context
-  const ctx = createKeaContextStub({
-    gitManager: createGitManagerStub({
-      getGitBranchForRepository: sinon.stub().resolves({
-        name: "feature-branch",
-        type: RefType.Head,
-      } as Branch),
+  const repository = createRepositoryStub({
+    remoteRepository: createRemoteRepositoryStub({
+      account: createAccountStub({
+        accountKey,
+      }),
+    }),
+    localRepository: createLocalRepositoryStub({
+      getCurrentBranch: sinon.stub().resolves(stubs.currentBranch ?? "not-main"),
     }),
   });
 
+  return { accountKey, repository };
+};
+
+suite("PullRequestListNode", () => {
   test("should be created with the correct properties", () => {
     // Given
+    const { repository } = createStubs();
     const pullRequest = createPullRequestStub();
 
     // When
-    const pullRequestListNode = new PullRequestListNode(ctx, accountKey, pullRequest, createWorkspaceFolderStub());
+    const pullRequestListNode = new PullRequestListNode(pullRequest, repository);
 
     // Then
-    assert.strictEqual(pullRequestListNode.accountKey, accountKey);
-    assert.strictEqual(pullRequestListNode.pullRequest, pullRequest);
+    assert.strictEqual(pullRequestListNode.pullRequestHead, pullRequest.head);
     assert.strictEqual(pullRequestListNode.collapsibleState, "none");
   });
 
@@ -59,7 +68,8 @@ suite("PullRequestListNode", () => {
         repo: "repo",
       },
     });
-    const pullRequestListNode = new PullRequestListNode(ctx, accountKey, pullRequest, createWorkspaceFolderStub());
+    const { repository, accountKey } = createStubs();
+    const pullRequestListNode = new PullRequestListNode(pullRequest, repository);
 
     // When
     const treeItem = await pullRequestListNode.getTreeItem();
@@ -104,7 +114,8 @@ suite("PullRequestListNode", () => {
       },
       user: createUserStub({ login: "testUser" }), // Explicitly set the user with the expected login
     });
-    const pullRequestListNode = new PullRequestListNode(ctx, accountKey, pullRequest, createWorkspaceFolderStub());
+    const { repository } = createStubs();
+    const pullRequestListNode = new PullRequestListNode(pullRequest, repository);
 
     // When
     const treeItem = await pullRequestListNode.getTreeItem();
@@ -119,14 +130,9 @@ suite("PullRequestListNode", () => {
   });
 
   test("getTreeItem indicates when the PR branch is checked out", async () => {
-    // Given
+    // Given the local branch name matches the PR head ref
     const branchName = "feature-branch";
-
-    // Configure the gitManager to return the same branch name as the PR head ref
-    (ctx.gitManager.getGitBranchForRepository as sinon.SinonStub).withArgs(sinon.match.any).resolves({
-      name: branchName,
-      type: RefType.Head,
-    } as Branch);
+    const { repository } = createStubs({ currentBranch: branchName });
 
     const pullRequest = createPullRequestStub({
       title: "Checked Out PR",
@@ -145,7 +151,7 @@ suite("PullRequestListNode", () => {
       },
     });
 
-    const pullRequestListNode = new PullRequestListNode(ctx, accountKey, pullRequest, createWorkspaceFolderStub());
+    const pullRequestListNode = new PullRequestListNode(pullRequest, repository);
 
     // When
     const treeItem = await pullRequestListNode.getTreeItem();

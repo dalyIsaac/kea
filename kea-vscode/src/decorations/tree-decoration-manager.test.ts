@@ -1,7 +1,7 @@
 import * as assert from "assert";
 import * as sinon from "sinon";
 import * as vscode from "vscode";
-import { IssueCommentsPayload } from "../repository/repository";
+import { IssueCommentsPayload } from "../repository/remote-repository";
 import { createAccountStub, createIssueCommentStub, createRemoteRepositoryStub, stubEvents } from "../test-utils";
 import { BaseTreeDecorationProvider } from "./base-tree-decoration-provider";
 import { createCommentsRootDecorationUri } from "./decoration-schemes";
@@ -15,32 +15,30 @@ class TestTreeDecorationProvider extends BaseTreeDecorationProvider {
   };
 }
 
-suite("TreeDecorationManager", () => {
+const createTestProvider = () => new TestTreeDecorationProvider();
 
-  const createTestProvider = () => new TestTreeDecorationProvider();
+const createRepoWithEventStub = (stub = sinon.stub()) => {
+  const repo = createRemoteRepositoryStub();
+  repo.onDidChangeIssueComments = stub;
+  return repo;
+};
 
-  const createRepoWithEventStub = (stub = sinon.stub()) => {
-    const repo = createRemoteRepositoryStub();
-    repo.onDidChangeIssueComments = stub;
-    return repo;
-  };
+const setupTestData = () => {
+  const accountKey = { providerId: "github", accountId: "accountId" };
+  const repoId = { owner: "owner", repo: "repo" };
+  const pullId = { ...repoId, number: 1 };
 
-  const setupTestData = () => {
-    const accountKey = { providerId: "github", accountId: "accountId" };
-    const repoId = { owner: "owner", repo: "repo" };
-    const pullId = { ...repoId, number: 1 };
+  // Create repository with event emitters
+  const { stub: repository, eventFirers } = stubEvents(
+    createRemoteRepositoryStub({
+      account: createAccountStub({ accountKey }),
+      repoId,
+    }),
+    ["onDidChangeIssueComments"] as const,
+  );
 
-    // Create repository with event emitters
-    const { stub: repository, eventFirers } = stubEvents(
-      createRemoteRepositoryStub({
-        account: createAccountStub({ accountKey }),
-        repoId,
-      }),
-      ["onDidChangeIssueComments"] as const,
-    );
-
-    return { accountKey, repoId, pullId, repository, eventFirers };
-  };
+  return { accountKey, repoId, pullId, repository, eventFirers };
+};
 
 const setupStubs = () => {
   const sandbox = sinon.createSandbox();
@@ -59,7 +57,6 @@ const setupStubs = () => {
 };
 
 suite("TreeDecorationManager", () => {
-
   test("registerProviders adds providers and registers them with vscode", () => {
     // Given
     const manager = new TreeDecorationManager();

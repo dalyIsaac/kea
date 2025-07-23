@@ -12,7 +12,7 @@ interface PullRequestQuickPickItem extends vscode.QuickPickItem {
 }
 
 export const createPullRequestListQuickPick = async (ctx: IKeaContext): Promise<PullRequestQuickPickItem[]> => {
-  const allRepos = await ctx.gitManager.getAllRepositoriesAndInfo();
+  const allRepos = await ctx.gitManager.getAllRepositories();
 
   const nestedPullRequests = await Promise.all(
     allRepos.map(async (repoInfo) => {

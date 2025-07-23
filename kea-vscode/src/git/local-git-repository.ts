@@ -4,6 +4,7 @@ import * as vscode from "vscode";
 import { KeaDisposable } from "../core/kea-disposable";
 import { Logger } from "../core/logger";
 import { WrappedError } from "../core/wrapped-error";
+import { Repository as GitExtensionRepository } from "../types/git";
 import { FileStatus } from "../types/kea";
 
 const execFileAsync = promisify(execFile);
@@ -119,11 +120,13 @@ export interface ILocalGitRepository {
 export class LocalGitRepository extends KeaDisposable implements ILocalGitRepository {
   #workspaceFolder: vscode.WorkspaceFolder;
   #gitExecutable: string;
+  #gitExtensionRepository: GitExtensionRepository;
 
-  constructor(workspaceFolder: vscode.WorkspaceFolder) {
+  constructor(workspaceFolder: vscode.WorkspaceFolder, vscodeRepository: GitExtensionRepository) {
     super();
     this.#workspaceFolder = workspaceFolder;
     this.#gitExecutable = this.#detectGitExecutable();
+    this.#gitExtensionRepository = vscodeRepository;
   }
 
   /**

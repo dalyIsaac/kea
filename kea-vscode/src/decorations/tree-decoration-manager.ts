@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import { disposeAll, IKeaDisposable, KeaDisposable } from "../core/kea-disposable";
-import { IRepository, IssueCommentsPayload } from "../repository/repository";
+import { IssueCommentsPayload } from "../repository/remote-repository";
+import { IRepository } from "../repository/repository";
 import { BaseTreeDecorationProvider } from "./base-tree-decoration-provider";
 import { createCommentsRootDecorationUri } from "./decoration-schemes";
 
@@ -28,7 +29,7 @@ export class TreeDecorationManager extends KeaDisposable implements ITreeDecorat
     this.#repositoryListeners = [];
 
     for (const repository of repositories) {
-      const listener = repository.onDidChangeIssueComments((payload) => {
+      const listener = repository.remoteRepository.onDidChangeIssueComments((payload) => {
         this.#onDidChangeIssueComments(repository, payload);
       });
 
@@ -44,7 +45,7 @@ export class TreeDecorationManager extends KeaDisposable implements ITreeDecorat
     for (const provider of this.#fileDecorationProviders) {
       const uri = createCommentsRootDecorationUri({
         pullId: payload.issueId,
-        accountKey: repository.account.accountKey,
+        accountKey: repository.remoteRepository.account.accountKey,
       });
 
       provider.refresh(uri);
