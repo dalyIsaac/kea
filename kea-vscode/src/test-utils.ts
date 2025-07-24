@@ -292,6 +292,16 @@ export const createTreeNodeProviderStub = (props: Partial<ITreeNodeProvider<ITre
   ...props,
 });
 
+export const createPullRequestContentsProviderStub = (props: Partial<PullRequestContentsProvider> = {}): PullRequestContentsProvider => ({
+  getChildren: sinon.stub(),
+  getTreeItem: sinon.stub(),
+  refresh: sinon.stub(),
+  onDidChangeTreeData: sinon.stub(),
+  openPullRequest: sinon.stub(),
+  dispose: sinon.stub(),
+  ...props,
+}) as PullRequestContentsProvider;
+
 export const createRepositoryManagerStub = (props: Partial<IRepositoryManager> = {}): IRepositoryManager => ({
   refresh: sinon.stub(),
   getAllRepositories: sinon.stub(),
@@ -335,7 +345,7 @@ export const createKeaContextStub = (props: Partial<IKeaContext> = {}): IKeaCont
     treeView: {} as vscode.TreeView<any>,
   },
   pullRequestContents: {
-    treeViewProvider: createTreeNodeProviderStub() as PullRequestContentsProvider,
+    treeViewProvider: createPullRequestContentsProviderStub(),
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     treeView: {} as vscode.TreeView<any>,
   },
