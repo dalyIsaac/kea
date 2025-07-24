@@ -1,19 +1,22 @@
 import * as vscode from "vscode";
 import { ICheckoutPullRequestCommandArgs } from "../../commands/commands/checkout-pull-request";
+import { IKeaContext } from "../../core/context";
 import { trimLength } from "../../core/utils";
 import { IRepository } from "../../repository/repository";
 import { PullRequest, PullRequestGitRef, PullRequestId } from "../../types/kea";
 import { CollapsibleState, getCollapsibleState, ITreeNode } from "../tree-node";
 
 export class PullRequestListNode implements ITreeNode, ICheckoutPullRequestCommandArgs {
+  protected _ctx: IKeaContext;
   protected _pullRequest: PullRequest;
   protected _repository: IRepository;
 
   collapsibleState: CollapsibleState = "none";
 
-  constructor(pullRequest: PullRequest, repository: IRepository) {
+  constructor(ctx: IKeaContext, pullRequest: PullRequest, repository: IRepository) {
     this.collapsibleState = "none";
 
+    this._ctx = ctx;
     this._repository = repository;
     this._pullRequest = pullRequest;
   }
@@ -52,12 +55,11 @@ export class PullRequestListNode implements ITreeNode, ICheckoutPullRequestComma
       label: this._pullRequest.title,
       description,
       collapsibleState: getCollapsibleState(this.collapsibleState),
-      contextValue: `pullRequest${isCheckedOut ? ":checkedout" : ""}`, // Add state to contextValue
-      command: {
-        command: "kea.openPullRequest",
-        title: "Open Pull Request",
-        arguments: [[this._repository.remoteRepository.account.accountKey, pullId]],
-      },
+      contextValue: `pullRequest${isCheckedOut ? ":checkedout" : ""}`,
+      command: this._ctx.commandManager.createCommand("kea.openPullRequest", "Open Pull Request", {
+        accountKey: this._repository.remoteRepository.account.accountKey,
+        pullRequestId: pullId,
+      }),
       tooltip: `${head}...${base}${isCheckedOut ? " (Checked out)" : ""}`,
       iconPath: iconPath,
     };

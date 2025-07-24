@@ -29,7 +29,7 @@ export class RemoteFileTreeNode extends BaseFileTreeNode {
   getTreeItem = (): vscode.TreeItem => {
     const treeItem = this.createBaseTreeItem();
 
-    treeItem.command = this._ctx.commandManager.getCommand("kea.openCommitFileDiff", "Open File Diff", {
+    treeItem.command = this._ctx.commandManager.createCommand("kea.openCommitFileDiff", "Open File Diff", {
       resourceUri: this.#decorationUri,
     });
 

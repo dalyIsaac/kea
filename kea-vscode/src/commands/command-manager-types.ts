@@ -21,9 +21,21 @@ export const COMMANDS = {
   "kea.openCommitFileDiff": createOpenCommitFileDiffCommand,
 } satisfies Record<string, CreateCommand>;
 
+export type CommandName = keyof typeof COMMANDS;
+
 export type CommandMap = Record<keyof typeof COMMANDS, ReturnType<(typeof COMMANDS)[keyof typeof COMMANDS]>>;
 
+export type CommandArgs<TCommandName extends CommandName> = (typeof COMMANDS)[TCommandName] extends (
+  ctx: IKeaContext,
+) => (...args: infer P) => unknown
+  ? P
+  : never;
+
 export interface ICommandManager extends IKeaDisposable {
-  executeCommand: (commandName: keyof typeof COMMANDS, ...args: unknown[]) => Thenable<void>;
-  getCommand: (commandName: keyof typeof COMMANDS, title: string, ...args: unknown[]) => vscode.Command;
+  executeCommand: (commandName: CommandName, ...args: unknown[]) => Thenable<void>;
+  createCommand: <TCommandName extends CommandName>(
+    commandName: TCommandName,
+    title: string,
+    ...args: CommandArgs<TCommandName>
+  ) => vscode.Command;
 }

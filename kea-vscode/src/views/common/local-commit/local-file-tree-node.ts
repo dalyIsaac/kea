@@ -35,7 +35,7 @@ export class LocalFileTreeNode extends BaseFileTreeNode {
   getTreeItem = (): vscode.TreeItem => {
     const treeItem = this.createBaseTreeItem();
 
-    treeItem.command = this._ctx.commandManager.getCommand("kea.openCommitFileDiff", "Open File Diff", {
+    treeItem.command = this._ctx.commandManager.createCommand("kea.openCommitFileDiff", "Open File Diff", {
       commitSha: this.#commit.sha,
       filePath: this.#file.filePath,
       workspacePath: this.#localGitRepo.path,

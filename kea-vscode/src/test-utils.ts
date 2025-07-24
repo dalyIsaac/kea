@@ -292,15 +292,16 @@ export const createTreeNodeProviderStub = (props: Partial<ITreeNodeProvider<ITre
   ...props,
 });
 
-export const createPullRequestContentsProviderStub = (props: Partial<PullRequestContentsProvider> = {}): PullRequestContentsProvider => ({
-  getChildren: sinon.stub(),
-  getTreeItem: sinon.stub(),
-  refresh: sinon.stub(),
-  onDidChangeTreeData: sinon.stub(),
-  openPullRequest: sinon.stub(),
-  dispose: sinon.stub(),
-  ...props,
-}) as PullRequestContentsProvider;
+export const createPullRequestContentsProviderStub = (props: Partial<PullRequestContentsProvider> = {}): PullRequestContentsProvider =>
+  ({
+    getChildren: sinon.stub(),
+    getTreeItem: sinon.stub(),
+    refresh: sinon.stub(),
+    onDidChangeTreeData: sinon.stub(),
+    openPullRequest: sinon.stub(),
+    dispose: sinon.stub(),
+    ...props,
+  }) as PullRequestContentsProvider;
 
 export const createRepositoryManagerStub = (props: Partial<IRepositoryManager> = {}): IRepositoryManager => ({
   refresh: sinon.stub(),
@@ -326,7 +327,7 @@ export const createGitManagerStub = (props: Partial<IGitManager> = {}): IGitMana
 
 export const createCommandManagerStub = (props: Partial<ICommandManager> = {}): ICommandManager => ({
   executeCommand: sinon.stub() as unknown as ICommandManager["executeCommand"],
-  getCommand: sinon.stub() as unknown as ICommandManager["getCommand"],
+  createCommand: sinon.stub() as unknown as ICommandManager["createCommand"],
   dispose: sinon.stub(),
   ...props,
 });

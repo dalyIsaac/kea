@@ -32,7 +32,7 @@ const setupStubs = () => {
 
   const ctx = createKeaContextStub({
     commandManager: createCommandManagerStub({
-      getCommand: sinon.stub().returns({
+      createCommand: sinon.stub().returns({
         command: "kea.openCommitFileDiff",
         title: "Open File Diff",
         arguments: [{}],
