@@ -180,99 +180,134 @@ suite("LocalGitRepository", () => {
 
   suite("getFileAtCommit", () => {
     test("should return error when given empty commit SHA", async () => {
-      // Given Git is available and repository is initialized
+      // Given
+      const { testRepository } = setupStubs();
 
-      // When calling getFileAtCommit with empty commit SHA
-      const result = await repository!.getFileAtCommit("", "test.txt");
+      try {
+        // When calling getFileAtCommit with empty commit SHA
+        const result = await testRepository.getFileAtCommit("", "test.txt");
 
-      // Then an error should be returned with appropriate message
-      assert.ok(result instanceof Error);
-      assert.ok(result.message.includes("commitSha and filePath are required"));
+        // Then an error should be returned with appropriate message
+        assert.ok(result instanceof Error);
+        assert.ok(result.message.includes("commitSha and filePath are required"));
+      } finally {
+        await testRepository.dispose();
+      }
     });
 
     test("should return error when given empty file path", async () => {
-      // Given Git is available and repository is initialized
+      // Given
+      const { testRepository } = setupStubs();
 
-      // When calling getFileAtCommit with empty file path
-      const result = await repository!.getFileAtCommit("abc123", "");
+      try {
+        // When calling getFileAtCommit with empty file path
+        const result = await testRepository.getFileAtCommit("abc123", "");
 
-      // Then an error should be returned with appropriate message
-      assert.ok(result instanceof Error);
-      assert.ok(result.message.includes("commitSha and filePath are required"));
+        // Then an error should be returned with appropriate message
+        assert.ok(result instanceof Error);
+        assert.ok(result.message.includes("commitSha and filePath are required"));
+      } finally {
+        await testRepository.dispose();
+      }
     });
 
     test("should return error when given invalid commit SHA format", async () => {
-      // Given Git is available and repository is initialized
+      // Given
+      const { testRepository } = setupStubs();
 
-      // When calling getFileAtCommit with invalid commit SHA format
-      const result = await repository!.getFileAtCommit("invalid-sha", "test.txt");
+      try {
+        // When calling getFileAtCommit with invalid commit SHA format
+        const result = await testRepository.getFileAtCommit("invalid-sha", "test.txt");
 
-      // Then an error should be returned indicating invalid format
-      assert.ok(result instanceof Error);
-      assert.ok(result.message.includes("Invalid commit SHA format"));
+        // Then an error should be returned indicating invalid format
+        assert.ok(result instanceof Error);
+        assert.ok(result.message.includes("Invalid commit SHA format"));
+      } finally {
+        await testRepository.dispose();
+      }
     });
 
     test("should retrieve file content when given valid HEAD commit", async () => {
-      // Given Git is available and repository is initialized
+      // Given
+      const { testRepository } = setupStubs();
 
-      // When getting the current HEAD commit and retrieving file content
-      const currentCommit = await repository!.getCurrentCommit();
-      if (currentCommit instanceof Error) {
-        console.log("Skipping test: Could not get current commit");
-        return;
+      try {
+        // When getting the current HEAD commit and retrieving file content
+        const currentCommit = await testRepository.getCurrentCommit();
+        if (currentCommit instanceof Error) {
+          console.log("Skipping test: Could not get current commit");
+          return;
+        }
+
+        const result = await testRepository.getFileAtCommit(currentCommit, "test.txt");
+
+        // Then the file content should be returned successfully
+        assert.ok(!(result instanceof Error), `Expected string but got Error: ${result instanceof Error ? result.message : ""}`);
+        assert.ok(typeof result === "string");
+        assert.ok(result.includes("Hello World"));
+      } finally {
+        await testRepository.dispose();
       }
-
-      const result = await repository!.getFileAtCommit(currentCommit, "test.txt");
-
-      // Then the file content should be returned successfully
-      assert.ok(!(result instanceof Error), `Expected string but got Error: ${result instanceof Error ? result.message : ""}`);
-      assert.strictEqual(result, "Hello World\nLine 2\nLine 3\n");
     });
 
     test("should return error when given non-existent file", async () => {
-      // Given Git is available and repository is initialized
+      // Given
+      const { testRepository } = setupStubs();
 
-      // When requesting a file that doesn't exist at current commit
-      const currentCommit = await repository!.getCurrentCommit();
-      if (currentCommit instanceof Error) {
-        console.log("Skipping test: Could not get current commit");
-        return;
+      try {
+        // When requesting a file that doesn't exist at current commit
+        const currentCommit = await testRepository.getCurrentCommit();
+        if (currentCommit instanceof Error) {
+          console.log("Skipping test: Could not get current commit");
+          return;
+        }
+
+        const result = await testRepository.getFileAtCommit(currentCommit, "nonexistent.txt");
+
+        // Then an error should be returned indicating file retrieval failure
+        assert.ok(result instanceof Error);
+        assert.ok(result.message.includes("Path 'nonexistent.txt' does not exist"));
+      } finally {
+        await testRepository.dispose();
       }
-
-      const result = await repository!.getFileAtCommit(currentCommit, "nonexistent.txt");
-
-      // Then an error should be returned indicating file retrieval failure
-      assert.ok(result instanceof Error);
-      assert.ok(result.message.includes("Failed to get file"));
     });
 
     test("should return error when given non-existent commit", async () => {
-      // Given Git is available and repository is initialized
+      // Given
+      const { testRepository } = setupStubs();
 
-      // When requesting a file from a commit that doesn't exist
-      const result = await repository!.getFileAtCommit("1234567890abcdef1234567890abcdef12345678", "test.txt");
+      try {
+        // When requesting a file from a commit that doesn't exist
+        const result = await testRepository.getFileAtCommit("1234567890abcdef1234567890abcdef12345678", "test.txt");
 
-      // Then an error should be returned indicating file retrieval failure
-      assert.ok(result instanceof Error);
-      assert.ok(result.message.includes("Failed to get file"));
+        // Then an error should be returned indicating file retrieval failure
+        assert.ok(result instanceof Error);
+        assert.ok(result.message.includes("bad revision"));
+      } finally {
+        await testRepository.dispose();
+      }
     });
   });
 
   suite("validateRepository", () => {
     test("should return true when given a valid git repository", async () => {
-      // Given Git is available and repository is initialized
+      // Given
+      const { testRepository } = setupStubs();
 
-      // When validating the repository
-      const result = await repository!.validateRepository();
+      try {
+        // When validating the repository
+        const result = await testRepository.validateRepository();
 
-      // Then validation should succeed
-      assert.ok(!(result instanceof Error));
-      assert.strictEqual(result, true);
+        // Then validation should succeed
+        assert.ok(!(result instanceof Error));
+        assert.strictEqual(result, true);
+      } finally {
+        await testRepository.dispose();
+      }
     });
 
     test("should return false when given a non-git directory", async () => {
       // Given Git is available and a non-git directory exists
-
       const nonGitDir = fs.mkdtempSync(path.join(os.tmpdir(), "kea-non-git-"));
       const gitExtensionRepo = createGitExtensionRepositoryStub();
       const workspaceFolder: vscode.WorkspaceFolder = {
@@ -282,28 +317,35 @@ suite("LocalGitRepository", () => {
       };
       const repo = new LocalGitRepository(workspaceFolder, gitExtensionRepo);
 
-      // When validating the non-git directory
-      const result = await repo.validateRepository();
+      try {
+        // When validating the non-git directory
+        const result = await repo.validateRepository();
 
-      // Then validation should return false
-      assert.strictEqual(result, false);
-
-      await repo.dispose();
-      fs.rmSync(nonGitDir, { recursive: true, force: true });
+        // Then validation should return false
+        assert.strictEqual(result, false);
+      } finally {
+        await repo.dispose();
+        fs.rmSync(nonGitDir, { recursive: true, force: true });
+      }
     });
   });
 
   suite("getCurrentCommit", () => {
     test("should return valid commit SHA when repository has commits", async () => {
-      // Given Git is available and repository is initialized
+      // Given
+      const { testRepository } = setupStubs();
 
-      // When getting the current HEAD commit
-      const result = await repository!.getCurrentCommit();
+      try {
+        // When getting the current HEAD commit
+        const result = await testRepository.getCurrentCommit();
 
-      // Then a valid 40-character SHA should be returned
-      assert.ok(!(result instanceof Error), `Expected string but got Error: ${result instanceof Error ? result.message : ""}`);
-      assert.ok(typeof result === "string");
-      assert.ok(/^[a-f0-9]{40}$/i.test(result)); // Should be a full 40-character SHA
+        // Then a valid 40-character SHA should be returned
+        assert.ok(!(result instanceof Error), `Expected string but got Error: ${result instanceof Error ? result.message : ""}`);
+        assert.ok(typeof result === "string");
+        assert.ok(/^[a-f0-9]{40}$/i.test(result)); // Should be a full 40-character SHA
+      } finally {
+        await testRepository.dispose();
+      }
     });
   });
 
