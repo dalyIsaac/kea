@@ -6,7 +6,7 @@ import * as os from "os";
 import * as path from "path";
 import * as vscode from "vscode";
 import { WrappedError } from "../core/wrapped-error";
-import { createApiCacheStub } from "../test-utils";
+import { createGitExtensionRepositoryStub } from "../test-utils";
 import { LocalGitRepository } from "./local-git-repository";
 
 suite("LocalGitRepository", () => {
@@ -101,7 +101,7 @@ suite("LocalGitRepository", () => {
 
   const setupStubs = () => {
     const testTempDir = fs.mkdtempSync(path.join(os.tmpdir(), "kea-git-test-"));
-    const cache = createApiCacheStub();
+    const gitExtensionRepo = createGitExtensionRepositoryStub();
 
     const repoCreated = createTestRepository(testTempDir);
     if (!repoCreated) {
@@ -113,11 +113,11 @@ suite("LocalGitRepository", () => {
       name: path.basename(testTempDir),
       index: 0,
     };
-    const testRepository = new LocalGitRepository(workspaceFolder, cache);
+    const testRepository = new LocalGitRepository(workspaceFolder, gitExtensionRepo);
 
     return {
       testTempDir,
-      cache,
+      gitExtensionRepo,
       testRepository,
       workspaceFolder,
     };
@@ -134,8 +134,8 @@ suite("LocalGitRepository", () => {
 
   suite("constructor", () => {
     test("should create instance when given a repository path and cache", async () => {
-      // Given a test cache and repository path
-      const testCache = createApiCacheStub();
+      // Given a test git extension repository and workspace folder
+      const gitExtensionRepo = createGitExtensionRepositoryStub();
       const workspaceFolder: vscode.WorkspaceFolder = {
         uri: vscode.Uri.file("/test/path"),
         name: "test",
@@ -143,7 +143,7 @@ suite("LocalGitRepository", () => {
       };
 
       // When creating a new LocalGitRepository instance
-      const repo = new LocalGitRepository(workspaceFolder, testCache);
+      const repo = new LocalGitRepository(workspaceFolder, gitExtensionRepo);
 
       // Then the repository instance should be created successfully
       assert.ok(repo, "Repository instance should be created");
@@ -152,14 +152,22 @@ suite("LocalGitRepository", () => {
 
     test("should handle cross-platform paths correctly in constructor", async () => {
       // Given test caches and different path formats
-      const testCache1 = createApiCacheStub();
-      const testCache2 = createApiCacheStub();
-      const windowsPath = "C:\\Users\\test\\repo";
-      const unixPath = "/home/test/repo";
+      const gitExtensionRepo1 = createGitExtensionRepositoryStub();
+      const gitExtensionRepo2 = createGitExtensionRepositoryStub();
+      const windowsFolder: vscode.WorkspaceFolder = {
+        uri: vscode.Uri.file("C:\\Users\\test\\repo"),
+        name: "repo",
+        index: 0,
+      };
+      const unixFolder: vscode.WorkspaceFolder = {
+        uri: vscode.Uri.file("/home/test/repo"),
+        name: "repo",
+        index: 0,
+      };
 
       // When creating LocalGitRepository instances with different path formats
-      const repo1 = new LocalGitRepository(windowsPath, testCache1);
-      const repo2 = new LocalGitRepository(unixPath, testCache2);
+      const repo1 = new LocalGitRepository(windowsFolder, gitExtensionRepo1);
+      const repo2 = new LocalGitRepository(unixFolder, gitExtensionRepo2);
 
       // Then both instances should be created successfully regardless of platform
       assert.ok(repo1, "Repository instance with Windows path should be created");
@@ -266,8 +274,13 @@ suite("LocalGitRepository", () => {
       // Given Git is available and a non-git directory exists
 
       const nonGitDir = fs.mkdtempSync(path.join(os.tmpdir(), "kea-non-git-"));
-      const testCache = createApiCacheStub();
-      const repo = new LocalGitRepository(nonGitDir, testCache);
+      const gitExtensionRepo = createGitExtensionRepositoryStub();
+      const workspaceFolder: vscode.WorkspaceFolder = {
+        uri: vscode.Uri.file(nonGitDir),
+        name: path.basename(nonGitDir),
+        index: 0,
+      };
+      const repo = new LocalGitRepository(workspaceFolder, gitExtensionRepo);
 
       // When validating the non-git directory
       const result = await repo.validateRepository();
@@ -394,8 +407,13 @@ suite("LocalGitRepository", () => {
     test("should handle invalid repository path gracefully when executing git commands", async () => {
       // Given Git is available and an invalid repository path
 
-      const testCache = createApiCacheStub();
-      const repo = new LocalGitRepository("/invalid/path/that/does/not/exist", testCache);
+      const gitExtensionRepo = createGitExtensionRepositoryStub();
+      const workspaceFolder: vscode.WorkspaceFolder = {
+        uri: vscode.Uri.file("/invalid/path/that/does/not/exist"),
+        name: "invalid",
+        index: 0,
+      };
+      const repo = new LocalGitRepository(workspaceFolder, gitExtensionRepo);
 
       // When attempting to get a file from the invalid repository
       const result = await repo.getFileAtCommit("1234567", "test.txt");
@@ -446,8 +464,13 @@ suite("LocalGitRepository", () => {
       try {
         // When creating a new isolated repository from scratch
         createTestRepository(isolatedDir);
-        const testCache = createApiCacheStub();
-        isolatedRepo = new LocalGitRepository(isolatedDir, testCache);
+        const gitExtensionRepo = createGitExtensionRepositoryStub();
+        const workspaceFolder: vscode.WorkspaceFolder = {
+          uri: vscode.Uri.file(isolatedDir),
+          name: path.basename(isolatedDir),
+          index: 0,
+        };
+        isolatedRepo = new LocalGitRepository(workspaceFolder, gitExtensionRepo);
 
         // Then the repository should work without any external dependencies
         const isValid = await isolatedRepo.validateRepository();
