@@ -2,7 +2,7 @@ import * as assert from "assert";
 import * as vscode from "vscode";
 import { IAccountKey } from "../account/account";
 import { FileStatus, RepoId } from "../types/kea";
-import { createGitDecorationUri } from "./decoration-schemes";
+import { createLocalFileDecorationUri } from "./decoration-schemes";
 import { FileGitDecorationProvider } from "./file-git-decoration-provider";
 
 suite("FileGitDecorationProvider", () => {
@@ -76,9 +76,7 @@ suite("FileGitDecorationProvider", () => {
       const provider = new FileGitDecorationProvider();
       const accountKey: IAccountKey = { providerId: "github", accountId: "accountId" };
       const repoId: RepoId = { owner: "owner", repo: "repo" };
-      const uri = createGitDecorationUri({
-        accountKey,
-        repoId,
+      const uri = createLocalFileDecorationUri({
         filePath: "test/file.ts",
         fileStatus: status,
       });

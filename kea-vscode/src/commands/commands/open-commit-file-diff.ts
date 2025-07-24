@@ -17,7 +17,21 @@ export const createOpenCommitFileDiffCommand =
   (ctx: IKeaContext) =>
   async (args?: IOpenCommitFileDiffCommandArgs): Promise<Error | void> => {
     if (args?.commitSha && args.filePath && args.workspacePath) {
-      await handleLocalCommitFileDiff(args.commitSha, args.filePath, args.workspacePath);
+      // Get the local git repository for the workspace
+      const workspaceFolder: vscode.WorkspaceFolder = {
+        uri: vscode.Uri.file(args.workspacePath),
+        name: path.basename(args.workspacePath),
+        index: 0,
+      };
+      
+      const localGitRepo = await ctx.gitManager.getLocalGitRepository(workspaceFolder);
+      if (localGitRepo instanceof Error) {
+        Logger.error("Failed to get local git repository", localGitRepo);
+        vscode.window.showErrorMessage("Failed to access local git repository");
+        return;
+      }
+
+      await handleLocalCommitFileDiff(args.commitSha, args.filePath, args.workspacePath, localGitRepo);
       return;
     }
 
@@ -66,7 +80,7 @@ export const createOpenCommitFileDiffCommand =
         return;
       }
 
-      await handleRemoteApiFileDiff(currentCommit, filePath, workspaceFolder.uri.fsPath);
+      await handleRemoteApiFileDiff(currentCommit, filePath, workspaceFolder.uri.fsPath, localGitRepo);
       return;
     } catch (error) {
       Logger.error("Error opening commit file diff", error);
@@ -74,10 +88,8 @@ export const createOpenCommitFileDiffCommand =
     }
   };
 
-async function handleLocalCommitFileDiff(commitSha: string, filePath: string, workspacePath: string): Promise<void> {
+async function handleLocalCommitFileDiff(commitSha: string, filePath: string, workspacePath: string, localGitRepo: ILocalGitRepository): Promise<void> {
   try {
-    const localGitRepo = new LocalGitRepository(workspacePath);
-
     const parentCommit = await localGitRepo.getParentCommit(commitSha);
 
     let leftTitle: string;
@@ -124,10 +136,8 @@ async function handleLocalCommitFileDiff(commitSha: string, filePath: string, wo
   }
 }
 
-async function handleRemoteApiFileDiff(commitSha: string, filePath: string, workspacePath: string): Promise<void> {
+async function handleRemoteApiFileDiff(commitSha: string, filePath: string, workspacePath: string, localGitRepo: ILocalGitRepository): Promise<void> {
   try {
-    const localGitRepo = new LocalGitRepository(workspacePath);
-
     const parentCommit = await localGitRepo.getParentCommit(commitSha);
 
     let leftTitle: string;

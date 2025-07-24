@@ -1,3 +1,4 @@
+import * as path from "path";
 import * as vscode from "vscode";
 import { IKeaContext } from "./context";
 import { Logger } from "./logger";
@@ -33,8 +34,18 @@ export class CommitFileContentProvider implements vscode.TextDocumentContentProv
         return "";
       }
 
-      // Create a local git repository instance.
-      const localGitRepo = new LocalGitRepository(workspacePath, this.#ctx.apiCache);
+      // Get git repository through git manager
+      const workspaceFolder: vscode.WorkspaceFolder = {
+        uri: vscode.Uri.file(workspacePath),
+        name: path.basename(workspacePath),
+        index: 0,
+      };
+      
+      const localGitRepo = await this.#ctx.gitManager.getLocalGitRepository(workspaceFolder);
+      if (localGitRepo instanceof Error) {
+        Logger.error("Failed to get local git repository", localGitRepo);
+        return "";
+      }
       
       // Handle initial commit case (null SHA).
       if (commitSha === "0000000000000000000000000000000000000000") {

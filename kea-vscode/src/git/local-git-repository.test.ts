@@ -4,6 +4,7 @@ import { execFileSync } from "child_process";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
+import * as vscode from "vscode";
 import { WrappedError } from "../core/wrapped-error";
 import { createApiCacheStub } from "../test-utils";
 import { LocalGitRepository } from "./local-git-repository";
@@ -107,12 +108,18 @@ suite("LocalGitRepository", () => {
       throw new Error("Test repository creation failed - Git-dependent tests will be skipped");
     }
 
-    const testRepository = new LocalGitRepository(testTempDir, cache);
+    const workspaceFolder: vscode.WorkspaceFolder = {
+      uri: vscode.Uri.file(testTempDir),
+      name: path.basename(testTempDir),
+      index: 0,
+    };
+    const testRepository = new LocalGitRepository(workspaceFolder, cache);
 
     return {
       testTempDir,
       cache,
       testRepository,
+      workspaceFolder,
     };
   };
 
@@ -129,10 +136,14 @@ suite("LocalGitRepository", () => {
     test("should create instance when given a repository path and cache", async () => {
       // Given a test cache and repository path
       const testCache = createApiCacheStub();
-      const testPath = "/test/path";
+      const workspaceFolder: vscode.WorkspaceFolder = {
+        uri: vscode.Uri.file("/test/path"),
+        name: "test",
+        index: 0,
+      };
 
       // When creating a new LocalGitRepository instance
-      const repo = new LocalGitRepository(testPath, testCache);
+      const repo = new LocalGitRepository(workspaceFolder, testCache);
 
       // Then the repository instance should be created successfully
       assert.ok(repo, "Repository instance should be created");

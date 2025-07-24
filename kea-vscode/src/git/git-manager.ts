@@ -1,9 +1,11 @@
 import * as vscode from "vscode";
 import { WrappedError } from "../core/wrapped-error";
 import { GitApi, GitExtension, Repository as GitExtensionRepository } from "../types/git";
+import { ILocalGitRepository, LocalGitRepository } from "./local-git-repository";
 
 export interface IGitManager {
   getGitExtensionRepository: (workspaceFolder: vscode.WorkspaceFolder) => Promise<GitExtensionRepository | Error>;
+  getLocalGitRepository: (workspaceFolder: vscode.WorkspaceFolder) => Promise<ILocalGitRepository | Error>;
 }
 
 export class GitManager implements IGitManager {
@@ -45,5 +47,13 @@ export class GitManager implements IGitManager {
     }
 
     return repo;
+  };
+
+  getLocalGitRepository = async (workspaceFolder: vscode.WorkspaceFolder): Promise<ILocalGitRepository | Error> => {
+    const gitExtRepo = await this.getGitExtensionRepository(workspaceFolder);
+    if (gitExtRepo instanceof Error) {
+      return gitExtRepo;
+    }
+    return new LocalGitRepository(workspaceFolder, gitExtRepo);
   };
 }
