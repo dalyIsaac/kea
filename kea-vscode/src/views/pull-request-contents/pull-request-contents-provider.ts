@@ -1,7 +1,7 @@
 import { IAccountKey } from "../../account/account";
 import { IKeaContext } from "../../core/context";
 import { Logger } from "../../core/logger";
-import { IKeaRepository } from "../../repository/kea-repository";
+import { IRepository } from "../../repository/repository";
 import { isSamePullRequest } from "../../type-utils";
 import { PullRequest, PullRequestId } from "../../types/kea";
 import { TreeNodeProvider } from "../tree-node-provider";
@@ -16,7 +16,7 @@ export type PullRequestTreeNode = CommitsRootTreeNode | CommentsRootTreeNode | F
  */
 export class PullRequestContentsProvider extends TreeNodeProvider<PullRequestTreeNode> {
   #ctx: IKeaContext;
-  #pullInfo: { repository: IKeaRepository; pullId: PullRequestId; pullRequest: PullRequest } | undefined;
+  #pullInfo: { repository: IRepository; pullId: PullRequestId; pullRequest: PullRequest } | undefined;
   #commentsRootTreeNode?: CommentsRootTreeNode;
   #filesRootTreeNode?: FilesRootTreeNode;
   #commitsRootTreeNode?: CommitsRootTreeNode;
@@ -24,6 +24,14 @@ export class PullRequestContentsProvider extends TreeNodeProvider<PullRequestTre
   constructor(ctx: IKeaContext) {
     super();
     this.#ctx = ctx;
+
+    // Listen for git repository state changes to refresh commits tree
+    this._registerDisposable(
+      this.#ctx.repositoryManager.onRepositoryStateChanged(() => {
+        // Refresh the commits tree when git state changes (e.g., branch checkout)
+        this._onDidChangeTreeData.fire();
+      }),
+    );
   }
 
   override _getRootChildren = async (): Promise<PullRequestTreeNode[]> => {
@@ -32,7 +40,7 @@ export class PullRequestContentsProvider extends TreeNodeProvider<PullRequestTre
       return Promise.resolve([]);
     }
 
-    const { repository, pullId } = this.#pullInfo;
+    const { repository, pullId, pullRequest } = this.#pullInfo;
 
     if (
       !isSamePullRequest(this.#commentsRootTreeNode?.pullId, pullId) ||
@@ -42,8 +50,8 @@ export class PullRequestContentsProvider extends TreeNodeProvider<PullRequestTre
       await this.#commentsRootTreeNode?.dispose();
 
       this.#commentsRootTreeNode = new CommentsRootTreeNode(repository, pullId, this);
-      this.#filesRootTreeNode = new FilesRootTreeNode(repository, pullId);
-      this.#commitsRootTreeNode = new CommitsRootTreeNode(repository, pullId);
+      this.#filesRootTreeNode = new FilesRootTreeNode(this.#ctx, repository, pullId);
+      this.#commitsRootTreeNode = new CommitsRootTreeNode(repository, pullId, this.#ctx, pullRequest);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -58,7 +66,7 @@ export class PullRequestContentsProvider extends TreeNodeProvider<PullRequestTre
       return false;
     }
 
-    const pullRequest = await repository.getPullRequest(pullId);
+    const pullRequest = await repository.remoteRepository.getPullRequest(pullId);
     if (pullRequest instanceof Error) {
       Logger.error("Error getting pull request", pullRequest);
       this.#pullInfo = undefined;
@@ -79,7 +87,7 @@ export class PullRequestContentsProvider extends TreeNodeProvider<PullRequestTre
       return;
     }
 
-    const { owner, repo } = this.#pullInfo.repository.repoId;
+    const { owner, repo } = this.#pullInfo.repository.remoteRepository.repoId;
     this.#ctx.apiCache.invalidate(owner, repo);
   };
 }

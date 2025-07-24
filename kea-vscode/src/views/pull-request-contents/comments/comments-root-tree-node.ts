@@ -2,7 +2,8 @@ import * as vscode from "vscode";
 import { KeaDisposable } from "../../../core/kea-disposable";
 import { Logger } from "../../../core/logger";
 import { createCommentsRootDecorationUri } from "../../../decorations/decoration-schemes";
-import { IKeaRepository, IssueCommentsPayload, PullRequestReviewCommentsPayload } from "../../../repository/kea-repository";
+import { IssueCommentsPayload, PullRequestReviewCommentsPayload } from "../../../repository/remote-repository";
+import { IRepository } from "../../../repository/repository";
 import { isSamePullRequest } from "../../../type-utils";
 import { PullRequestId } from "../../../types/kea";
 import { CommentTreeNode } from "../../common/comment-tree-node";
@@ -16,7 +17,7 @@ import { ITreeNodeProvider } from "../../tree-node-provider";
 export class CommentsRootTreeNode extends KeaDisposable implements IParentTreeNode<CommentTreeNode | ReviewCommentTreeNode> {
   #label = "Comments";
   #resourceUri: vscode.Uri;
-  #repository: IKeaRepository;
+  #repository: IRepository;
   #provider: ITreeNodeProvider<ITreeNode>;
 
   #issueCommentsCount: number | undefined;
@@ -25,19 +26,21 @@ export class CommentsRootTreeNode extends KeaDisposable implements IParentTreeNo
   pullId: PullRequestId;
   collapsibleState: CollapsibleState = "none";
 
-  constructor(repository: IKeaRepository, id: PullRequestId, provider: ITreeNodeProvider<ITreeNode>) {
+  constructor(repository: IRepository, id: PullRequestId, provider: ITreeNodeProvider<ITreeNode>) {
     super();
     this.#repository = repository;
     this.pullId = id;
     this.#provider = provider;
 
     this.#resourceUri = createCommentsRootDecorationUri({
-      accountKey: this.#repository.account.accountKey,
+      accountKey: this.#repository.remoteRepository.account.accountKey,
       pullId: this.pullId,
     });
 
-    this._registerDisposable(this.#repository.onDidChangeIssueComments(this.#onDidChangeIssueComments));
-    this._registerDisposable(this.#repository.onDidChangePullRequestReviewComments(this.#onDidChangePullRequestReviewComments));
+    this._registerDisposable(this.#repository.remoteRepository.onDidChangeIssueComments(this.#onDidChangeIssueComments));
+    this._registerDisposable(
+      this.#repository.remoteRepository.onDidChangePullRequestReviewComments(this.#onDidChangePullRequestReviewComments),
+    );
   }
 
   getTreeItem = (): vscode.TreeItem => {
@@ -50,7 +53,11 @@ export class CommentsRootTreeNode extends KeaDisposable implements IParentTreeNo
       const count = (this.#issueCommentsCount ?? 0) + (this.#reviewCommentsCount ?? 0);
       treeItem.description = count > 1 ? `${count} comments` : `${count} comment`;
     } else {
-      void Promise.all([this.#repository.getPullRequestReviewComments(this.pullId), this.#repository.getIssueComments(this.pullId)]);
+      // If counts are not available, we fetch them to ensure the tree item is always up-to-date.
+      void Promise.all([
+        this.#repository.remoteRepository.getPullRequestReviewComments(this.pullId),
+        this.#repository.remoteRepository.getIssueComments(this.pullId),
+      ]);
     }
 
     return treeItem;
@@ -58,8 +65,8 @@ export class CommentsRootTreeNode extends KeaDisposable implements IParentTreeNo
 
   getChildren = async (): Promise<Array<CommentTreeNode | ReviewCommentTreeNode>> => {
     const [reviewComments, issueComments] = await Promise.all([
-      this.#repository.getPullRequestReviewComments(this.pullId),
-      this.#repository.getIssueComments(this.pullId),
+      this.#repository.remoteRepository.getPullRequestReviewComments(this.pullId),
+      this.#repository.remoteRepository.getIssueComments(this.pullId),
     ]);
 
     let hasFailed = false;

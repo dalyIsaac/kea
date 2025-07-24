@@ -24,4 +24,12 @@ export class CommandManager extends KeaDisposable implements ICommandManager {
     Logger.debug(`Executing command: ${commandName}`, ...args);
     return vscode.commands.executeCommand(commandName, ...args);
   };
+
+  createCommand: ICommandManager["createCommand"] = (commandName, title, ...args) => {
+    return {
+      command: commandName,
+      title,
+      arguments: args,
+    };
+  };
 }

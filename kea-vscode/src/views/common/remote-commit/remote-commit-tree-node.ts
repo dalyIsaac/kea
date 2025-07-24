@@ -1,22 +1,35 @@
 import * as vscode from "vscode";
-import { IKeaRepository } from "../../../repository/kea-repository";
-import { Commit } from "../../../types/kea";
+import { IKeaContext } from "../../../core/context";
+import { IRepository } from "../../../repository/repository";
+import { Commit, CommitFile, FileComment } from "../../../types/kea";
+import { BaseFileTreeNode } from "../../common/base-file-tree-node";
 import { BaseFilesRootTreeNode, FilesRootTreeNodeChild } from "../../common/base-files-root-tree-node";
+import { BaseFolderTreeNode } from "../../common/base-folder-tree-node";
 import { CollapsibleState, getCollapsibleState } from "../../tree-node";
+import { RemoteFileTreeNode } from "./remote-file-tree-node";
+import { RemoteFolderTreeNode } from "./remote-folder-tree-node";
 
 /**
  * Provides information about a file or directory in a commit.
  */
-export class CommitTreeNode extends BaseFilesRootTreeNode {
+export class RemoteCommitTreeNode extends BaseFilesRootTreeNode {
   #contextValue = "commit";
-  #iconPath = new vscode.ThemeIcon("git-commit");
+  #iconPath = new vscode.ThemeIcon("cloud");
   commit: Commit;
 
   collapsibleState: CollapsibleState = "collapsed";
 
-  constructor(repository: IKeaRepository, commit: Commit) {
-    super(repository);
+  constructor(ctx: IKeaContext, repository: IRepository, commit: Commit) {
+    super(ctx, repository);
     this.commit = commit;
+  }
+
+  protected createFileNode(file: CommitFile, comments: FileComment[]): BaseFileTreeNode {
+    return new RemoteFileTreeNode(this._ctx, this._repository.remoteRepository, file, comments);
+  }
+
+  protected createFolderNode(folderPath: string): BaseFolderTreeNode<FilesRootTreeNodeChild> {
+    return new RemoteFolderTreeNode(folderPath) as BaseFolderTreeNode<FilesRootTreeNodeChild>;
   }
 
   getTreeItem = (): vscode.TreeItem => {
@@ -37,8 +50,8 @@ export class CommitTreeNode extends BaseFilesRootTreeNode {
 
   getChildren = async (): Promise<FilesRootTreeNodeChild[]> => {
     const [files, comments] = await Promise.all([
-      this._repository.getCommitFiles(this.commit.sha),
-      this._repository.getCommitComments(this.commit.sha),
+      this._repository.remoteRepository.getCommitFiles(this.commit.sha),
+      this._repository.remoteRepository.getCommitComments(this.commit.sha),
     ]);
 
     if (files instanceof Error) {

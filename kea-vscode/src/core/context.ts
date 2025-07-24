@@ -4,6 +4,7 @@ import { ApiCache, IApiCache } from "../cache/api/api-cache";
 import { FileCache, IFileCache } from "../cache/file/file-cache";
 import { CommandManager } from "../commands/command-manager";
 import { ICommandManager } from "../commands/command-manager-types";
+import { CommitFileContentProvider } from "../core/commit-file-content-provider";
 import { ITreeDecorationManager, TreeDecorationManager } from "../decorations/tree-decoration-manager";
 import { GitManager, IGitManager } from "../git/git-manager";
 import { IRepositoryManager, RepositoryManager } from "../repository/repository-manager";
@@ -44,8 +45,8 @@ export class KeaContext extends KeaDisposable implements IKeaContext {
     this.fileCache = this._registerDisposable(new FileCache(extCtx, MAX_FILE_CACHE_SIZE));
 
     this.accountManager = new AccountManager();
-    this.gitManager = this._registerDisposable(new GitManager(this));
-    this.repositoryManager = new RepositoryManager();
+    this.gitManager = new GitManager();
+    this.repositoryManager = this._registerDisposable(new RepositoryManager(this));
 
     this.treeDecorationManager = this._registerDisposable(new TreeDecorationManager());
 
@@ -56,5 +57,7 @@ export class KeaContext extends KeaDisposable implements IKeaContext {
     this.pullRequestContents = this._registerDisposable(new TreeViewContainer("kea.pullRequestContents", prContentsProvider));
 
     this.commandManager = this._registerDisposable(new CommandManager(this));
+
+    this._registerDisposable(vscode.workspace.registerTextDocumentContentProvider("kea-commit-file", new CommitFileContentProvider(this)));
   }
 }

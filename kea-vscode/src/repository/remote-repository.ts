@@ -23,7 +23,7 @@ export interface PullRequestReviewCommentsPayload {
   comments: PullRequestComment[] | Error;
 }
 
-export interface IKeaRepository extends IKeaDisposable {
+export interface IRemoteRepository extends IKeaDisposable {
   account: IAccount;
   repoId: RepoId;
   remoteUrl: string;

@@ -1,4 +1,5 @@
 import * as assert from "assert";
+import * as sinon from "sinon";
 import * as vscode from "vscode";
 import {
   createCommitCommentStub,
@@ -10,28 +11,22 @@ import {
   createUserStub,
 } from "../../../test-utils";
 import { CommitComment, CommitFile } from "../../../types/kea";
-import { RemoteCommitTreeNode } from "../../common/remote-commit/remote-commit-tree-node";
-import { RemoteFileTreeNode } from "../../common/remote-commit/remote-file-tree-node";
-import { RemoteFolderTreeNode } from "../../common/remote-commit/remote-folder-tree-node";
 import { ReviewCommentTreeNode } from "../../common/review-comment-tree-node";
+import { RemoteCommitTreeNode } from "./remote-commit-tree-node";
+import { RemoteFileTreeNode } from "./remote-file-tree-node";
+import { RemoteFolderTreeNode } from "./remote-folder-tree-node";
 
-const createStubs = (
+const setupStubs = (
   stubs: {
-    getCommitFiles: CommitFile[] | Error;
-    getCommitComments: CommitComment[] | Error;
-  } = {
-    getCommitFiles: [],
-    getCommitComments: [],
-  },
+    files?: CommitFile[] | Error;
+    comments?: CommitComment[] | Error;
+  } = {},
 ) => {
   const remoteRepository = createRemoteRepositoryStub({
-    getCommitFiles: (_sha) => Promise.resolve(stubs.getCommitFiles),
-    getCommitComments: (_sha) => Promise.resolve(stubs.getCommitComments),
+    getCommitFiles: sinon.stub().resolves(stubs.files ?? []),
+    getCommitComments: sinon.stub().resolves(stubs.comments ?? []),
   });
-
   const repository = createRepositoryStub({ remoteRepository });
-
-  const ctx = createKeaContextStub();
 
   const testCommit = createCommitStub({
     sha: "test-sha",
@@ -44,13 +39,19 @@ const createStubs = (
     },
   });
 
-  return { ctx, repository, testCommit };
+  const ctx = createKeaContextStub();
+
+  return {
+    repository,
+    testCommit,
+    ctx,
+  };
 };
 
-suite("RemoteCommitTreeNode", () => {
+suite("CommitTreeNode", () => {
   test("constructor and getTreeItem should create a valid tree item", () => {
     // Given
-    const { ctx, repository, testCommit } = createStubs();
+    const { testCommit, repository, ctx } = setupStubs();
     const node = new RemoteCommitTreeNode(ctx, repository, testCommit);
 
     // When
@@ -61,13 +62,12 @@ suite("RemoteCommitTreeNode", () => {
     assert.strictEqual(treeItem.tooltip, "Test commit title\n\nThis is the commit body.");
     assert.strictEqual(treeItem.collapsibleState, vscode.TreeItemCollapsibleState.Collapsed);
     assert.strictEqual(treeItem.contextValue, "commit");
-    assert.deepStrictEqual(treeItem.iconPath, new vscode.ThemeIcon("git-commit"));
+    assert.deepStrictEqual(treeItem.iconPath, new vscode.ThemeIcon("cloud"));
   });
 
   test("getTreeItem should handle empty commit message", () => {
     // Given
-    const { ctx, repository } = createStubs();
-
+    const { repository, ctx } = setupStubs();
     // Provide all required nested properties when overriding commit
     const emptyMessageCommit = createCommitStub({
       commit: {
@@ -99,12 +99,7 @@ suite("RemoteCommitTreeNode", () => {
       createCommitCommentStub({ path: "src/file1.ts", body: "Comment 1", line: 10 }),
       createCommitCommentStub({ path: "README.md", body: "Comment 2", line: 5 }),
     ];
-
-    const { ctx, repository, testCommit } = createStubs({
-      getCommitFiles: files,
-      getCommitComments: comments,
-    });
-
+    const { repository, testCommit, ctx } = setupStubs({ files, comments });
     const node = new RemoteCommitTreeNode(ctx, repository, testCommit);
 
     // When
@@ -154,12 +149,7 @@ suite("RemoteCommitTreeNode", () => {
   test("getChildren should handle error fetching files", async () => {
     // Given
     const error = new Error("Failed to fetch files");
-
-    const { ctx, repository, testCommit } = createStubs({
-      getCommitFiles: error,
-      getCommitComments: [],
-    });
-
+    const { repository, testCommit, ctx } = setupStubs({ files: error });
     const node = new RemoteCommitTreeNode(ctx, repository, testCommit);
 
     // When
@@ -173,12 +163,7 @@ suite("RemoteCommitTreeNode", () => {
     // Given
     const files: CommitFile[] = [createFileStub({ filename: "file.ts" })];
     const error = new Error("Failed to fetch comments");
-
-    const { ctx, repository, testCommit } = createStubs({
-      getCommitFiles: files,
-      getCommitComments: error,
-    });
-
+    const { repository, testCommit, ctx } = setupStubs({ files, comments: error });
     const node = new RemoteCommitTreeNode(ctx, repository, testCommit);
 
     // When

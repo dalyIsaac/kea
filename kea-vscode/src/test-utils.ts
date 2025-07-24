@@ -10,14 +10,35 @@ import { ICommandManager } from "./commands/command-manager-types";
 import { IKeaContext } from "./core/context";
 import { ITreeDecorationManager } from "./decorations/tree-decoration-manager";
 import { IGitManager } from "./git/git-manager";
-import { IKeaRepository } from "./repository/kea-repository";
+import { ILocalGitRepository } from "./git/local-git-repository";
+import { IRemoteRepository } from "./repository/remote-repository";
+import { IRepository } from "./repository/repository";
 import { IRepositoryManager } from "./repository/repository-manager";
+import { Repository as GitExtensionRepository } from "./types/git";
 import { Commit, CommitComment, CommitFile, IssueComment, PullRequest, PullRequestComment, PullRequestGitRef, User } from "./types/kea";
 import { PullRequestContentsProvider } from "./views/pull-request-contents/pull-request-contents-provider";
 import { PullRequestListTreeProvider } from "./views/pull-request-list/pull-request-list-tree-provider";
 import { ITreeNode } from "./views/tree-node";
 import { ITreeNodeProvider } from "./views/tree-node-provider";
 
+/**
+ * Stubs event properties on an object, allowing you to simulate event listeners and firers for testing purposes.
+ *
+ * @template TObject - The type of the object to stub.
+ * @template TProperties - An array of keys from TObject representing event names.
+ * @param stub - The object whose event properties will be stubbed.
+ * @param eventNames - An array of property names (keys of TObject) to stub as events.
+ * @returns An object containing:
+ *   - `stub`: The stubbed object with event properties replaced by listener registration functions.
+ *   - `eventFirers`: A record mapping each event name to a function that fires the event with a given payload.
+ *
+ * @example
+ * ```typescript
+ * const { stub, eventFirers } = stubEvents(myObject, ['onChange', 'onUpdate']);
+ * stub.onChange((payload) => { /* listener code *\/ });
+ * eventFirers.onChange({ some: 'data' }); // Fires the event to all listeners
+ * ```
+ */
 export const stubEvents = <TObject extends object, TProperties extends Array<keyof TObject>>(
   stub: TObject,
   eventNames: TProperties,
@@ -54,13 +75,25 @@ export const stubEvents = <TObject extends object, TProperties extends Array<key
   return { stub: stubCopy, eventFirers };
 };
 
+export const subscribeToEvent = <TEvent extends vscode.Event<unknown>>(event: TEvent) => {
+  type Listener = Parameters<TEvent>[0];
+  type Args = Parameters<Listener>;
+
+  const calls: Args[] = [];
+
+  event((...args) => {
+    calls.push(args as Args);
+  });
+
+  return calls;
+};
+
 export const createAccountStub = (props: Partial<IAccount> = {}): IAccount => ({
   accountKey: {
     providerId: "providerId",
     accountId: "accountId",
   },
   isRepoForAccount: sinon.stub(),
-  tryCreateRepoForAccount: sinon.stub(),
   ...props,
 });
 
@@ -71,7 +104,7 @@ export const createUserStub = (props: Partial<User> = {}): User => ({
   ...props,
 });
 
-export const createRepositoryStub = (props: Partial<IKeaRepository> = {}): IKeaRepository => ({
+export const createRemoteRepositoryStub = (props: Partial<IRemoteRepository> = {}): IRemoteRepository => ({
   account: createAccountStub(),
   remoteUrl: "remoteUrl",
   repoId: {
@@ -88,6 +121,36 @@ export const createRepositoryStub = (props: Partial<IKeaRepository> = {}): IKeaR
   getCommitComments: sinon.stub(),
   onDidChangeIssueComments: sinon.stub(),
   onDidChangePullRequestReviewComments: sinon.stub(),
+  dispose: sinon.stub(),
+  ...props,
+});
+
+export const createLocalRepositoryStub = (props: Partial<ILocalGitRepository> = {}): ILocalGitRepository => ({
+  workspaceFolder: createWorkspaceFolderStub(),
+  path: "path/to/repo",
+  getFileAtCommit: sinon.stub(),
+  getBranchCommitsAheadOf: sinon.stub(),
+  getBranchCommits: sinon.stub(),
+  getBranchStatus: sinon.stub(),
+  getCurrentBranch: sinon.stub(),
+  getCurrentCommit: sinon.stub(),
+  getCommitsForPullRequest: sinon.stub(),
+  getCommitFiles: sinon.stub(),
+  getParentCommit: sinon.stub(),
+  checkout: sinon.stub(),
+  ...props,
+});
+
+// @ts-expect-error Partial stub.
+export const createGitExtensionRepositoryStub = (props: Partial<GitExtensionRepository> = {}): GitExtensionRepository => ({
+  rootUri: vscode.Uri.parse("file:///workspace"),
+  ...props,
+});
+
+export const createRepositoryStub = (props: Partial<IRepository> = {}): IRepository => ({
+  repoId: { owner: "owner", repo: "repo" },
+  remoteRepository: createRemoteRepositoryStub(),
+  localRepository: createLocalRepositoryStub(),
   dispose: sinon.stub(),
   ...props,
 });
@@ -124,7 +187,7 @@ export const createPullRequestStub = (props: Partial<PullRequest> = {}): PullReq
 
 export const createFileStub = (props: Partial<CommitFile> = {}): CommitFile => ({
   filename: "filename",
-  status: "unchanged",
+  status: "U",
   sha: "sha",
   additions: 0,
   deletions: 0,
@@ -230,8 +293,23 @@ export const createTreeNodeProviderStub = (props: Partial<ITreeNodeProvider<ITre
   ...props,
 });
 
+export const createPullRequestContentsProviderStub = (props: Partial<PullRequestContentsProvider> = {}): PullRequestContentsProvider =>
+  ({
+    getChildren: sinon.stub(),
+    getTreeItem: sinon.stub(),
+    refresh: sinon.stub(),
+    onDidChangeTreeData: sinon.stub(),
+    openPullRequest: sinon.stub(),
+    dispose: sinon.stub(),
+    ...props,
+  }) as PullRequestContentsProvider;
+
 export const createRepositoryManagerStub = (props: Partial<IRepositoryManager> = {}): IRepositoryManager => ({
-  addRepository: sinon.stub(),
+  refresh: sinon.stub(),
+  getAllRepositories: sinon.stub(),
+  getRepository: sinon.stub(),
+  dispose: sinon.stub(),
+  onRepositoryStateChanged: sinon.stub(),
   getRepositoryById: sinon.stub(),
   ...props,
 });
@@ -244,17 +322,14 @@ export const createTreeDecorationManagerStub = (props: Partial<ITreeDecorationMa
 });
 
 export const createGitManagerStub = (props: Partial<IGitManager> = {}): IGitManager => ({
-  getAllRepositoriesAndInfo: sinon.stub(),
-  getRepositoryInfo: sinon.stub(),
-  getGitRepository: sinon.stub(),
-  getGitBranchForRepository: sinon.stub(),
-  onRepositoryStateChanged: sinon.stub(),
-  dispose: sinon.stub(),
+  getGitExtensionRepository: sinon.stub(),
+  getLocalGitRepository: sinon.stub(),
   ...props,
 });
 
 export const createCommandManagerStub = (props: Partial<ICommandManager> = {}): ICommandManager => ({
   executeCommand: sinon.stub() as unknown as ICommandManager["executeCommand"],
+  createCommand: sinon.stub() as unknown as ICommandManager["createCommand"],
   dispose: sinon.stub(),
   ...props,
 });
@@ -273,7 +348,7 @@ export const createKeaContextStub = (props: Partial<IKeaContext> = {}): IKeaCont
     treeView: {} as vscode.TreeView<any>,
   },
   pullRequestContents: {
-    treeViewProvider: createTreeNodeProviderStub() as PullRequestContentsProvider,
+    treeViewProvider: createPullRequestContentsProviderStub(),
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     treeView: {} as vscode.TreeView<any>,
   },

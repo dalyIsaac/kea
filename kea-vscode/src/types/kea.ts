@@ -3,6 +3,8 @@ export interface RepoId {
   repo: string;
 }
 
+export const isEqualRepoId = (a: RepoId, b: RepoId): boolean => a.owner === b.owner && a.repo === b.repo;
+
 export interface IssueId extends RepoId {
   number: number;
 }
@@ -67,7 +69,18 @@ export interface PullRequest {
   user: User | null;
 }
 
-export type FileStatus = "added" | "removed" | "modified" | "renamed" | "copied" | "changed" | "unchanged";
+export const FileStatusDescriptions = {
+  " ": "unmodified",
+  M: " modified",
+  T: "file type changed (regular file, symbolic link or submodule)",
+  A: "added",
+  D: "deleted",
+  R: "renamed",
+  C: `copied (if config option status.renames is set to "copies")`,
+  U: "updated but unmerged",
+} as const;
+
+export type FileStatus = keyof typeof FileStatusDescriptions;
 
 export interface CommitFile {
   filename: string;

@@ -1,66 +1,65 @@
 import * as vscode from "vscode";
-import { IAccountKey } from "../../account/account";
 import { ICheckoutPullRequestCommandArgs } from "../../commands/commands/checkout-pull-request";
 import { IKeaContext } from "../../core/context";
 import { trimLength } from "../../core/utils";
+import { IRepository } from "../../repository/repository";
 import { PullRequest, PullRequestGitRef, PullRequestId } from "../../types/kea";
 import { CollapsibleState, getCollapsibleState, ITreeNode } from "../tree-node";
 
 export class PullRequestListNode implements ITreeNode, ICheckoutPullRequestCommandArgs {
-  #ctx: IKeaContext;
+  protected _ctx: IKeaContext;
+  protected _pullRequest: PullRequest;
+  protected _repository: IRepository;
 
   collapsibleState: CollapsibleState = "none";
 
-  accountKey: IAccountKey;
-  pullRequest: PullRequest;
-  workspaceFolder: vscode.WorkspaceFolder;
-
-  get pullRequestHead(): PullRequestGitRef {
-    return this.pullRequest.head;
-  }
-
-  constructor(ctx: IKeaContext, accountKey: IAccountKey, pullRequest: PullRequest, workspaceFolder: vscode.WorkspaceFolder) {
-    this.#ctx = ctx;
-
+  constructor(ctx: IKeaContext, pullRequest: PullRequest, repository: IRepository) {
     this.collapsibleState = "none";
 
-    this.accountKey = accountKey;
-    this.pullRequest = pullRequest;
-    this.workspaceFolder = workspaceFolder;
+    this._ctx = ctx;
+    this._repository = repository;
+    this._pullRequest = pullRequest;
+  }
+
+  get pullRequestHead(): PullRequestGitRef {
+    return this._pullRequest.head;
+  }
+
+  get workspaceFolder(): vscode.WorkspaceFolder {
+    return this._repository.localRepository.workspaceFolder;
   }
 
   getTreeItem = async (): Promise<vscode.TreeItem> => {
     const pullId: PullRequestId = {
-      owner: this.pullRequest.repository.owner,
-      repo: this.pullRequest.repository.name,
-      number: this.pullRequest.number,
+      owner: this._pullRequest.repository.owner,
+      repo: this._pullRequest.repository.name,
+      number: this._pullRequest.number,
     };
 
-    const head = this.pullRequest.head.ref;
+    const head = this._pullRequest.head.ref;
     const shortHead = trimLength(head, 16);
-    const base = this.pullRequest.base.ref;
+    const base = this._pullRequest.base.ref;
 
-    let description = `#${this.pullRequest.number}`;
-    if (this.pullRequest.user?.login) {
-      description += ` by ${this.pullRequest.user.login}`;
+    let description = `#${this._pullRequest.number}`;
+    if (this._pullRequest.user?.login) {
+      description += ` by ${this._pullRequest.user.login}`;
     }
     description += ` (${shortHead})`;
 
-    const branch = await this.#ctx.gitManager.getGitBranchForRepository(this.workspaceFolder);
-    const isCheckedOut = branch instanceof Error ? false : branch.name === head;
+    const branch = await this._repository.localRepository.getCurrentBranch();
+    const isCheckedOut = branch instanceof Error ? false : branch === head;
 
     const iconPath = isCheckedOut ? new vscode.ThemeIcon("git-branch") : "";
 
     return {
-      label: this.pullRequest.title,
+      label: this._pullRequest.title,
       description,
       collapsibleState: getCollapsibleState(this.collapsibleState),
-      contextValue: `pullRequest${isCheckedOut ? ":checkedout" : ""}`, // Add state to contextValue
-      command: {
-        command: "kea.openPullRequest",
-        title: "Open Pull Request",
-        arguments: [[this.accountKey, pullId]],
-      },
+      contextValue: `pullRequest${isCheckedOut ? ":checkedout" : ""}`,
+      command: this._ctx.commandManager.createCommand("kea.openPullRequest", "Open Pull Request", {
+        accountKey: this._repository.remoteRepository.account.accountKey,
+        pullRequestId: pullId,
+      }),
       tooltip: `${head}...${base}${isCheckedOut ? " (Checked out)" : ""}`,
       iconPath: iconPath,
     };

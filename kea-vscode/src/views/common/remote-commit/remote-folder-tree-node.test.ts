@@ -1,15 +1,15 @@
 import * as assert from "assert";
 import * as vscode from "vscode";
-import { FileTreeNode } from "./file-tree-node";
-import { FolderTreeNode } from "./folder-tree-node";
+import { RemoteFileTreeNode } from "./remote-file-tree-node";
+import { RemoteFolderTreeNode } from "./remote-folder-tree-node";
 
-suite("FolderTreeNode", () => {
+suite("RemoteFolderTreeNode", () => {
   test("constructor should extract folder name from path", () => {
     // Given
     const folderPath = "src/components/buttons";
 
     // When
-    const folderTreeNode = new FolderTreeNode(folderPath);
+    const folderTreeNode = new RemoteFolderTreeNode(folderPath);
 
     // Then
     assert.strictEqual(folderTreeNode.folderName, "buttons");
@@ -22,7 +22,7 @@ suite("FolderTreeNode", () => {
     const folderPath = "components";
 
     // When
-    const folderTreeNode = new FolderTreeNode(folderPath);
+    const folderTreeNode = new RemoteFolderTreeNode(folderPath);
 
     // Then
     assert.strictEqual(folderTreeNode.folderName, "components");
@@ -31,7 +31,7 @@ suite("FolderTreeNode", () => {
   test("getTreeItem should return TreeItem with correct properties", () => {
     // Given
     const folderPath = "src/views";
-    const folderTreeNode = new FolderTreeNode(folderPath);
+    const folderTreeNode = new RemoteFolderTreeNode(folderPath);
 
     // When
     const treeItem = folderTreeNode.getTreeItem();
@@ -47,7 +47,7 @@ suite("FolderTreeNode", () => {
   test("getTreeItem should respect custom collapsibleState", () => {
     // Given
     const folderPath = "src/models";
-    const folderTreeNode = new FolderTreeNode(folderPath);
+    const folderTreeNode = new RemoteFolderTreeNode(folderPath);
     folderTreeNode.collapsibleState = "expanded";
 
     // When
@@ -60,11 +60,11 @@ suite("FolderTreeNode", () => {
   test("getChildren should return the children array", () => {
     // Given
     const folderPath = "src/utils";
-    const folderTreeNode = new FolderTreeNode(folderPath);
+    const folderTreeNode = new RemoteFolderTreeNode(folderPath);
 
     // Mock children
-    const childFolder = new FolderTreeNode("src/utils/helpers");
-    const childFile = {} as FileTreeNode; // We only need the reference, not the implementation
+    const childFolder = new RemoteFolderTreeNode("src/utils/helpers");
+    const childFile = {} as RemoteFileTreeNode; // We only need the reference, not the implementation
     folderTreeNode.children = [childFolder, childFile];
 
     // When

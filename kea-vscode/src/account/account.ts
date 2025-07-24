@@ -1,6 +1,3 @@
-import { IApiCache } from "../cache/api/api-cache";
-import { IKeaRepository } from "../repository/kea-repository";
-
 export interface IAccountKey {
   providerId: string;
   accountId: string;
@@ -9,5 +6,6 @@ export interface IAccountKey {
 export interface IAccount {
   accountKey: IAccountKey;
   isRepoForAccount: (repoUrl: string) => boolean;
-  tryCreateRepoForAccount: (repoUrl: string, cache: IApiCache) => IKeaRepository | Error;
 }
+
+export const isEqualAccountKey = (a: IAccountKey, b: IAccountKey): boolean => a.providerId === b.providerId && a.accountId === b.accountId;

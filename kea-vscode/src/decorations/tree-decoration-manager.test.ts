@@ -1,8 +1,8 @@
 import * as assert from "assert";
 import * as sinon from "sinon";
 import * as vscode from "vscode";
-import { IssueCommentsPayload } from "../repository/kea-repository";
-import { createAccountStub, createIssueCommentStub, createRepositoryStub, stubEvents } from "../test-utils";
+import { IssueCommentsPayload } from "../repository/remote-repository";
+import { createAccountStub, createIssueCommentStub, createRepositoryStub, createRemoteRepositoryStub, stubEvents } from "../test-utils";
 import { BaseTreeDecorationProvider } from "./base-tree-decoration-provider";
 import { createCommentsRootDecorationUri } from "./decoration-schemes";
 import { TreeDecorationManager } from "./tree-decoration-manager";
@@ -15,61 +15,79 @@ class TestTreeDecorationProvider extends BaseTreeDecorationProvider {
   };
 }
 
+const createTestProvider = () => new TestTreeDecorationProvider();
+
+const createRepoWithEventStub = (stub = sinon.stub()) => {
+  const remoteRepo = createRemoteRepositoryStub();
+  remoteRepo.onDidChangeIssueComments = stub;
+  const repo = createRepositoryStub({
+    remoteRepository: remoteRepo,
+  });
+  return repo;
+};
+
+const setupStubs = () => {
+  const accountKey = { providerId: "github", accountId: "accountId" };
+  const repoId = { owner: "owner", repo: "repo" };
+  const pullId = { ...repoId, number: 1 };
+
+  // Create remote repository with event emitters
+  const { stub: remoteRepository, eventFirers } = stubEvents(
+    createRemoteRepositoryStub({
+      account: createAccountStub({ accountKey }),
+      repoId,
+    }),
+    ["onDidChangeIssueComments"] as const,
+  );
+
+  // Create full repository with the stubbed remote repository
+  const repository = createRepositoryStub({
+    repoId,
+    remoteRepository,
+  });
+
+  const mockScheme = "test-scheme";
+  const mockUri = vscode.Uri.parse(`${mockScheme}:/test/path`);
+  const mockEvent = new vscode.EventEmitter<vscode.Uri | vscode.Uri[]>();
+  const mockDisposable = { dispose: sinon.stub() };
+
+  return {
+    accountKey,
+    repoId,
+    pullId,
+    repository,
+    eventFirers,
+    mockScheme,
+    mockUri,
+    mockEvent,
+    mockDisposable,
+  };
+};
+
 suite("TreeDecorationManager", () => {
-  let sandbox: sinon.SinonSandbox;
-
-  const createTestProvider = () => new TestTreeDecorationProvider();
-
-  const createRepoWithEventStub = (stub = sinon.stub()) => {
-    const repo = createRepositoryStub();
-    repo.onDidChangeIssueComments = stub;
-    return repo;
-  };
-
-  const setupTestData = () => {
-    const accountKey = { providerId: "github", accountId: "accountId" };
-    const repoId = { owner: "owner", repo: "repo" };
-    const pullId = { ...repoId, number: 1 };
-
-    // Create repository with event emitters
-    const { stub: repository, eventFirers } = stubEvents(
-      createRepositoryStub({
-        account: createAccountStub({ accountKey }),
-        repoId,
-      }),
-      ["onDidChangeIssueComments"] as const,
-    );
-
-    return { accountKey, repoId, pullId, repository, eventFirers };
-  };
-
-  setup(() => {
-    sandbox = sinon.createSandbox();
-  });
-
-  teardown(() => {
-    sandbox.restore();
-  });
-
   test("registerProviders adds providers and registers them with vscode", () => {
     // Given
     const manager = new TreeDecorationManager();
     const provider1 = createTestProvider();
     const provider2 = createTestProvider();
 
-    const registerStub = sandbox.stub(vscode.window, "registerFileDecorationProvider").returns({
+    const registerStub = sinon.stub(vscode.window, "registerFileDecorationProvider").returns({
       dispose: () => {
         /* empty for testing */
       },
     });
 
-    // When
-    manager.registerProviders(provider1, provider2);
+    try {
+      // When
+      manager.registerProviders(provider1, provider2);
 
-    // Then
-    assert.strictEqual(registerStub.callCount, 2, "Should register two providers");
-    assert.ok(registerStub.calledWith(provider1), "Should register the first provider");
-    assert.ok(registerStub.calledWith(provider2), "Should register the second provider");
+      // Then
+      assert.strictEqual(registerStub.callCount, 2, "Should register two providers");
+      assert.ok(registerStub.calledWith(provider1), "Should register the first provider");
+      assert.ok(registerStub.calledWith(provider2), "Should register the second provider");
+    } finally {
+      registerStub.restore();
+    }
   });
 
   test("updateListeners disposes old listeners and creates new ones", () => {
@@ -104,30 +122,34 @@ suite("TreeDecorationManager", () => {
     const provider = createTestProvider();
     manager.registerProviders(provider);
 
-    const refreshSpy = sandbox.spy(provider, "refresh");
+    const refreshSpy = sinon.spy(provider, "refresh");
 
-    const { accountKey, pullId, repository, eventFirers } = setupTestData();
+    const { accountKey, pullId, repository, eventFirers } = setupStubs();
 
-    // Set up listeners
-    manager.updateListeners(repository);
+    try {
+      // Set up listeners
+      manager.updateListeners(repository);
 
-    // When - fire event with comments
-    const comments = [createIssueCommentStub({ id: 1, body: "Test comment" })];
-    const payload: IssueCommentsPayload = { issueId: pullId, comments };
-    eventFirers.onDidChangeIssueComments(payload);
+      // When - fire event with comments
+      const comments = [createIssueCommentStub({ id: 1, body: "Test comment" })];
+      const payload: IssueCommentsPayload = { issueId: pullId, comments };
+      eventFirers.onDidChangeIssueComments(payload);
 
-    // Then
-    assert.strictEqual(refreshSpy.callCount, 1, "Provider refresh should be called once");
+      // Then
+      assert.strictEqual(refreshSpy.callCount, 1, "Provider refresh should be called once");
 
-    // Check correct URI was passed
-    const expectedUri = createCommentsRootDecorationUri({
-      pullId,
-      accountKey,
-    });
+      // Check correct URI was passed
+      const expectedUri = createCommentsRootDecorationUri({
+        pullId,
+        accountKey,
+      });
 
-    const actualUri = refreshSpy.firstCall.args[0];
-    assert.strictEqual(actualUri.scheme, expectedUri.scheme);
-    assert.strictEqual(actualUri.query, expectedUri.query);
+      const actualUri = refreshSpy.firstCall.args[0];
+      assert.strictEqual(actualUri.scheme, expectedUri.scheme);
+      assert.strictEqual(actualUri.query, expectedUri.query);
+    } finally {
+      refreshSpy.restore();
+    }
   });
 
   test("onDidChangeIssueComments does not refresh providers when comments is an Error", () => {
@@ -136,24 +158,28 @@ suite("TreeDecorationManager", () => {
     const provider = createTestProvider();
     manager.registerProviders(provider);
 
-    const refreshSpy = sandbox.spy(provider, "refresh");
+    const refreshSpy = sinon.spy(provider, "refresh");
 
     // Create repository with event emitters
-    const { repository, eventFirers } = setupTestData();
+    const { repository, eventFirers } = setupStubs();
 
-    // Set up listeners
-    manager.updateListeners(repository);
+    try {
+      // Set up listeners
+      manager.updateListeners(repository);
 
-    // When - fire event with error
-    const error = new Error("Issue comments API call failed");
-    const payload: IssueCommentsPayload = {
-      issueId: { owner: "owner", repo: "repo", number: 1 },
-      comments: error,
-    };
-    eventFirers.onDidChangeIssueComments(payload);
+      // When - fire event with error
+      const error = new Error("Issue comments API call failed");
+      const payload: IssueCommentsPayload = {
+        issueId: { owner: "owner", repo: "repo", number: 1 },
+        comments: error,
+      };
+      eventFirers.onDidChangeIssueComments(payload);
 
-    // Then
-    assert.strictEqual(refreshSpy.callCount, 0, "Provider refresh should not be called for errors");
+      // Then
+      assert.strictEqual(refreshSpy.callCount, 0, "Provider refresh should not be called for errors");
+    } finally {
+      refreshSpy.restore();
+    }
   });
 
   test("Multiple providers are all refreshed when issue comments change", () => {
@@ -165,25 +191,30 @@ suite("TreeDecorationManager", () => {
     manager.registerProviders(provider1, provider2);
 
     // Mock the refresh methods
-    const refreshSpy1 = sandbox.spy(provider1, "refresh");
-    const refreshSpy2 = sandbox.spy(provider2, "refresh");
+    const refreshSpy1 = sinon.spy(provider1, "refresh");
+    const refreshSpy2 = sinon.spy(provider2, "refresh");
 
-    const { pullId, repository, eventFirers } = setupTestData();
+    const { pullId, repository, eventFirers } = setupStubs();
 
-    // Set up listeners
-    manager.updateListeners(repository);
+    try {
+      // Set up listeners
+      manager.updateListeners(repository);
 
-    // When - fire event with comments
-    const comments = [createIssueCommentStub({ id: 1, body: "Test comment" })];
-    const payload: IssueCommentsPayload = { issueId: pullId, comments };
-    eventFirers.onDidChangeIssueComments(payload);
+      // When - fire event with comments
+      const comments = [createIssueCommentStub({ id: 1, body: "Test comment" })];
+      const payload: IssueCommentsPayload = { issueId: pullId, comments };
+      eventFirers.onDidChangeIssueComments(payload);
 
-    // Then
-    assert.strictEqual(refreshSpy1.callCount, 1, "First provider refresh should be called once");
-    assert.strictEqual(refreshSpy2.callCount, 1, "Second provider refresh should be called once");
+      // Then
+      assert.strictEqual(refreshSpy1.callCount, 1, "First provider refresh should be called once");
+      assert.strictEqual(refreshSpy2.callCount, 1, "Second provider refresh should be called once");
 
-    // Verify both were called with the same URI
-    assert.deepStrictEqual(refreshSpy1.firstCall.args[0], refreshSpy2.firstCall.args[0]);
+      // Verify both were called with the same URI
+      assert.deepStrictEqual(refreshSpy1.firstCall.args[0], refreshSpy2.firstCall.args[0]);
+    } finally {
+      refreshSpy1.restore();
+      refreshSpy2.restore();
+    }
   });
 
   test("dispose should clean up all repository listeners", async () => {
