@@ -3,7 +3,7 @@ import { IAccountKey } from "../account/account";
 import { IKeaContext } from "../core/context";
 import { Logger } from "../core/logger";
 import { formatDate } from "../core/utils";
-import { RepoInfo } from "../git/git-manager";
+import { IRepository } from "../repository/repository";
 import { PullRequest, PullRequestId } from "../types/kea";
 
 interface PullRequestQuickPickItem extends vscode.QuickPickItem {
@@ -12,24 +12,18 @@ interface PullRequestQuickPickItem extends vscode.QuickPickItem {
 }
 
 export const createPullRequestListQuickPick = async (ctx: IKeaContext): Promise<PullRequestQuickPickItem[]> => {
-  const allRepos = await ctx.gitManager.getAllRepositories();
+  const allRepos = ctx.repositoryManager.getAllRepositories();
 
   const nestedPullRequests = await Promise.all(
-    allRepos.map(async (repoInfo) => {
-      if (repoInfo instanceof Error) {
-        Logger.error(`Error creating RepoTreeNode: ${repoInfo.message}`);
-        return [];
-      }
-
-      const { repository } = repoInfo;
-      const pullRequests = await repository.getPullRequestList();
+    allRepos.map(async (repository) => {
+      const pullRequests = await repository.remoteRepository.getPullRequestList();
       if (pullRequests instanceof Error) {
         Logger.error(`Error fetching pull requests: ${pullRequests.message}`);
         return [];
       }
 
       return pullRequests.map((pr) => ({
-        info: createPullRequestQuickPickItem(pr, repoInfo),
+        info: createPullRequestQuickPickItem(pr, repository),
         updatedAt: pr.updatedAt,
       }));
     }),
@@ -41,8 +35,8 @@ export const createPullRequestListQuickPick = async (ctx: IKeaContext): Promise<
   return pullRequests.map((pr) => pr.info);
 };
 
-const createPullRequestQuickPickItem = (pr: PullRequest, repoInfo: RepoInfo): PullRequestQuickPickItem => ({
-  accountKey: repoInfo.account.accountKey,
+const createPullRequestQuickPickItem = (pr: PullRequest, repository: IRepository): PullRequestQuickPickItem => ({
+  accountKey: repository.remoteRepository.account.accountKey,
   pullRequestId: {
     owner: pr.repository.owner,
     repo: pr.repository.name,
