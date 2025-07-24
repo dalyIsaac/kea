@@ -51,11 +51,11 @@ export interface ILocalGitRepository {
 
   /**
    * Get the contents of a specific file at a given commit.
-   * @param commitSha The commit SHA to retrieve the file from.
+   * @param treeish The commit SHA to retrieve the file from.
    * @param filePath The path to the file relative to the repository root.
    * @returns The file contents as a string, or an Error if the operation fails.
    */
-  getFileAtCommit(commitSha: string, filePath: string): Promise<string | Error>;
+  getFileAtCommit(treeish: string, filePath: string): Promise<string | Error>;
 
   /**
    * Get commits from the current branch that are ahead of the target branch.
@@ -100,17 +100,24 @@ export interface ILocalGitRepository {
 
   /**
    * Get files changed in a specific commit.
-   * @param commitSha The commit SHA to get files for.
+   * @param treeish The commit SHA to get files for.
    * @returns Array of files changed in the commit.
    */
-  getCommitFiles(commitSha: string): Promise<LocalCommitFile[] | Error>;
+  getCommitFiles(treeish: string): Promise<LocalCommitFile[] | Error>;
 
   /**
    * Get the parent commit SHA for a given commit.
-   * @param commitSha The commit SHA to get the parent for.
+   * @param treeish The commit SHA to get the parent for.
    * @returns The parent commit SHA, or an Error if the operation fails.
    */
-  getParentCommit(commitSha: string): Promise<string | Error>;
+  getParentCommit(treeish: string): Promise<string | Error>;
+
+  /**
+   * Check if a commit exists in the repository.
+   * @param treeish The commit SHA to check.
+   * @returns True if the commit exists, false otherwise.
+   */
+  checkout(treeish: string): Promise<void | Error>;
 }
 
 /**
@@ -183,24 +190,24 @@ export class LocalGitRepository extends KeaDisposable implements ILocalGitReposi
   /**
    * {@inheritdoc ILocalGitRepository.getFileAtCommit}
    */
-  getFileAtCommit = async (commitSha: string, filePath: string): Promise<string | Error> => {
-    if (!commitSha || !filePath) {
-      return new Error("commitSha and filePath are required");
+  getFileAtCommit = async (treeish: string, filePath: string): Promise<string | Error> => {
+    if (!treeish || !filePath) {
+      return new Error("treeish and filePath are required");
     }
 
     // Validate commit SHA format (basic validation)
-    if (!/^[a-f0-9]{7,40}$/i.test(commitSha)) {
-      return new Error(`Invalid commit SHA format: ${commitSha}`);
+    if (!/^[a-f0-9]{7,40}$/i.test(treeish)) {
+      return new Error(`Invalid commit SHA format: ${treeish}`);
     }
 
     // Normalize file path to use forward slashes for Git
     const normalizedPath = filePath.replace(/\\/g, "/");
 
     // Use git show command to get file contents at specific commit
-    const result = await this.#executeGitCommand(["show", `${commitSha}:${normalizedPath}`]);
+    const result = await this.#executeGitCommand(["show", `${treeish}:${normalizedPath}`]);
 
     if (result instanceof Error) {
-      return new WrappedError(`Failed to get file ${filePath} at commit ${commitSha}`, result);
+      return new WrappedError(`Failed to get file ${filePath} at commit ${treeish}`, result);
     }
 
     return result;
@@ -249,8 +256,8 @@ export class LocalGitRepository extends KeaDisposable implements ILocalGitReposi
   /**
    * {@inheritdoc ILocalGitRepository.getCurrentCommit}
    */
-  commitExists = async (commitSha: string): Promise<boolean | Error> => {
-    const result = await this.#executeGitCommand(["cat-file", "-e", commitSha]);
+  commitExists = async (treeish: string): Promise<boolean | Error> => {
+    const result = await this.#executeGitCommand(["cat-file", "-e", treeish]);
     if (result instanceof Error) {
       // If the command fails, the commit doesn't exist
       return false;
@@ -398,21 +405,21 @@ export class LocalGitRepository extends KeaDisposable implements ILocalGitReposi
   /**
    * {@inheritdoc ILocalGitRepository.getCommitFiles}
    */
-  getCommitFiles = async (commitSha: string): Promise<LocalCommitFile[] | Error> => {
-    if (!commitSha) {
-      return new Error("commitSha is required");
+  getCommitFiles = async (treeish: string): Promise<LocalCommitFile[] | Error> => {
+    if (!treeish) {
+      return new Error("treeish is required");
     }
 
     // Validate commit SHA format (basic validation)
-    if (!/^[a-f0-9]{7,40}$/i.test(commitSha)) {
-      return new Error(`Invalid commit SHA format: ${commitSha}`);
+    if (!/^[a-f0-9]{7,40}$/i.test(treeish)) {
+      return new Error(`Invalid commit SHA format: ${treeish}`);
     }
 
     // Use git diff-tree to get files changed in the commit
-    const result = await this.#executeGitCommand(["diff-tree", "--no-commit-id", "--name-status", "-r", commitSha]);
+    const result = await this.#executeGitCommand(["diff-tree", "--no-commit-id", "--name-status", "-r", treeish]);
 
     if (result instanceof Error) {
-      return new WrappedError(`Failed to get files for commit ${commitSha}`, result);
+      return new WrappedError(`Failed to get files for commit ${treeish}`, result);
     }
 
     const lines = result
@@ -440,21 +447,30 @@ export class LocalGitRepository extends KeaDisposable implements ILocalGitReposi
   /**
    * {@inheritdoc ILocalGitRepository.getParentCommit}
    */
-  getParentCommit = async (commitSha: string): Promise<string | Error> => {
-    if (!commitSha) {
-      return new Error("commitSha is required");
+  getParentCommit = async (treeish: string): Promise<string | Error> => {
+    if (!treeish) {
+      return new Error("treeish is required");
     }
 
     // Validate commit SHA format (basic validation)
-    if (!/^[a-f0-9]{7,40}$/i.test(commitSha)) {
-      return new Error(`Invalid commit SHA format: ${commitSha}`);
+    if (!/^[a-f0-9]{7,40}$/i.test(treeish)) {
+      return new Error(`Invalid commit SHA format: ${treeish}`);
     }
 
-    const result = await this.#executeGitCommand(["rev-parse", `${commitSha}^`]);
+    const result = await this.#executeGitCommand(["rev-parse", `${treeish}^`]);
     if (result instanceof Error) {
-      return new WrappedError(`Failed to get parent commit for ${commitSha}`, result);
+      return new WrappedError(`Failed to get parent commit for ${treeish}`, result);
     }
 
     return result.trim();
+  };
+
+  checkout = async (treeish: string): Promise<void | Error> => {
+    try {
+      await this.#gitExtensionRepository.checkout(treeish);
+      return;
+    } catch (error) {
+      return new WrappedError(`Failed to checkout ${treeish}`, error);
+    }
   };
 }

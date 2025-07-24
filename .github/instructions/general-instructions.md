@@ -1,3 +1,7 @@
+---
+applyTo: "**"
+---
+
 This is a TypeScript-based repository for a Visual Studio Code extension to provide Git-based code review and development tools.
 
 ## Architecture Overview
@@ -41,6 +45,9 @@ Components communicate via events rather than direct coupling:
 - Write tests in the form "Given <context>, when <action>, then <expected result>"
 - Test names should be descriptive and follow the format: `should ...`
 - Write tests with a `const setupStubs = () => { ... }` pattern to create reusable test data - don't use `setup` or `beforeEach` for stubs
+- Do not use `beforeEach`, `beforeAll`, `afterEach`, or `afterAll` for test setup - use `setupStubs()` instead
+- Do not use `SinonSandbox`
+- `createStubs` can be used in place of `setupStubs`
 - **Don't mock external modules** (vscode, sinon.restore, Logger) - only mock context dependencies
 - Create comprehensive stub factories in `test-utils.ts` following the pattern: `createXxxStub(props: Partial<IXxx> = {}): IXxx`
 
