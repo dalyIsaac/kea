@@ -2,6 +2,7 @@ import * as assert from "assert";
 import * as vscode from "vscode";
 import { IAccount, IAccountKey } from "../../account/account";
 import {
+  createKeaContextStub,
   createLocalRepositoryStub,
   createPullRequestStub,
   createRemoteRepositoryStub,
@@ -13,6 +14,8 @@ import { PullRequestListNode } from "./pull-request-list-node";
 import { RepoTreeNode } from "./repo-tree-node";
 
 const createStubs = (stubs: { pullRequestsList?: PullRequest[] | Error } = {}) => {
+  const ctx = createKeaContextStub();
+
   const accountKey: IAccountKey = { providerId: "github", accountId: "test-account" };
   const workspaceFolder = createWorkspaceFolderStub({
     uri: vscode.Uri.file("c:/test/workspace"),
@@ -31,16 +34,16 @@ const createStubs = (stubs: { pullRequestsList?: PullRequest[] | Error } = {}) =
     remoteRepository,
   });
 
-  return { repository };
+  return { ctx, repository };
 };
 
 suite("RepoTreeNode", () => {
   test("should be created with the correct properties", () => {
     // Given
-    const { repository } = createStubs();
+    const { ctx, repository } = createStubs();
 
     // When
-    const repoTreeNode = new RepoTreeNode(repository);
+    const repoTreeNode = new RepoTreeNode(ctx, repository);
 
     // Then
     assert.strictEqual(repoTreeNode.collapsibleState, "collapsed");
@@ -48,8 +51,8 @@ suite("RepoTreeNode", () => {
 
   test("getTreeItem returns a TreeItem with the correct properties", () => {
     // Given
-    const { repository } = createStubs();
-    const repoTreeNode = new RepoTreeNode(repository);
+    const { ctx, repository } = createStubs();
+    const repoTreeNode = new RepoTreeNode(ctx, repository);
 
     // When
     const treeItem = repoTreeNode.getTreeItem();
@@ -65,10 +68,10 @@ suite("RepoTreeNode", () => {
     // Given
     const pullRequest1 = createPullRequestStub({ number: 1, title: "PR 1" });
     const pullRequest2 = createPullRequestStub({ number: 2, title: "PR 2" });
-    const { repository } = createStubs({
+    const { ctx, repository } = createStubs({
       pullRequestsList: [pullRequest1, pullRequest2],
     });
-    const repoTreeNode = new RepoTreeNode(repository);
+    const repoTreeNode = new RepoTreeNode(ctx, repository);
 
     // When
     const children = await repoTreeNode.getChildren();
@@ -84,10 +87,10 @@ suite("RepoTreeNode", () => {
   test("getChildren returns empty array on failure", async () => {
     // Given
     const error = new Error("Failed to fetch PRs");
-    const { repository } = createStubs({
+    const { ctx, repository } = createStubs({
       pullRequestsList: error,
     });
-    const repoTreeNode = new RepoTreeNode(repository);
+    const repoTreeNode = new RepoTreeNode(ctx, repository);
 
     // When
     const children = await repoTreeNode.getChildren();

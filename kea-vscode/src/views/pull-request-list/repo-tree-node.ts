@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { IKeaContext } from "../../core/context";
 import { Logger } from "../../core/logger";
 import { IRepository } from "../../repository/repository";
 import { CollapsibleState, getCollapsibleState, IParentTreeNode } from "../tree-node";
@@ -7,10 +8,12 @@ import { PullRequestListNode } from "./pull-request-list-node";
 export class RepoTreeNode implements IParentTreeNode<PullRequestListNode> {
   static #contextValue = "repository";
 
+  #ctx: IKeaContext;
   #repository: IRepository;
   collapsibleState: CollapsibleState;
 
-  constructor(repository: IRepository) {
+  constructor(ctx: IKeaContext, repository: IRepository) {
+    this.#ctx = ctx;
     this.#repository = repository;
 
     this.collapsibleState = "collapsed";
@@ -31,6 +34,6 @@ export class RepoTreeNode implements IParentTreeNode<PullRequestListNode> {
       return [];
     }
 
-    return pullRequests.map((pr) => new PullRequestListNode(pr, this.#repository));
+    return pullRequests.map((pr) => new PullRequestListNode(this.#ctx, pr, this.#repository));
   };
 }

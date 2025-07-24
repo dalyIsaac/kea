@@ -89,7 +89,7 @@ suite("PullRequestContentsProvider", () => {
     override collapsibleState: CollapsibleState;
 
     constructor(ctx: IKeaContext, label: string, collapsibleState: CollapsibleState, pullRequest: PullRequest, repository: IRepository) {
-      super(pullRequest, repository);
+      super(ctx, pullRequest, repository);
       this.#ctx = ctx;
       this.label = label;
       this.collapsibleState = collapsibleState;

@@ -23,7 +23,7 @@ export class PullRequestListTreeProvider extends TreeNodeProvider<PullRequestLis
   };
 
   override _getRootChildren = (): Promise<PullRequestListTreeNode[]> => {
-    const rootItems = this.#ctx.repositoryManager.getAllRepositories().map((repo) => new RepoTreeNode(repo));
+    const rootItems = this.#ctx.repositoryManager.getAllRepositories().map((repo) => new RepoTreeNode(this.#ctx, repo));
 
     return Promise.resolve(rootItems);
   };

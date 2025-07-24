@@ -4,6 +4,7 @@ import * as vscode from "vscode";
 import { IAccountKey } from "../../account/account";
 import {
   createAccountStub,
+  createKeaContextStub,
   createLocalRepositoryStub,
   createPullRequestStub,
   createRemoteRepositoryStub,
@@ -18,6 +19,8 @@ const createStubs = (
     currentBranch?: string;
   } = {},
 ) => {
+  const ctx = createKeaContextStub();
+
   const accountKey: IAccountKey = {
     providerId: "github",
     accountId: "accountId",
@@ -34,17 +37,17 @@ const createStubs = (
     }),
   });
 
-  return { accountKey, repository };
+  return { ctx, accountKey, repository };
 };
 
 suite("PullRequestListNode", () => {
   test("should be created with the correct properties", () => {
     // Given
-    const { repository } = createStubs();
+    const { ctx, repository } = createStubs();
     const pullRequest = createPullRequestStub();
 
     // When
-    const pullRequestListNode = new PullRequestListNode(pullRequest, repository);
+    const pullRequestListNode = new PullRequestListNode(ctx, pullRequest, repository);
 
     // Then
     assert.strictEqual(pullRequestListNode.pullRequestHead, pullRequest.head);
@@ -68,8 +71,8 @@ suite("PullRequestListNode", () => {
         repo: "repo",
       },
     });
-    const { repository, accountKey } = createStubs();
-    const pullRequestListNode = new PullRequestListNode(pullRequest, repository);
+    const { ctx, repository, accountKey } = createStubs();
+    const pullRequestListNode = new PullRequestListNode(ctx, pullRequest, repository);
 
     // When
     const treeItem = await pullRequestListNode.getTreeItem();
@@ -114,8 +117,8 @@ suite("PullRequestListNode", () => {
       },
       user: createUserStub({ login: "testUser" }), // Explicitly set the user with the expected login
     });
-    const { repository } = createStubs();
-    const pullRequestListNode = new PullRequestListNode(pullRequest, repository);
+    const { ctx, repository } = createStubs();
+    const pullRequestListNode = new PullRequestListNode(ctx, pullRequest, repository);
 
     // When
     const treeItem = await pullRequestListNode.getTreeItem();
@@ -132,7 +135,7 @@ suite("PullRequestListNode", () => {
   test("getTreeItem indicates when the PR branch is checked out", async () => {
     // Given the local branch name matches the PR head ref
     const branchName = "feature-branch";
-    const { repository } = createStubs({ currentBranch: branchName });
+    const { ctx, repository } = createStubs({ currentBranch: branchName });
 
     const pullRequest = createPullRequestStub({
       title: "Checked Out PR",
@@ -151,7 +154,7 @@ suite("PullRequestListNode", () => {
       },
     });
 
-    const pullRequestListNode = new PullRequestListNode(pullRequest, repository);
+    const pullRequestListNode = new PullRequestListNode(ctx, pullRequest, repository);
 
     // When
     const treeItem = await pullRequestListNode.getTreeItem();

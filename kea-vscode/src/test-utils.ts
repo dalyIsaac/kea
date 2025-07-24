@@ -137,6 +137,7 @@ export const createLocalRepositoryStub = (props: Partial<ILocalGitRepository> = 
   getCommitsForPullRequest: sinon.stub(),
   getCommitFiles: sinon.stub(),
   getParentCommit: sinon.stub(),
+  checkout: sinon.stub(),
   ...props,
 });
 
