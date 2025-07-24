@@ -351,97 +351,127 @@ suite("LocalGitRepository", () => {
 
   suite("commitExists", () => {
     test("should return true when given an existing commit SHA", async () => {
-      // Given Git is available and repository is initialized
+      // Given
+      const { testRepository } = setupStubs();
 
-      // When checking if the current commit exists
-      const currentCommit = await repository!.getCurrentCommit();
-      if (currentCommit instanceof Error) {
-        console.log("Skipping test: Could not get current commit");
-        return;
+      try {
+        // When checking if the current commit exists
+        const currentCommit = await testRepository.getCurrentCommit();
+        if (currentCommit instanceof Error) {
+          console.log("Skipping test: Could not get current commit");
+          return;
+        }
+
+        const result = await testRepository.commitExists(currentCommit);
+
+        // Then the commit should exist
+        assert.ok(!(result instanceof Error));
+        assert.strictEqual(result, true);
+      } finally {
+        await testRepository.dispose();
       }
-
-      const result = await repository!.commitExists(currentCommit);
-
-      // Then the commit should exist
-      assert.ok(!(result instanceof Error));
-      assert.strictEqual(result, true);
     });
 
     test("should return false when given a non-existent commit SHA", async () => {
-      // Given Git is available and repository is initialized
+      // Given
+      const { testRepository } = setupStubs();
 
-      // When checking if a non-existent commit exists
-      const result = await repository!.commitExists("1234567890abcdef1234567890abcdef12345678");
+      try {
+        // When checking if a non-existent commit exists
+        const result = await testRepository.commitExists("1234567890abcdef1234567890abcdef12345678");
 
-      // Then the commit should not exist
-      assert.ok(!(result instanceof Error));
-      assert.strictEqual(result, false);
+        // Then the commit should not exist
+        assert.ok(!(result instanceof Error));
+        assert.strictEqual(result, false);
+      } finally {
+        await testRepository.dispose();
+      }
     });
   });
 
   suite("getBranchCommits", () => {
     test("should return commits from current branch when repository has commits", async () => {
-      // Given Git is available and repository is initialized
+      // Given
+      const { testRepository } = setupStubs();
 
-      // When getting branch commits
-      const result = await repository!.getBranchCommits(5);
+      try {
+        // When getting branch commits
+        const result = await testRepository.getBranchCommits(5);
 
-      // Then commits should be returned
-      assert.ok(!(result instanceof Error), `Expected array but got Error: ${result instanceof Error ? result.message : ""}`);
-      assert.ok(Array.isArray(result));
-      assert.ok(result.length > 0);
+        // Then commits should be returned
+        assert.ok(!(result instanceof Error), `Expected array but got Error: ${result instanceof Error ? result.message : ""}`);
+        assert.ok(Array.isArray(result));
+        assert.ok(result.length > 0);
 
-      // Verify commit structure
-      const firstCommit = result[0];
-      assert.ok(firstCommit, "First commit should exist");
-      assert.ok(firstCommit.sha);
-      assert.ok(firstCommit.message);
-      assert.ok(firstCommit.author);
-      assert.ok(firstCommit.date instanceof Date);
+        // Verify commit structure
+        const firstCommit = result[0];
+        assert.ok(firstCommit, "First commit should exist");
+        assert.ok(firstCommit.sha);
+        assert.ok(firstCommit.message);
+        assert.ok(firstCommit.author);
+        assert.ok(firstCommit.date instanceof Date);
+      } finally {
+        await testRepository.dispose();
+      }
     });
 
     test("should limit commits when limit parameter is provided", async () => {
-      // Given Git is available and repository is initialized
+      // Given
+      const { testRepository } = setupStubs();
 
-      // When getting limited number of commits
-      const result = await repository!.getBranchCommits(1);
+      try {
+        // When getting limited number of commits
+        const result = await testRepository.getBranchCommits(1);
 
-      // Then only the specified number of commits should be returned
-      assert.ok(!(result instanceof Error));
-      if (!(result instanceof Error)) {
-        assert.strictEqual(result.length, 1);
+        // Then only the specified number of commits should be returned
+        assert.ok(!(result instanceof Error));
+        if (!(result instanceof Error)) {
+          assert.strictEqual(result.length, 1);
+        }
+      } finally {
+        await testRepository.dispose();
       }
     });
   });
 
   suite("getBranchStatus", () => {
     test("should return branch status when repository has no remote", async () => {
-      // Given Git is available and repository is initialized without remote
+      // Given
+      const { testRepository } = setupStubs();
 
-      // When getting branch status
-      const result = await repository!.getBranchStatus();
+      try {
+        // When getting branch status
+        const result = await testRepository.getBranchStatus();
 
-      // Then status should indicate no remote tracking
-      assert.ok(!(result instanceof Error), `Expected status but got Error: ${result instanceof Error ? result.message : ""}`);
-      if (!(result instanceof Error)) {
-        assert.strictEqual(result.ahead, 0);
-        assert.strictEqual(result.behind, 0);
-        assert.strictEqual(result.remoteBranch, null);
+        // Then status should indicate no remote tracking
+        assert.ok(!(result instanceof Error), `Expected status but got Error: ${result instanceof Error ? result.message : ""}`);
+        if (!(result instanceof Error)) {
+          assert.strictEqual(result.ahead, 0);
+          assert.strictEqual(result.behind, 0);
+          assert.strictEqual(result.remoteBranch, null);
+        }
+      } finally {
+        await testRepository.dispose();
       }
     });
   });
 
   suite("getCurrentBranch", () => {
     test("should return current branch name when repository is initialized", async () => {
-      // Given Git is available and repository is initialized
+      // Given
+      const { testRepository } = setupStubs();
 
-      // When getting current branch
-      const result = await repository!.getCurrentBranch();
+      try {
+        // When getting current branch
+        const result = await testRepository.getCurrentBranch();
 
-      // Then branch name should be returned
-      assert.ok(!(result instanceof Error), `Expected string but got Error: ${result instanceof Error ? result.message : ""}`);
-      assert.ok(typeof result === "string");
-      assert.ok(result.length > 0);
+        // Then branch name should be returned
+        assert.ok(!(result instanceof Error), `Expected string but got Error: ${result instanceof Error ? result.message : ""}`);
+        assert.ok(typeof result === "string");
+        assert.ok(result.length > 0);
+      } finally {
+        await testRepository.dispose();
+      }
     });
   });
 
